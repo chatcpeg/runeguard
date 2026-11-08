@@ -78,12 +78,28 @@ const manifest = {
 
 // 4) service worker: open from cache instantly, refresh the cache in the background
 const CORE = ['./', './index.html', './manifest.webmanifest', './icons/icon-192.png', './icons/icon-512.png', './icons/maskable-512.png', './icons/apple-touch-icon.png'];
+const fontCss = (src.match(/href="(https:\/\/fonts\.googleapis\.com\/css2[^"]+)"/) || [])[1] || '';
 const sw = `// Runeguard service worker — build ${version}
 const VERSION = 'runeguard-${version}';
 const FONTS = 'runeguard-fonts';
 const CORE = ${JSON.stringify(CORE)};
+const FONT_CSS = ${JSON.stringify(fontCss)};
+// fonts are fetched before this worker exists on the first visit, so pull them in during install
+async function cacheFonts() {
+  if (!FONT_CSS) return;
+  try {
+    const c = await caches.open(FONTS);
+    if (await c.match(FONT_CSS, { ignoreVary: true })) return;
+    const r = await fetch(FONT_CSS);
+    if (!r.ok) return;
+    const css = await r.clone().text();
+    await c.put(FONT_CSS, r);
+    const files = [...css.matchAll(/url\\((https:[^)]+)\\)/g)].map(m => m[1]);
+    await Promise.all(files.map(u => fetch(u).then(f => f.ok && c.put(u, f)).catch(() => {})));
+  } catch (e) { /* offline during install: fonts get cached on the next online visit */ }
+}
 self.addEventListener('install', e => {
-  e.waitUntil(caches.open(VERSION).then(c => c.addAll(CORE)).then(() => self.skipWaiting()));
+  e.waitUntil(Promise.all([caches.open(VERSION).then(c => c.addAll(CORE)), cacheFonts()]).then(() => self.skipWaiting()));
 });
 self.addEventListener('activate', e => {
   e.waitUntil(caches.keys()
@@ -106,7 +122,7 @@ self.addEventListener('fetch', e => {
   }
   if (url.hostname === 'fonts.googleapis.com' || url.hostname === 'fonts.gstatic.com') {
     e.respondWith(caches.open(FONTS).then(async c => {
-      const hit = await c.match(req);
+      const hit = await c.match(req, { ignoreVary: true });
       if (hit) return hit;
       const r = await fetch(req);
       if (r.ok || r.type === 'opaque') c.put(req, r.clone());

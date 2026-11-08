@@ -500,11 +500,14 @@ const QUAL={mode:'auto',level:TOUCH?1:2};
 try{ const q=localStorage.getItem('runeguard.quality'); if(q&&['auto','low','mid','high'].indexOf(q)>=0) QUAL.mode=q; }catch(e){}
 const qLv=()=>QUAL.mode==='auto'?QUAL.level:({low:0,mid:1,high:2})[QUAL.mode];
 const QDPR=[1,1.5,2],QPART=[200,450,800],QDECAL=[20,60,110],QCORPSE=[12,35,65],QSS=[1,1.25,1.5];
-let ftEMA=16.7,qTimer=0;
-function autoQuality(ms){ if(QUAL.mode!=='auto'||!G||G.ui||G.over) return; ftEMA+=(ms-ftEMA)*.04; qTimer+=ms/1000;
-  if(ftEMA>22&&QUAL.level>0&&qTimer>2.5){ QUAL.level--; qTimer=0; ftEMA=16.7; resize(); }
-  else if(ftEMA<14&&QUAL.level<2&&qTimer>10){ QUAL.level++; qTimer=0; resize(); } }
-function setQuality(m){ QUAL.mode=m; if(m==='auto'){ QUAL.level=TOUCH?1:2; ftEMA=16.7; qTimer=0; } try{ localStorage.setItem('runeguard.quality',m); }catch(e){} resize(); renderQualityButtons(); }
+/* auto quality watches two things, each clamped so one hitch can't move it:
+   workEMA = ms spent in update+render (CPU side), rawEMA = ms between frames (catches GPU-bound slowdowns) */
+let workEMA=6,rawEMA=16.7,qTimer=0;
+function autoQuality(workMs,rawMs){ if(QUAL.mode!=='auto'||!G||G.ui||G.over) return;
+  workEMA+=(Math.min(50,workMs)-workEMA)*.04; rawEMA+=(Math.min(50,rawMs)-rawEMA)*.04; qTimer+=Math.min(.05,rawMs/1000);
+  if((workEMA>11||rawEMA>24)&&QUAL.level>0&&qTimer>2.5){ QUAL.level--; qTimer=0; workEMA=6; rawEMA=16.7; resize(); }
+  else if(workEMA<4.5&&rawEMA<18.5&&QUAL.level<2&&qTimer>8){ QUAL.level++; qTimer=0; workEMA=6; rawEMA=16.7; resize(); } }
+function setQuality(m){ QUAL.mode=m; if(m==='auto'){ QUAL.level=TOUCH?1:2; workEMA=6; rawEMA=16.7; qTimer=0; } try{ localStorage.setItem('runeguard.quality',m); }catch(e){} resize(); renderQualityButtons(); }
 function renderQualityButtons(){ for(const b of document.querySelectorAll('#qSeg button')) b.setAttribute('aria-pressed',b.dataset.q===QUAL.mode?'true':'false');
   $('#qNow').textContent=QUAL.mode==='auto'?'ตอนนี้: '+['ต่ำ','กลาง','สูง'][QUAL.level]:''; }
 
@@ -877,7 +880,7 @@ function part(o){ if(G.auto||G.parts.length>=QPART[qLv()]) return; o.t=0; o.dead
 function burst(x,y,n,c,sp,life,size,kind){ if(G.auto) return; life=life||.45; size=size||3; kind=kind||'sq'; const add=kind!=='rock'&&kind!=='puff';
   for(let i=0;i<n;i++){ const a=rand(0,TAU),v=rand(.25,1)*sp; part({x,y,vx:Math.cos(a)*v,vy:Math.sin(a)*v-(kind==='rock'?120:0),life:life*rand(.6,1.2),s:size*rand(.6,1.3),c,g:kind==='rock'?520:0,drag:kind==='rock'?1.2:4,k:kind,add,rot:rand(0,TAU),vr:rand(-12,12)}); } }
 function sparks(x,y,nx,ny,n,c){ if(G.auto) return; const base=Math.atan2(ny,nx); for(let i=0;i<n;i++){ const a=base+rand(-.7,.7),v=rand(170,330); part({x,y,vx:Math.cos(a)*v,vy:Math.sin(a)*v,life:rand(.1,.2),s:1.8,c,g:0,drag:5,k:'streak',add:true}); } }
-function addDecal(tex,x,y,r,life,a,flat){ if(G.auto) return; const cap=QDECAL[qLv()]; if(G.decals.length>=cap) G.decals.shift(); G.decals.push({tex,x,y,r,rot:flat?0:rand(0,TAU),flat:!!flat,t:0,life,a,dead:false}); }
+function addDecal(tex,x,y,r,life,a,flat){ if(G.auto) return; const cap=QDECAL[qLv()]; while(G.decals.length>=cap) G.decals.shift(); G.decals.push({tex,x,y,r,rot:flat?0:rand(0,TAU),flat:!!flat,t:0,life,a,dead:false}); }
 function addText(x,y,s,c,big){ if(G.auto||G.texts.length>140) return; G.texts.push({x,y,s:String(s),k:null,c,big:!!big,t:0,dead:false}); }
 function addNum(x,y,s,k){ if(G.auto||G.texts.length>140) return; G.texts.push({x,y,s:String(s),k,c:null,big:k==='c',t:0,dead:false}); }
 
@@ -941,7 +944,7 @@ function hurtPlayer(dmg){
   if(P.shield>0){ const a=Math.min(P.shield,dmg); P.shield-=a; dmg-=a; if(P.shield<=.01){ P.shield=0; shieldBreak(); } }
   if(dmg<=0) return;
   P.hp-=dmg; P.hurtT=.3; G.hurtFlash=.28; G.shake=Math.max(G.shake,4);
-  if(dmg>P.maxHp*.12&&!G.auto) G.hitStop=Math.max(G.hitStop,.05);
+  if(dmg>P.maxHp*.12&&!G.auto&&G.t>=(G.hurtStopAt||0)){ G.hitStop=Math.max(G.hitStop,.05); G.hurtStopAt=G.t+1; }
   addNum(P.x+rand(-8,8),P.y-30,Math.round(dmg),'h');
   sfx('hurt');
   if(P.hp<=0){ P.hp=0; endRun(false); }
@@ -1424,7 +1427,7 @@ function openLevel(kind){
   $('#lvTitle').textContent=kind==='chest'?'เลือกของรางวัล':'Lv '+(P.lv-G.pendingLv+1);
   renderCards(); show('scrLevel'); G.uiReadyAt=performance.now()+260; sfx('level');
 }
-function choose(i){ if(!G||G.ui!=='level'||performance.now()<G.uiReadyAt) return; const o=G.choices[i]; if(!o) return; applyChoice(o); if(G.choiceKind==='chest') G.pendingChest--; else G.pendingLv--; show(null); G.ui=null; refreshSkillBar(); }
+function choose(i){ if(!G||G.ui!=='level'||performance.now()<G.uiReadyAt) return; const o=G.choices[i]; if(!o) return; applyChoice(o); if(G.choiceKind==='chest') G.pendingChest--; else G.pendingLv--; show(null); G.ui=null; refreshSkillBar(); keepAwake(); }
 function reroll(){ if(!G||G.ui!=='level'||G.rerolls<=0) return; G.rerolls--; G.choices=buildChoices(); renderCards(); }
 function applyChoice(o){
   switch(o.k){
@@ -1445,7 +1448,7 @@ function openAdv(){
     b.append(cvs,info); b.addEventListener('click',()=>pickAdv(i)); box.appendChild(b); });
   show('scrAdv'); G.uiReadyAt=performance.now()+300; sfx('level');
 }
-function pickAdv(i){ if(!G||G.ui!=='adv'||performance.now()<G.uiReadyAt) return; applyAdv(P.cls.adv[i]); show(null); G.ui=null; }
+function pickAdv(i){ if(!G||G.ui!=='adv'||performance.now()<G.uiReadyAt) return; applyAdv(P.cls.adv[i]); show(null); G.ui=null; keepAwake(); }
 function applyAdv(a){
   P.adv=a; P.look=Object.assign({},P.cls.look,a.look); recalc(P); P.skills.push(makeSkill(a.skills[0])); refreshSkillBar();
   banner('เปลี่ยนอาชีพ!',P.cls.n+' → '+a.n);
@@ -1763,11 +1766,13 @@ function frame(now){
   requestAnimationFrame(frame);
   const raw=now-last; let dt=raw/1000; last=now; if(dt>.05) dt=.05; if(dt<0) dt=0;
   titleT+=dt;
+  const w0=performance.now(), playing=G&&!G.ui&&!G.over;
   if(G){
-    if(!G.ui&&!G.over){ if(G.hitStop>0) G.hitStop-=dt; else update(dt); autoQuality(raw); }
+    if(playing){ if(G.hitStop>0) G.hitStop-=dt; else update(dt); }
     else { G.shake=0; G.flash=Math.max(0,G.flash-dt); G.hurtFlash=Math.max(0,G.hurtFlash-dt); }
   }
   try{ render(); }catch(err){ console.error(err); }
+  if(playing) autoQuality(performance.now()-w0,raw);
   if(G&&P){ updateHUD(); if(!G.ui&&!G.over) checkUI(); }
 }
 addEventListener('keydown',e=>{
