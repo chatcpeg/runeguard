@@ -290,11 +290,11 @@ const BOSS_WAVES={5:[['colossus',1500]],10:[['lich',4800]],15:[['colossus',7000]
 const HINT={1:'ขยับหลบฝูง แล้วปล่อยให้สกิลทำงานเอง',2:'ซอมบี้วิ่งเร็วโผล่มาแล้ว',3:'ฝูงค้างคาวบินส่ายไปมา',4:'โครงกระดูกยิงธนูจากระยะไกล',6:'ศพพองระเบิดเมื่อตาย อย่ายืนชิด',7:'ฝูงหนาขึ้นเรื่อย ๆ',8:'วิญญาณลอยทะลุฝูงเข้ามาได้',11:'ศัตรูแข็งขึ้นอีกระดับ',16:'ช่วงท้าย เตรียมสกิลวิวัฒนาการให้พร้อม'};
 
 const STATS={
-  STR:{n:'พลังกาย',i:'💪',d:'ดาเมจทุกสกิล +12%'},
+  STR:{ab:'ATK',n:'พลังโจมตี',i:'⚔️',d:'ดาเมจทุกสกิล +12% ใช้ได้ทุกอาชีพ'},
   AGI:{n:'ความว่องไว',i:'💨',d:'ความเร็วเดิน +7% · คูลดาวน์ −4%'},
   VIT:{n:'ความอึด',i:'❤️',d:'HP สูงสุด +20 · ฟื้น HP +0.4 ต่อวินาที'},
   INT:{n:'สติปัญญา',i:'🔮',d:'พื้นที่สกิล +10% · ระยะเวลาสกิล +10%'},
-  DEX:{n:'ความแม่นยำ',i:'🎯',d:'คูลดาวน์ −6% · ถึง Lv3 และ Lv5 ได้กระสุนเพิ่ม +1'},
+  DEX:{n:'ความแม่นยำ',i:'🎯',d:()=>dexText()},
   LUK:{n:'โชค',i:'🍀',d:'คริติคอล +5% · ระยะดูดของ +20% · EXP +6%'},
 };
 
@@ -1386,12 +1386,16 @@ function updateHUD(){
 function refreshSkillBar(){
   if(!P) return;
   el.skills.innerHTML=P.skills.map(s=>`<div class="sk${s.evolved?' evo':''}" title="${s.evolved?s.def.evo.n:s.def.n}"><span aria-hidden="true">${s.def.i}</span><b>${s.evolved?'★':s.lv}</b></div>`).join('');
-  el.stats.textContent=Object.keys(STATS).filter(k=>P.stats[k]>0).map(k=>k+' '+P.stats[k]).join(' · ');
+  el.stats.textContent=Object.keys(STATS).filter(k=>P.stats[k]>0).map(k=>SNAME(k)+' '+P.stats[k]).join(' · ');
 }
 const PL={cd:'คูลดาวน์',dmg:'ดาเมจ',count:'จำนวน',range:'ระยะ',r:'รัศมี',pierce:'ทะลุ',spin:'ความเร็วหมุน',absorb:'โล่',nova:'ดาเมจระเบิด',explode:'รัศมีระเบิด',slow:'ชะลอ',freeze:'แช่แข็ง',stun:'สตัน',bounces:'กระโดด',hits:'ระลอก',heal:'ฟื้นฟู',targets:'เป้าหมาย',trap:'ดาเมจกับดัก',rage:'โบนัสคลั่งสูงสุด',steal:'ฟื้น HP ต่อศพ',dodge:'หลบหลีก'};
 const PCT={slow:1,rage:1,dodge:1},SEC={cd:1,freeze:1,stun:1};
 function fmtP(k,v){ if(PCT[k]) return Math.round(v*100)+'%'; if(SEC[k]) return (+v.toFixed(2))+' วิ'; return String(+(+v).toFixed(2)); }
 function diffText(s){ const out=[]; for(const k in s.def.p){ const v=s.def.p[k]; if(!Array.isArray(v)) continue; const a=v[s.lv-1],b=v[s.lv]; if(b===undefined||a===b) continue; out.push(`${PL[k]||k} ${fmtP(k,a)} → ${fmtP(k,b)}`); } return out.join(' · '); }
+const SNAME=k=>STATS[k].ab||k;
+function dexText(){ const nx=P.stats.DEX+1, names=P.skills.filter(s=>s.def.type==='proj'||s.def.type==='orbit').map(s=>s.def.n);
+  const now=(nx===3||nx===5)?' (ได้ทันทีที่เลือก)':'';
+  return 'คูลดาวน์ −6% · ถึง Lv3 และ Lv5: '+(names.length?names.map(n=>n+' +1 ชิ้น').join(' · ')+now:'สกิลแบบยิงหรือหมุนรอบตัวได้เพิ่ม 1 ชิ้น (ตอนนี้ยังไม่มีสกิลแบบนี้)'); }
 function evoUses(stat){ const names=[]; for(const s of P.skills) if(s.def.evo&&s.def.evo.s===stat&&!s.evolved) names.push(s.def.n); return names.length?'ใช้วิวัฒนาการ: '+names.join(', '):''; }
 function buildChoices(){
   const pool=[],owned=new Set(P.skills.map(s=>s.id));
@@ -1410,10 +1414,10 @@ function buildChoices(){
 function cardHTML(o,i){
   let ic,tag,nm,ds,df='';
   switch(o.k){
-    case 'new':{ const d=SK[o.id]; ic=d.i; tag='สกิลใหม่'; nm=d.n; ds=d.d; if(d.evo) df=`วิวัฒนาการเมื่อ Lv5 + ${d.evo.s}`; break; }
+    case 'new':{ const d=SK[o.id]; ic=d.i; tag='สกิลใหม่'; nm=d.n; ds=d.d; if(d.evo) df=`วิวัฒนาการเมื่อ Lv5 + ${SNAME(d.evo.s)}`; break; }
     case 'up':{ const d=o.s.def; ic=d.i; tag=`Lv ${o.s.lv} → ${o.s.lv+1}`; nm=d.n; ds=d.d; df=diffText(o.s); break; }
-    case 'evo':{ const d=o.s.def; ic=d.i; tag='วิวัฒนาการ'; nm=d.evo.n; ds=d.evo.d; df=`${d.n} Lv5 + ${d.evo.s}`; break; }
-    case 'stat':{ const st=STATS[o.stat]; ic=st.i; tag=`ค่าสถานะ Lv ${P.stats[o.stat]} → ${P.stats[o.stat]+1}`; nm=`${o.stat} · ${st.n}`; ds=st.d; df=evoUses(o.stat); break; }
+    case 'evo':{ const d=o.s.def; ic=d.i; tag='วิวัฒนาการ'; nm=d.evo.n; ds=d.evo.d; df=`${d.n} Lv5 + ${SNAME(d.evo.s)}`; break; }
+    case 'stat':{ const st=STATS[o.stat]; ic=st.i; tag=`ค่าสถานะ Lv ${P.stats[o.stat]} → ${P.stats[o.stat]+1}`; nm=`${SNAME(o.stat)} · ${st.n}`; ds=typeof st.d==='function'?st.d():st.d; df=evoUses(o.stat); break; }
     case 'potion': ic='🧪'; tag='ไอเทม'; nm='ยาฟื้นฟู'; ds='ฟื้นฟู HP 40% ทันที'; break;
     default: ic='💰'; tag='ไอเทม'; nm='ถุงทอง'; ds='คะแนน +250'; break;
   }
