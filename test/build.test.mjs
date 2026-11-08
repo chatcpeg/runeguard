@@ -121,9 +121,9 @@ console.log('L11 · ขนาด');
   const big = n => '/*' + 'x'.repeat(n * 1024) + '*/\n';
   const cur = Buffer.byteLength(assemble(base)), padTo = lim => Math.max(0, Math.ceil((lim - cur) / 1024)) + 2;
   const r1 = lint(s => addJs(s, '97-x.js', big(padTo(SIZE_FAIL))));
-  fires('เกิน 450 KB', r1, 'L11', 'ใหญ่เกิน 450 KB');
+  fires(`เกิน ${SIZE_FAIL / 1024} KB`, r1, 'L11', `ใหญ่เกิน ${SIZE_FAIL / 1024} KB`);
   const r2 = lint(s => addJs(s, '97-x.js', big(padTo(SIZE_WARN))));
-  ok('L11 เตือนเมื่อเกิน 350 KB (ไม่ fail)', r2.errors.length === 0 && r2.warnings.some(w => w.rule === 'L11' && w.msg.includes('เกิน 350 KB')), show(r2));
+  ok(`L11 เตือนเมื่อเกิน ${SIZE_WARN / 1024} KB (ไม่ fail)`, r2.errors.length === 0 && r2.warnings.some(w => w.rule === 'L11' && w.msg.includes(`เกิน ${SIZE_WARN / 1024} KB`)), show(r2));
 }
 
 console.log('end-to-end: node build.mjs บนสำเนาชั่วคราว');

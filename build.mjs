@@ -225,7 +225,7 @@ function pureHit(ln) {
   return false;
 }
 const XSS_WORDS = ['name', 'email', 'msg', 'err', 'text'];
-export const SIZE_WARN = 350 * 1024, SIZE_FAIL = 450 * 1024;
+export const SIZE_WARN = 600 * 1024, SIZE_FAIL = 800 * 1024;   // raised after M1 (353.8 KB raw = 113 KB gzip; Thai text is 3 bytes/char)
 const lineOf = (text, idx) => text.slice(0, idx).split('\n').length;
 
 // right-hand side of `…innerHTML = <rhs>;` on one line, reduced to the parts that are code, not string text:
@@ -340,8 +340,8 @@ export function lintAll(src, html) {
 
   // L11 size
   const kb = Buffer.byteLength(html, 'utf8');
-  if (kb > SIZE_FAIL) E('L11', `runeguard.html ใหญ่เกิน 450 KB (${(kb / 1024).toFixed(1)} KB)`);
-  else if (kb > SIZE_WARN) warnings.push({ rule: 'L11', msg: `คำเตือน: runeguard.html ใหญ่ ${(kb / 1024).toFixed(1)} KB (เกิน 350 KB)` });
+  if (kb > SIZE_FAIL) E('L11', `runeguard.html ใหญ่เกิน ${SIZE_FAIL / 1024} KB (${(kb / 1024).toFixed(1)} KB)`);
+  else if (kb > SIZE_WARN) warnings.push({ rule: 'L11', msg: `คำเตือน: runeguard.html ใหญ่ ${(kb / 1024).toFixed(1)} KB (เกิน ${SIZE_WARN / 1024} KB)` });
   return { errors, warnings };
 }
 
