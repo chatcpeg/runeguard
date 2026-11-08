@@ -384,7 +384,7 @@ Base EXP จากการฆ่า = mobExp(e.lv) · diffMul · P.xpMul
 | โจร | `assassin` | นักฆ่า | **มือมีดจันทร์ดับ · Eclipseblade** | ชื่อ + อาวุธตรงกับต้นแบบ |
 | โจร | `nightblade` | ใบมีดราตรี | คงเดิม | original อยู่แล้ว |
 
-- **สกิลที่เปลี่ยนชื่อ:** `valor` "ออร่าอัศวิน" → **"ออร่าผู้พิทักษ์"** · `spheres` "ลูกพลังจิต" → **"ดวงไฟสุริยะ"**
+- **สกิลที่เปลี่ยนชื่อ:** `valor` "ออร่าอัศวิน" → **"ออร่าผู้พิทักษ์"** · `spheres` "ลูกพลังจิต" → **"ดวงไฟสุริยะ"** (M0 เปลี่ยนคำในคำอธิบาย `spheres.d` และ `templar.d` ให้ตรงชื่อใหม่ด้วย)
 - **look ที่เปลี่ยน id:** `katar` (L443, L722) → **`twinblade`** ชื่อที่แสดงคือ "ใบมีดคู่" การเปลี่ยนนี้ทำให้ lint ห้ามคำนั้นได้ทั้งไฟล์
 - **ทำเมื่อไร:** ใน M0 เป็นการแก้ข้อมูลล้วน ไม่กระทบ golden run (Q6)
 
@@ -1642,7 +1642,7 @@ MODES[id] = {
 | 21 `showEnd` (L1480) | eyebrow / title / rows จาก `G.endInfo` · `if(UIX.endExtra) UIX.endExtra($('#endStats'),G);` | rows เดิม |
 | 22 `render` (L1744) | พื้น: `if(G.mode.drawGround) G.mode.drawGround(L,T,R,B); else { ctx.fillStyle=groundPat; ctx.fillRect(…); drawProps(L,T,R,B); }` · หลัง `drawDecals`: `drawWorld` · หลัง `drawActors`: `drawOver` · หลัง `drawScreenFx()`: `drawScreen` (ทุกตัวเช็กว่ามีก่อนเรียก) | ไม่มี hook |
 | 23 keydown (L1782) · ปุ่ม (L1801–1810) | ต้น handler: `const uk=UIKEY[(G&&G.ui)\|\|curScreen()]; if(uk&&uk(e)) return;` · Enter ตอน `!G`: ถ้า scrTitle เปิดอยู่ใช้โค้ดเดิม ไม่อย่างนั้น `UIX.enter&&UIX.enter()` · ปุ่มรีสตาร์ต / เล่นอีก: `startRun(G.cls.id,G.modeId,G.opts)` | |
-| 90 dev-hook (L1813) | `window.RG = Object.assign({start, sim, info, god, botR, ui, renderMs, quality, state, seed(n){ Math.random=mulberry(n>>>0); }, run(mode,opts){ opts=Object.assign({char:mode==='classic'?null:curChar()},opts); startRun((opts.char&&opts.char.cls)\|\|opts.cls\|\|selected, mode, opts); return this.info(); }}, DEV)` เฉพาะเมื่อ `#dev` | lane ไม่เขียนทับ `window.RG` |
+| 90 dev-hook (L1813) | `window.RG = Object.assign({start, sim, info, god, botR, ui, renderMs, quality, state, seed(n){ initAudio(); Math.random=mulberry(n>>>0); }, run(mode,opts){ opts=Object.assign({char:mode==='classic'?null:curChar()},opts); startRun((opts.char&&opts.char.cls)\|\|opts.cls\|\|selected, mode, opts); return this.info(); }}, DEV)` เฉพาะเมื่อ `#dev` | lane ไม่เขียนทับ `window.RG` |
 | 99 boot (L1826) | สร้าง sprite ล่วงหน้าเฉพาะ `!EN[t].boss&&!EN[t].lazy` (มอนโซนตั้ง `lazy:1`) | EN เดิมไม่มี lazy |
 
 > **กติกาเหล็ก:** core ตรวจได้แค่ `G.char`, `G.mode.*`, `P.rank`, `P.loadout`, `P.bonus` ห้ามอ่าน `SAVE` หรือ `curChar()` จาก core เพราะเหตุนี้ ต่อให้เลือกตัวละครค้างไว้ในเมนู รอบคลาสสิกก็ยังได้ผลตรงเดิมทุกบิต
@@ -1752,6 +1752,8 @@ function sysLog(text, kind);   function openCharWindow(tab);   // หน้า�
 
 ### 7.10 งบประสิทธิภาพและวิธีวัด
 - **วิธีวัด:** Claude Browser ที่ `http://localhost:8793/#dev`, viewport 1280×800 และ preset mobile, Chrome CPU throttle 4× และ 6× (`emulate` ของ chrome-devtools) ใช้ median ของ 5 รอบ `RG.renderMs(300)`
+- **(เพิ่มหลัง M0) เทียบแบบ A/B ในหน้าเดียวเท่านั้น:** เครื่องนี้แกว่าง ±30% ข้ามรอบ (มีงาน GPU/ComfyUI รันพร้อมกัน) ตัวเลข ms แบบสัมบูรณ์ใน `test/golden/README.md` จึงใช้เทียบข้ามวันไม่ได้ ให้เปิดของเดิม (pristine + `RG.seed`) กับ build ใหม่เป็น iframe คู่ในหน้าเดียว สลับวัดแบบ ABBA แล้วดู **อัตราส่วน median** ต้องอยู่ใน ±5% · ทุกรอบรีเซ็ตไปสถานะคลื่น 15 เดียวกันและล็อกคุณภาพเป็น "สูง"
+- **(เพิ่มหลัง M0) `RG.seed` เรียก `initAudio()` ก่อน:** `startRun` ครั้งแรกสร้าง noise buffer ของเสียงซึ่งดึง `Math.random` ไป sampleRate/2 ครั้ง (48 kHz = 24,000 · 44.1 kHz = 22,050) ถ้าไม่สร้างก่อน seed ผล golden จะต่างกันระหว่างรอบแรกกับรอบถัดไป และต่างตามเครื่อง ทุก lane ที่เขียน golden/sim ต้องเรียก `RG.seed` ก่อน `RG.start`/`RG.run` เสมอ
 
 | สิ่งที่วัด | งบ |
 |---|---|

@@ -163,6 +163,12 @@ h1,h2,h3{margin:0;font-weight:400;text-wrap:balance}
 .qnow{font-size:12px;color:var(--ash)}
 @media (max-width:480px){.end-stats{grid-template-columns:repeat(2,minmax(0,1fr))}}
 @media (prefers-reduced-motion:reduce){#banner.show{animation:none}.card,.cls,.adv{transition:none}}
+/* 50-shell.css · lane B · M0 stub (empty) */
+/* 51-auth.css · lane N · M0 stub (empty) */
+/* 53-char.css · lane E · M0 stub (empty) */
+/* 54-progress.css · lane P · M0 stub (empty) */
+/* 60-field.css · lane F · M0 stub (empty) */
+/* 66-boss.css · lane H · M0 stub (empty) */
 </style>
 
 <canvas id="game" role="img" aria-label="สนามรบ Runeguard"></canvas>
@@ -254,6 +260,12 @@ h1,h2,h3{margin:0;font-weight:400;text-wrap:balance}
   </div>
 </section>
 
+<!-- 50-shell.html · lane B · M0 stub (empty) -->
+<!-- 51-auth.html · lane N · M0 stub (empty) -->
+<!-- 53-char.html · lane E · M0 stub (empty) -->
+<!-- 54-progress.html · lane P · M0 stub (empty) -->
+<!-- 60-field.html · lane F · M0 stub (empty) -->
+<!-- 66-boss.html · lane H · M0 stub (empty) -->
 <script>
 (()=>{
 'use strict';
@@ -314,7 +326,7 @@ bulwark:{n:'ปราการเหล็ก',i:'🛡️',type:'shield',c:'#a9c
   evo:{s:'INT',n:'โล่หนามเทวะ',d:'โล่หนาเกิดใหม่เร็วและระเบิดรุนแรง',set:{cd:4.5,absorb:130,nova:160,r:178}}},
 lance:{n:'หอกพุ่งทะยาน',i:'🔱',type:'proj',shape:'spear',c:'#ffe28a',d:'พุ่งหอกยาวทะลวงศัตรูทั้งแถว',
   p:{cd:[2.2,2,1.8,1.6,1.4],dmg:[42,54,68,84,104],speed:580,life:.75,pierce:99,size:11,count:[1,1,2,2,3],spread:.16,knock:330}},
-valor:{n:'ออร่าอัศวิน',i:'✨',type:'aura',c:'#ffd76a',d:'ออร่าศักดิ์สิทธิ์แผดเผาและชะลอศัตรูรอบตัว',
+valor:{n:'ออร่าผู้พิทักษ์',i:'✨',type:'aura',c:'#ffd76a',d:'ออร่าศักดิ์สิทธิ์แผดเผาและชะลอศัตรูรอบตัว',
   p:{r:[92,102,112,126,140],dmg:[7,9,11,14,17],tick:.4,slow:[.1,.13,.16,.19,.22]}},
 cyclone:{n:'พายุหมุนเหวี่ยง',i:'🌪️',type:'swing',c:'#ff8f7f',d:'เหวี่ยงขวานรอบตัว 360 องศา',
   p:{cd:[1.7,1.5,1.3,1.1,.9],dmg:[24,30,38,47,58],range:[96,104,112,122,134],arc:7,knock:200,count:1}},
@@ -381,7 +393,7 @@ aegis:{n:'เกราะเทวา',i:'👼',type:'shield',c:'#fff3b0',d:'โ
   p:{cd:[12,10.5,9,8,7],absorb:[30,45,60,75,95],nova:[40,55,70,90,115],r:[120,130,140,150,165]}},
 fists:{n:'หมัดศักดิ์สิทธิ์',i:'👊',type:'swing',c:'#ffd27a',d:'ชกรัวด้วยพลังศักดิ์สิทธิ์',
   p:{cd:[.38,.34,.3,.26,.22],dmg:[9,11,13,16,19],range:[62,65,68,72,78],arc:1.6,knock:90,count:1}},
-spheres:{n:'ลูกพลังจิต',i:'💠',type:'orbit',os:'orb',c:'#ffe066',d:'ลูกพลังจิตหมุนรอบตัวกระแทกศัตรู',
+spheres:{n:'ดวงไฟสุริยะ',i:'💠',type:'orbit',os:'orb',c:'#ffe066',d:'ดวงไฟสุริยะหมุนรอบตัวกระแทกศัตรู',
   p:{count:[2,3,3,4,5],r:[60,64,68,72,78],dmg:[14,17,21,26,32],spin:[4,4.2,4.4,4.7,5],size:10,knock:200}},
 /* --- Thief --- */
 dagger:{n:'ปามีด',i:'🗡️',type:'proj',shape:'dagger',c:'#e6e6f0',d:'ปามีดความเร็วสูง คริติคอลง่าย',
@@ -411,36 +423,36 @@ const CLASSES=[
 {id:'swordsman',n:'นักดาบ',e:'Swordsman',d:'นักสู้แนวหน้า HP หนา ฟันฝูงซอมบี้ให้กระเด็นกระจาย',hp:150,speed:172,armor:4,crit:.05,regen:.3,
  rating:{hp:5,atk:3,spd:3,rng:1},skills:['slash','slam','blades','bulwark'],
  look:{body:'#3d6db3',trim:'#d9e2ef',pants:'#2d3442',hair:'#7a4a26',hat:'helm',hatC:'#aeb9c7',weapon:'sword',wc:'#e6edf7'},
- adv:[{id:'knight',n:'อัศวิน',e:'Knight',d:'ผู้พิทักษ์หุ้มเกราะ พุ่งหอกทะลวงแนวศัตรู',bonus:{hp:40,armor:3},bt:'HP +40 · เกราะ +3',skills:['lance','valor'],
+ adv:[{id:'knight',n:'พลหอกพิทักษ์',e:'Lancewarden',d:'ผู้พิทักษ์หุ้มเกราะ พุ่งหอกทะลวงแนวศัตรู',bonus:{hp:40,armor:3},bt:'HP +40 · เกราะ +3',skills:['lance','valor'],
    look:{body:'#2c4a8f',trim:'#f0c75a',hatC:'#d5dde8',orn:'plume',ornC:'#d8444c',weapon:'lance',wc:'#f3d27a',cape:'#7a1f2b'}},
   {id:'berserker',n:'เบอร์เซิร์กเกอร์',e:'Berserker',d:'นักรบคลั่ง ยิ่งบาดเจ็บยิ่งอันตราย',bonus:{might:.15,speed:.08},bt:'ดาเมจ +15% · ความเร็ว +8%',skills:['cyclone','frenzy'],
    look:{body:'#8a2f2a',trim:'#2a1a18',hatC:'#6d5c4f',orn:'horns',ornC:'#efe4cc',weapon:'axe',wc:'#cfd3d8'}}]},
 {id:'mage',n:'จอมเวท',e:'Mage',d:'ปล่อยเวทธาตุถล่มฝูงศัตรูจากระยะไกล แต่ตัวบาง',hp:90,speed:165,armor:0,crit:.05,regen:.2,
  rating:{hp:1,atk:5,spd:2,rng:4},skills:['mbolt','flame','frost','thunder'],
  look:{body:'#5b3a8e',trim:'#f0b545',pants:'#2a2240',hair:'#e8dcc0',hat:'wizard',hatC:'#45296f',weapon:'staff',wc:'#c09cff'},
- adv:[{id:'archmage',n:'อาร์คเมจ',e:'Archmage',d:'ผู้เรียกอุกกาบาตและพายุหิมะ',bonus:{area:.15,might:.1},bt:'พื้นที่สกิล +15% · ดาเมจ +10%',skills:['meteor','blizzard'],
+ adv:[{id:'archmage',n:'จอมเวทดาราตก',e:'Starfall Magus',d:'ผู้เรียกอุกกาบาตและพายุหิมะ',bonus:{area:.15,might:.1},bt:'พื้นที่สกิล +15% · ดาเมจ +10%',skills:['meteor','blizzard'],
    look:{body:'#7a2d4f',trim:'#ffd76a',hatC:'#5a1f3a',orn:'star',ornC:'#ffd76a',wc:'#ff8a4a',cape:'#2a1030'}},
   {id:'elementalist',n:'นักเวทธาตุ',e:'Elementalist',d:'ควบคุมลมและหิน ดูดศัตรูมารวมแล้วบดขยี้',bonus:{cd:.88},bt:'คูลดาวน์ −12%',skills:['vortex','spikes'],
    look:{body:'#2f6f68',trim:'#b9ffcf',hatC:'#1f4f4a',orn:'gem',ornC:'#8fffd0',wc:'#8fffd0'}}]},
 {id:'archer',n:'นักธนู',e:'Archer',d:'ยิงไวเดินไว เก่งการวิ่งวนยิงรอบฝูง',hp:100,speed:190,armor:1,crit:.08,regen:.2,
  rating:{hp:2,atk:4,spd:4,rng:5},skills:['arrow','spread','rain','trap'],
  look:{body:'#4f7a3a',trim:'#c9a66b',pants:'#3b2f22',hair:'#d9a441',hat:'cap',hatC:'#3d6a2c',orn:'feather',ornC:'#e84a4a',weapon:'bow',wc:'#b07a40'},
- adv:[{id:'ranger',n:'เรนเจอร์',e:'Ranger',d:'นักล่ากับเหยี่ยวคู่ใจ ยิงธนูรอบทิศ',bonus:{speed:.08,proj:1},bt:'ความเร็ว +8% · กระสุน +1',skills:['hawk','arrownova'],
+ adv:[{id:'ranger',n:'พรานเหยี่ยวลม',e:'Windhawk Tracker',d:'นักล่ากับเหยี่ยวคู่ใจ ยิงธนูรอบทิศ',bonus:{speed:.08,proj:1},bt:'ความเร็ว +8% · กระสุน +1',skills:['hawk','arrownova'],
    look:{body:'#3f5f2c',hat:'hood',hatC:'#2f4a22',orn:'',weapon:'bow',wc:'#8a5a30',cape:'#2f4a22'}},
-  {id:'sharpshooter',n:'จอมแม่นธนู',e:'Sharpshooter',d:'ยิงนัดเดียวจอด เน้นคริติคอลและลูกระเบิด',bonus:{crit:.15,critMult:.5},bt:'คริติคอล +15% · แรงคริ +50%',skills:['deadeye','blast'],
+  {id:'sharpshooter',n:'มือธนูเจาะดาว',e:'Starpiercer',d:'ยิงนัดเดียวจอด เน้นคริติคอลและลูกระเบิด',bonus:{crit:.15,critMult:.5},bt:'คริติคอล +15% · แรงคริ +50%',skills:['deadeye','blast'],
    look:{body:'#5a4a3a',trim:'#ff5d73',hatC:'#2b2b33',orn:'feather',ornC:'#ff5d73',weapon:'longbow',wc:'#4a4a56'}}]},
 {id:'cleric',n:'นักบวช',e:'Cleric',d:'ผู้ใช้แสงศักดิ์สิทธิ์ ฟื้นฟูตัวเองและแผดเผาอันเดด',hp:115,speed:168,armor:2,crit:.05,regen:.8,
  rating:{hp:4,atk:3,spd:2,rng:3},skills:['holy','heal','sacred','cross'],
  look:{body:'#ece4d2',trim:'#c99a2e',pants:'#6b5e4a',hair:'#a35a2a',hat:'hood',hatC:'#f6f1e6',weapon:'rod',wc:'#f0c75a'},
- adv:[{id:'highcleric',n:'มหานักบวช',e:'High Cleric',d:'เรียกเสาแสงพิพากษาและเกราะเทวา',bonus:{hp:30,regen:1},bt:'HP +30 · ฟื้น HP +1 ต่อวินาที',skills:['judgment','aegis'],
+ adv:[{id:'highcleric',n:'ผู้เฝ้าแสงอรุณ',e:'Dawnkeeper',d:'เรียกเสาแสงพิพากษาและเกราะเทวา',bonus:{hp:30,regen:1},bt:'HP +30 · ฟื้น HP +1 ต่อวินาที',skills:['judgment','aegis'],
    look:{body:'#f7f2e6',trim:'#3a6fd8',hatC:'#ffffff',orn:'mitre',ornC:'#f0c75a',wc:'#fff1a8',cape:'#3a6fd8'}},
-  {id:'templar',n:'เทมพลาร์',e:'Templar',d:'นักรบศักดิ์สิทธิ์ ชกรัวพร้อมลูกพลังจิต',bonus:{speed:.12,armor:2},bt:'ความเร็ว +12% · เกราะ +2',skills:['fists','spheres'],
+  {id:'templar',n:'นักพรตหมัดสุริยะ',e:'Sunfist Ascetic',d:'นักรบศักดิ์สิทธิ์ ชกรัวพร้อมดวงไฟสุริยะ',bonus:{speed:.12,armor:2},bt:'ความเร็ว +12% · เกราะ +2',skills:['fists','spheres'],
    look:{body:'#c9b48a',trim:'#8a2b2b',hat:'helm',hatC:'#d8c9a3',orn:'cross',ornC:'#8a2b2b',weapon:'fist',wc:'#ffd27a'}}]},
 {id:'thief',n:'โจร',e:'Thief',d:'เร็วที่สุด คริติคอลสูง และหลบหลีกได้',hp:92,speed:205,armor:0,crit:.12,regen:.2,
  rating:{hp:1,atk:4,spd:5,rng:3},skills:['dagger','fan','venom','shadow'],
  look:{body:'#3b3346',trim:'#9b3b4a',pants:'#262230',hair:'#2a2a33',hat:'bandana',hatC:'#9b3b4a',orn:'mask',ornC:'#262230',weapon:'dagger',wc:'#e6e6f0'},
- adv:[{id:'assassin',n:'นักฆ่า',e:'Assassin',d:'พุ่งฟันเป้าหมายแข็งแกร่งในพริบตา',bonus:{crit:.12,speed:.1},bt:'คริติคอล +12% · ความเร็ว +10%',skills:['phantom','whirl'],
-   look:{body:'#232028',trim:'#c23048',hat:'hood',hatC:'#1c1a22',orn:'mask',ornC:'#c23048',weapon:'katar',wc:'#e9e9f5',cape:'#c23048'}},
+ adv:[{id:'assassin',n:'มือมีดจันทร์ดับ',e:'Eclipseblade',d:'พุ่งฟันเป้าหมายแข็งแกร่งในพริบตา',bonus:{crit:.12,speed:.1},bt:'คริติคอล +12% · ความเร็ว +10%',skills:['phantom','whirl'],
+   look:{body:'#232028',trim:'#c23048',hat:'hood',hatC:'#1c1a22',orn:'mask',ornC:'#c23048',weapon:'twinblade',wc:'#e9e9f5',cape:'#c23048'}},
   {id:'nightblade',n:'ใบมีดราตรี',e:'Nightblade',d:'ใช้ร่างเงาและระเบิดควันคุมฝูง',bonus:{xp:.2,magnet:1.4},bt:'EXP +20% · ระยะดูดของ +40%',skills:['clones','smoke'],
    look:{body:'#3a2d5e',trim:'#9a7dff',hat:'hood',hatC:'#2c2248',orn:'mask',ornC:'#9a7dff',weapon:'dagger',wc:'#c3b0ff'}}]},
 ];
@@ -667,9 +679,10 @@ const EDRAW={
 function getSpr(type){
   let S=SPR[type]; if(S) return S;
   const d=EN[type],ss=d.boss?Math.min(SPR_SS,1.25):SPR_SS,pad=d.boss?d.r*1.45+30:d.r*1.3+16,w=Math.ceil((d.r+pad)*2),h=w,PW=Math.ceil(w*ss),PH=Math.ceil(h*ss);
-  const tmp=mkCanvas(PW,PH),sil=mkCanvas(PW,PH);
+  const tmp=mkCanvas(PW,PH),sil=mkCanvas(PW,PH),draw=EDRAW[d.base||type];   // d.base: reuse another painter (zone mobs) · d.r is still this type's own
   const mk=(f,dir,white)=>{
-    const tc=tmp.getContext('2d'); tc.setTransform(1,0,0,1,0,0); tc.clearRect(0,0,PW,PH); tc.setTransform(ss,0,0,ss,PW/2,PH/2); if(dir) tc.scale(-1,1); EDRAW[type](tc,f);
+    const tc=tmp.getContext('2d'); tc.setTransform(1,0,0,1,0,0); tc.clearRect(0,0,PW,PH); tc.setTransform(ss,0,0,ss,PW/2,PH/2); if(dir) tc.scale(-1,1); draw(tc,f);
+    if(d.tint){ tc.save(); tc.setTransform(1,0,0,1,0,0); tc.globalCompositeOperation='source-atop'; tc.globalAlpha=.35; tc.fillStyle=d.tint; tc.fillRect(0,0,PW,PH); tc.restore(); }
     const out=mkCanvas(PW,PH),oc=out.getContext('2d');
     if(white){ oc.drawImage(tmp,0,0); oc.globalCompositeOperation='source-in'; oc.fillStyle='#ffffff'; oc.fillRect(0,0,PW,PH); return out; }
     const sg=sil.getContext('2d'); sg.globalCompositeOperation='copy'; sg.drawImage(tmp,0,0); sg.globalCompositeOperation='source-in'; sg.fillStyle='#120c10'; sg.fillRect(0,0,PW,PH); sg.globalCompositeOperation='source-over';
@@ -682,6 +695,7 @@ function getSpr(type){
 
 /* ================= hero drawing ================= */
 function drawHat(c,L,t){
+  if(HAT_EXT[L.hat]) return HAT_EXT[L.hat](c,L,t);
   const C=L.hatC;
   if(L.hat==='helm'){
     c.fillStyle=C; c.beginPath(); c.arc(1,-15,11.6,PI,TAU); c.lineTo(12.6,-12); c.lineTo(-10.6,-12); c.closePath(); c.fill();
@@ -710,7 +724,10 @@ function drawHat(c,L,t){
   if(L.orn==='mask'){ c.fillStyle=L.ornC; c.beginPath(); c.moveTo(1,-11.5); c.lineTo(11,-11.5); c.lineTo(10,-6); c.lineTo(2,-5); c.closePath(); c.fill(); }
 }
 function drawWeapon(c,L,a,face){
+  if(WEAPON_EXT[L.weapon]) return WEAPON_EXT[L.weapon](c,L,a,face);
   c.save(); c.translate(face*3,-2); c.rotate(a); const C=L.wc||'#dddddd',sk=L.skin||'#ffdcbc';
+  // refined gear: L.glow 1 = soft glow, 2 = aura (drawn on c — glow() itself only paints the main ctx)
+  if(L.glow){ const r=L.glow>1?30:19; c.save(); c.globalCompositeOperation='lighter'; c.globalAlpha*=L.glow>1?.8:.45; c.drawImage(glowTex(L.glowC||C),16-r,-r,r*2,r*2); c.restore(); }
   switch(L.weapon){
     case 'sword': c.fillStyle='#6b4a2b'; c.fillRect(3,-1.6,7,3.2); c.fillStyle='#d4a940'; c.fillRect(9.5,-5,2.6,10); c.fillStyle=C; c.beginPath(); c.moveTo(12,-2.3); c.lineTo(29,-1.5); c.lineTo(32.5,0); c.lineTo(29,1.5); c.lineTo(12,2.3); c.closePath(); c.fill(); c.fillStyle='rgba(255,255,255,.6)'; c.fillRect(13,-1.2,15,.9); break;
     case 'lance': c.fillStyle='#7a5434'; c.fillRect(-8,-1.7,38,3.4); c.fillStyle=C; c.beginPath(); c.moveTo(29,-4.5); c.lineTo(44,0); c.lineTo(29,4.5); c.closePath(); c.fill(); c.fillStyle='#d9e2ef'; c.beginPath(); c.moveTo(4,-6); c.lineTo(12,-2); c.lineTo(12,2); c.lineTo(4,6); c.closePath(); c.fill(); break;
@@ -719,7 +736,7 @@ function drawWeapon(c,L,a,face){
     case 'rod': c.fillStyle='#8a6a3a'; c.fillRect(-2,-1.5,24,3); c.fillStyle=C; c.fillRect(22,-6.5,3,13); c.fillRect(19,-1.5,11,3); break;
     case 'bow': case 'longbow': { const R=L.weapon==='bow'?13:17; c.strokeStyle=C; c.lineWidth=2.6; c.beginPath(); c.arc(6,0,R,-1.2,1.2); c.stroke(); c.strokeStyle='rgba(240,236,220,.8)'; c.lineWidth=1; c.beginPath(); c.moveTo(6+R*Math.cos(-1.2),R*Math.sin(-1.2)); c.lineTo(6+R*Math.cos(1.2),R*Math.sin(1.2)); c.stroke(); break; }
     case 'dagger': c.fillStyle='#4a3a30'; c.fillRect(4,-1.4,5,2.8); c.fillStyle='#c9a24a'; c.fillRect(8.5,-3.2,1.8,6.4); c.fillStyle=C; c.beginPath(); c.moveTo(10.3,-2); c.lineTo(21,0); c.lineTo(10.3,2); c.closePath(); c.fill(); break;
-    case 'katar': c.fillStyle=C; for(const o of [-3.2,3.2]){ c.beginPath(); c.moveTo(8,o-1.6); c.lineTo(24,o); c.lineTo(8,o+1.6); c.closePath(); c.fill(); } c.fillStyle='#4a3a30'; c.fillRect(5,-5,3,10); break;
+    case 'twinblade': c.fillStyle=C; for(const o of [-3.2,3.2]){ c.beginPath(); c.moveTo(8,o-1.6); c.lineTo(24,o); c.lineTo(8,o+1.6); c.closePath(); c.fill(); } c.fillStyle='#4a3a30'; c.fillRect(5,-5,3,10); break;
     case 'fist': circ(c,C,12,0,5); circ(c,'#ffffff',13.5,-1.5,1.4); break;
   }
   if(L.weapon!=='fist') circ(c,sk,5.5,0,2.6);
@@ -793,44 +810,50 @@ function makePlayer(cls){
   return p;
 }
 function recalc(p){
-  const c=p.cls,b=(p.adv&&p.adv.bonus)||{},s=p.stats,oldMax=p.maxHp;
+  const c=p.cls,b=p.bonus||(p.adv&&p.adv.bonus)||{},s=p.stats,oldMax=p.maxHp;   // p.bonus: run bonus from a character (prepareRun)
   p.maxHp=c.hp+(b.hp||0)+20*s.VIT;
   p.speed=c.speed*(1+(b.speed||0))*(1+.07*s.AGI);
   p.armor=c.armor+(b.armor||0);
   p.crit=c.crit+(b.crit||0)+.05*s.LUK; p.critMult=1.75+(b.critMult||0);
   p.regen=c.regen+(b.regen||0)+.4*s.VIT;
   p.might=1+(b.might||0)+.12*s.STR;
-  p.area=1+(b.area||0)+.1*s.INT; p.durMul=1+.1*s.INT;
+  p.area=1+(b.area||0)+.1*s.INT; p.durMul=1+.1*s.INT+(b.dur||0);
   p.cdMul=(b.cd||1)*Math.pow(.96,s.AGI)*Math.pow(.94,s.DEX);
   p.magnet=125*(b.magnet||1)*(1+.2*s.LUK); p.xpMul=1+(b.xp||0)+.06*s.LUK;
   p.extraProj=(b.proj||0)+(s.DEX>=3?1:0)+(s.DEX>=5?1:0);
   p.dodge=0; p.rage=0; p.steal=0;
   for(const k of p.skills){ if(k.def.type!=='passive') continue; const d=pv(k,'dodge'); if(d) p.dodge=Math.max(p.dodge,d); const r=pv(k,'rage'); if(r) p.rage=r; const st=pv(k,'steal'); if(st) p.steal=st; }
+  if(b.dodge) p.dodge=Math.min(.6,p.dodge+b.dodge); if(b.rage) p.rage+=b.rage; if(b.steal) p.steal+=b.steal;
+  p.drop=b.drop||0; p.bossDmg=b.boss||0; p.fam=b.fam||null;
   if(oldMax&&p.maxHp>oldMax) p.hp+=p.maxHp-oldMax;
   p.hp=Math.min(p.hp,p.maxHp);
 }
 
 /* ================= run lifecycle ================= */
-function newRun(cls){
+/* modeId → MODES[modeId] (25-mode-survival.js and lane files) · classic: no opts.char, MODES.classic.init = the old opening */
+function newRun(cls,modeId='classic',opts={}){
   G={cls,t:0,wave:0,waveT:WAVE_LEN,boss:false,bosses:[],waveEnding:false,spawnAcc:0,hordeT:9,hordeWarn:null,eliteDone:false,kills:0,eid:0,
      enemies:[],projs:[],eprojs:[],gems:[],zones:[],strikes:[],fx:[],parts:[],texts:[],timers:[],corpses:[],decals:[],
-     pendingLv:0,pendingChest:0,rerolls:3,ui:null,over:false,won:false,shake:0,flash:0,hurtFlash:0,hitStop:0,hitSfxT:0,cfg:null,score:0,totalDmg:0,auto:false,god:false,near:null,nearD:1e9,choices:null,uiReadyAt:0};
-  P=makePlayer(cls); recalc(P); P.hp=P.maxHp; G.player=P;
+     pendingLv:0,pendingChest:0,rerolls:3,ui:null,over:false,won:false,shake:0,flash:0,hurtFlash:0,hitStop:0,hitSfxT:0,cfg:null,score:0,totalDmg:0,auto:false,god:false,near:null,nearD:1e9,choices:null,uiReadyAt:0,
+     mode:MODES[modeId],modeId,opts,char:opts.char||null,bounds:null,obstacles:null,loot:[],rewards:null,runId:'r_'+Date.now().toString(36)};
+  P=makePlayer(cls); recalc(P); P.hp=P.maxHp;
+  if(G.char) prepareRun(G,P,G.char,modeId);
+  G.player=P;
   cam.x=P.x; cam.y=P.y;
-  nextWave();
-  for(let i=0;i<8;i++){ const q=ringPos(); spawnEnemy('shambler',q[0],q[1]); }
+  G.mode.init(opts);
 }
-function startRun(id){
-  initAudio(); selected=id; newRun(CLS[id]||CLASSES[0]);
+function startRun(id,modeId='classic',opts={}){
+  if(G&&G.mode.dispose) G.mode.dispose();
+  initAudio(); selected=id; newRun(CLS[id]||CLASSES[0],modeId,opts);
   show(null); el.hud.hidden=false; for(const k in HC) delete HC[k];
   refreshSkillBar(); last=performance.now(); keepAwake();
 }
-function toTitle(){ G=null; P=null; el.hud.hidden=true; $('#banner').hidden=true; releaseWake(); renderTitle(); show('scrTitle'); }
+function toTitle(){ if(G&&G.mode.dispose) G.mode.dispose(); G=null; P=null; el.hud.hidden=true; $('#banner').hidden=true; releaseWake(); if(UIX.home) UIX.home(); else { renderTitle(); show('scrTitle'); } }
 function nextWave(){
   if(G.wave>=WAVES){ endRun(true); return; }
-  G.wave++; const w=G.wave; G.cfg=waveCfg(w); G.eliteDone=false;
+  G.wave++; const w=G.wave; G.cfg=G.mode.cfgFor?G.mode.cfgFor(w):waveCfg(w); G.eliteDone=false;
   const bl=BOSS_WAVES[w];
-  if(bl){ G.boss=true; G.bosses=bl.map(q=>spawnBoss(q[0],q[1])); banner('คลื่นที่ '+w+' · บอส',G.bosses.map(b=>b.d.n).join(' + ')); sfx('boss'); }
+  if(bl){ G.boss=true; G.bosses=bl.map(q=>spawnBoss(q[0],q[1]*(G.bossHpMul||1))); banner('คลื่นที่ '+w+' · บอส',G.bosses.map(b=>b.d.n).join(' + ')); sfx('boss'); }
   else { G.boss=false; G.bosses=[]; G.waveT=WAVE_LEN; banner('คลื่นที่ '+w,HINT[w]||'ฝูงหนาแน่นขึ้น'); sfx('wave'); }
 }
 function updateWave(dt){
@@ -891,7 +914,8 @@ function damageEnemy(e,base,s,o){
   let dmg=base*P.might*(crit?P.critMult:1);
   if(P.rage) dmg*=1+P.rage*(1-P.hp/P.maxHp);
   dmg*=rand(.92,1.08);
-  e.hp-=dmg; e.flash=.09; e.hitT=.12; if(s) s.dealt+=dmg; G.totalDmg+=dmg;
+  if(e.def) dmg*=1-e.def; if(e.boss&&P.bossDmg) dmg*=1+P.bossDmg; if(P.fam&&e.d.fam){ const f=P.fam[e.d.fam]; if(f) dmg*=1+f; }
+  e.hp-=dmg; e.flash=.09; e.hitT=.12; e.ai.hurtT=G.t; if(s) s.dealt+=dmg; G.totalDmg+=dmg;
   if((!o.quiet||crit)&&(G.texts.length<110||crit)) addNum(e.x+rand(-6,6),e.y-e.r-6,Math.round(dmg),crit?'c':'w');
   let nx=o.nx,ny=o.ny;
   if(nx===undefined){ nx=e.x-(o.ox??P.x); ny=e.y-(o.oy??P.y); const l=Math.hypot(nx,ny)||1; nx/=l; ny/=l; }
@@ -934,20 +958,21 @@ function killEnemy(e,dirX){
     const dx=P.x-e.x,dy=P.y-e.y; if(dx*dx+dy*dy<(b.r+P.r)*(b.r+P.r)) hurtPlayer(b.dmg*G.cfg.dmgMul);
     for(const o of query(e.x,e.y,b.r+60)){ if(o.dead||o===e) continue; const ex=o.x-e.x,ey=o.y-e.y,d=Math.hypot(ex,ey); if(d-o.r>b.r) continue; damageEnemy(o,b.dmg*3,null,{knock:300,nx:d?ex/d:1,ny:d?ey/d:0,quiet:true}); } }
   if(P.steal) healP(P.steal,true);
+  if(G.mode.onKill) G.mode.onKill(e);
   sfx('kill');
 }
 function healP(a,quiet){ if(G.over) return; const before=P.hp; P.hp=Math.min(P.maxHp,P.hp+a); const got=P.hp-before; if(!quiet&&got>=3){ addNum(P.x,P.y-40,'+'+Math.round(got),'g'); for(let i=0;i<5;i++) part({x:P.x+rand(-12,12),y:P.y+rand(-10,6),vx:rand(-8,8),vy:rand(-70,-40),life:rand(.5,.8),s:3,c:'#7dffa8',g:0,drag:1,k:'plus',add:true}); } }
 function hurtPlayer(dmg){
   if(G.over||G.god) return;
   if(P.dodge>0&&Math.random()<P.dodge){ addText(P.x,P.y-34,'หลบ!','#c9b6ff'); if(P.dodgeCd<=0){ P.dodgeCd=.6; shadowBurst(); } return; }
-  dmg*=1-P.armor/(P.armor+22);
+  dmg*=1-P.armor/(P.armor+(G.defK||22));
   if(P.shield>0){ const a=Math.min(P.shield,dmg); P.shield-=a; dmg-=a; if(P.shield<=.01){ P.shield=0; shieldBreak(); } }
   if(dmg<=0) return;
   P.hp-=dmg; P.hurtT=.3; G.hurtFlash=.28; G.shake=Math.max(G.shake,4);
   if(dmg>P.maxHp*.12&&!G.auto&&G.t>=(G.hurtStopAt||0)){ G.hitStop=Math.max(G.hitStop,.05); G.hurtStopAt=G.t+1; }
   addNum(P.x+rand(-8,8),P.y-30,Math.round(dmg),'h');
   sfx('hurt');
-  if(P.hp<=0){ P.hp=0; endRun(false); }
+  if(P.hp<=0){ P.hp=0; if(G.mode.onDeath&&G.mode.onDeath()) return; endRun(false); }
 }
 function shieldBreak(){ const s=P.shieldSrc; if(!s) return; const r=pv(s,'r')*P.area; aoe(P.x,P.y,r,pv(s,'nova'),s,{knock:380}); G.fx.push({k:'ring',x:P.x,y:P.y,r0:20,r1:r,t:0,dur:.4,c:s.def.c,w:10,follow:true,dead:false}); burst(P.x,P.y-6,12,'#dff2ff',260,.4,3,'shard'); G.shake=Math.max(G.shake,6); sfx('boom'); s.st.t=cdOf(s); }
 function shadowBurst(){ const s=P.skills.find(k=>k.id==='shadow'); if(!s) return; const r=pv(s,'r')*P.area; aoe(P.x,P.y,r,pv(s,'nova'),s,{knock:260}); G.fx.push({k:'ring',x:P.x,y:P.y,r0:10,r1:r,t:0,dur:.35,c:'#a58bff',w:8,follow:true,dead:false}); G.fx.push({k:'after',x:P.x,y:P.y,t:0,dur:.4,dead:false}); sfx('slice'); }
@@ -1132,7 +1157,7 @@ function cloneUpdate(s,u,dt,i,n){
 /* ================= world updates ================= */
 function updatePlayer(dt){
   let ix=0,iy=0;
-  if(G.auto){ const b=botInput(); ix=b[0]; iy=b[1]; }
+  if(G.auto){ const b=(G.mode.bot&&G.mode.bot())||botInput(); ix=b[0]; iy=b[1]; }
   else { if(keys.KeyA||keys.ArrowLeft) ix-=1; if(keys.KeyD||keys.ArrowRight) ix+=1; if(keys.KeyW||keys.ArrowUp) iy-=1; if(keys.KeyS||keys.ArrowDown) iy+=1; if(joy.on){ ix+=joy.dx; iy+=joy.dy; } }
   let m=Math.hypot(ix,iy); if(m>1){ ix/=m; iy/=m; m=1; }
   const k=1-Math.exp(-dt*(m>.05?12:9));
@@ -1145,18 +1170,33 @@ function updatePlayer(dt){
   P.hurtT=Math.max(0,P.hurtT-dt); P.atkT=Math.max(0,P.atkT-dt); P.dodgeCd-=dt;
   if(P.swing){ P.swing.t+=dt; if(P.swing.t>P.swing.dur) P.swing=null; }
   if(P.moving){ P.stepT-=dt; if(P.stepT<=0){ P.stepT=.16; part({x:P.x+rand(-5,5),y:P.y+15,vx:-P.vx*.15+rand(-10,10),vy:rand(-14,-4),life:.45,s:3,grow:9,c:'#7a7a5e',g:0,drag:3,k:'puff',add:false,a:.35}); } }
+  if(G.bounds) clampToBounds(P); if(G.obstacles) pushOutObstacles(P);
 }
+/* world edge for modes that set G.bounds = {k:'rect',x0,y0,x1,y1} | {k:'circle',x,y,r} (null in classic) */
+function clampToBounds(o){ const b=G.bounds,r=o.r||0;
+  if(b.k==='circle'){ const dx=o.x-b.x,dy=o.y-b.y,d=Math.hypot(dx,dy),m=Math.max(0,b.r-r); if(d>m){ const k=m/(d||1); o.x=b.x+dx*k; o.y=b.y+dy*k; } }
+  else { const x0=b.x0+r,x1=b.x1-r,y0=b.y0+r,y1=b.y1-r; if(o.x<x0) o.x=x0; else if(o.x>x1) o.x=x1; if(o.y<y0) o.y=y0; else if(o.y>y1) o.y=y1; } }
+/* G.obstacles = {list:[{x,y,r}], grid:Map(gkey(cx,cy) → [obstacle])} · the mode files each obstacle under every CELL its box
+   touches; without a grid the whole list is checked. Pushes a circle (player or enemy) out of any obstacle it overlaps. */
+function pushOutObstacles(o){ const ob=G.obstacles,r=o.r||0; let list=ob.list;
+  if(ob.grid){ const cx=Math.floor(o.x/CELL),cy=Math.floor(o.y/CELL); list=null;
+    for(let ox=-1;ox<=1;ox++) for(let oy=-1;oy<=1;oy++){ const a=ob.grid.get(gkey(cx+ox,cy+oy)); if(a) for(const s of a) pushOutOne(o,s,r); } }
+  if(list) for(const s of list) pushOutOne(o,s,r); }
+function pushOutOne(o,s,r){ const dx=o.x-s.x,dy=o.y-s.y,rr=s.r+r,d2=dx*dx+dy*dy; if(d2>=rr*rr) return; const d=Math.sqrt(d2);
+  if(d<.01){ o.x=s.x+rr; return; } o.x=s.x+dx/d*rr; o.y=s.y+dy/d*rr; }
 function updateEnemies(dt){
   const kd=Math.exp(-dt*6.5),far=Math.hypot(VW,VH)/2+320;
   for(const e of G.enemies){
     if(e.dead) continue;
+    if(e.sleep) continue;
     e.flash-=dt; e.atkCd-=dt; e.hitT=Math.max(0,e.hitT-dt);
     if(e.freezeT>0) e.freezeT-=dt;
     if(e.stunT>0) e.stunT-=dt;
     if(e.slowT>0){ e.slowT-=dt; if(e.slowT<=0) e.slowF=1; }
     let dx=P.x-e.x,dy=P.y-e.y; const d=Math.hypot(dx,dy)||1; dx/=d; dy/=d;
-    if(e.boss){ bossAI(e,dt,d,dx,dy); e.walk+=Math.hypot(e.vx,e.vy)*dt/(e.d.r*.9); continue; }
-    if(d>far){ relocate(e); continue; }
+    if(e.boss){ bossAI(e,dt,d,dx,dy); e.walk+=Math.hypot(e.vx,e.vy)*dt/(e.d.r*.9); if(G.bounds) clampToBounds(e); continue; }
+    if(d>far){ if(G.mode.relocate){ relocate(e); continue; } if(G.mode.far&&G.mode.far(e,d)) continue; }
+    if(e.ai.home&&G.mode.steer&&G.mode.steer(e,dt,d,dx,dy)) continue;
     let sp=e.speed*e.slowF; if(e.freezeT>0||e.stunT>0) sp=0;
     let tx=dx,ty=dy;
     if(e.d.ranged){
@@ -1170,12 +1210,14 @@ function updateEnemies(dt){
     e.x+=(e.vx+e.kx)*dt; e.y+=(e.vy+e.ky)*dt;
     if(Math.abs(e.vx)>3) e.face=e.vx<0?-1:1;
     e.walk+=e.d.fly?dt*14:Math.hypot(e.vx,e.vy)*dt/(e.d.r*.9);
+    if(G.bounds) clampToBounds(e);
   }
 }
 function bossAI(e,dt,d,dx,dy){
-  const A=e.ai,kd=Math.exp(-dt*6); e.kx*=kd; e.ky*=kd;
+  const x=BOSSAI[e.d.ai||e.type]; if(x){ x(e,dt,d,dx,dy); return; }   // lane bosses register BOSSAI[name]
+  const A=e.ai,kd=Math.exp(-dt*6),ai=e.d.ai||e.type; e.kx*=kd; e.ky*=kd;
   let tx=dx,ty=dy,sp=e.speed*e.slowF;
-  if(e.type==='colossus'){
+  if(ai==='colossus'){
     A.slamCd=(A.slamCd??3)-dt;
     if(A.slam>0){ A.slam-=dt; sp=0;
       if(A.slam<=0){ const R=170; G.fx.push({k:'ring',x:e.x,y:e.y,r0:20,r1:R,t:0,dur:.45,c:'#e8d6a8',w:14,dead:false}); G.shake=Math.max(G.shake,10); sfx('boom'); burst(e.x,e.y+20,20,'#bfae8a',300,.6,5,'rock'); addDecal(crackTex(),e.x,e.y+20,R*.8,6,.8);
@@ -1183,12 +1225,12 @@ function bossAI(e,dt,d,dx,dy){
         for(const o of query(e.x,e.y,R)){ if(o.boss||o.dead) continue; const l=Math.hypot(o.x-e.x,o.y-e.y)||1; o.kx+=(o.x-e.x)/l*300; o.ky+=(o.y-e.y)/l*300; }
         A.slamCd=4.5; } }
     else if(A.slamCd<=0&&d<260){ A.slam=1; A.tele={k:'circle',r:170,t:0,dur:1}; }
-  } else if(e.type==='lich'){
+  } else if(ai==='lich'){
     if(d<170){ tx=-dx; ty=-dy; sp*=.8; } else if(d<330){ const sg=Math.sin(G.t*.7)>0?1:-1; tx=-dy*sg; ty=dx*sg; sp*=.6; }
     A.ring=(A.ring??2)-dt; if(A.ring<=0){ A.ring=2.8; const n=16,off=rand(0,TAU); for(let i=0;i<n;i++) enemyShoot(e,off+i*TAU/n,150,9*G.cfg.dmgMul,'orb'); sfx('zap'); }
     A.sum=(A.sum??5)-dt; if(A.sum<=0){ A.sum=8; const ns=Math.min(6,CAP+40-G.enemies.length); for(let i=0;i<ns;i++){ const a=i*TAU/6; spawnEnemy(i%2?'spitter':'shambler',e.x+Math.cos(a)*64,e.y+Math.sin(a)*64); burst(e.x+Math.cos(a)*64,e.y+Math.sin(a)*64,6,'#6a5a4a',120,.5,3,'rock'); } G.fx.push({k:'ring',x:e.x,y:e.y,r0:20,r1:110,t:0,dur:.5,c:'#a46bff',w:10,dead:false}); }
     A.tp=(A.tp??6)-dt; if(A.tp<=0&&d<110){ A.tp=7; burst(e.x,e.y,20,'#a46bff',220,.5,4); const a=rand(0,TAU); e.x=P.x+Math.cos(a)*260; e.y=P.y+Math.sin(a)*260; e.vx=e.vy=0; burst(e.x,e.y,20,'#a46bff',220,.5,4); }
-  } else if(e.type==='king'){
+  } else if(ai==='king'){
     if(A.charge>0){ A.charge-=dt; e.x+=A.cx*880*dt; e.y+=A.cy*880*dt;
       for(const o of query(e.x,e.y,e.r+40)){ if(o.boss||o.dead) continue; const l=Math.hypot(o.x-e.x,o.y-e.y)||1; o.kx+=(o.x-e.x)/l*60; o.ky+=(o.y-e.y)/l*60; }
       const px=P.x-e.x,py=P.y-e.y; if(!A.hitP&&px*px+py*py<(e.r+P.r)*(e.r+P.r)){ A.hitP=true; hurtPlayer(e.dmg*1.5); P.kx+=A.cx*620; P.ky+=A.cy*620; }
@@ -1294,7 +1336,7 @@ function updateStrikes(dt){
     while(s.done<s.hits&&s.t>=s.delay+s.done*s.hitInt){ s.done++; strikeImpact(s); if(G.over) return; } if(s.done>=s.hits&&s.t>s.delay+s.hits*s.hitInt+.35) s.dead=true; }
   compact(G.strikes);
 }
-function gainXp(v){ P.xp+=v*P.xpMul; while(P.xp>=P.need){ P.xp-=P.need; P.lv++; P.need=xpNeed(P.lv); G.pendingLv++; G.fx.push({k:'lvup',x:P.x,y:P.y,t:0,dur:.9,follow:true,dead:false}); } }
+function gainXp(v){ if(G.mode.cards===false) return; P.xp+=v*P.xpMul; while(P.xp>=P.need){ P.xp-=P.need; P.lv++; P.need=xpNeed(P.lv); G.pendingLv++; G.fx.push({k:'lvup',x:P.x,y:P.y,t:0,dur:.9,follow:true,dead:false}); } }
 function collect(g){
   g.dead=true;
   switch(g.kind){
@@ -1303,6 +1345,7 @@ function collect(g){
     case 'magnet': for(const o of G.gems) if(o.kind==='xp'&&!o.dead){ o.mag=true; o.sp=200; } addText(P.x,P.y-44,'ดูดทั้งหมด!','#5fd3c3',true); sfx('level'); break;
     case 'bomb': { const hw=VW/2+40,hh=VH/2+40; for(const e of G.enemies){ if(e.dead||Math.abs(e.x-P.x)>hw||Math.abs(e.y-P.y)>hh) continue; if(e.boss||e.elite) damageEnemy(e,e.maxHp*.08/P.might,null,{}); else killEnemy(e); } G.flash=.25; G.shake=Math.max(G.shake,12); sfx('boom'); break; }
     case 'chest': G.pendingChest++; sfx('level'); break;
+    default:{ const k=ITEMKIND[g.kind]; if(k) k.collect(g); }
   }
 }
 function updateGems(dt){
@@ -1327,7 +1370,7 @@ function updateFx(dt){
 function update(dt){
   qi=0;
   G.t+=dt; P.t+=dt; G.hitSfxT-=dt;
-  updateWave(dt); if(G.over) return;
+  G.mode.update(dt); if(G.over) return;
   updateTimers(dt); if(G.over) return;
   updatePlayer(dt);
   updateEnemies(dt); if(G.over) return;
@@ -1374,14 +1417,13 @@ const HC={};
 function setText(node,key,v){ if(HC[key]!==v){ HC[key]=v; node.textContent=v; } }
 function updateHUD(){
   const xr=clamp(P.xp/P.need,0,1); if(HC.xr===undefined||Math.abs(HC.xr-xr)>.002){ HC.xr=xr; el.xpFill.style.transform=`scaleX(${xr})`; }
-  setText(el.lv,'lv','Lv '+P.lv+' · '+(P.adv?P.adv.n:P.cls.n));
-  setText(el.wave,'wave','คลื่น '+G.wave+'/'+WAVES);
-  setText(el.time,'time',G.boss?'บอส!':fmtTime(G.waveT));
+  const h=G.mode.hud(); setText(el.lv,'lv',h.lv); setText(el.wave,'wave',h.wave); setText(el.time,'time',h.time);
   if(HC.bt!==G.boss){ HC.bt=G.boss; el.time.classList.toggle('boss-t',G.boss); }
   setText(el.kills,'kills',fmtNum(G.kills)+' ศพ');
   let alive=0,hp=0,mx=0; const names=[]; for(const b of G.bosses){ mx+=b.maxHp; if(!b.dead){ alive++; hp+=Math.max(0,b.hp); names.push(b.d.n); } }
   const sb=G.boss&&alive>0; if(el.boss.hidden===sb) el.boss.hidden=!sb;
   if(sb){ setText(el.bossName,'bn',names.join(' · ')); const r=(hp/mx).toFixed(3); if(HC.bf!==r){ HC.bf=r; el.bossFill.style.transform=`scaleX(${r})`; } }
+  if(UIX.hud) UIX.hud();
 }
 function refreshSkillBar(){
   if(!P) return;
@@ -1399,12 +1441,13 @@ function dexText(){ const nx=P.stats.DEX+1, names=P.skills.filter(s=>s.def.type=
 function evoUses(stat){ const names=[]; for(const s of P.skills) if(s.def.evo&&s.def.evo.s===stat&&!s.evolved) names.push(s.def.n); return names.length?'ใช้วิวัฒนาการ: '+names.join(', '):''; }
 function buildChoices(){
   const pool=[],owned=new Set(P.skills.map(s=>s.id));
+  const cap=P.rank?(id=>P.rank[id]||0):(()=>5);   // P.rank / P.loadout come from a character (prepareRun); classic: cap 5, all class skills
   for(const s of P.skills){
     if(s.def.evo&&s.lv>=5&&!s.evolved&&P.stats[s.def.evo.s]>=1) pool.push({k:'evo',s,w:1000});
-    else if(s.lv<5) pool.push({k:'up',s,w:s.id===P.cls.skills[0]?1.3:1.1});
+    else if(s.lv<cap(s.id)) pool.push({k:'up',s,w:s.id===P.cls.skills[0]?1.3:1.1});
   }
-  const avail=P.cls.skills.concat(P.adv?P.adv.skills:[]);
-  for(const id of avail) if(!owned.has(id)) pool.push({k:'new',id,w:P.adv&&P.adv.skills.indexOf(id)>=0?3:1.4});
+  const avail=P.loadout||P.cls.skills.concat(P.adv?P.adv.skills:[]);
+  for(const id of avail) if(!owned.has(id)&&cap(id)>0) pool.push({k:'new',id,w:P.adv&&P.adv.skills.indexOf(id)>=0?3:1.4});
   for(const k in STATS) if(P.stats[k]<5) pool.push({k:'stat',stat:k,w:.85});
   const out=[];
   while(out.length<3&&pool.length){ let tot=0; for(const o of pool) tot+=o.w; let r=Math.random()*tot,idx=0; for(;idx<pool.length-1;idx++){ r-=pool[idx].w; if(r<=0) break; } out.push(pool[idx]); pool.splice(idx,1); }
@@ -1431,7 +1474,7 @@ function openLevel(kind){
   $('#lvTitle').textContent=kind==='chest'?'เลือกของรางวัล':'Lv '+(P.lv-G.pendingLv+1);
   renderCards(); show('scrLevel'); G.uiReadyAt=performance.now()+260; sfx('level');
 }
-function choose(i){ if(!G||G.ui!=='level'||performance.now()<G.uiReadyAt) return; const o=G.choices[i]; if(!o) return; applyChoice(o); if(G.choiceKind==='chest') G.pendingChest--; else G.pendingLv--; show(null); G.ui=null; refreshSkillBar(); keepAwake(); }
+function choose(i){ if(!G||G.ui!=='level'||performance.now()<G.uiReadyAt) return; const o=G.choices[i]; if(!o) return; applyChoice(o); if(G.choiceKind==='chest') G.pendingChest--; else G.pendingLv--; if(G.pendingLv<=0&&G.pendingChest<=0) G.cardReq=false; show(null); G.ui=null; refreshSkillBar(); keepAwake(); }
 function reroll(){ if(!G||G.ui!=='level'||G.rerolls<=0) return; G.rerolls--; G.choices=buildChoices(); renderCards(); }
 function applyChoice(o){
   switch(o.k){
@@ -1440,7 +1483,7 @@ function applyChoice(o){
     case 'evo': o.s.evolved=true; banner('วิวัฒนาการ!',o.s.def.evo.n); G.fx.push({k:'ring',x:P.x,y:P.y,r0:10,r1:160,t:0,dur:.6,c:'#f0b545',w:12,follow:true,dead:false}); G.fx.push({k:'lvup',x:P.x,y:P.y,t:0,dur:1,follow:true,dead:false}); break;
     case 'stat': P.stats[o.stat]++; break;
     case 'potion': healP(P.maxHp*.4); break;
-    default: G.score+=250;
+    default: G.score+=250; if(G.char) G.goldRun=(G.goldRun||0)+5*P.lv;
   }
   recalc(P);
 }
@@ -1459,30 +1502,36 @@ function applyAdv(a){
   G.fx.push({k:'ring',x:P.x,y:P.y,r0:10,r1:220,t:0,dur:.7,c:'#f0b545',w:14,follow:true,dead:false}); G.fx.push({k:'pillar',x:P.x,y:P.y,r:40,t:0,dur:.8,c:'#fff3c4',follow:true,dead:false}); G.fx.push({k:'lvup',x:P.x,y:P.y,t:0,dur:1.1,follow:true,dead:false});
   burst(P.x,P.y-10,24,'#f0b545',320,.7,3); sfx('win');
 }
-function checkUI(){ if(G.ui||G.over) return; if(P.lv-G.pendingLv+1>=ADV_LV&&!P.adv&&!P.advOffered){ openAdv(); return; } if(G.pendingChest>0){ openLevel('chest'); return; } if(G.pendingLv>0) openLevel('lv'); }
-function autoUI(){ if(G.over) return; if(P.lv>=ADV_LV&&!P.adv&&!P.advOffered){ P.advOffered=true; applyAdv(pick(P.cls.adv)); }
+function checkUI(){ if(G.ui||G.over) return; if(G.mode.cards===false) return; if(G.mode.cards==='manual'&&!G.cardReq) return;
+  if(!G.char&&P.lv-G.pendingLv+1>=ADV_LV&&!P.adv&&!P.advOffered){ openAdv(); return; } if(G.pendingChest>0){ openLevel('chest'); return; } if(G.pendingLv>0) openLevel('lv'); }
+function autoUI(){ if(G.over) return; if(!G.char&&P.lv>=ADV_LV&&!P.adv&&!P.advOffered){ P.advOffered=true; applyAdv(pick(P.cls.adv)); }
+  if(G.mode.cards===false) return;   // 'manual' modes still let the bot pick
   let guard=0; while((G.pendingChest>0||G.pendingLv>0)&&guard++<60){ const ch=buildChoices(); const o=ch.find(c=>c.k==='evo')||ch.find(c=>c.k==='new')||ch.find(c=>c.k==='up')||ch[(Math.random()*ch.length)|0]; applyChoice(o); if(G.pendingChest>0) G.pendingChest--; else G.pendingLv--; } }
 function pauseGame(){ if(!G||G.ui) return; G.ui='pause'; for(const k in keys) keys[k]=false; joy.on=false; releaseWake();
   const rows=P.skills.map(s=>`<div class="dmg-row"><span class="dmg-n">${s.def.i} ${s.evolved?s.def.evo.n:s.def.n} <em>${s.evolved?'★':'Lv'+s.lv}</em></span><span class="dmg-bar"><span style="width:${Math.min(100,s.dealt/Math.max(1,G.totalDmg)*100)}%"></span></span><span class="dmg-v">${fmtNum(s.dealt)}</span></div>`).join('');
-  $('#pauseBox').innerHTML=`<div class="dmg-title">${P.adv?P.adv.n:P.cls.n} · Lv ${P.lv} · คลื่น ${G.wave}/${WAVES} · เวลา ${fmtClock(G.t)}</div>${rows}`;
+  $('#pauseBox').innerHTML=`<div class="dmg-title">${G.mode.pauseTitle()}</div>${rows}`;
+  if(UIX.pauseExtra) UIX.pauseExtra($('#pauseBox'));
   renderQualityButtons(); show('scrPause'); }
 function resumeGame(){ if(!G||G.ui!=='pause') return; G.ui=null; show(null); last=performance.now(); keepAwake(); }
 function loadBest(){ try{ return JSON.parse(localStorage.getItem('runeguard.best')||'{}')||{}; }catch(e){ return {}; } }
 function saveBest(id,rec){ try{ const b=loadBest(); const o=b[id]; if(!o||rec.score>o.score){ b[id]=rec; localStorage.setItem('runeguard.best',JSON.stringify(b)); return true; } }catch(e){} return false; }
 function endRun(won){
   if(G.over) return; G.over=true; G.won=won; G.ui='end'; joy.on=false;
-  G.score+=G.kills+G.wave*150+(won?5000:0);
+  G.endInfo=G.mode.end(won);   // the mode adds its own score here
+  G.rewards=G.char?onRunEnd(G,won,{commit:!G.auto||!!DEV.commit}):null;
   if(G.auto) return;
   sfx(won?'win':'lose'); releaseWake();
-  const isBest=saveBest(G.cls.id,{score:G.score,wave:G.wave,kills:G.kills,won});
+  const isBest=G.modeId==='classic'&&saveBest(G.cls.id,{score:G.score,wave:G.wave,kills:G.kills,won});
+  BUS.emit('runEnd',G,won);
   setTimeout(()=>showEnd(isBest),won?700:1000);
 }
 function showEnd(isBest){
-  if(!G) return;
-  $('#endEyebrow').textContent=G.won?'ปกป้องแผ่นดินจากคลื่นอันเดดได้สำเร็จ':'ล้มลงกลางสนามรบ';
-  const t=$('#endTitle'); t.textContent=G.won?'ชัยชนะ!':'พ่ายแพ้'; t.classList.toggle('lose',!G.won);
-  const st=[['คะแนน',fmtNum(G.score)+(isBest?' ★':'')],['คลื่น',G.wave+'/'+WAVES],['เวลา',fmtClock(G.t)],['เลเวล',P.lv],['สังหาร',fmtNum(G.kills)],['อาชีพ',P.adv?P.adv.n:P.cls.n]];
+  if(!G) return; const E=G.endInfo;
+  $('#endEyebrow').textContent=E.eyebrow;
+  const t=$('#endTitle'); t.textContent=E.title; t.classList.toggle('lose',!G.won);
+  const st=E.rows(isBest);
   $('#endStats').innerHTML=st.map(q=>`<div><dt>${q[0]}</dt><dd>${q[1]}</dd></div>`).join('');
+  if(UIX.endExtra) UIX.endExtra($('#endStats'),G);
   const rows=P.skills.slice().sort((a,b)=>b.dealt-a.dealt),max=Math.max(1,rows[0]?rows[0].dealt:1);
   $('#endDmg').innerHTML=`<div class="dmg-title">ดาเมจแยกตามสกิล</div>`+rows.map(s=>`<div class="dmg-row"><span class="dmg-n">${s.def.i} ${s.evolved?s.def.evo.n:s.def.n} <em>${s.evolved?'★':'Lv'+s.lv}</em></span><span class="dmg-bar"><span style="width:${s.dealt/max*100}%"></span></span><span class="dmg-v">${fmtNum(s.dealt)}</span></div>`).join('');
   show('scrEnd');
@@ -1568,6 +1617,7 @@ function drawItem(g){
     case 'magnet': ctx.strokeStyle='#d8444c'; ctx.lineWidth=5; ctx.beginPath(); ctx.arc(x,y-1,6,PI,TAU,true); ctx.stroke(); ctx.fillStyle='#d9e2ef'; ctx.fillRect(x-8.5,y-3,5,4); ctx.fillRect(x+3.5,y-3,5,4); break;
     case 'bomb': circ(ctx,'#120e14',x,y+1,8.5); circ(ctx,'#2a2630',x,y+1,7.5); circ(ctx,'#4a4650',x-2.5,y-1.5,2.5); limb(ctx,'#a08a60',2,x+4,y-5,x+7,y-9); circ(ctx,(G.t*10|0)%2?'#ffd34d':'#ff7a3d',x+7.5,y-9.5,2.4); break;
     case 'chest': ctx.fillStyle='#2a160a'; rrect(ctx,x-10,y-7,20,15,3); ctx.fill(); ctx.fillStyle='#7a4a24'; rrect(ctx,x-9,y-6,18,13,2.5); ctx.fill(); ctx.fillStyle='#f0b545'; ctx.fillRect(x-9,y-1.5,18,2.6); ctx.fillRect(x-1.5,y-6,3,13); circ(ctx,'#fff2c0',x,y,1.6); break;
+    default: if(ITEMKIND[g.kind]) ITEMKIND[g.kind].draw(ctx,g);
   }
 }
 function drawGems(L,T,R,B){
@@ -1747,12 +1797,12 @@ function render(){
   let sx=0,sy=0; if(G.shake>0&&!REDUCED){ sx=rand(-1,1)*G.shake; sy=rand(-1,1)*G.shake; }
   ctx.fillStyle='#151b12'; ctx.fillRect(0,0,W,H);
   ctx.save(); ctx.translate(W/2,H/2); ctx.scale(ZOOM,ZOOM); ctx.translate(-cam.x+sx,-cam.y+sy);
-  const L=cam.x-VW/2-80,T=cam.y-VH/2-80,R=cam.x+VW/2+80,B=cam.y+VH/2+80;
-  ctx.fillStyle=groundPat; ctx.fillRect(L,T,R-L,B-T);
-  drawProps(L,T,R,B); drawDecals(L,T,R,B);
+  const L=cam.x-VW/2-80,T=cam.y-VH/2-80,R=cam.x+VW/2+80,B=cam.y+VH/2+80,M=G.mode;   // M.draw*: optional mode layers (none in classic)
+  if(M.drawGround) M.drawGround(L,T,R,B); else { ctx.fillStyle=groundPat; ctx.fillRect(L,T,R-L,B-T); drawProps(L,T,R,B); }
+  drawDecals(L,T,R,B); if(M.drawWorld) M.drawWorld(L,T,R,B);
   drawZones(); drawStrikesUnder(); drawAuras(); drawGems(L,T,R,B); drawBossTele();
   drawFx(true); drawCorpses();
-  drawActors(L,T,R,B);
+  drawActors(L,T,R,B); if(M.drawOver) M.drawOver(L,T,R,B);
   drawOrbits(); drawUnits();
   drawParts(false);
   ctx.globalCompositeOperation='lighter';
@@ -1761,7 +1811,7 @@ function render(){
   drawEProjs(); drawTexts();
   ctx.restore();
   drawFog(); ctx.drawImage(vig,0,0,W,H);
-  drawScreenFx();
+  drawScreenFx(); if(M.drawScreen) M.drawScreen();
 }
 
 /* ================= loop + input ================= */
@@ -1780,10 +1830,11 @@ function frame(now){
   if(G&&P){ updateHUD(); if(!G.ui&&!G.over) checkUI(); }
 }
 addEventListener('keydown',e=>{
+  const uk=UIKEY[(G&&G.ui)||curScreen()]; if(uk&&uk(e)) return;   // lane screens / G.ui states handle their own keys first
   keys[e.code]=true;
   if(G&&!G.ui&&['ArrowUp','ArrowDown','ArrowLeft','ArrowRight','Space'].includes(e.code)) e.preventDefault();
   if(e.code==='KeyM'){ toggleMute(); return; }
-  if(!G){ if(e.code==='Enter'&&!$('#scrTitle').hidden&&!(document.activeElement&&document.activeElement.tagName==='BUTTON')) startRun(selected); return; }
+  if(!G){ if(e.code==='Enter'){ if(!$('#scrTitle').hidden){ if(!(document.activeElement&&document.activeElement.tagName==='BUTTON')) startRun(selected); } else if(UIX.enter) UIX.enter(); } return; }
   const n={Digit1:0,Digit2:1,Digit3:2,Numpad1:0,Numpad2:1,Numpad3:2}[e.code];
   if(G.ui==='level'){ if(n!==undefined) choose(n); else if(e.code==='KeyR') reroll(); }
   else if(G.ui==='adv'){ if(n!==undefined&&n<2) pickAdv(n); }
@@ -1802,15 +1853,300 @@ $('#btnStart').addEventListener('click',()=>startRun(selected));
 $('#btnMuteT').addEventListener('click',toggleMute); $('#btnMuteP').addEventListener('click',toggleMute); $('#btnMute').addEventListener('click',()=>{ initAudio(); toggleMute(); });
 $('#btnPause').addEventListener('click',pauseGame);
 $('#btnResume').addEventListener('click',resumeGame);
-$('#btnRestartP').addEventListener('click',()=>startRun(G.cls.id));
+$('#btnRestartP').addEventListener('click',()=>startRun(G.cls.id,G.modeId,G.opts));
 $('#btnMenuP').addEventListener('click',toTitle);
-$('#btnAgain').addEventListener('click',()=>startRun(G?G.cls.id:selected));
+$('#btnAgain').addEventListener('click',()=>G?startRun(G.cls.id,G.modeId,G.opts):startRun(selected));
 $('#btnMenuE').addEventListener('click',toTitle);
 $('#btnReroll').addEventListener('click',reroll);
 for(const b of document.querySelectorAll('#qSeg button')) b.addEventListener('click',()=>setQuality(b.dataset.q));
 
-/* test hook (only with #dev in the address): lets a script fast-forward a run without the screen */
-if(location.hash==='#dev') window.RG={
+/* ================= hooks: registry กลางที่ทุก lane ใช้ ================= */
+const DEV = {};                       // lane: DEV.field = {...} · 90-dev-hook รวมเข้า window.RG เมื่อ #dev
+const MODES = {};                     // id → ModeDef (§7.6)
+const BOSSAI = {};                    // ชื่อ AI → (e,dt,d,dx,dy)=>void · core เรียก BOSSAI[e.d.ai||e.type]
+const ITEMKIND = {};                  // gem kind ใหม่ → {collect(g), draw(c,g)}
+const HAT_EXT = {}, WEAPON_EXT = {};  // look id ใหม่ → painter
+const UIKEY = {};                     // G.ui หรือ id หน้าจอ → (e)=>bool (true = จัดการแล้ว)
+const HUB = [];                       // ปุ่มเมนูหลัก {id,n,i,order,badge?()→string,open()}
+const SERVICES = [];                  // บริการในป้อม {id,npc,n,i,order,open()}
+const CHARTABS = {};                  // แท็บหน้าตัวละคร id → {n,order,render(root,ch)}
+const UIX = {home:null, enter:null, hud:null, endExtra:null, pauseExtra:null};   // null = พฤติกรรมเดิม
+const BUS = { h:{}, on(n,f){ (this.h[n]||(this.h[n]=[])).push(f); },
+  emit(n,...a){ for(const f of this.h[n]||[]) try{ f(...a); }catch(e){ console.error(e); } } };
+  // event: 'save' 'sync' 'auth' 'char' 'runEnd' 'screen' · ห้ามใช้ทุกเฟรมหรือทุกศัตรู
+const STORE = {
+  get(k){ try{ return localStorage.getItem(k); }catch(e){ return null; } },
+  set(k,v){ try{ localStorage.setItem(k,v); return true; }catch(e){ return false; } },
+  del(k){ try{ localStorage.removeItem(k); }catch(e){} } };
+let SAVE = null;                      // เซฟปัจจุบัน · กำหนดค่าได้เฉพาะ 41-save-local.js
+function esc(s){ return String(s).replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'})[c]); }
+function regScreen(id){ if(!SCREENS.includes(id)) SCREENS.push(id); }
+function curScreen(){ for(const s of SCREENS){ const n=$('#'+s); if(n&&!n.hidden) return s; } return null; }
+function mergeBonus(...bs){ const o={}; for(const b of bs){ if(!b) continue; for(const k in b){ const v=b[k];
+  if(k==='cd'||k==='magnet') o[k]=(o[k]||1)*v;
+  else if(k==='fam'){ o.fam=o.fam||{}; for(const f in v) o.fam[f]=(o.fam[f]||0)+v[f]; }
+  else o[k]=(o[k]||0)+v; } } return o; }
+function rngUnit(){ const a=new Uint32Array(1); crypto.getRandomValues(a); return a[0]/4294967296; }   // ใช้กับตีบวก
+
+/* ================= modes: classic (the original game, unchanged) + survival (with a character) ================= */
+// classic = the old code path moved here verbatim: opening, wave loop, HUD/pause/end texts and the score formula
+MODES.classic={
+  id:'classic', n:'คลาสสิก', cards:'auto', relocate:true,
+  init(opts){ nextWave(); for(let i=0;i<8;i++){ const q=ringPos(); spawnEnemy('shambler',q[0],q[1]); } },
+  update:updateWave,
+  hud(){ return {lv:'Lv '+P.lv+' · '+(P.adv?P.adv.n:P.cls.n), wave:'คลื่น '+G.wave+'/'+WAVES, time:G.boss?'บอส!':fmtTime(G.waveT)}; },
+  pauseTitle(){ return `${P.adv?P.adv.n:P.cls.n} · Lv ${P.lv} · คลื่น ${G.wave}/${WAVES} · เวลา ${fmtClock(G.t)}`; },
+  end(won){
+    G.score+=G.kills+G.wave*150+(won?5000:0);
+    return {eyebrow:won?'ปกป้องแผ่นดินจากคลื่นอันเดดได้สำเร็จ':'ล้มลงกลางสนามรบ', title:won?'ชัยชนะ!':'พ่ายแพ้',
+      rows:isBest=>[['คะแนน',fmtNum(G.score)+(isBest?' ★':'')],['คลื่น',G.wave+'/'+WAVES],['เวลา',fmtClock(G.t)],['เลเวล',P.lv],['สังหาร',fmtNum(G.kills)],['อาชีพ',P.adv?P.adv.n:P.cls.n]]};
+  }
+};
+// survival = classic waves scaled by hell tier T (opts.tier) · numbers come from BAL.SURV (30-balance.js),
+// loot from rollDrops (34-items-logic.js), rewards from onRunEnd (42-progression.js) — this file stays thin
+MODES.survival=Object.assign({},MODES.classic,{
+  id:'survival', n:'เอาชีวิตรอด',
+  init(opts){ const T=G.tier=(opts&&opts.tier)||0; G.defK=BAL.SURV.defK(T); G.bossHpMul=BAL.SURV.hpMul(T); MODES.classic.init(opts); },
+  cfgFor(w){ const c=waveCfg(w),T=G.tier||0; c.hpMul*=BAL.SURV.hpMul(T); c.dmgMul*=BAL.SURV.dmgMul(T); return c; },
+  onKill(e){ if(!e.elite&&!e.boss) return; const t=BAL.DROP.surv&&BAL.DROP.surv[e.boss?'boss'+G.wave:'elite']; if(!t) return;
+    for(const it of rollDrops(t,1+(P.drop||0))) G.loot.push(it); },
+  hud(){ const h=MODES.classic.hud(); h.lv='ชำนาญ Lv '+P.lv+' · '+(P.adv?P.adv.n:P.cls.n); return h; },
+  end(won){ const r=MODES.classic.end(won); r.eyebrow='เอาชีวิตรอด · ระดับนรก T'+(G.tier||0)+' · '+r.eyebrow; return r; }
+});
+
+/* ================= 30-balance.js · lane C · pure · every number of §2–§5 (single source) ================= */
+/* M0 stub: frozen signatures from DESIGN §7.8, neutral values — classic never calls these. Lane C writes the real body. */
+const BAL={ CAP:{base:60, job1:20, job2:25, stat:50, chars:3, bag:120, stash:120},
+  mobExp(m){ return 0; }, minPerLv(L){ return 0; }, bxpNeed(L){ return 0; }, diffMul(d){ return 1; }, jxpNeed(J,tier){ return 0; },
+  statCost(x){ return 0; }, statPtsFor(L){ return 0; }, START_PTS:5,
+  META_K:{STR:{might:.008}, VIT:{hp:4,regen:.015,armor:.06}, AGI:{speed:.003,cd:.996}, DEX:{cd:.997,proj40:1},
+          INT:{area:.006,dur:.006}, LUK:{crit:.003,critMult:.006,drop:.012,xp:.004}, LV:{hp:4,might:.004}},
+  RANK_COST:[0,1,1,1,2,2], ADV:{base:20, job:20, fee:500}, LOADOUT:{1:4, 2:5},
+  SURV:{recLv(T){ return 1; }, hpMul(T){ return 1; }, dmgMul(T){ return 1; }, defK(T){ return 22; }, goldPerWave(T){ return 0; }, gearTier(T){ return 1; }, expMul(waves,won){ return 0; }, overLv(L,rec){ return 1; }},
+  FIELD:{hpByLv(m){ return 1; }, dmgByLv(m){ return 1; }, gold(m){ return 0; }, cap:{touch:45, desk:70}, deathExp:.01, respawn:[8,15], rampage:{every:150, jitter:20, n:{touch:14, desk:18}}},
+  BOSS:{diff:[{n:'ปกติ',hp:1,dmg:1,lv:0},{n:'ยาก',hp:2.2,dmg:1.4,lv:10},{n:'ฝันร้าย',hp:4.5,dmg:2,lv:20}], hp(lv,d){ return 1; }, exp(lv,d){ return 0; }, gold(lv,d){ return 0; }, marks:[4,8,15], rune:[.08,.15,.25], uniq:[.10,.18,.30]},
+  REFINE:{p:[1,1,1,1,1,.80,.65,.50,.38,.26,.15], fail:['','','','','','keep','keep','down','down','down','down'],
+          mat(t){ return null; }, pity:.04, pityMax:.20, fee(tier,t){ return 0; }, weapon(r){ return 0; }, armor(r){ return 0; }},
+  PRICE:{}, DROP:{field:{}, fboss:{}, surv:{}}, RESET:{gold:2000, marks:40, freeBelow:20} };
+
+/* ================= 31-jobs-data.js · lane C · pure · passives, skill requirements, stat order/names, presets ================= */
+/* M0 stub: frozen signatures from DESIGN §7.8, neutral values — classic never calls these. Lane C writes the real body. */
+const PASSIVES={};       // id → {own, n, i, per:{…}} (§3.5)
+const SKILL_REQ={};      // skill id → {need, r}
+const STAT_ORDER=['STR','VIT','AGI','DEX','INT','LUK'];
+const STAT_TH={STR:'ATK · พลังโจมตี', VIT:'ความอึด', AGI:'ความว่องไว', DEX:'ความแม่นยำ', INT:'สติปัญญา', LUK:'โชค'};
+const PRESETS={swordsman:{STR:3,VIT:2}, mage:{INT:3,DEX:2}, archer:{DEX:3,AGI:2}, cleric:{VIT:2,INT:2,LUK:1}, thief:{AGI:3,LUK:2}};
+
+/* ================= 33-items-data.js · lane E · pure · items, runes, drop tables, shop ================= */
+/* M0 stub: frozen signatures from DESIGN §7.8, neutral values — classic never calls these. Lane E writes the real body. */
+const ITEMS={};          // id → {n, i, slot, cls?, lv, tier, rar:0..3, st, sock?, sockRoll?, look?, refine?, stack?, kind?, price?, noSell?, unique?}
+const RUNES={};
+const RUNE_GROUP={};
+const DROPS={};
+const SHOP={};
+
+/* ================= 34-items-logic.js · lane E · pure per ch/acct · bag, equip, refine, runes, drops, shop ================= */
+/* M0 stub: frozen signatures from DESIGN §7.8, neutral values — classic never calls these. Lane E writes the real body. */
+function itemDef(id){ return null; }
+function itemName(inst){ return ''; }
+function makeInst(id,o){ return null; }                    // o = {sockets}
+function invAdd(ch,idOrInst,n){ return {ok:false, overflow:0}; }
+function invRemove(ch,idOrUid,n){ return false; }
+function invCount(ch,id){ return 0; }
+function canEquip(ch,inst){ return 'ยังไม่เปิดระบบอุปกรณ์'; }
+function equip(ch,uid){ return 'ยังไม่เปิดระบบอุปกรณ์'; }
+function unequip(ch,slot){ return 'ยังไม่เปิดระบบอุปกรณ์'; }
+function gearBonus(ch){ return {}; }
+function gearLook(ch){ return {}; }
+function refineInfo(inst){ return null; }                  // → {to, p, mat, fee, onFail}
+function refineTry(ch,uid,o){ return {res:'keep', from:0, to:0, p:0}; }   // o = {seal} · real one uses rngUnit()
+function socketRune(ch,uid,runeId,i){ return 'ยังไม่เปิดระบบรูน'; }
+function unsocketRune(ch,uid,i){ return 'ยังไม่เปิดระบบรูน'; }
+function combineShards(ch,shardId){ return ''; }
+function rollDrops(table,luckMul){ return []; }
+function buyItem(ch,id,n){ return 'ร้านยังไม่เปิด'; }
+function sellItem(ch,idOrUid,n){ return 0; }
+function sellAllCommon(ch){ return 0; }
+function useConsumable(ch,id){ return false; }
+function stashMove(ch,uid,toStash){ return 'คลังยังไม่เปิด'; }
+
+/* ================= 35-loot-runtime.js · lane E · loot on the ground (ITEMKIND.loot / .gold / .bosschest) ================= */
+/* M0 stub: frozen signatures from DESIGN §7.8, neutral values — classic never calls these. Lane E writes the real body. */
+function dropLoot(x,y,list){}
+function dropGold(x,y,n){}
+
+/* ================= 40-save-schema.js · lane C · pure · save schema, migrate, validate, summary ================= */
+/* M0 stub: frozen signatures from DESIGN §7.8, neutral values — classic never calls these. Lane C writes the real body. */
+const SCHEMA_V=1;
+function newSave(owner){ return {v:SCHEMA_V, owner:owner||null, chars:[]}; }
+function newChar(name,clsId){ return null; }
+function migrateSave(o,legacyBest){ return newSave(null); }
+function validateSave(s){ return s; }
+function saveSummary(s){ return {chars:[], play:0, mt:0, appVer:''}; }
+function isTrivialSave(s){ return true; }
+function uid(prefix){ return String(prefix||''); }
+
+/* ================= 41-save-local.js · lane C · local save (the only file that assigns SAVE) · curChar ================= */
+/* M0 stub: frozen signatures from DESIGN §7.8, neutral values — classic never calls these. Lane C writes the real body. */
+function loadSaveFor(owner){ return SAVE; }
+function saveLocal(reason){}
+function saveNow(reason){}
+function curChar(){ return null; }
+function setActiveChar(id){}
+function createChar(name,clsId){ return 'ยังไม่เปิดระบบตัวละคร'; }
+function deleteChar(id){ return false; }
+function exportSave(){ return ''; }
+function importSave(json){ return {ok:false, err:'ยังไม่เปิดระบบเซฟ'}; }
+function saveReadOnly(){ return false; }
+function loadSettings(){ return {}; }
+function saveSettings(patch){}
+
+/* ================= 42-progression.js · lane C · pure per ch · levels, points, jobs, skills, prepareRun, onRunEnd ================= */
+/* M0 stub: frozen signatures from DESIGN §7.8, neutral values — classic never calls these. Lane C writes the real body. */
+function metaBonus(ch){ return {}; }
+function passiveBonus(ch){ return {}; }
+function buildRunBonus(ch){ return {}; }
+function commitStats(ch,delta){ return false; }
+function resetStats(ch,o){ return false; }                 // o = {scroll}
+function grantExp(ch,base,job){ return {lvUp:0, jobUp:0}; }
+function canLearn(ch,id){ return 'ยังไม่เปิดระบบสกิล'; }
+function learnSkill(ch,id){ return false; }
+function learnPassive(ch,id){ return false; }
+function resetSkills(ch,o){ return false; }                // o = {scroll}
+function setLoadout(ch,ids){ return false; }
+function jobReqs(ch,advId){ return []; }                   // → [{t, ok}]
+function advanceJob(ch,advId){ return false; }
+function prepareRun(G,P,ch,modeId){}
+function onRunEnd(G,won,o){ return null; }                 // o = {commit} → Reward {runId, baseXp, jobXp, gold, marks, items, lvUp, jobUp, unlocks}
+function grantRewards(ch,r){ return false; }               // idempotent by r.runId
+function fieldKillExp(ch,e){ return {base:0, job:0}; }
+
+/* ================= 43-auth.js · lane N · GoTrue raw fetch + PKCE (§6.7) · the only file with the Supabase URL/key ================= */
+/* M0 stub: frozen signatures from DESIGN §7.8, neutral values — classic never calls these. Lane N writes the real body. */
+const SUPA={ url:'https://edmwctmnasggdtdbcxkb.supabase.co', key:'sb_publishable_uSbGPoK1lGd6PMUUGpu4uw_N_HfOIbF' };
+const AUTH_ON=false;                                   // เปิดหลังเจ้าของอนุมัติ (M3)
+const CLOUD_HOSTS=['runeguard-lac.vercel.app','localhost','127.0.0.1'];
+const CLOUD_OK=AUTH_ON&&CLOUD_HOSTS.includes(location.hostname)
+  &&(location.protocol==='https:'||location.hostname!=='runeguard-lac.vercel.app')
+  &&!!(self.crypto&&crypto.subtle)&&typeof fetch==='function';
+const RURL=location.origin+'/';                        // ห้ามอ่าน redirect จาก query (กัน open redirect)
+const AUTH={state:'off', s:null};                      // state: 'off'|'guest'|'busy'|'in'|'expired' · s = session
+function authSignUp(email,pw){ return Promise.resolve({ok:false, msg:'ระบบบัญชียังไม่เปิดใช้'}); }
+function authSignIn(email,pw){ return Promise.resolve({ok:false, msg:'ระบบบัญชียังไม่เปิดใช้', code:'off'}); }
+function authGoogle(){}
+function authHandleRedirect(){ return Promise.resolve(null); }
+function authResend(email){}
+function authRecover(email){}
+function authSetPassword(pw){}
+function authSignOut(){}
+function authToken(){ return Promise.resolve(null); }
+function authFetch(path,opts){ return Promise.reject(new Error('AUTH_ON=false')); }
+function authEmailMasked(){ return ''; }
+
+/* ================= 44-cloud-sync.js · lane N · PostgREST CAS · sync decisions (pure) ================= */
+/* M0 stub: frozen signatures from DESIGN §7.8, neutral values — classic never calls these. Lane N writes the real body. */
+function cloudStatus(){ return {k:'off', text:'เล่นในเครื่องเท่านั้น'}; }
+function cloudPull(){ return Promise.resolve('none'); }
+function cloudPush(reason){ return Promise.resolve('offline'); }
+function cloudOnLogin(){}
+function cloudResolve(choice){}                        // 'local'|'cloud'
+function cloudRestoreBackup(){}
+function cloudWipe(){}
+function syncDecide(localState,srvHead){ return 'noop'; }   // 'adopt'|'push'|'conflict'|'create'|'noop'
+function linkDecide(guestSave,srvHead){ return 'noop'; }    // 'adopt'|'askMove'|'choose'|'noop'
+
+/* ================= 50-ui-shell.js · lane B · UI router, sheet, toast, confirmBox, sysLog, character window frame ================= */
+/* M0 stub: frozen signatures from DESIGN §7.8, neutral values — classic never calls these. Lane B writes the real body. */
+const UI={ go(id,args){}, back(){}, home(){}, stack(){ return []; } };
+function sheet(nodeOrHtml,o){ return null; }               // o = {title, onClose}
+function closeSheet(){}
+function toast(text,kind){}                                // kind: 'info'|'good'|'bad'
+function confirmBox(text,o){ return Promise.resolve(false); }   // o = {hold, okText}
+function sysLog(text,kind){}
+function openCharWindow(tab){}
+// lane B sets UIX.home / enter / hud / endExtra / pauseExtra here (all null in M0 = old behaviour)
+
+/* ================= 51-ui-auth.js · lane N · scrAuth, scrAccount, conflict / link sheets ================= */
+/* M0 stub: frozen signatures from DESIGN §7.8, neutral values — classic never calls these. Lane N writes the real body. */
+// M0: nothing yet (screens register with regScreen when they exist)
+
+/* ================= 52-ui-hub.js · lane B · scrHub, scrChars, scrSurv, scrSettings ================= */
+/* M0 stub: frozen signatures from DESIGN §7.8, neutral values — classic never calls these. Lane B writes the real body. */
+// M0: nothing yet
+
+/* ================= 53-ui-char.js · lane E · equipment/bag tabs, item / refine / rune / shop / stash sheets ================= */
+/* M0 stub: frozen signatures from DESIGN §7.8, neutral values — classic never calls these. Lane E writes the real body. */
+function openItemSheet(uid){}
+function openRefine(uid){}
+function openRuneScribe(){}
+function openShop(){}
+function openStash(){}
+// CHARTABS.equip / CHARTABS.bag are registered in M2
+
+/* ================= 54-ui-skills.js · lane P · scrSkills ================= */
+/* M0 stub: frozen signatures from DESIGN §7.8, neutral values — classic never calls these. Lane P writes the real body. */
+// M0: nothing yet
+
+/* ================= 55-ui-hud.js · lane B · HUD of character modes (EXP bar, quick potions, card button, log) ================= */
+/* M0 stub: frozen signatures from DESIGN §7.8, neutral values — classic never calls these. Lane B writes the real body. */
+// M0: nothing yet
+
+/* ================= 56-ui-stats.js · lane P · stats tab (CHARTABS.stats) ================= */
+/* M0 stub: frozen signatures from DESIGN §7.8, neutral values — classic never calls these. Lane P writes the real body. */
+// M0: nothing yet
+
+/* ================= 57-ui-job.js · lane P · scrJob ================= */
+/* M0 stub: frozen signatures from DESIGN §7.8, neutral values — classic never calls these. Lane P writes the real body. */
+// M0: nothing yet
+
+/* ================= 58-mode-trial.js · lane P · MODES.trial + EN.trial_warden ================= */
+/* M0 stub: frozen signatures from DESIGN §7.8, neutral values — classic never calls these. Lane P writes the real body. */
+function trialStart(ch){}
+
+/* ================= 60-zones-data.js · lane F · pure · zones and mobs (merged into EN on load) ================= */
+/* M0 stub: frozen signatures from DESIGN §7.8, neutral values — classic never calls these. Lane F writes the real body. */
+const ZONES={};
+const MOBS={};
+
+/* ================= 61-mob-sprites.js · lane F · new mob painters → EDRAW ================= */
+/* M0 stub: frozen signatures from DESIGN §7.8, neutral values — classic never calls these. Lane F writes the real body. */
+// M0: nothing yet
+
+/* ================= 62-field-mode.js · lane F · MODES.field: spawns, AI, field bosses, rampages, portals, death ================= */
+/* M0 stub: frozen signatures from DESIGN §7.8, neutral values — classic never calls these. Lane F writes the real body. */
+function fieldEnter(zoneId,portalId){}
+function fieldLeave(toHub){}
+function fieldBossState(zoneId){ return {ready:false, inSec:0, name:''}; }
+
+/* ================= 63-field-render.js · lane F · ground, props, obstacles, minimap ================= */
+/* M0 stub: frozen signatures from DESIGN §7.8, neutral values — classic never calls these. Lane F writes the real body. */
+function groundFor(zone){ return null; }
+
+/* ================= 64-boss-patterns.js · lane F · BOSS_PAT + BOSSAI of field bosses ================= */
+/* M0 stub: frozen signatures from DESIGN §7.8, neutral values — classic never calls these. Lane F writes the real body. */
+const BOSS_PAT={};
+function bossPattern(e,dt,d,dx,dy,cfg){}
+
+/* ================= 65-ui-worldmap.js · lane F · scrWorld ================= */
+/* M0 stub: frozen signatures from DESIGN §7.8, neutral values — classic never calls these. Lane F writes the real body. */
+// M0: nothing yet
+
+/* ================= 66-boss-data.js · lane H · pure · arena bosses (EN, EDRAW, BOSSAI) ================= */
+/* M0 stub: frozen signatures from DESIGN §7.8, neutral values — classic never calls these. Lane H writes the real body. */
+const BOSS_LIST=[];
+
+/* ================= 67-boss-mode.js · lane H · MODES.boss: pick a boss, boss rush, rewards ================= */
+/* M0 stub: frozen signatures from DESIGN §7.8, neutral values — classic never calls these. Lane H writes the real body. */
+function bossStart(id,diff){}
+function bossRushStart(){}
+
+/* ================= 68-ui-boss.js · lane H · scrBossSel, conqueror-mark shop ================= */
+/* M0 stub: frozen signatures from DESIGN §7.8, neutral values — classic never calls these. Lane H writes the real body. */
+// M0: nothing yet
+
+/* test hook (only with #dev in the address): lets a script fast-forward a run without the screen
+   lanes add DEV.<ns> in their own files; it is merged in here. Lanes never assign window.RG themselves. */
+if(location.hash==='#dev'){ const RG=Object.assign({
   start(id){ startRun(id||'swordsman'); return this.info(); },
   sim(sec){ if(!G) return 'no run'; G.auto=true; const steps=Math.round(sec*60); for(let i=0;i<steps&&!G.over;i++){ update(1/60); autoUI(); } G.auto=false; refreshSkillBar(); return this.info(); },
   info(){ return G&&{t:+G.t.toFixed(1),wave:G.wave,boss:G.boss,lv:P.lv,hp:Math.round(P.hp)+'/'+Math.round(P.maxHp),kills:G.kills,enemies:G.enemies.length,projs:G.projs.length,gems:G.gems.length,zones:G.zones.length,parts:G.parts.length,decals:G.decals.length,corpses:G.corpses.length,adv:P.adv&&P.adv.id,over:G.over,won:G.won,
@@ -1820,12 +2156,19 @@ if(location.hash==='#dev') window.RG={
   ui(){ if(G){ G.ui=null; checkUI(); updateHUD(); render(); return G.ui; } },
   renderMs(n){ n=n||30; const t0=performance.now(); for(let i=0;i<n;i++){ if(G&&!G.over){ update(1/60); } render(); } if(G) updateHUD(); return (performance.now()-t0)/n; },
   quality(m){ setQuality(m); return qLv(); },
-  state(){ return G; }
-};
+  state(){ return G; },
+  // initAudio first: its noise buffer draws sampleRate/2 numbers from Math.random on the first startRun,
+  // which would shift the seeded stream (and differ between 44.1/48 kHz devices). Seed → start → sim is then exact.
+  seed(n){ initAudio(); Math.random=mulberry(n>>>0); },
+  run(mode,opts){ opts=Object.assign({char:mode==='classic'?null:curChar()},opts); startRun((opts.char&&opts.char.cls)||opts.cls||selected,mode,opts); return this.info(); }
+},DEV);
+  // RG.commit = true lets sim() keep rewards (endRun reads DEV.commit), so route the property to DEV
+  Object.defineProperty(RG,'commit',{get(){ return !!DEV.commit; },set(v){ DEV.commit=!!v; },enumerable:true,configurable:true});
+  window.RG=RG; }
 
 function boot(data){
   resize(); groundPat=ctx.createPattern(makeGround(),'repeat'); buildNum();
-  for(const t in EN) if(!EN[t].boss) getSpr(t);
+  for(const t in EN) if(!EN[t].boss&&!EN[t].lazy) getSpr(t);   // zone mobs set lazy:1 and are built on entry
   if(data&&data.cls&&CLS[data.cls]) selected=data.cls;
   renderTitle(); setMuteLabels(); renderQualityButtons(); show('scrTitle');
   if(document.fonts&&document.fonts.load){ document.fonts.load('700 16px Mali').then(()=>{ buildNum(); TXT.clear(); renderTitle(); }).catch(()=>{}); }

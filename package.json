@@ -2,9 +2,12 @@
   "name": "runeguard",
   "version": "1.1.0",
   "private": true,
-  "description": "Runeguard — survivor-like undead wave game (single HTML file + PWA build)",
+  "description": "Runeguard — survivor-like undead wave game (single HTML file + PWA build, assembled from src/)",
   "scripts": {
-    "build": "node build.mjs"
+    "build": "node build.mjs",
+    "lint": "node build.mjs --lint",
+    "check": "node build.mjs --check",
+    "test": "node test/build.test.mjs && node build.mjs --check"
   },
   "engines": {
     "node": ">=18"

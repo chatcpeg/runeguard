@@ -1,0 +1,90 @@
+
+<canvas id="game" role="img" aria-label="สนามรบ Runeguard"></canvas>
+
+<div id="hud" hidden>
+  <div class="hud-top">
+    <div class="xp"><div class="xp-fill" id="xpFill"></div><div class="xp-lv" id="lvTxt">Lv 1</div></div>
+    <div class="hud-row">
+      <span class="chip wave" id="waveTxt">คลื่น 1/20</span>
+      <span class="chip" id="timeTxt">0:30</span>
+      <span class="chip" id="killTxt">0 ศพ</span>
+      <span class="spacer"></span>
+      <button class="iconbtn" id="btnMute" type="button" aria-label="เปิดหรือปิดเสียง">เสียง</button>
+      <button class="iconbtn" id="btnPause" type="button" aria-label="พักเกม">❚❚</button>
+    </div>
+    <div class="bossbar" id="bossBar" hidden><div class="boss-name" id="bossName"></div><div class="boss-track"><div class="boss-fill" id="bossFill"></div></div></div>
+  </div>
+  <div class="hud-bot">
+    <div class="statline" id="statLine"></div>
+    <div class="skillbar" id="skillBar"></div>
+  </div>
+</div>
+
+<div id="banner" hidden><div class="b-main"></div><div class="b-sub"></div></div>
+
+<section class="screen" id="scrTitle" aria-label="เลือกอาชีพ">
+  <div class="panel">
+    <header class="brand">
+      <p class="eyebrow">เอาชีวิตรอดจากคลื่นอันเดด 20 ระลอก</p>
+      <h1 class="logo">Runeguard<small>ศึกคลื่นอันเดด</small></h1>
+      <p class="tagline">เลือกอาชีพ ฝ่าฝูงซอมบี้ที่ถาโถมเข้ามา เก็บสกิลทุกครั้งที่เลเวลอัพ ดันสกิลถึง Lv5 คู่กับค่าสถานะเพื่อวิวัฒนาการ แล้วเปลี่ยนอาชีพขั้นสองเมื่อถึงเลเวล 15</p>
+    </header>
+    <div class="class-grid" id="classGrid" role="group" aria-label="อาชีพเริ่มต้น"></div>
+    <div class="cls-detail" id="clsDetail"></div>
+    <div class="start-row">
+      <button class="btn primary" id="btnStart" type="button">ออกรบ</button>
+      <button class="btn ghost" id="btnMuteT" type="button">เสียง: เปิด</button>
+    </div>
+    <p class="hint">เดิน: WASD / ปุ่มลูกศร หรือแตะค้างแล้วลากบนจอ · โจมตีอัตโนมัติ · P พักเกม · M เปิดปิดเสียง · 1 2 3 เลือกการ์ด</p>
+  </div>
+</section>
+
+<section class="screen" id="scrLevel" hidden aria-label="เลือกรางวัลเลเวลอัพ">
+  <div class="panel">
+    <div class="lv-head"><p class="eyebrow" id="lvEyebrow">เลเวลอัพ</p><h2 class="lv-title" id="lvTitle">Lv 2</h2></div>
+    <div class="cards" id="lvCards"></div>
+    <div class="lv-foot"><button class="btn ghost" id="btnReroll" type="button">สุ่มใหม่ (3)</button></div>
+  </div>
+</section>
+
+<section class="screen" id="scrAdv" hidden aria-label="เปลี่ยนอาชีพ">
+  <div class="panel">
+    <div class="lv-head"><p class="eyebrow">เลเวล 15 · ถึงเวลาเปลี่ยนอาชีพ</p><h2 class="lv-title">เลือกอาชีพขั้นสอง</h2></div>
+    <div class="adv-cards" id="advCards"></div>
+  </div>
+</section>
+
+<section class="screen" id="scrPause" hidden aria-label="พักเกม">
+  <div class="panel small-panel">
+    <h2 class="end-title">พักเกม</h2>
+    <div class="box" id="pauseBox"></div>
+    <div class="box">
+      <div class="qrow"><span class="qlabel">คุณภาพกราฟิก</span>
+        <div class="seg" id="qSeg" role="group" aria-label="คุณภาพกราฟิก"><button type="button" data-q="auto">อัตโนมัติ</button><button type="button" data-q="high">สูง</button><button type="button" data-q="mid">กลาง</button><button type="button" data-q="low">ต่ำ</button></div>
+        <span class="qnow" id="qNow"></span></div>
+    </div>
+    <div class="btn-col">
+      <button class="btn primary" id="btnResume" type="button">เล่นต่อ</button>
+      <div class="btn-row">
+        <button class="btn ghost" id="btnRestartP" type="button">เริ่มใหม่</button>
+        <button class="btn ghost" id="btnMenuP" type="button">เปลี่ยนอาชีพ</button>
+        <button class="btn ghost" id="btnMuteP" type="button">เสียง: เปิด</button>
+      </div>
+    </div>
+  </div>
+</section>
+
+<section class="screen" id="scrEnd" hidden aria-label="สรุปผล">
+  <div class="panel small-panel">
+    <div class="lv-head"><p class="eyebrow" id="endEyebrow"></p><h2 class="end-title" id="endTitle"></h2></div>
+    <div class="box">
+      <dl class="end-stats" id="endStats"></dl>
+    </div>
+    <div class="box" id="endDmg"></div>
+    <div class="btn-row">
+      <button class="btn primary" id="btnAgain" type="button">เล่นอีกครั้ง</button>
+      <button class="btn ghost" id="btnMenuE" type="button">เปลี่ยนอาชีพ</button>
+    </div>
+  </div>
+</section>
+
