@@ -77,7 +77,7 @@
 |---|---|---|---|
 | Q1 | ในโหมดท่องแดน ให้มีการ์ดความชำนาญด้วยไหม | มี (ปุ่มกดเปิดเอง) · ล่าบอสไม่มีการ์ด | M4 (M1 ทำได้ทั้งสองแบบ) |
 | Q2 | อนุญาตให้รัน SQL `sql/rg_001_init.sql` บนโปรเจกต์ BAZI (production) ไหม และยอมรับผลข้างเคียงตามรายงาน trigger ของ `auth.users` ไหม | รอจนกว่าจะตอบ (`AUTH_ON=false`) | M3 |
-| Q3 | ช่วยเพิ่ม Redirect URLs ใน dashboard ให้ (ดู §6.12) | ต้องทำก่อนเปิด M3 | M3 |
+| Q3 | ช่วยเพิ่ม Redirect URLs ใน dashboard ให้ (ดู §6.12) | ✅ เจ้าของเพิ่ม `https://runeguard-lac.vercel.app/**` แล้ว (2026-11-09) · localhost / preview ยังไม่เพิ่ม (ดู §6.12 ข้อ 1) | M3 |
 | Q4 | รับได้ไหมที่อีเมลยืนยัน/รีเซ็ตจะเป็นแบรนด์ BAZI, หน้าขออนุญาตของ Google จะขึ้นชื่อแอปเดิม, โควตาอีเมลใช้ร่วมกัน และการรีเซ็ตรหัสผ่านมีผลกับทุกแอปในบัญชีเดียวกัน | แสดงข้อความแจ้งผู้เล่นบนหน้าล็อกอิน | M3 |
 | Q5 | เล่นบน iOS หรือ Android และเล่นแบบติดตั้งแอป (PWA) หรือเปิดในเบราว์เซอร์ | ทดสอบทั้งสองแบบ | M3 |
 | Q6 | อนุมัติชื่ออาชีพใหม่ 7 ชื่อในตาราง §3.4 | ใช้ตามตาราง | M0 |
@@ -1371,6 +1371,9 @@ Base `SUPA.url + '/rest/v1/rg_saves'`
 **ต้องทำ (เราทำแทนไม่ได้)**
 1. **Auth → URL Configuration → Redirect URLs:** เพิ่ม `https://runeguard-lac.vercel.app/` และ `http://localhost:8793/`
    - ถ้าไม่เพิ่ม GoTrue จะส่งกลับไปที่ Site URL ของ BAZI ลิงก์ยืนยันจะไปเปิดแอปอื่น
+   - **สถานะ 2026-11-09:** เจ้าของเพิ่ม `https://runeguard-lac.vercel.app/**` แล้ว ตรงกับ `RURL = location.origin + '/'` ใน 43-auth
+   - `http://localhost:8793/**` ยังไม่ได้เพิ่ม · ไม่จำเป็นถ้าเทสต์ในเครื่องด้วยบัญชีที่ยืนยันอีเมลแล้วและล็อกอินด้วยรหัสผ่าน · ต้องมีถ้าจะลองปุ่ม Google หรือกดลิงก์ยืนยันอีเมลจาก build ในเครื่อง
+   - preview ของ branch v2 (`runeguard-git-v2-chatcpegs-projects.vercel.app`) เป็นคนละ origin · ถ้าจะลองล็อกอิน Google บนมือถือก่อน merge ต้องเพิ่ม `https://runeguard-git-v2-chatcpegs-projects.vercel.app/**` ด้วย ไม่งั้นจะเด้งไปแอป BAZI
 2. **Auth → Email Templates:** ตรวจว่าใช้ `{{ .ConfirmationURL }}` (§6.6 ค) และแจ้งผล
 3. **อนุมัติข้อความ SQL ใน §6.4** แล้ว orchestrator จึงรัน migration → `get_advisors` → เทสต์ §6.5
 4. ยอมรับหรือไม่ยอมรับรายงาน trigger ของ `auth.users` (§6.6)
