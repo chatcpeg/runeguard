@@ -4,7 +4,7 @@ function newRun(cls,modeId='classic',opts={}){
   G={cls,t:0,wave:0,waveT:WAVE_LEN,boss:false,bosses:[],waveEnding:false,spawnAcc:0,hordeT:9,hordeWarn:null,eliteDone:false,kills:0,eid:0,
      enemies:[],projs:[],eprojs:[],gems:[],zones:[],strikes:[],fx:[],parts:[],texts:[],timers:[],corpses:[],decals:[],
      pendingLv:0,pendingChest:0,rerolls:3,ui:null,over:false,won:false,shake:0,flash:0,hurtFlash:0,hitStop:0,hitSfxT:0,cfg:null,score:0,totalDmg:0,auto:false,god:false,near:null,nearD:1e9,choices:null,uiReadyAt:0,
-     mode:MODES[modeId],modeId,opts,char:opts.char||null,bounds:null,obstacles:null,loot:[],rewards:null,runId:'r_'+Date.now().toString(36)};
+     mode:MODES[modeId],modeId,opts,char:opts.char||null,bounds:null,obstacles:null,loot:[],rewards:null,runId:'r_'+Date.now().toString(36)+'_'+Math.floor(rngUnit()*1679616).toString(36).padStart(4,'0')};   // crypto suffix: two runs in one ms stay distinct · Math.random untouched
   P=makePlayer(cls); recalc(P); P.hp=P.maxHp;
   if(G.char) prepareRun(G,P,G.char,modeId);
   G.player=P;

@@ -163,10 +163,232 @@ h1,h2,h3{margin:0;font-weight:400;text-wrap:balance}
 .qnow{font-size:12px;color:var(--ash)}
 @media (max-width:480px){.end-stats{grid-template-columns:repeat(2,minmax(0,1fr))}}
 @media (prefers-reduced-motion:reduce){#banner.show{animation:none}.card,.cls,.adv{transition:none}}
-/* 50-shell.css · lane B · M0 stub (empty) */
+/* 50-shell.css · lane B · hub, characters, survival, settings, character window, tab bar, sheet, confirm, toasts, log, HUD extras */
+.sh-panel{margin:0 auto;width:100%;max-width:520px;min-height:100%;display:flex;flex-direction:column;gap:12px}
+body.sh-navon .screen{bottom:calc(env(safe-area-inset-bottom,0px) + 71px)}
+body.sh-fabon #scrTitle{padding-top:calc(env(safe-area-inset-top,0px) + 66px)}
+.hb-top,.sv-tier,.sv-row,.st-row,.cw-head,.nw-info,.ch-card,.hb-svc button,.sh-back,.sh-cbox{background:var(--card);border:1px solid var(--line);border-radius:14px}
+.sh-back,.sv-arr,.sh-x,.ch-del,.st-tg,.hb-nx,.sh-nav button,.cw-tabs button,.hb-me,.hb-mode,.hb-classic,.hb-svc button,.nw-cls button,.ch-card,.sh-fab{cursor:pointer;min-height:44px}
+.sh-head{display:flex;align-items:center;gap:10px}
+.sh-head h2{flex:1;font-family:var(--f-display);font-size:22px;color:var(--rune)}
+.sh-back{min-width:48px;min-height:48px;font-size:20px}
+.sh-foot{position:sticky;bottom:0;z-index:2;margin-top:auto;display:flex;flex-direction:column;gap:8px;padding-top:14px;background:linear-gradient(rgba(8,10,7,0),rgba(8,10,7,.95) 30%)}
+.sh-wide{width:100%}
+.sh-pt{flex:none;border-radius:12px;background:var(--well)}
+.sh-bars{display:grid;gap:6px}
+.sh-bar{display:grid;grid-template-columns:56px minmax(0,1fr) auto;gap:8px;align-items:center;font-size:12.5px;font-variant-numeric:tabular-nums}
+.sh-bl{font-weight:700}
+.sh-bt{height:8px;border-radius:4px;background:var(--well);overflow:hidden}
+.sh-bt i{display:block;height:100%;transform-origin:left;background:var(--spirit)}
+.job .sh-bt i{background:var(--rune)}
+.sh-bv,.hb-mt small,.hb-sub,.hb-st,.ch-t span,.sv-t small,.sv-who small,.cw-n small,.cw-der,.sv-row span,.st-ver,.hd-rr span{color:var(--ash);font-size:12.5px}
+.hb-top{display:flex;flex-direction:column;gap:10px;padding:12px}
+.hb-me{display:flex;align-items:center;gap:12px;padding:0;border:0;background:none;text-align:left}
+.hb-mt,.ch-t,.cw-n,.sv-who>span{display:flex;flex-direction:column;min-width:0;flex:1}
+.hb-mt b,.ch-t b,.cw-n b{font-family:var(--f-display);font-weight:400;font-size:19px;overflow-wrap:anywhere}
+.hb-none{margin:0;color:var(--ash);text-align:center}
+.hb-wal{display:flex;flex-wrap:wrap;align-items:center;gap:4px 14px;font-variant-numeric:tabular-nums}
+.hb-st{margin-left:auto;text-align:right}
+button.hb-st{padding:0;border:0;background:none;text-decoration:underline dotted;cursor:pointer;min-height:44px}
+.hb-note{display:grid;grid-template-columns:1fr 44px;align-items:center;padding:8px 6px 8px 14px;border-radius:14px;border:1px solid var(--rune-deep);background:rgba(240,181,69,.08);font-size:13.5px}
+.hb-note b{color:var(--rune)}
+.hb-nx{grid-area:1/2/3;border:0;background:none;color:var(--ash)}
+.hb-mid{flex:1;min-height:56px;display:flex;flex-direction:column;align-items:center;justify-content:center;text-align:center}
+.hb-logo{font-family:var(--f-display);font-size:clamp(30px,9vw,46px);letter-spacing:.05em;color:var(--rune);text-transform:uppercase;text-shadow:0 3px 0 var(--rune-deep)}
+.hb-modes,.ch-list,.sv-body,.st-list,.cw-body{display:flex;flex-direction:column;gap:10px}
+.hb-mode{display:grid;grid-template-columns:40px 1fr auto;gap:12px;align-items:center;min-height:66px;padding:10px 14px;border-radius:14px;border:1px solid var(--rune-deep);background:linear-gradient(135deg,rgba(240,181,69,.15),rgba(240,181,69,.02)),var(--card);text-align:left}
+.hb-mi{font-size:26px;text-align:center}
+.hb-mode .hb-mt small{color:var(--spirit)}
+.hb-go{color:var(--rune)}
+.hb-svc{display:grid;grid-template-columns:1fr 1fr;gap:8px}
+.hb-svc h3{grid-column:1/-1;font:600 12.5px var(--f-body);letter-spacing:.12em;color:var(--spirit)}
+.hb-classic{display:grid;grid-template-columns:1fr auto;column-gap:10px;align-items:center;padding:6px 14px;border-radius:12px;border:1px dashed var(--line-hi);background:none;text-align:left}
+.hb-classic small{grid-row:2;color:var(--ash);font-size:12px}
+.hb-classic b{grid-area:1/2/3;font-size:22px;color:var(--ash)}
+.ch-row{display:flex;gap:8px}
+.ch-card{flex:1;min-width:0;display:flex;align-items:center;gap:12px;min-height:76px;padding:8px 12px;text-align:left;-webkit-touch-callout:none}
+.ch-card.on{border-color:var(--rune);box-shadow:inset 0 0 0 1px var(--rune)}
+.ch-card.hold{transform:scale(.97);border-color:var(--blood);transition:transform .65s,border-color .65s}
+.ch-ok{color:var(--rune);font-size:20px}
+.ch-del{min-width:48px;border-radius:14px;border:1px solid var(--line);background:none;font-size:18px}
+.nw-f{display:flex;flex-direction:column;gap:6px;color:var(--ash)}
+.nw-f>span{display:flex;justify-content:space-between}
+.nw-f input,.sh-ta{box-sizing:border-box;width:100%;padding:0 14px;border-radius:12px;border:1px solid var(--line-hi);background:var(--well);color:var(--bone);font:inherit;font-size:16px;-webkit-user-select:text;user-select:text}
+.nw-f input{min-height:48px}
+.nw-f input:focus{border-color:var(--spirit);outline:none}
+.nw-cls{display:grid;grid-template-columns:repeat(5,minmax(0,1fr));gap:6px}
+.nw-cls button{display:flex;flex-direction:column;align-items:center;min-width:0;padding:6px 2px;border-radius:12px;border:1px solid var(--line);background:var(--card);font-size:12.5px}
+.nw-cls [aria-checked="true"],.ch-card.on{border-color:var(--rune);color:var(--rune)}
+.nw-cls canvas{width:48px;height:48px}
+.nw-info{padding:12px 14px;font-size:13.5px;color:var(--ash)}
+.nw-info h3{font-family:var(--f-display);font-size:19px;color:var(--bone)}
+.nw-info p{margin:6px 0 0}
+.nw-pts{margin:0;padding:4px 14px 6px;border:1px solid var(--line);border-radius:14px}
+.nw-pts legend{padding:0 6px;font-size:13px;color:var(--spirit)}
+.nw-pts label{display:flex;align-items:center;gap:10px;min-height:44px;cursor:pointer}
+.nw-pts input{width:20px;height:20px;margin:0;accent-color:var(--rune)}
+.nw-err{margin:0;min-height:1.3em;color:#ff9aa0;font-size:13.5px;text-align:center}
+.sv-tier{display:grid;grid-template-columns:56px 1fr 56px;align-items:center;gap:8px;padding:10px}
+.sv-arr,.sh-x,.st-tg{border-radius:12px;border:1px solid var(--line-hi);background:none;font-size:18px}
+.sv-arr{min-height:56px}
+.sv-t{display:flex;flex-direction:column;align-items:center}
+.sv-t b{font:400 36px/1.15 var(--f-display);color:var(--rune)}
+.sv-who{display:flex;align-items:center;gap:10px}
+.sv-row,.hd-rr{display:flex;justify-content:space-between;gap:12px;font-size:14px}
+.sv-row{padding:10px 14px}
+.sv-row b,.hd-rr b{text-align:right}
+.sv-lock{margin:0;padding:12px;border-radius:12px;border:1px dashed var(--rune-deep);color:var(--rune);text-align:center}
+.st-row{display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:8px 12px;min-height:56px;padding:6px 14px}
+.st-row .btn,.sv-who .btn{min-height:44px;padding:0 16px;font-size:14px}
+.st-seg button{min-height:44px;min-width:44px}
+#scrEnd.hd-on{background:rgba(8,10,7,.97)}
+.st-tg{min-width:76px;font-size:15px;font-weight:700}
+.st-tg[aria-pressed="true"],.cw-tabs [aria-selected="true"]{background:var(--rune);border-color:var(--rune);color:#24170a}
+.st-ver{text-align:center}
+.sh-ta{min-height:120px;max-height:36vh;padding:10px;font:12px/1.4 monospace}
+.cw-head{display:grid;grid-template-columns:auto 1fr;gap:10px 14px;align-items:center;padding:12px}
+.cw-head .sh-bars,.cw-der{grid-column:1/-1}
+.cw-der{display:flex;flex-wrap:wrap;gap:4px 12px}
+.cw-der b{color:var(--bone)}
+.cw-tabs{display:flex;gap:4px;padding:4px;border-radius:12px;background:var(--well)}
+.cw-tabs button{flex:1;border:0;border-radius:9px;background:none;font-weight:600}
+.sh-nav{position:fixed;left:0;right:0;bottom:0;z-index:30;display:flex;justify-content:center;padding:6px 8px calc(env(safe-area-inset-bottom,0px) + 6px);background:rgba(12,16,10,.96);border-top:1px solid var(--line)}
+.sh-nav button{position:relative;flex:1;max-width:128px;min-height:58px;display:flex;flex-direction:column;align-items:center;justify-content:center;border:0;border-radius:12px;background:none;font-size:12.5px;color:var(--ash)}
+.sh-nav i{font-style:normal;font-size:20px}
+.sh-nav [aria-current="page"]{color:var(--rune);background:rgba(240,181,69,.1)}
+.sh-nav [data-n]::after{content:attr(data-n);position:absolute;top:4px;left:calc(50% + 8px);min-width:18px;padding:0 5px;box-sizing:border-box;border-radius:9px;background:var(--blood);color:#fff;font-size:11px;font-weight:700;line-height:18px}
+.sh-fab{position:fixed;z-index:25;top:calc(env(safe-area-inset-top,0px) + 12px);left:16px;padding:0 16px;border-radius:12px;border:1px solid var(--line-hi);background:var(--card);font-weight:600}
+.sh-sheet,.sh-conf{position:fixed;inset:0;z-index:40;display:flex;flex-direction:column;justify-content:flex-end;background:rgba(5,7,4,.65)}
+.sh-sbg{position:absolute;inset:0}
+.sh-card{position:relative;width:100%;max-width:560px;max-height:80vh;margin:0 auto;box-sizing:border-box;display:flex;flex-direction:column;padding:0 16px calc(env(safe-area-inset-bottom,0px) + 16px);border:1px solid var(--line-hi);border-radius:18px 18px 0 0;background:var(--loam);transition:transform .18s}
+.sh-grip{display:grid;grid-template-columns:1fr 44px;align-items:center;gap:6px;padding-top:10px;touch-action:none}
+.sh-grip span{grid-column:1/-1;justify-self:center;width:44px;height:5px;border-radius:3px;background:var(--line-hi)}
+.sh-grip h2{font-family:var(--f-display);font-size:19px;color:var(--rune)}
+.sh-sb{overflow-y:auto;overscroll-behavior:contain;padding:10px 0 4px;display:flex;flex-direction:column;gap:10px}
+.sh-conf{z-index:50;align-items:center;padding:16px 16px calc(env(safe-area-inset-bottom,0px) + 24px)}
+.sh-cbox{width:100%;max-width:440px;box-sizing:border-box;display:flex;flex-direction:column;gap:16px;padding:18px}
+.sh-cbox p{margin:0;line-height:1.6;overflow-wrap:anywhere}
+.sh-crow{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.sh-crow .btn{padding:0 10px}
+#shConfOk.hold{position:relative;overflow:hidden;box-shadow:none;touch-action:none;-webkit-touch-callout:none}
+#shConfOk.hold::before{content:'';position:absolute;inset:0;background:rgba(255,255,255,.4);transform:scaleX(0);transform-origin:left;transition:transform .15s}
+#shConfOk.hold.on::before{transform:none;transition:transform var(--hold,1s) linear}
+.sh-toasts{position:fixed;z-index:70;left:16px;right:16px;top:calc(env(safe-area-inset-top,0px) + 12px);display:flex;flex-direction:column;align-items:center;gap:6px;pointer-events:none}
+.sh-toast{max-width:440px;padding:10px 16px;border-radius:12px;border:1px solid var(--line-hi);background:var(--card);box-shadow:0 6px 18px rgba(0,0,0,.5);font-size:14px;text-align:center;overflow-wrap:anywhere;transition:opacity .3s}
+.sh-toast.good{border-color:var(--spirit)}
+.sh-toast.bad{border-color:var(--blood)}
+.sh-toast.tap{pointer-events:auto;cursor:pointer;border-color:var(--rune)}
+.sh-toast.out,.sh-ll.out{opacity:0}
+.sh-log{position:fixed;z-index:6;left:16px;bottom:calc(env(safe-area-inset-bottom,0px) + 108px);max-width:min(70%,360px);pointer-events:none}
+.sh-ll{font-size:12.5px;text-shadow:0 1px 3px #000;transition:opacity .4s}
+.sh-ll.good,.hd-rr.good b{color:var(--spirit)}
+.sh-ll.bad,.hd-rr.bad b{color:#ff9aa0}
+.hd{position:fixed;z-index:6;right:16px;bottom:calc(env(safe-area-inset-bottom,0px) + 12px);display:flex;flex-direction:column;align-items:flex-end;gap:8px;pointer-events:none}
+.hd-bars{width:150px;padding:6px 8px;border-radius:10px;background:var(--glass);border:1px solid var(--line)}
+.hd-bars .sh-bar{grid-template-columns:44px 1fr}
+.hd-bars .sh-bv{display:none}
+.hd-card{pointer-events:auto;min-height:48px;padding:0 16px;border-radius:12px;border:1px solid var(--rune);background:var(--card);color:var(--rune);font-weight:700;cursor:pointer}
+.hd-cap{grid-column:1/-1;margin-top:6px;font-size:12px;color:var(--rune)}
 /* 51-auth.css · lane N · M0 stub (empty) */
 /* 53-char.css · lane E · M0 stub (empty) */
-/* 54-progress.css · lane P · M0 stub (empty) */
+/* 54-progress.css · lane P · scrSkills · scrJob · stats tab · mobile first (360 px), touch targets ≥ 44 px */
+.prg-panel{max-width:560px;gap:14px;margin:0 auto}
+.prg-top{display:flex;align-items:center;gap:10px;min-height:44px}
+.prg-back{flex:none;width:44px;height:44px;border-radius:12px;border:1px solid var(--line-hi);background:none;cursor:pointer;font-size:20px}
+.prg-h{font-family:var(--f-display);font-size:22px;color:var(--rune)}
+.prg-sub{margin-left:auto;font-size:12.5px;line-height:1.35;color:var(--ash);text-align:right}
+.prg-sub b{color:var(--bone);font-size:16px}
+.prg-ro{margin:0;padding:10px 12px;border-radius:10px;border:1px solid var(--blood);font-size:13px}
+.prg-empty{margin:28px 0;text-align:center;color:var(--ash)}
+.prg-seg{display:grid;grid-template-columns:1fr 1fr;gap:6px}
+.prg-seg button{min-height:44px;line-height:1.3}
+.prg-reset{display:flex;align-items:center;justify-content:space-between;gap:10px;flex-wrap:wrap;font-size:12.5px;color:var(--ash)}
+.prg-reset .btn,.pst-auto,.pjb-trial{min-height:44px;padding:0 14px;font-size:14px}
+.prg-scr button,.pst button{-webkit-touch-callout:none}
+.pks-load,.pjb-req{padding:14px;gap:8px}
+.pks-lh{display:flex;flex-direction:column;gap:2px}
+.pks-lh small,.pks-tip{font-size:12px;color:var(--ash);line-height:1.5}
+.pks-tip{margin:0;color:var(--spirit)}
+.pks-slots{display:flex;gap:8px;flex-wrap:wrap}
+.pks-sl{position:relative;width:52px;height:52px;border-radius:12px;border:1px solid var(--line-hi);background:var(--well);display:grid;place-items:center;font-size:24px;cursor:pointer;padding:0}
+.pks-sl.sel{border-color:var(--spirit);box-shadow:0 0 0 2px var(--spirit)}
+.pks-sl.empty{border:1px dashed var(--line);background:none;color:var(--line-hi);font-size:18px;cursor:default}
+.pks-sl em,.pks-sl b{position:absolute;font-size:10px;font-style:normal;font-weight:700;line-height:15px;padding:0 4px;border-radius:6px}
+.pks-sl em{top:-8px;left:8px;background:var(--rune);color:#24170a}
+.pks-sl b{right:-5px;bottom:-6px;background:var(--card);border:1px solid var(--line-hi);color:var(--rune)}
+.pks-grp,.pks-list,.pst,.pst-list{display:flex;flex-direction:column;gap:8px}
+.pks-list,.pst-list,.pjb-req ul{list-style:none;margin:0;padding:0}
+.pks-path{font-family:var(--f-display);font-size:17px;color:var(--rune)}
+.pks-path small,.pjb-n small{font-family:var(--f-body);font-size:11px;letter-spacing:.06em;color:var(--ash);text-transform:uppercase}
+.pks-sep{margin:6px 0 0;font-size:12px;color:var(--spirit);text-align:center}
+.pks-row{display:grid;grid-template-columns:34px minmax(0,1fr) 56px;gap:8px;align-items:start;padding:10px;background:var(--card);border:1px solid var(--line);border-radius:12px}
+.pks-row.got{border-color:var(--line-hi)}
+.pks-row.lock{opacity:.72}
+.pks-ic{font-size:24px;line-height:34px;text-align:center}
+.pks-m{display:flex;flex-direction:column;gap:3px;min-width:0;font-size:12px;line-height:1.5;color:var(--ash);overflow-wrap:anywhere}
+.pks-n{font-size:15px;font-weight:700;color:var(--bone)}
+.pks-st{color:var(--rune);font-weight:400;white-space:nowrap}
+.pks-in{margin-left:4px;padding:0 6px;border-radius:6px;background:var(--spirit-deep);color:var(--bone);font-size:10.5px;font-style:normal}
+.pks-x{color:var(--bone)}
+.pks-e{color:var(--violet)}
+.pks-lock{color:#ff9aa0}
+.pks-side{display:flex;flex-direction:column;gap:6px}
+.pks-up,.pks-lo{min-height:44px;border-radius:10px;border:1px solid var(--line-hi);background:none;cursor:pointer;font-weight:700;line-height:1.1;font-size:13px}
+.pks-up{font-size:20px;background:var(--rune);border-color:var(--rune);color:#24170a}
+.pks-up small{display:block;font-size:10px}
+.pks-up:disabled{background:none;border-color:var(--line);color:var(--ash);opacity:.6;cursor:not-allowed}
+.pks-lo.on{border-color:var(--spirit);color:var(--spirit)}
+.pks-max{display:grid;place-items:center;min-height:44px;font-size:13px;font-weight:700;color:var(--rune)}
+.pjb-req h3{font-size:15px;font-weight:700}
+.pjb-req ul{display:flex;flex-direction:column;gap:8px}
+.pjb-req li{display:flex;align-items:center;gap:8px;flex-wrap:wrap;font-size:14px;line-height:1.45}
+.pjb-mk{flex:none;width:22px;font-weight:700;text-align:center}
+.ok>.pjb-mk{color:#7dffa8}
+.no>.pjb-mk{color:var(--blood)}
+.no>.pjb-t{color:var(--ash)}
+.pjb-t{flex:1;min-width:150px}
+.pjb-trial{margin-left:30px}
+.pjb-cards{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px}
+.pjb-cards.one{grid-template-columns:minmax(0,1fr)}
+.pjb-card{display:flex;flex-direction:column;align-items:center;gap:5px;padding:12px 8px;text-align:center;background:var(--card);border:1px solid var(--line);border-radius:14px;min-width:0;font-size:12px;line-height:1.45;overflow-wrap:anywhere}
+button.pjb-card{cursor:pointer}
+.pjb-card.sel{border-color:var(--rune);box-shadow:0 0 0 2px var(--rune) inset}
+.pjb-card canvas{width:80px;height:80px;border-radius:12px;background:var(--well)}
+.pjb-n{font-family:var(--f-display);font-size:16px;line-height:1.25;color:var(--rune)}
+.pjb-n small{display:block}
+.pjb-b{padding:2px 8px;border-radius:999px;background:var(--well);font-size:11.5px}
+.pjb-d{display:none;color:var(--ash)}
+.pjb-sk,.pjb-ps{display:flex;flex-direction:column;gap:2px}
+.pjb-ps{color:var(--ash)}
+.pjb-done{margin:0;text-align:center;color:#7dffa8;font-weight:700}
+.pjb-warn{margin:0;text-align:center;color:var(--rune);font-size:13.5px}
+.pjb-hold{position:relative;overflow:hidden;width:100%;min-height:54px;touch-action:none}
+.pjb-hold::before{content:'';position:absolute;inset:0;background:rgba(255,255,255,.42);transform:scaleX(0);transform-origin:left;pointer-events:none}
+.pjb-hold.holding::before{transform:scaleX(1);transition:transform var(--hold,1s) linear}
+.pjb-hold span{position:relative}
+@media (min-width:480px){.pjb-d{display:block}}
+.pst{gap:12px}
+.pst-head{display:flex;align-items:center;justify-content:space-between;gap:10px}
+.pst-head b{font-size:20px;color:var(--rune)}
+.pst-list{gap:6px}
+.pst-row{display:grid;grid-template-columns:minmax(0,1fr) 46px 44px 44px 34px;gap:6px;align-items:center;padding:6px 8px;background:var(--card);border:1px solid var(--line);border-radius:12px}
+.pst-row.pend{border-color:var(--spirit)}
+.pst-n{display:flex;flex-direction:column;min-width:0;font-size:14px}
+.pst-n small{font-size:10.5px;line-height:1.4;color:var(--ash);overflow-wrap:anywhere}
+.pst-v{text-align:right;font-weight:700;white-space:nowrap}
+.pend>.pst-v{color:var(--spirit)}
+.pst-b{width:44px;height:44px;border-radius:10px;border:1px solid var(--line-hi);background:var(--well);cursor:pointer;font-size:20px;font-weight:700;padding:0}
+.pst-b:disabled{opacity:.35;cursor:not-allowed}
+.pst-c,.pst-tip{font-size:11.5px;color:var(--ash);text-align:center}
+.pst-tip{margin:0}
+.pst-prev{padding:12px 14px;gap:8px}
+.pst-ph{font-size:14px;font-weight:700;color:var(--spirit)}
+.pst-dl{margin:0;display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:4px 12px;font-size:12.5px}
+.pst-dl div{display:flex;justify-content:space-between;gap:6px}
+.pst-dl dt{color:var(--ash)}
+.pst-dl dd{margin:0;font-weight:700;white-space:nowrap}
+.pst-dl .up dd{color:#7dffa8}
+.pst-act .btn{flex:1;min-width:120px}
 /* 60-field.css · lane F · M0 stub (empty) */
 /* 66-boss.css · lane H · M0 stub (empty) */
 </style>
@@ -260,10 +482,96 @@ h1,h2,h3{margin:0;font-weight:400;text-wrap:balance}
   </div>
 </section>
 
-<!-- 50-shell.html · lane B · M0 stub (empty) -->
+<!-- 50-shell.html · lane B · hub, characters, new character, survival tier, settings, character window + shared layers (tab bar, sheet, confirm, toasts, log, run HUD extras) -->
+<section class="screen sh-scr" id="scrHub" hidden aria-label="เมนูหลัก ป้อมรูนทอง">
+  <div class="sh-panel">
+    <div class="hb-top" id="hbTop"></div>
+    <div class="hb-note" id="hbNote" hidden></div>
+    <div class="hb-mid" aria-hidden="true"><span class="hb-logo">Runeguard</span><span class="hb-sub">ป้อมรูนทอง · ป้อมสุดท้ายของอาณาจักรรูน</span></div>
+    <div class="hb-modes" id="hbModes"></div>
+    <div class="hb-svc" id="hbSvc" hidden></div>
+    <button class="hb-classic" id="hbClassic" type="button"><span>ทดลอง: เอาชีวิตรอดแบบคลาสสิก</span><small id="hbClassicSub">ไม่ใช้ตัวละคร · เกมเดิมทุกอย่าง</small><b aria-hidden="true">›</b></button>
+  </div>
+</section>
+
+<section class="screen sh-scr" id="scrChars" hidden aria-labelledby="chTitle">
+  <div class="sh-panel">
+    <header class="sh-head"><button class="sh-back" type="button" data-back aria-label="ย้อนกลับ">←</button><h2 id="chTitle">ตัวละคร</h2></header>
+    <div class="ch-list" id="chList"></div>
+    <div class="sh-foot"><button class="btn primary sh-wide" id="chNew" type="button">+ สร้างตัวละครใหม่</button><p class="hint">แตะการ์ดเพื่อเลือก · กดค้างที่การ์ดหรือแตะ 🗑 เพื่อลบ</p></div>
+  </div>
+</section>
+
+<section class="screen sh-scr" id="scrNew" hidden aria-labelledby="nwTitle">
+  <div class="sh-panel">
+    <header class="sh-head"><button class="sh-back" type="button" data-back aria-label="ย้อนกลับ">←</button><h2 id="nwTitle">สร้างตัวละคร</h2></header>
+    <label class="nw-f"><span>ชื่อตัวละคร <small id="nwCount">0/16</small></span><input id="nwName" type="text" maxlength="16" autocomplete="off" autocapitalize="off" spellcheck="false" enterkeyhint="done" placeholder="2–16 ตัวอักษร: ไทย อังกฤษ ตัวเลข เว้นวรรค"></label>
+    <div class="nw-cls" id="nwCls" role="radiogroup" aria-label="เลือกอาชีพ"></div>
+    <div class="nw-info" id="nwInfo"></div>
+    <fieldset class="nw-pts"><legend>แต้มสถานะเริ่มต้น 5 แต้ม</legend>
+      <label><input type="radio" name="nwPts" id="nwAuto" checked> แจกตามแบบแนะนำของอาชีพ</label>
+      <label><input type="radio" name="nwPts"> แจกเองทีหลังที่หน้าตัวละคร</label>
+    </fieldset>
+    <p class="nw-err" id="nwErr" role="alert"></p>
+    <div class="sh-foot"><button class="btn primary sh-wide" id="nwGo" type="button">สร้างตัวละคร</button></div>
+  </div>
+</section>
+
+<section class="screen sh-scr" id="scrSurv" hidden aria-labelledby="svTitle">
+  <div class="sh-panel">
+    <header class="sh-head"><button class="sh-back" type="button" data-back aria-label="ย้อนกลับ">←</button><h2 id="svTitle">เอาชีวิตรอด</h2></header>
+    <div class="sv-tier"><button class="sv-arr" id="svPrev" type="button" aria-label="ระดับนรกก่อนหน้า">◀</button><div class="sv-t" aria-live="polite"><small>ระดับนรก</small><b id="svT">T0</b><small id="svOpen"></small></div><button class="sv-arr" id="svNext" type="button" aria-label="ระดับนรกถัดไป">▶</button></div>
+    <div class="sv-body" id="svBody"></div>
+    <div class="sh-foot"><button class="btn primary sh-wide" id="svGo" type="button">เริ่ม</button></div>
+  </div>
+</section>
+
+<section class="screen sh-scr" id="scrSettings" hidden aria-labelledby="stTitle">
+  <div class="sh-panel">
+    <header class="sh-head"><button class="sh-back" type="button" data-back aria-label="ย้อนกลับ">←</button><h2 id="stTitle">ตั้งค่า</h2></header>
+    <div class="st-list" id="stList"></div>
+  </div>
+</section>
+
+<section class="screen sh-scr" id="scrChar" hidden aria-labelledby="cwTitle">
+  <div class="sh-panel">
+    <header class="sh-head"><button class="sh-back" type="button" data-back aria-label="ย้อนกลับ">←</button><h2 id="cwTitle">ตัวละคร</h2></header>
+    <div class="cw-head" id="cwHead"></div>
+    <div class="cw-tabs" id="cwTabs" role="tablist" aria-label="แท็บตัวละคร"></div>
+    <div class="cw-body" id="cwBody" role="tabpanel"></div>
+  </div>
+</section>
+
+<nav class="sh-nav" id="shNav" hidden aria-label="หน้าตัวละคร">
+  <button type="button" data-go="scrChar"><i aria-hidden="true">👤</i>ตัวละคร</button>
+  <button type="button" data-go="scrSkills"><i aria-hidden="true">✦</i>สกิล</button>
+  <button type="button" data-go="scrJob"><i aria-hidden="true">⚜</i>อาชีพ</button>
+  <button type="button" data-go="scrHub"><i aria-hidden="true">🏰</i>ป้อม</button>
+  <button type="button" data-go="scrSettings"><i aria-hidden="true">⚙</i>ตั้งค่า</button>
+</nav>
+<button class="sh-fab" id="shFab" type="button" hidden>← ป้อมรูนทอง</button>
+
+<div class="sh-sheet" id="shSheet" hidden>
+  <div class="sh-sbg" data-x></div>
+  <div class="sh-card" id="shCard" role="dialog" aria-modal="true" aria-labelledby="shSheetT">
+    <div class="sh-grip" id="shGrip"><span></span><h2 id="shSheetT"></h2><button class="sh-x" type="button" data-x aria-label="ปิด">✕</button></div>
+    <div class="sh-sb" id="shSheetB"></div>
+  </div>
+</div>
+<div class="sh-conf" id="shConf" hidden>
+  <div class="sh-cbox" role="alertdialog" aria-modal="true" aria-labelledby="shConfT">
+    <p id="shConfT"></p>
+    <div class="sh-crow"><button class="btn ghost" id="shConfNo" type="button">ยกเลิก</button><button class="btn primary" id="shConfOk" type="button">ยืนยัน</button></div>
+  </div>
+</div>
+<div class="sh-toasts" id="shToasts"></div>
+<div class="sh-log" id="shLog" aria-live="polite"></div>
+<div class="hd" id="hdBox" hidden><div class="hd-bars" id="hdBars" hidden></div><button class="hd-card" id="hdCard" type="button" hidden>⬆ เลือกการ์ด</button></div>
 <!-- 51-auth.html · lane N · M0 stub (empty) -->
 <!-- 53-char.html · lane E · M0 stub (empty) -->
-<!-- 54-progress.html · lane P · M0 stub (empty) -->
+<!-- 54-progress.html · lane P · scrSkills (§8.9) and scrJob (§8.10) · the stats tab (§8.8) is drawn by CHARTABS.stats into the character window -->
+<section class="screen prg-scr" id="scrSkills" hidden aria-label="สกิล"><div class="panel prg-panel" id="pksRoot"></div></section>
+<section class="screen prg-scr" id="scrJob" hidden aria-label="อาชีพ"><div class="panel prg-panel" id="pjbRoot"></div></section>
 <!-- 60-field.html · lane F · M0 stub (empty) -->
 <!-- 66-boss.html · lane H · M0 stub (empty) -->
 <script>
@@ -835,7 +1143,7 @@ function newRun(cls,modeId='classic',opts={}){
   G={cls,t:0,wave:0,waveT:WAVE_LEN,boss:false,bosses:[],waveEnding:false,spawnAcc:0,hordeT:9,hordeWarn:null,eliteDone:false,kills:0,eid:0,
      enemies:[],projs:[],eprojs:[],gems:[],zones:[],strikes:[],fx:[],parts:[],texts:[],timers:[],corpses:[],decals:[],
      pendingLv:0,pendingChest:0,rerolls:3,ui:null,over:false,won:false,shake:0,flash:0,hurtFlash:0,hitStop:0,hitSfxT:0,cfg:null,score:0,totalDmg:0,auto:false,god:false,near:null,nearD:1e9,choices:null,uiReadyAt:0,
-     mode:MODES[modeId],modeId,opts,char:opts.char||null,bounds:null,obstacles:null,loot:[],rewards:null,runId:'r_'+Date.now().toString(36)};
+     mode:MODES[modeId],modeId,opts,char:opts.char||null,bounds:null,obstacles:null,loot:[],rewards:null,runId:'r_'+Date.now().toString(36)+'_'+Math.floor(rngUnit()*1679616).toString(36).padStart(4,'0')};   // crypto suffix: two runs in one ms stay distinct · Math.random untouched
   P=makePlayer(cls); recalc(P); P.hp=P.maxHp;
   if(G.char) prepareRun(G,P,G.char,modeId);
   G.player=P;
@@ -1911,32 +2219,143 @@ MODES.survival=Object.assign({},MODES.classic,{
   onKill(e){ if(!e.elite&&!e.boss) return; const t=BAL.DROP.surv&&BAL.DROP.surv[e.boss?'boss'+G.wave:'elite']; if(!t) return;
     for(const it of rollDrops(t,1+(P.drop||0))) G.loot.push(it); },
   hud(){ const h=MODES.classic.hud(); h.lv='ชำนาญ Lv '+P.lv+' · '+(P.adv?P.adv.n:P.cls.n); return h; },
-  end(won){ const r=MODES.classic.end(won); r.eyebrow='เอาชีวิตรอด · ระดับนรก T'+(G.tier||0)+' · '+r.eyebrow; return r; }
+  end(won){ const r=MODES.classic.end(won), T='ระดับนรก T'+(G.tier||0);   // G.retreat = pause → ถอยทัพ (55-ui-hud.js)
+    if(G.retreat){ r.eyebrow=T+' · ถอยทัพกลับป้อมพร้อมรางวัล'; r.title='ถอยทัพ'; } else r.eyebrow=T+' · '+r.eyebrow; return r; }
 });
 
 /* ================= 30-balance.js · lane C · pure · every number of §2–§5 (single source) ================= */
-/* M0 stub: frozen signatures from DESIGN §7.8, neutral values — classic never calls these. Lane C writes the real body. */
-const BAL={ CAP:{base:60, job1:20, job2:25, stat:50, chars:3, bag:120, stash:120},
-  mobExp(m){ return 0; }, minPerLv(L){ return 0; }, bxpNeed(L){ return 0; }, diffMul(d){ return 1; }, jxpNeed(J,tier){ return 0; },
-  statCost(x){ return 0; }, statPtsFor(L){ return 0; }, START_PTS:5,
-  META_K:{STR:{might:.008}, VIT:{hp:4,regen:.015,armor:.06}, AGI:{speed:.003,cd:.996}, DEX:{cd:.997,proj40:1},
+// Tune here, then measure with RG.sim. Formulas are DESIGN §2.2 · §2.4 · §3.2–3.5 · §4.6–4.12 · §5.3–5.6.
+// Rule for every multiplier at its neutral input (T0, Lv1, +0): it returns exactly 1 / 22 / 0, so classic-equal paths stay bit-equal.
+const BAL={ CAP:{base:60, job1:20, job2:25, stat:50, chars:3, bag:120, stash:120, rank:5, gold:999999999, marks:999999},
+  // §3.2 levels and EXP
+  mobExp(m){ return Math.round(4+1.5*Math.pow(m,1.25)); },                       // Base EXP per mob of Lv m
+  minPerLv(L){ return 1+.6*L; },                                                // minutes per level at 30 same-level kills/min
+  bxpNeed(L){ return Math.round(BAL.mobExp(L)*30*BAL.minPerLv(L)/10)*10; },     // EXP to go from L to L+1
+  diffMul(d){ return d>=0 ? 1+.04*Math.min(d,8) : Math.max(.15,1+.07*d); },     // d = mob Lv − character Lv
+  jxpNeed(J,tier){ return tier===2 ? Math.round(.8*BAL.bxpNeed(Math.min(59,Math.round(20+1.6*J)))/10)*10
+                                   : Math.round(.72*BAL.bxpNeed(J)/10)*10; },   // tier 1 = first job, 2 = advanced job
+  JOB_EXP:.8,                                                                   // Job EXP = 0.8 × Base EXP (every source)
+  OVER_GOLD:.02,                                                                // at Base 60 excess EXP → 2% gold
+  // §3.3 stat points
+  statCost(x){ return 1+Math.floor(x*x/600); },                                 // cost to raise a stat from x to x+1
+  statPtsFor(L){ return 2+Math.floor(L/20); },                                  // points gained on reaching Lv L (L ≥ 2)
+  START_PTS:5,
+  META_K:{STR:{might:.008}, VIT:{hp:4,regen:.015,armor:.06}, AGI:{speed:.003,cd:.996,speedMax:.15}, DEX:{cd:.997,proj40:1},
           INT:{area:.006,dur:.006}, LUK:{crit:.003,critMult:.006,drop:.012,xp:.004}, LV:{hp:4,might:.004}},
-  RANK_COST:[0,1,1,1,2,2], ADV:{base:20, job:20, fee:500}, LOADOUT:{1:4, 2:5},
-  SURV:{recLv(T){ return 1; }, hpMul(T){ return 1; }, dmgMul(T){ return 1; }, defK(T){ return 22; }, goldPerWave(T){ return 0; }, gearTier(T){ return 1; }, expMul(waves,won){ return 0; }, overLv(L,rec){ return 1; }},
-  FIELD:{hpByLv(m){ return 1; }, dmgByLv(m){ return 1; }, gold(m){ return 0; }, cap:{touch:45, desk:70}, deathExp:.01, respawn:[8,15], rampage:{every:150, jitter:20, n:{touch:14, desk:18}}},
-  BOSS:{diff:[{n:'ปกติ',hp:1,dmg:1,lv:0},{n:'ยาก',hp:2.2,dmg:1.4,lv:10},{n:'ฝันร้าย',hp:4.5,dmg:2,lv:20}], hp(lv,d){ return 1; }, exp(lv,d){ return 0; }, gold(lv,d){ return 0; }, marks:[4,8,15], rune:[.08,.15,.25], uniq:[.10,.18,.30]},
+  ptsAt(L){ let n=BAL.START_PTS; for(let l=2;l<=L;l++) n+=BAL.statPtsFor(l); return n; },   // stat points earned by Lv L (incl. start)
+  statSpent(x){ let n=0; for(let i=0;i<x;i++) n+=BAL.statCost(i); return n; },             // points to raise one stat 0 → x
+  // §3.5 skill ranks (index r = cost of ★(r−1) → ★r) · passives cost 1 per ★ · loadout slots per job tier
+  RANK_COST:[0,1,1,1,2,2], PAS_COST:1, ADV:{base:20, job:20, fee:500}, LOADOUT:{1:4, 2:5},
+  rankSpent(r){ let n=0; for(let i=1;i<=r;i++) n+=BAL.RANK_COST[i]; return n; },            // skill points for ★0 → ★r
+  spAt(tier,jlv){ return tier===2 ? BAL.CAP.job1-1+jlv-1 : jlv-1; },                        // skill points earned at that job level
+  // §2.2 survival hell tiers T0–T10 (M1 ships T0 only)
+  SURV:{ maxT:10, WAVES:20, unlockWave:10, dailyWave:10,
+    recLv(T){ return Math.max(1,6*T); }, hpMul(T){ return 1+.3*T; }, dmgMul(T){ return 1+.12*T; }, defK(T){ return 22+3*T; },
+    goldPerWave(T){ return 15+5*T; }, gearTier(T){ return Math.min(5,1+Math.floor(T/2)); },
+    expMul(waves,won){ return .04*waves+(won?.3:0); },                          // × bxpNeed(recLv)
+    overLv(L,rec){ return L>rec+5 ? Math.max(.2,1-.08*(L-rec-5)) : 1; },
+    winGoldWaves:10 },                                                          // a win adds goldPerWave × 10
+  // §5.3–5.6 field
+  FIELD:{ hpByLv(m){ return 1+.12*(m-1)+.0015*(m-1)*(m-1); }, dmgByLv(m){ return 1+.06*(m-1); },
+    gold(m,u){ if(u===undefined) u=Math.random(); return Math.round((2+.35*m)*(.7+.6*u)); },   // u ∈ [0,1) → U(0.7, 1.3)
+    cap:{touch:45, desk:70}, deathExp:.01, respawn:[8,15], rampage:{every:150, jitter:20, n:{touch:14, desk:18}, extra:20, sec:30},
+    gemMul:3, size:{w:3200, h:2400}, points:[24,36], wander:120, aggro:260, packR:200, leash:900,
+    boss:{first:120, warn:60, appear:10, leash:800, jitter:[.9,1.1]}, potCd:8, autoPot:.35 },
+  // §2.4 boss hunt (lv = the boss's effective level: base Lv + diff.lv)
+  BOSS:{diff:[{n:'ปกติ',hp:1,dmg:1,lv:0},{n:'ยาก',hp:2.2,dmg:1.4,lv:10},{n:'ฝันร้าย',hp:4.5,dmg:2,lv:20}],
+    hp(lv,d){ return 900*BAL.FIELD.hpByLv(lv)*BAL.BOSS.diff[d].hp; },
+    exp(lv,d){ return Math.round(BAL.bxpNeed(lv)*.12*[1,1.5,2.2][d]); },
+    gold(lv,d){ return Math.round((100+10*lv)*[1,1.6,2.5][d]); },
+    marks:[4,8,15], rune:[.08,.15,.25], uniq:[.10,.18,.30], par:[60,75,120], medalA:1.5, dailyMul:2, rush:{n:5, heal:.25, marks:30} },
+  // §4.9 refine (+0 → +10). p[t] = base chance to reach +t · fail[t]: '' | 'keep' | 'down'
   REFINE:{p:[1,1,1,1,1,.80,.65,.50,.38,.26,.15], fail:['','','','','','keep','keep','down','down','down','down'],
-          mat(t){ return null; }, pity:.04, pityMax:.20, fee(tier,t){ return 0; }, weapon(r){ return 0; }, armor(r){ return 0; }},
-  PRICE:{}, DROP:{field:{}, fboss:{}, surv:{}}, RESET:{gold:2000, marks:40, freeBelow:20} };
-
+    mat(t){ return t<=6 ? 'm_dust' : 'm_crystal'; }, pity:.04, pityMax:.20,
+    fee(tier,t){ return 20*tier*t; },
+    weapon(r){ return {might:Math.round((r<=6 ? .02*r : .12+.03*(r-6))*1000)/1000}; },   // +10 → might +0.24
+    armor(r){ return {armor:.5*r, hp:5*r}; }, max:10 },
+  // §4.6 / §4.8 / §4.10 / §4.11 prices (gold unless "marks")
+  PRICE:{ u_potion_s:{buy:30, sell:8}, u_potion_l:{buy:120, sell:30}, m_dust:{buy:80, sell:20},
+    m_crystal:{marks:12, sell:150}, m_seal:{marks:50, sell:300}, u_forget:{buy:2000, marks:40}, m_shard:{sell:10},
+    u_dye:{buy:1500, marks:20}, u_bag10:{marks:60},
+    gear(tier,rar,r){ return Math.round(15*tier*tier*(1+rar)*(1+.1*(r||0))); },
+    bag:[2000,6000,15000,40000], bagStep:10, bagStart:80, stash:{marks:80, step:20, start:60},
+    combine:300, shardsPerRune:4, unsocket(tier){ return 100*tier; }, stack:{use:99, mat:999} },
+  // §4.12 drop rates. surv: tables in rollDrops() format, read by MODES.survival.onKill — empty until M2 (lane E/C CR)
+  DROP:{ field:{gold:1, gem:1, dust:.03, crystal2:.003, crystal4:.006, shard:.01, gear:.006, potion:.02},
+    fboss:{gold(L){ return 150+15*L; }, dust:[4,8], crystal:[1,3], gear:[1,2], uniq:.25, rune:.12, seal:.10},
+    rampage:{dust:2, gold(L){ return 20*L; }},
+    surv:{} },
+  RESET:{gold:2000, marks:40, freeBelow:20} };
 /* ================= 31-jobs-data.js · lane C · pure · passives, skill requirements, stat order/names, presets ================= */
-/* M0 stub: frozen signatures from DESIGN §7.8, neutral values — classic never calls these. Lane C writes the real body. */
-const PASSIVES={};       // id → {own, n, i, per:{…}} (§3.5)
-const SKILL_REQ={};      // skill id → {need, r}
+// PASSIVES[id] = {own, n, i, per} · own = class id (first job) or adv id (advanced job) · per = bonus per ★ (§3.5)
+// additive keys scale linearly (★5 = ×5) · multiplier keys (cd, magnet) are raised to the ★ (cd ×0.99 at ★5 = ×0.99⁵)
+const PASSIVES={
+  p_heavyarms:{own:'swordsman', n:'วิชาอาวุธหนัก', i:'🛡️', per:{might:.02, hp:8}},
+  p_runefocus:{own:'mage', n:'สมาธิแห่งรูน', i:'🔮', per:{area:.02, cd:.99}},
+  p_huntereye:{own:'archer', n:'สายตานักล่า', i:'👁️', per:{crit:.01, might:.01}},
+  p_steadyfaith:{own:'cleric', n:'ศรัทธาแน่วแน่', i:'🙏', per:{regen:.15, hp:6}},
+  p_catstep:{own:'thief', n:'ฝีเท้าแมว', i:'🐾', per:{speed:.015, dodge:.01}},
+  p_ironwall:{own:'knight', n:'กำแพงเหล็กไหล', i:'🧱', per:{armor:.6}},
+  p_steadylance:{own:'knight', n:'ปลายหอกแน่วแน่', i:'🔱', per:{might:.025}},
+  p_endlessrage:{own:'berserker', n:'โทสะไม่ดับ', i:'🔥', per:{might:.02, rage:.04}},
+  p_stonehide:{own:'berserker', n:'หนังหนาดั่งหิน', i:'🪨', per:{hp:12, regen:.1}},
+  p_manasea:{own:'archmage', n:'ทะเลมานา', i:'🌊', per:{area:.03}},
+  p_starcalm:{own:'archmage', n:'ใจเย็นดั่งดารา', i:'✨', per:{cd:.985}},
+  p_elemweave:{own:'elementalist', n:'ประสานธาตุ', i:'🌀', per:{cd:.98}},
+  p_earthpull:{own:'elementalist', n:'แรงดึงพสุธา', i:'🌍', per:{dur:.04}},
+  p_hawkbond:{own:'ranger', n:'ผูกพันเหยี่ยวลม', i:'🦅', per:{might:.015, speed:.01}},
+  p_underwing:{own:'ranger', n:'ลมใต้ปีก', i:'🪶', per:{speed:.02}},
+  p_stillbreath:{own:'sharpshooter', n:'ลมหายใจนิ่ง', i:'🎯', per:{critMult:.06}},
+  p_pierceshot:{own:'sharpshooter', n:'ศรเจาะเกราะ', i:'🏹', per:{boss:.03}},
+  p_dawnblessing:{own:'highcleric', n:'พรแห่งอรุณ', i:'🌅', per:{regen:.25}},
+  p_lightward:{own:'highcleric', n:'ผนึกแสงคุ้มกาย', i:'🔆', per:{armor:.5, hp:6}},
+  p_faithfist:{own:'templar', n:'หมัดศรัทธา', i:'👊', per:{might:.02, armor:.3}},
+  p_sunfocus:{own:'templar', n:'สมาธิสุริยะ', i:'☀️', per:{cd:.985}},
+  p_vitalpoint:{own:'assassin', n:'จุดตาย', i:'🗡️', per:{crit:.015}},
+  p_bighunt:{own:'assassin', n:'ล่าเหยื่อใหญ่', i:'🐗', per:{boss:.03}},
+  p_thinsmoke:{own:'nightblade', n:'ม่านควันจาง', i:'🍃', per:{xp:.03, magnet:1.04}},
+  p_shadowstep:{own:'nightblade', n:'ย่างก้าวเงา', i:'👣', per:{dodge:.012}},
+};
+for(const k in PASSIVES) PASSIVES[k].id=k;
+// SKILL_REQ[skill] = {need, r}: learning `skill` needs `need` at ★r (adv skill 1 ← base skill ★3 · adv skill 2 ← adv skill 1 ★2)
+const SKILL_REQ={
+  lance:{need:'slash', r:3}, valor:{need:'lance', r:2},
+  cyclone:{need:'blades', r:3}, frenzy:{need:'cyclone', r:2},
+  meteor:{need:'flame', r:3}, blizzard:{need:'meteor', r:2},
+  vortex:{need:'frost', r:3}, spikes:{need:'vortex', r:2},
+  hawk:{need:'arrow', r:3}, arrownova:{need:'hawk', r:2},
+  deadeye:{need:'arrow', r:3}, blast:{need:'deadeye', r:2},
+  judgment:{need:'holy', r:3}, aegis:{need:'judgment', r:2},
+  fists:{need:'sacred', r:3}, spheres:{need:'fists', r:2},
+  phantom:{need:'dagger', r:3}, whirl:{need:'phantom', r:2},
+  clones:{need:'shadow', r:3}, smoke:{need:'clones', r:2},
+};
 const STAT_ORDER=['STR','VIT','AGI','DEX','INT','LUK'];
 const STAT_TH={STR:'ATK · พลังโจมตี', VIT:'ความอึด', AGI:'ความว่องไว', DEX:'ความแม่นยำ', INT:'สติปัญญา', LUK:'โชค'};
+// PRESETS = the 5 starting points of each class; the same ratio drives [แจกอัตโนมัติ] (pgAutoStats in 42)
 const PRESETS={swordsman:{STR:3,VIT:2}, mage:{INT:3,DEX:2}, archer:{DEX:3,AGI:2}, cleric:{VIT:2,INT:2,LUK:1}, thief:{AGI:3,LUK:2}};
-
+// Thai labels of bonus keys (P.bonus / adv.bonus / passives / gear) and a formatter for the UI lanes
+const JD_BONUS_TH={might:'พลังโจมตี', hp:'HP', armor:'เกราะ', regen:'ฟื้น HP/วิ', speed:'ความเร็ว', crit:'คริติคอล', critMult:'แรงคริ',
+  area:'พื้นที่สกิล', dur:'ระยะเวลาสกิล', cd:'คูลดาวน์', proj:'กระสุน', magnet:'ระยะดูดของ', xp:'EXP', drop:'ดรอป', dodge:'หลบหลีก',
+  rage:'โทสะ', steal:'ดูดเลือด', boss:'ดาเมจต่อบอส'};
+const JD_PCT={might:1, speed:1, crit:1, area:1, dur:1, xp:1, drop:1, dodge:1, rage:1, boss:1};
+// jdBonusText({might:.1, cd:.95, hp:40}) → 'พลังโจมตี +10% · คูลดาวน์ −5% · HP +40' (fam = per-family damage)
+function jdBonusText(b){
+  const out=[], r2=v=>String(+(+v).toFixed(2)), pc=v=>String(+(v*100).toFixed(1));
+  for(const k in b||{}){ const v=b[k];
+    if(k==='fam'){ for(const f in v) if(v[f]) out.push('ดาเมจต่อเผ่า '+f+' +'+pc(v[f])+'%'); continue; }
+    if(typeof v!=='number'||!isFinite(v)) continue;
+    const n=JD_BONUS_TH[k]||k;
+    if(k==='cd'||k==='magnet'){ if(v===1) continue; const d=v-1; out.push(n+' '+(d<0?'−':'+')+pc(Math.abs(d))+'%'); continue; }
+    if(!v) continue;
+    if(k==='critMult'){ out.push(n+' '+(v<0?'−':'+')+r2(Math.abs(v))+'×'); continue; }
+    out.push(n+' '+(v<0?'−':'+')+(JD_PCT[k]?pc(Math.abs(v))+'%':r2(Math.abs(v))));
+  }
+  return out.join(' · ');
+}
+// value of one passive at ★r (additive × r · multiplier ^ r), the unit used by passiveBonus() and the skills page
+function jdPassiveAt(id,r){ const d=PASSIVES[id], o={}; if(!d||!(r>0)) return o;
+  for(const k in d.per){ const v=d.per[k]; o[k]=(k==='cd'||k==='magnet')?Math.pow(v,r):v*r; } return o; }
 /* ================= 33-items-data.js · lane E · pure · items, runes, drop tables, shop ================= */
 /* M0 stub: frozen signatures from DESIGN §7.8, neutral values — classic never calls these. Lane E writes the real body. */
 const ITEMS={};          // id → {n, i, slot, cls?, lv, tier, rar:0..3, st, sock?, sockRoll?, look?, refine?, stack?, kind?, price?, noSell?, unique?}
@@ -1976,51 +2395,581 @@ function dropLoot(x,y,list){}
 function dropGold(x,y,n){}
 
 /* ================= 40-save-schema.js · lane C · pure · save schema, migrate, validate, summary ================= */
-/* M0 stub: frozen signatures from DESIGN §7.8, neutral values — classic never calls these. Lane C writes the real body. */
+// Save data model v1 = DESIGN §6.3. validateSave rebuilds a clean save from whitelisted fields only (never trusts input):
+// numbers clamped, ids/keys matched against known data or a strict pattern, names stripped to ^[\p{L}\p{M}\p{N} ]{2,16}$.
+// Newer schema (v > SCHEMA_V) → a validated copy marked read-only (non-enumerable .ro); the original is never overwritten.
 const SCHEMA_V=1;
-function newSave(owner){ return {v:SCHEMA_V, owner:owner||null, chars:[]}; }
-function newChar(name,clsId){ return null; }
-function migrateSave(o,legacyBest){ return newSave(null); }
-function validateSave(s){ return s; }
-function saveSummary(s){ return {chars:[], play:0, mt:0, appVer:''}; }
-function isTrivialSave(s){ return true; }
-function uid(prefix){ return String(prefix||''); }
+const SV_APP='2.0.0-m1';                                 // app version stamped into every local write (saveSummary.appVer)
+const SV_NAME_RE=/^[\p{L}\p{M}\p{N} ]{2,16}$/u;
+const SV_SLOTS=['weapon','off','head','face','body','cloak','hands','feet','neck','ring'];
+const SV_WEAPON={swordsman:'w_sword_1', mage:'w_staff_1', archer:'w_bow_1', cleric:'w_rod_1', thief:'w_dagger_1'};   // §3.8 starter (M2)
+const SV_ID=/^[a-z][a-z0-9_]{0,39}$/;                   // item / skill / zone / boss / mob ids
+const SV_TMAX=4102444800000;                             // year 2100 (ms epoch)
+const SV_MAXB=256*1024;                                  // biggest save the cloud table accepts
+const SV_RUNIDS=30;
+function svObj(x){ return !!x&&typeof x==='object'&&!Array.isArray(x); }
+function svHas(o,k){ return typeof k==='string'&&Object.prototype.hasOwnProperty.call(o,k); }
+function svKeys(x,max){ return svObj(x)?Object.keys(x).filter(k=>!(k in Object.prototype)).slice(0,max||64):[]; }   // no __proto__ / constructor / toString …
+function svInt(v,lo,hi,def){ const n=typeof v==='number'?v:typeof v==='string'&&v.trim()!==''?Number(v):NaN; if(!isFinite(n)) return def; const i=Math.floor(n); return i<lo?lo:i>hi?hi:i; }
+function svNum(v,lo,hi,def){ const n=typeof v==='number'?v:NaN; if(!isFinite(n)) return def; return n<lo?lo:n>hi?hi:n; }
+function svStr(v,re,def){ return typeof v==='string'&&re.test(v)?v:def; }
+function uid(prefix){
+  let p=String(prefix||'x'); if(!p.endsWith('_')) p+='_';
+  const a=new Uint8Array(8); try{ crypto.getRandomValues(a); }catch(e){ for(let i=0;i<8;i++) a[i]=(Math.random()*256)|0; }
+  let s=''; for(let i=0;i<8;i++) s+='0123456789abcdefghijklmnopqrstuvwxyz'[a[i]%36]; return p+s; }
+// local calendar day / ISO week (daily bonus · weekly rush)
+function svDay(t){ const d=new Date(t==null?Date.now():t); return d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0'); }
+function svWeek(t){ const d=new Date(t==null?Date.now():t); const u=new Date(Date.UTC(d.getFullYear(),d.getMonth(),d.getDate())); const dn=u.getUTCDay()||7;
+  u.setUTCDate(u.getUTCDate()+4-dn); const y=u.getUTCFullYear(), w=Math.ceil(((u-Date.UTC(y,0,1))/864e5+1)/7); return y+'-W'+String(w).padStart(2,'0'); }
+// a name the player typed: Unicode letters/marks/digits/space only, ≤ 16 characters ('' = unusable)
+// + at least 2 letters/digits, a mark only right after a letter/digit/mark, ≤ 3 marks in a row (Thai vowel + tone fits; no invisible / Zalgo names)
+function svNameOk(t){ return typeof t==='string'&&SV_NAME_RE.test(t)&&!/\p{M}{4}/u.test(t)&&!/(^|[^\p{L}\p{N}\p{M}])\p{M}/u.test(t)&&(t.match(/[\p{L}\p{N}]/gu)||[]).length>=2; }
+function svCleanName(s){ if(typeof s!=='string') return '';
+  let t=s.normalize('NFC').replace(/[^\p{L}\p{M}\p{N} ]/gu,'').replace(/(^|[^\p{L}\p{N}\p{M}])\p{M}+/gu,'$1').replace(/(\p{M}{3})\p{M}+/gu,'$1').replace(/ +/g,' ').trim();
+  t=Array.from(t).slice(0,16).join('').trim(); return svNameOk(t)?t:''; }
+function svOwner(o){ return typeof o==='string'&&/^[A-Za-z0-9_-]{1,64}$/.test(o)?o:null; }   // auth uid, never an email
+function svEmptyEq(){ const o={}; for(const k of SV_SLOTS) o[k]=null; return o; }
+function svNewAcct(){ return {gold:0, marks:0, stash:[], stashMax:BAL.PRICE.stash.start, survTier:0,
+  records:{classic:{}, survival:{}, boss:{}}, fboss:{}, bossUnlock:{colossus:0, lich:0, king:0},
+  daily:{day:'', surv:{}, boss:{}, rushWeek:''}, flags:{pioneer:false, migratedBest:false, pioneerCloak:false, tips:{}}, runIds:[]}; }
 
+function newSave(owner){ const t=Date.now();
+  return {v:SCHEMA_V, sid:uid('s_'), owner:svOwner(owner), created:t, mt:t, play:0, app:SV_APP, acct:svNewAcct(), chars:[], active:null}; }
+function newChar(name,clsId){
+  if(!svHas(CLS,clsId)) return null; const c=CLS[clsId], first=c.skills[0], t=Date.now();
+  const ch={id:uid('c_'), name:svCleanName(name)||c.n, cls:c.id, job:null, created:t, play:0, kills:0, deaths:0,
+    lv:1, xp:0, pts:BAL.START_PTS, st:{STR:0,VIT:0,AGI:0,DEX:0,INT:0,LUK:0}, jlv:1, jxp:0, sp:0,
+    sk:{[first]:1}, pas:{}, load:[first], eq:svEmptyEq(), inv:[], bagMax:BAL.PRICE.bagStart, quick:[null,null],
+    trial:{t2:0}, zone:'z1', visited:['z1'], bestiary:{}, resets:{free:1, skFree:1}};
+  // §3.8 starter kit: shows up once lane E's ITEMS has these ids (M2) — training weapon worn + small potion ×3
+  const items=typeof ITEMS!=='undefined'?ITEMS:{}, wid=SV_WEAPON[c.id];
+  if(svHas(items,wid)){ const w=(typeof makeInst==='function'&&makeInst(wid,{}))||{u:uid('i_'), id:wid, r:0, f:0, s:[], lk:0}; ch.inv.push(w); ch.eq.weapon=w.u; }
+  if(svHas(items,'u_potion_s')){ ch.inv.push({id:'u_potion_s', n:3}); ch.quick[0]='u_potion_s'; }
+  return ch;
+}
+
+// ---- migration ----
+function svImportBest(best){   // runeguard.best = {clsId:{score,wave,kills,won}} (read only, never written back)
+  if(typeof best==='string'){ try{ best=JSON.parse(best); }catch(e){ return null; } }
+  if(!svObj(best)) return null; const o={}; let n=0;
+  for(const k of svKeys(best)) if(svHas(CLS,k)){ const r=svRecClassic(best[k]); if(r){ o[k]=r; n++; } }
+  return n?o:null; }
+function svMig0(o,best){   // v0 = the old single-file game: nothing but runeguard.best
+  const s=newSave(o&&o.owner), imp=svImportBest(best);
+  if(imp){ s.acct.records.classic=imp; s.acct.flags.pioneer=true; s.acct.flags.migratedBest=true; }
+  return s; }
+const SV_MIG={0:svMig0};      // SV_MIG[v](o) → save of version v+1 (add 1→2 here when SCHEMA_V becomes 2)
+function migrateSave(o,legacyBest){
+  if(!svObj(o)) o=null;
+  const v=o?o.v:undefined;
+  if(o&&Number.isInteger(v)&&v>SCHEMA_V){   // written by a newer app: read-only view, never written or pushed (1.5 / 1e999 = garbage)
+    const s=validateSave(o); s.v=v; Object.defineProperty(s,'ro',{value:true, enumerable:false}); return s; }
+  if(!o||v===undefined||v===0) o=svMig0(o,legacyBest);
+  else if(!(Number.isInteger(v)&&v>=1)) o=svMig0(null,legacyBest);   // garbage version → start clean
+  while(o.v<SCHEMA_V) o=SV_MIG[o.v](o,legacyBest);
+  return validateSave(o);
+}
+
+// ---- validation (pure · idempotent: validateSave(validateSave(x)) deep-equals validateSave(x)) ----
+function svRecClassic(x){ if(!svObj(x)) return null;
+  return {score:svInt(x.score,0,1e12,0), wave:svInt(x.wave,0,BAL.SURV.WAVES,0), kills:svInt(x.kills,0,1e9,0), won:x.won===true}; }
+function svRecSurv(x){ x=svObj(x)?x:{}; return {wave:svInt(x.wave,0,BAL.SURV.WAVES,0), kills:svInt(x.kills,0,1e9,0), won:x.won===true}; }
+function svFlagMap(x,re,max){ const o={}; for(const k of svKeys(x,max)) if(re.test(k)&&x[k]) o[k]=1; return o; }
+function svItem(x){
+  if(!svObj(x)||!svStr(x.id,SV_ID,'')) return null;
+  const items=typeof ITEMS!=='undefined'?ITEMS:{}, def=svHas(items,x.id)?items[x.id]:null;
+  const stack=def?!!def.stack:x.u===undefined;
+  let o;
+  if(stack) o={id:x.id, n:svInt(x.n,1,def&&def.stack||999,1)};
+  else o={u:svStr(x.u,/^i_[a-z0-9]{1,24}$/,'')||uid('i_'), id:x.id, r:svInt(x.r,0,BAL.REFINE.max,0), f:svNum(x.f,0,20,0),
+    s:Array.isArray(x.s)?x.s.slice(0,2).map(v=>svStr(v,SV_ID,null)):[], lk:x.lk?1:0};
+  if(!def) o.unk=1;                      // unknown id (maybe from a newer client): keep it, flagged
+  return o; }
+function svItems(arr,max,keepU){   // → clean list ≤ max · equipped uids (keepU) are kept first when trimming
+  const out=[], seen=new Set();
+  for(const x of Array.isArray(arr)?arr.slice(0,400):[]){ const it=svItem(x); if(!it) continue;
+    if(it.u){ if(seen.has(it.u)) it.u=uid('i_'); seen.add(it.u); } out.push(it); }
+  if(out.length<=max) return out;
+  let room=max-out.filter(it=>it.u&&keepU&&keepU.has(it.u)).length;
+  return out.filter(it=>{ if(it.u&&keepU&&keepU.has(it.u)) return true; if(room>0){ room--; return true; } return false; }).slice(0,max); }
+function svAcct(a){
+  a=svObj(a)?a:{}; const o=svNewAcct(), cap=BAL.CAP;
+  o.gold=svInt(a.gold,0,cap.gold,0); o.marks=svInt(a.marks,0,cap.marks,0);
+  o.stashMax=svInt(a.stashMax,BAL.PRICE.stash.start,cap.stash,BAL.PRICE.stash.start);
+  o.stash=svItems(a.stash,o.stashMax,null);
+  o.survTier=svInt(a.survTier,0,BAL.SURV.maxT,0);
+  const r=svObj(a.records)?a.records:{};
+  for(const k of svKeys(r.classic)) if(svHas(CLS,k)){ const x=svRecClassic(r.classic[k]); if(x) o.records.classic[k]=x; }
+  for(const cid of svKeys(r.survival)){ if(!/^c_[a-z0-9]{1,24}$/.test(cid)) continue; const m={}, src=r.survival[cid];
+    for(const tk of svKeys(src)){ if(!/^(10|[0-9])$/.test(tk)) continue; m[tk]=svRecSurv(src[tk]); } o.records.survival[cid]=m; }
+  for(const b of svKeys(r.boss)){ if(!SV_ID.test(b)) continue; const m={}, src=r.boss[b];
+    for(const dk of svKeys(src)){ if(!/^[012]$/.test(dk)) continue; const x=svObj(src[dk])?src[dk]:{};
+      m[dk]={sec:svNum(x.sec,0,1e6,0), medal:x.medal==='S'||x.medal==='A'?x.medal:'B'}; } o.records.boss[b]=m; }
+  for(const z of svKeys(a.fboss)){ if(!SV_ID.test(z)) continue; const x=svObj(a.fboss[z])?a.fboss[z]:{};
+    o.fboss[z]={next:svInt(x.next,0,SV_TMAX,0), kills:svInt(x.kills,0,1e9,0)}; }
+  for(const b of svKeys(a.bossUnlock)) if(SV_ID.test(b)) o.bossUnlock[b]=a.bossUnlock[b]?1:0;
+  const d=svObj(a.daily)?a.daily:{};
+  o.daily={day:svStr(d.day,/^\d{4}-\d{2}-\d{2}$/,''), surv:svFlagMap(d.surv,/^(10|[0-9])$/,16), boss:svFlagMap(d.boss,/^[a-z0-9_:-]{1,40}$/,64),
+    rushWeek:svStr(d.rushWeek,/^\d{4}-W\d{2}$/,'')};
+  const f=svObj(a.flags)?a.flags:{};
+  o.flags={pioneer:f.pioneer===true, migratedBest:f.migratedBest===true, pioneerCloak:f.pioneerCloak===true, tips:svFlagMap(f.tips,/^[A-Za-z0-9_:-]{1,40}$/,64)};
+  const ids=[]; for(const x of Array.isArray(a.runIds)?a.runIds:[]) if(svStr(x,/^r_[a-z0-9_]{1,24}$/,'')&&ids.indexOf(x)<0) ids.push(x);
+  o.runIds=ids.slice(-SV_RUNIDS);
+  return o; }
+function svChar(c){
+  if(!svObj(c)||!svHas(CLS,c.cls)) return null;
+  const cls=CLS[c.cls], first=cls.skills[0], cap=BAL.CAP, t=Date.now(), o={};
+  o.id=svStr(c.id,/^c_[a-z0-9]{1,24}$/,'')||uid('c_');
+  o.name=svCleanName(c.name)||cls.n;
+  o.cls=cls.id;
+  const adv=cls.adv.find(a=>a.id===c.job)||null; o.job=adv?adv.id:null;
+  o.created=svInt(c.created,0,SV_TMAX,t); o.play=svNum(c.play,0,1e9,0); o.kills=svInt(c.kills,0,1e12,0); o.deaths=svInt(c.deaths,0,1e9,0);
+  o.lv=svInt(c.lv,1,cap.base,1); o.xp=o.lv>=cap.base?0:svInt(c.xp,0,BAL.bxpNeed(o.lv)-1,0);
+  const st=svObj(c.st)?c.st:{}; o.st={}; for(const k of STAT_ORDER) o.st[k]=svInt(st[k],0,cap.stat,0);
+  const spentSt=STAT_ORDER.reduce((n,k)=>n+BAL.statSpent(o.st[k]),0);
+  o.pts=svInt(c.pts,0,Math.max(0,BAL.ptsAt(o.lv)-spentSt),0);
+  const tier=adv?2:1, jcap=adv?cap.job2:cap.job1;
+  o.jlv=svInt(c.jlv,1,jcap,1); o.jxp=o.jlv>=jcap?0:svInt(c.jxp,0,BAL.jxpNeed(o.jlv,tier)-1,0);
+  const sk=svObj(c.sk)?c.sk:{}; o.sk={};
+  for(const id of cls.skills.concat(adv?adv.skills:[])){ const r=svInt(sk[id],0,cap.rank,0); if(r) o.sk[id]=r; }
+  if(!o.sk[first]) o.sk[first]=1;                                   // the free ★1 of the first skill never goes away
+  const pas=svObj(c.pas)?c.pas:{}; o.pas={};
+  for(const id in PASSIVES){ const w=PASSIVES[id].own; if(w!==cls.id&&w!==o.job) continue; const r=svInt(pas[id],0,cap.rank,0); if(r) o.pas[id]=r; }
+  o.sp=svInt(c.sp,0,Math.max(0,BAL.spAt(tier,o.jlv)-pgSpSpent(o)),0);
+  const slots=BAL.LOADOUT[tier], load=[];
+  for(const id of Array.isArray(c.load)?c.load:[]) if(typeof id==='string'&&o.sk[id]>0&&load.indexOf(id)<0&&load.length<slots) load.push(id);
+  o.load=load.length?load:[first];
+  o.bagMax=svInt(c.bagMax,BAL.PRICE.bagStart,cap.bag,BAL.PRICE.bagStart);
+  const eqIn=svObj(c.eq)?c.eq:{}, want=new Set(); for(const k of SV_SLOTS) if(typeof eqIn[k]==='string') want.add(eqIn[k]);
+  o.eq=svEmptyEq(); o.inv=svItems(c.inv,o.bagMax,want);
+  const used=new Set(), items=typeof ITEMS!=='undefined'?ITEMS:{};
+  for(const k of SV_SLOTS){ const u=eqIn[k]; if(typeof u!=='string'||used.has(u)) continue;
+    const it=o.inv.find(x=>x.u===u); if(!it) continue;                  // must point at an instance in this bag
+    const d=svHas(items,it.id)?items[it.id]:null; if(d&&d.slot&&d.slot!==k) continue;   // a known item only in its own slot
+    o.eq[k]=u; used.add(u); }
+  const q=Array.isArray(c.quick)?c.quick:[]; o.quick=[svStr(q[0],SV_ID,null), svStr(q[1],SV_ID,null)];
+  o.trial={t2:svObj(c.trial)&&c.trial.t2===1?1:0};
+  o.zone=svStr(c.zone,SV_ID,'z1');
+  const vis=[]; for(const z of Array.isArray(c.visited)?c.visited.slice(0,64):[]) if(svStr(z,SV_ID,'')&&vis.indexOf(z)<0&&vis.length<32) vis.push(z);
+  o.visited=vis.length?vis:['z1'];
+  o.bestiary={}; for(const m of svKeys(c.bestiary,200)) if(SV_ID.test(m)) o.bestiary[m]=svInt(c.bestiary[m],0,1e9,0);
+  const rs=svObj(c.resets)?c.resets:{}; o.resets={free:rs.free===0?0:1, skFree:rs.skFree===0?0:1};
+  return o; }
+function validateSave(s){
+  if(!svObj(s)) s={};
+  const t=Date.now(), o={v:SCHEMA_V};
+  o.sid=svStr(s.sid,/^s_[a-z0-9]{1,24}$/,'')||uid('s_');
+  o.owner=svOwner(s.owner);
+  o.created=svInt(s.created,0,SV_TMAX,t); o.mt=svInt(s.mt,0,SV_TMAX,t); o.play=svNum(s.play,0,1e10,0);
+  o.app=svStr(s.app,/^[A-Za-z0-9._-]{1,24}$/,SV_APP);
+  o.acct=svAcct(s.acct);
+  o.chars=[]; const ids=new Set();
+  for(const c of Array.isArray(s.chars)?s.chars.slice(0,16):[]){ if(o.chars.length>=BAL.CAP.chars) break;
+    const ch=svChar(c); if(!ch) continue; if(ids.has(ch.id)) ch.id=uid('c_'); ids.add(ch.id); o.chars.push(ch); }
+  o.active=typeof s.active==='string'&&ids.has(s.active)?s.active:(o.chars[0]?o.chars[0].id:null);
+  return o; }
+
+function saveSummary(s){ s=svObj(s)?s:{};
+  return {chars:(Array.isArray(s.chars)?s.chars:[]).map(c=>({n:c.name, cls:c.cls, job:c.job||null, lv:c.lv})), play:+s.play||0, mt:+s.mt||0, appVer:typeof s.app==='string'?s.app:''}; }
+// nothing worth keeping (used when a guest save meets an account save): no progress, no gold/marks/stash, no records
+function isTrivialSave(s){
+  if(!svObj(s)) return true; const a=svObj(s.acct)?s.acct:{}, r=svObj(a.records)?a.records:{};
+  if((a.gold|0)>0||(a.marks|0)>0||(Array.isArray(a.stash)&&a.stash.length)) return false;
+  if(svKeys(r.survival).length||svKeys(r.boss).length) return false;
+  for(const c of Array.isArray(s.chars)?s.chars:[]) if((c.lv|0)>1||(c.xp|0)>0||(c.jlv|0)>1||(c.jxp|0)>0||(c.kills|0)>0||(c.job)) return false;
+  return true; }
 /* ================= 41-save-local.js · lane C · local save (the only file that assigns SAVE) · curChar ================= */
-/* M0 stub: frozen signatures from DESIGN §7.8, neutral values — classic never calls these. Lane C writes the real body. */
-function loadSaveFor(owner){ return SAVE; }
-function saveLocal(reason){}
-function saveNow(reason){}
-function curChar(){ return null; }
-function setActiveChar(id){}
-function createChar(name,clsId){ return 'ยังไม่เปิดระบบตัวละคร'; }
-function deleteChar(id){ return false; }
-function exportSave(){ return ''; }
-function importSave(json){ return {ok:false, err:'ยังไม่เปิดระบบเซฟ'}; }
-function saveReadOnly(){ return false; }
-function loadSettings(){ return {}; }
-function saveSettings(patch){}
+// Keys (§6.2): runeguard.save.guest / runeguard.save.u.<uid> (+ .bak) · runeguard.settings. runeguard.best is read only.
+// Every access goes through STORE (try/catch inside), so a blocked localStorage (artifact, private mode) plays from memory.
+// Write-ahead: the previous value that still parses is copied to .bak, then the new one is written.
+// Load: main → .bak → new save. Usable = an object with an integer v ≥ 1; a v1 save also needs acct {} + chars [] (else → .bak).
+// A save from a newer app (v > SCHEMA_V) is read only: never written, never pushed · export gives its stored text unchanged.
+// Two tabs (or tab + installed PWA) share the keys: svlLast = the main text this tab last read or wrote. A write that finds anything
+// else there (another tab saved) never overwrites it: reload + toast instead. The 'storage' event reloads an idle tab at once;
+// mid-run the reload waits for onRunEnd (svlFresh), so the reward lands on top of the other tab's progress.
+// Sandbox (RG.profile.sandbox): the save lives in memory only and nothing is written to localStorage at all.
+const SVL_KEY={guest:'runeguard.save.guest', user:'runeguard.save.u.', settings:'runeguard.settings', best:'runeguard.best'};
+const SVL_SET_DEF={mute:false, autoPot:.35, cardAuto:false, haptics:true};
+let svlOwner=null, svlSandbox=false, svlTimer=0, svlStored=true, svlFrom='none', svlSet=null, svlHooked=false, svlLast=null, svlRaw=null, svlBusy=0;
+function svlKeyFor(owner){ return owner?SVL_KEY.user+owner:SVL_KEY.guest; }
+function svlParse(raw){ if(raw==null) return {k:'none'};
+  try{ const o=JSON.parse(raw); if(svObj(o)&&Number.isInteger(o.v)&&o.v>=1&&(o.v>SCHEMA_V||(svObj(o.acct)&&Array.isArray(o.chars)))) return {k:'ok', o, raw}; }catch(e){} return {k:'bad'}; }
+function svlRead(key){ return svlParse(STORE.get(key)); }
+function svlBest(){ const raw=STORE.get(SVL_KEY.best); if(!raw) return null; try{ return JSON.parse(raw); }catch(e){ return null; } }
+function svlNote(text,kind){ try{ if(typeof toast==='function') toast(text,kind); }catch(e){} }
+// later classic records (classic keeps writing runeguard.best) are folded in on every load — the key itself is never touched
+function svlMergeBest(s,best){ const imp=svImportBest(best); if(!imp) return; const c=s.acct.records.classic;
+  for(const k in imp) if(!c[k]||imp[k].score>c[k].score) c[k]=imp[k]; }
+function loadSaveFor(owner){
+  owner=svOwner(owner); clearTimeout(svlTimer); svlTimer=0; svlOwner=owner;
+  if(svlSandbox){ if(!SAVE){ SAVE=migrateSave(null,null); SAVE.owner=owner; } return SAVE; }
+  svlHook();
+  const key=svlKeyFor(owner), best=svlBest(), raw=STORE.get(key);
+  let r=svlParse(raw), from='main';
+  svlLast=raw;                                                           // what this tab saw in the main key
+  if(r.k!=='ok'){ const b=svlRead(key+'.bak'); if(b.k==='ok'){ r=b; from='bak'; } else from=r.k==='none'&&b.k==='none'?'new':'lost'; }
+  let s;
+  try{ s=migrateSave(r.k==='ok'?r.o:null,best); }catch(e){ console.error(e); s=migrateSave(null,best); from='lost'; }
+  if(!s.ro){ if(r.k==='ok') svlMergeBest(s,best); s.owner=owner; }
+  SAVE=s; svlFrom=from; svlRaw=s.ro&&r.k==='ok'?r.raw:null;
+  if(from==='bak') svlNote('เซฟในเครื่องเสีย ใช้สำรองแทน','bad');
+  else if(from==='lost') svlNote('เซฟในเครื่องเสีย เริ่มเซฟใหม่','bad');
+  if(s.ro) svlNote('มีเวอร์ชันใหม่ แตะเพื่ออัปเดต','info');
+  else if(from!=='main') svlWrite('load',true);                           // keep the new / migrated / restored save
+  BUS.emit('char',curChar());
+  return SAVE; }
+function svlEnsure(){ if(!SAVE) loadSaveFor(svlOwner); return SAVE; }
+function svlWrite(reason,keepMt){
+  if(!SAVE||SAVE.ro||svlSandbox) return false;
+  const key=svlKeyFor(svlOwner), prev=STORE.get(key);
+  if(prev!==svlLast){ if(!svlBusy) svlReload(); return false; }       // another tab saved since this tab read: keep its progress
+  if(!keepMt) SAVE.mt=Date.now(); SAVE.app=SV_APP;
+  let json; try{ json=JSON.stringify(SAVE); }catch(e){ console.error(e); return false; }
+  if(json.length>200*1024) console.warn('Runeguard: เซฟมีขนาด '+Math.round(json.length/1024)+' KB (เกิน 200 KB)');
+  if(prev&&prev!==json&&svlBakOk(prev,key)) STORE.set(key+'.bak',prev);
+  svlStored=STORE.set(key,json); if(svlStored) svlLast=json;
+  BUS.emit('save',reason||'');
+  return svlStored; }
+// write-ahead copy only of a usable save, and never a save with no progress over a .bak that has some
+function svlBakOk(prev,key){ const p=svlParse(prev); if(p.k!=='ok') return false; const b=svlRead(key+'.bak'); if(b.k!=='ok') return true;
+  try{ return !(isTrivialSave(validateSave(p.o))&&!isTrivialSave(validateSave(b.o))); }catch(e){ return true; } }
+function svlReload(){ svlBusy=1; try{ loadSaveFor(svlOwner); }finally{ svlBusy=0; }
+  try{ if(typeof G!=='undefined'&&G&&G.char&&typeof pgLive==='function') pgLive(G,G.char); }catch(e){}   // a held run follows the reloaded character
+  svlNote('ข้อมูลถูกแก้จากอีกแท็บ · โหลดล่าสุดแล้ว','info'); }
+// another tab saved since this tab last read/wrote → reload now (true). Callers holding a character re-find it by id.
+function svlFresh(){ if(!SAVE||svlSandbox||SAVE.ro||svlBusy||STORE.get(svlKeyFor(svlOwner))===svlLast) return false; svlReload(); return true; }
+function svlOnStorage(e){
+  if(!e||svlSandbox||!SAVE) return;
+  if(e.key===null||e.key===SVL_KEY.settings) svlSet=null;
+  if(e.key!==null&&e.key!==svlKeyFor(svlOwner)) return;
+  if(typeof G!=='undefined'&&G&&G.char&&!G.over) return;               // mid-run: onRunEnd calls svlFresh before the reward
+  svlFresh(); }
+function svlHook(){ if(svlHooked) return; svlHooked=true;            // flush a pending debounced save when the page goes away
+  try{ const f=()=>{ if(svlTimer) saveNow('hide'); }; document.addEventListener('visibilitychange',()=>{ if(document.visibilityState==='hidden') f(); }); window.addEventListener('pagehide',f); }catch(e){}
+  try{ window.addEventListener('storage',svlOnStorage); }catch(e){} }
+function saveLocal(reason){ if(!SAVE||SAVE.ro||svlSandbox) return; svlHook(); clearTimeout(svlTimer); svlTimer=setTimeout(()=>{ svlTimer=0; svlWrite(reason,false); },800); }
+function saveNow(reason){ clearTimeout(svlTimer); svlTimer=0; return svlWrite(reason,false); }
+function curChar(){ const s=svlEnsure(); return s&&s.chars.find(c=>c.id===s.active)||null; }
+function setActiveChar(id){ svlFresh(); const s=svlEnsure(), ch=s.chars.find(c=>c.id===id); if(!ch) return false;
+  if(s.active!==id){ s.active=id; saveLocal('active'); BUS.emit('char',ch); } return true; }
+function createChar(name,clsId){
+  svlFresh(); const s=svlEnsure();
+  if(s.ro) return 'ข้อมูลเป็นเวอร์ชันใหม่กว่าแอป แก้ไขไม่ได้';
+  if(s.chars.length>=BAL.CAP.chars) return 'สร้างตัวละครได้สูงสุด '+BAL.CAP.chars+' ตัว';
+  if(!svHas(CLS,clsId)) return 'ไม่พบอาชีพนี้';
+  const nm=typeof name==='string'?name.normalize('NFC').replace(/\s+/g,' ').trim():'';
+  if(!svNameOk(nm)) return 'ชื่อต้องยาว 2–16 ตัวอักษร ใช้ได้เฉพาะไทย อังกฤษ ตัวเลข และเว้นวรรค';
+  if(s.chars.some(c=>c.name===nm)) return 'มีตัวละครชื่อนี้แล้ว';
+  const ch=newChar(nm,clsId);
+  const items=typeof ITEMS!=='undefined'?ITEMS:{};                        // §6.3 pioneer cloak, once, when lane E ships it (M2)
+  if(s.acct.flags.pioneer&&!s.acct.flags.pioneerCloak&&svHas(items,'c_pioneer')&&typeof makeInst==='function'){
+    const it=makeInst('c_pioneer',{}); if(it){ ch.inv.push(it); s.acct.flags.pioneerCloak=true; } }
+  s.chars.push(ch); s.active=ch.id; saveNow('create'); BUS.emit('char',ch);
+  return ch; }
+function deleteChar(id){
+  svlFresh(); const s=svlEnsure(); if(s.ro) return false; const i=s.chars.findIndex(c=>c.id===id); if(i<0) return false;
+  s.chars.splice(i,1); delete s.acct.records.survival[id];
+  if(s.active===id) s.active=s.chars[0]?s.chars[0].id:null;
+  saveNow('delete'); BUS.emit('char',curChar()); return true; }
+function exportSave(){ const s=svlEnsure(); return s&&s.ro&&!svlSandbox&&svlRaw?svlRaw:JSON.stringify(s); }   // read only: the stored text, newer fields kept
+function importSave(json){
+  const s=svlEnsure();
+  if(s.ro) return {ok:false, err:'ข้อมูลในเครื่องเป็นเวอร์ชันใหม่กว่าแอป กรุณาอัปเดตเกมก่อน'};
+  if(typeof json!=='string'||!json.trim()) return {ok:false, err:'ไม่มีข้อมูลเซฟ'};
+  if(json.length>SV_MAXB) return {ok:false, err:'ไฟล์เซฟใหญ่เกิน 256 KB'};
+  let o; try{ o=JSON.parse(json); }catch(e){ return {ok:false, err:'อ่านไฟล์เซฟไม่ได้ (ไม่ใช่ JSON)'}; }
+  if(!svObj(o)||!Number.isInteger(o.v)||o.v<1||!Array.isArray(o.chars)||!svObj(o.acct)) return {ok:false, err:'ไฟล์นี้ไม่ใช่เซฟของ Runeguard'};
+  if(o.v>SCHEMA_V) return {ok:false, err:'ไฟล์เซฟมาจากเกมเวอร์ชันใหม่กว่า กรุณาอัปเดตเกมก่อน'};
+  let n; try{ n=migrateSave(o,null); }catch(e){ console.error(e); return {ok:false, err:'ไฟล์เซฟเสีย'}; }
+  n.owner=svlOwner; clearTimeout(svlTimer); svlTimer=0;
+  SAVE=n; svlLast=STORE.get(svlKeyFor(svlOwner)); svlWrite('import',true);   // replaces whatever is stored (even another tab's): it goes to .bak first
+  BUS.emit('char',curChar());
+  return {ok:true, err:''}; }
+function saveReadOnly(){ return !!(SAVE&&SAVE.ro); }
+// what the shell can show: owner, sandbox, read only, whether the last write reached localStorage, where the save came from
+function svlState(){ return {owner:svlOwner, sandbox:svlSandbox, readonly:saveReadOnly(), stored:svlStored, from:svlFrom}; }
+function svlCleanSet(o){ o=svObj(o)?o:{};
+  return {mute:o.mute===true, autoPot:o.autoPot===0||o.autoPot===false?0:svNum(o.autoPot,0,.9,SVL_SET_DEF.autoPot), cardAuto:o.cardAuto===true, haptics:o.haptics!==false}; }
+function loadSettings(){ if(!svlSet){ let o=null; try{ o=JSON.parse(STORE.get(SVL_KEY.settings)||'null'); }catch(e){} svlSet=svlCleanSet(o); } return Object.assign({},svlSet); }
+function saveSettings(patch){ svlSet=svlCleanSet(Object.assign(loadSettings(),svObj(patch)?patch:{}));
+  if(!svlSandbox) STORE.set(SVL_KEY.settings,JSON.stringify(svlSet)); return loadSettings(); }
 
+// dev hook (§7.9) · window.RG.profile when the address ends with #dev
+DEV.profile={
+  // on: true = fresh empty save in memory · 'copy' = a copy of the current save · false = back to the stored save
+  sandbox(on){ clearTimeout(svlTimer); svlTimer=0;
+    if(on){ const base=on==='copy'&&SAVE?JSON.parse(JSON.stringify(SAVE)):null; svlSandbox=true;
+      SAVE=base?migrateSave(base,null):migrateSave(null,null); SAVE.owner=svlOwner; BUS.emit('char',curChar()); return 'sandbox'; }
+    svlSandbox=false; SAVE=null; loadSaveFor(svlOwner); return 'local'; },
+  get(){ return svlEnsure(); },
+  json(){ return exportSave(); },
+  state(){ return svlState(); },
+  reset(){ if(saveReadOnly()&&!svlSandbox) return 'read only';            // never overwrite a save from a newer app
+    clearTimeout(svlTimer); svlTimer=0;
+    SAVE=migrateSave(null,svlSandbox?null:svlBest()); SAVE.owner=svlOwner; svlLast=STORE.get(svlKeyFor(svlOwner)); svlWrite('reset',false);
+    BUS.emit('char',null); return SAVE; },
+  // char({cls, name, lv, xp, jlv, jxp, job, st, sk, pas, load, pts, sp, trial}) → the active character, edited (created if needed)
+  char(o){ o=o||{}; const s=svlEnsure(); if(s.ro) return 'read only';
+    let ch=curChar();
+    if(!ch||(o.cls&&o.cls!==ch.cls)){ const r=createChar(o.name||('นักทดสอบ '+(s.chars.length+1)),o.cls||(ch&&ch.cls)||'swordsman'); if(typeof r==='string') return r; ch=r; }
+    const raw=JSON.parse(JSON.stringify(ch));
+    for(const k of ['name','lv','xp','jlv','jxp','job']) if(o[k]!==undefined) raw[k]=o[k];
+    if(o.st) raw.st=Object.assign({},raw.st,o.st);
+    if(o.sk) raw.sk=Object.assign({},raw.sk,o.sk);
+    if(o.pas) raw.pas=Object.assign({},raw.pas,o.pas);
+    if(o.trial!==undefined){ const t=svObj(o.trial)?o.trial.t2:o.trial; raw.trial={t2:t?1:0}; }
+    const v0=svChar(raw);                                                // job/levels clamped first, then the derived fields
+    if(o.load) v0.load=o.load.slice();
+    else if(o.sk){ v0.load=[]; for(const id of pgSkillPool(v0)) if(v0.sk[id]>0&&v0.load.length<BAL.LOADOUT[pgTier(v0)]) v0.load.push(id); }
+    v0.pts=o.pts!==undefined?o.pts:BAL.ptsAt(v0.lv)-pgStSpent(v0);
+    v0.sp=o.sp!==undefined?o.sp:BAL.spAt(pgTier(v0),v0.jlv)-pgSpSpent(v0);
+    const v=svChar(v0); v.id=ch.id;
+    for(const k in ch) delete ch[k]; Object.assign(ch,v);
+    saveNow('dev'); BUS.emit('char',ch); return ch; },
+  give(id,n,o){ const ch=curChar(); if(!ch) return 'no character';
+    let res;
+    if(o&&o.r!=null&&typeof makeInst==='function'){ const it=makeInst(id,{}); if(!it) return 'unknown item'; it.r=Math.max(0,Math.min(BAL.REFINE.max,o.r|0)); res=invAdd(ch,it,1); }
+    else res=invAdd(ch,id,n||1);
+    saveLocal('dev'); return res; },
+  gold(n){ const s=svlEnsure(); if(n!==undefined){ s.acct.gold=svInt(n,0,BAL.CAP.gold,0); saveNow('dev'); } return s.acct.gold; },
+  exp(base,job){ const ch=curChar(); if(!ch) return 'no character'; const r=grantExp(ch,base,job===undefined?Math.round((+base||0)*BAL.JOB_EXP):job); saveNow('dev'); return r; }
+};
 /* ================= 42-progression.js · lane C · pure per ch · levels, points, jobs, skills, prepareRun, onRunEnd ================= */
-/* M0 stub: frozen signatures from DESIGN §7.8, neutral values — classic never calls these. Lane C writes the real body. */
-function metaBonus(ch){ return {}; }
-function passiveBonus(ch){ return {}; }
-function buildRunBonus(ch){ return {}; }
-function commitStats(ch,delta){ return false; }
-function resetStats(ch,o){ return false; }                 // o = {scroll}
-function grantExp(ch,base,job){ return {lvUp:0, jobUp:0}; }
-function canLearn(ch,id){ return 'ยังไม่เปิดระบบสกิล'; }
-function learnSkill(ch,id){ return false; }
-function learnPassive(ch,id){ return false; }
-function resetSkills(ch,o){ return false; }                // o = {scroll}
-function setLoadout(ch,ids){ return false; }
-function jobReqs(ch,advId){ return []; }                   // → [{t, ok}]
-function advanceJob(ch,advId){ return false; }
-function prepareRun(G,P,ch,modeId){}
-function onRunEnd(G,won,o){ return null; }                 // o = {commit} → Reward {runId, baseXp, jobXp, gold, marks, items, lvUp, jobUp, unlocks}
-function grantRewards(ch,r){ return false; }               // idempotent by r.runId
-function fieldKillExp(ch,e){ return {base:0, job:0}; }
+// Rules: DESIGN §3 (levels, stat/skill points, job tree, ★ ranks, loadout, passives, derived stats) · §2.2 survival rewards.
+// Account-wide data (gold, marks, runIds, records, daily — Q7) lives in SAVE.acct. Mutators return false on a read-only save,
+// and save themselves when ch belongs to SAVE (saveLocal = debounced · saveNow for job change and rewards).
+const PG_START={survival:'first', field:'all1', boss:'rank', trial:'rank'};   // skills at run start (§3.6) · other modes: 'first'
+const PG_TIP='ความชำนาญเริ่มที่ 1 ทุกครั้ง · สกิลอัปได้ถึง ★ ที่ฝึกไว้';
+const PG_RUNIDS=[];                                                            // fallback when there is no SAVE (never in the game)
+function pgAcct(){ return SAVE&&SAVE.acct||null; }
+function pgCls(ch){ return ch&&typeof CLS!=='undefined'&&svHas(CLS,ch.cls)?CLS[ch.cls]:null; }
+function pgAdvOf(ch){ const c=pgCls(ch); return c&&ch.job&&c.adv.find(a=>a.id===ch.job)||null; }
+function pgTier(ch){ return pgAdvOf(ch)?2:1; }
+function pgJobCap(ch){ return pgAdvOf(ch)?BAL.CAP.job2:BAL.CAP.job1; }
+function pgSkillPool(ch){ const c=pgCls(ch), a=pgAdvOf(ch); return c?c.skills.concat(a?a.skills:[]):[]; }   // skills ch may train now
+function pgPasPool(ch){ const out=[]; if(!ch) return out; for(const id in PASSIVES){ const w=PASSIVES[id].own; if(w===ch.cls||(ch.job&&w===ch.job)) out.push(id); } return out; }
+function pgRO(){ return typeof saveReadOnly==='function'&&saveReadOnly(); }
+function pgSave(ch,reason,now){ if(!SAVE||!Array.isArray(SAVE.chars)) return;
+  if(SAVE.chars.indexOf(ch)<0){ if(ch&&SAVE.chars.some(c=>c&&c.id===ch.id)) console.warn('Runeguard: ไม่ได้บันทึก · ตัวละครถูกโหลดใหม่จากอีกแท็บแล้ว'); return; }
+  if(now) saveNow(reason); else saveLocal(reason); }
+// a held character re-found by id in the current SAVE (a reload from another tab leaves the old object behind) → G.char and
+// G.opts.char follow it · null = SAVE has no such character any more (deleted in another tab)
+function pgLive(G,ch){
+  if(!ch||!SAVE||!Array.isArray(SAVE.chars)||SAVE.chars.indexOf(ch)>=0) return ch;
+  const f=SAVE.chars.find(c=>c&&c.id===ch.id)||null;
+  if(f&&G){ if(G.char===ch) G.char=f; if(G.opts&&G.opts.char===ch) G.opts.char=f; }
+  return f; }
+function pgR6(v){ return Math.round(v*1e6)/1e6; }
+// points bookkeeping (also used by validateSave)
+function pgSpSpent(ch){ const c=pgCls(ch); let n=0; if(!c) return 0;
+  for(const id in ch.sk||{}) n+=BAL.rankSpent(ch.sk[id]|0);
+  if((ch.sk||{})[c.skills[0]]>0) n-=BAL.RANK_COST[1];                   // ★1 of the first skill is free (§3.5)
+  for(const id in ch.pas||{}) n+=(ch.pas[id]|0)*BAL.PAS_COST; return n; }
+function pgStSpent(ch){ return STAT_ORDER.reduce((n,k)=>n+BAL.statSpent((ch.st||{})[k]|0),0); }
+function pgStatCost(ch,delta){ let n=0; for(const k in delta||{}){ const x=(ch.st||{})[k]|0, d=delta[k]|0; for(let i=x;i<x+d&&i<BAL.CAP.stat;i++) n+=BAL.statCost(i); } return n; }
 
+/* ---- derived stats: P.bonus = mergeBonus(adv.bonus, metaBonus, passiveBonus, gearBonus) (§3.7) ---- */
+function metaBonus(ch){
+  const b={}; if(!ch) return b; const K=BAL.META_K, s=ch.st||{}, L=Math.max(0,(ch.lv|0)-1);
+  const add=(k,v)=>{ v=pgR6(v); if(v) b[k]=pgR6((b[k]||0)+v); };
+  add('might',K.STR.might*(s.STR|0)+K.LV.might*L);
+  add('hp',K.VIT.hp*(s.VIT|0)+K.LV.hp*L); add('regen',K.VIT.regen*(s.VIT|0)); add('armor',K.VIT.armor*(s.VIT|0));
+  add('speed',Math.min(K.AGI.speedMax,K.AGI.speed*(s.AGI|0)));
+  const cd=pgR6(Math.pow(K.AGI.cd,s.AGI|0)*Math.pow(K.DEX.cd,s.DEX|0)); if(cd!==1) b.cd=cd;
+  if((s.DEX|0)>=40) b.proj=K.DEX.proj40;
+  add('area',K.INT.area*(s.INT|0)); add('dur',K.INT.dur*(s.INT|0));
+  add('crit',K.LUK.crit*(s.LUK|0)); add('critMult',K.LUK.critMult*(s.LUK|0)); add('drop',K.LUK.drop*(s.LUK|0)); add('xp',K.LUK.xp*(s.LUK|0));
+  return b; }
+function passiveBonus(ch){
+  if(!ch) return {}; const b=mergeBonus(...pgPasPool(ch).map(id=>jdPassiveAt(id,Math.min(BAL.CAP.rank,(ch.pas||{})[id]|0))));
+  for(const k in b) if(typeof b[k]==='number') b[k]=pgR6(b[k]); return b; }
+// the complete permanent bonus of a run — exactly what prepareRun puts in P.bonus (a fresh character with no gear → {})
+function buildRunBonus(ch){
+  if(!ch) return {}; const a=pgAdvOf(ch), g=typeof gearBonus==='function'?gearBonus(ch):null;
+  const b=mergeBonus(a&&a.bonus, metaBonus(ch), passiveBonus(ch), g);
+  for(const k in b) if(typeof b[k]==='number') b[k]=pgR6(b[k]); return b; }
+
+/* ---- stat points (§3.3) ---- */
+function commitStats(ch,delta){
+  if(!ch||!svObj(delta)||pgRO()) return false; let cost=0, any=false; const nx={};
+  for(const k in delta){ if(STAT_ORDER.indexOf(k)<0) return false; const n=delta[k];
+    if(!Number.isInteger(n)||n<0) return false; if(!n) continue;
+    const x=ch.st[k]|0; if(x+n>BAL.CAP.stat) return false;
+    for(let i=x;i<x+n;i++) cost+=BAL.statCost(i); nx[k]=x+n; any=true; }
+  if(!any||cost>ch.pts) return false;
+  Object.assign(ch.st,nx); ch.pts-=cost; pgSave(ch,'stats'); return true; }
+// [แจกอัตโนมัติ]: spend up to `pts` (default all) by the class preset ratio → delta for commitStats (pure, no change)
+function pgAutoStats(ch,pts){
+  const w=PRESETS[ch.cls]||{STR:1}, d={}; let left=pts==null?ch.pts|0:pts|0;
+  for(let guard=0;guard<400;guard++){ let best=null, bv=1e9;
+    for(const k of STAT_ORDER){ if(!w[k]) continue; const x=(ch.st[k]|0)+(d[k]|0); if(x>=BAL.CAP.stat||BAL.statCost(x)>left) continue;
+      const v=x/w[k]; if(v<bv){ bv=v; best=k; } }
+    if(!best) break; left-=BAL.statCost((ch.st[best]|0)+(d[best]|0)); d[best]=(d[best]|0)+1; }
+  return d; }
+// how a reset is paid now: 'free' (Base < 20) · 'freeOnce' (the one free reset) · 'scroll' (ม้วนลืมเลือน)
+function pgResetWay(ch,kind){ if((ch.lv|0)<BAL.RESET.freeBelow) return 'free'; const f=kind==='sk'?ch.resets.skFree:ch.resets.free; return f?'freeOnce':'scroll'; }
+function pgPayReset(ch,kind,o){ const way=pgResetWay(ch,kind);
+  if(way==='scroll'){ if(!(o&&o.scroll)) return false; if(!(typeof invRemove==='function'&&invRemove(ch,'u_forget',1))) return false; }
+  if(way==='freeOnce'){ if(kind==='sk') ch.resets.skFree=0; else ch.resets.free=0; }
+  return true; }
+function resetStats(ch,o){
+  if(!ch||pgRO()) return false; const spent=pgStSpent(ch); if(!spent) return false;
+  if(!pgPayReset(ch,'st',o)) return false;
+  for(const k of STAT_ORDER) ch.st[k]=0; ch.pts+=spent; pgSave(ch,'resetStats',true); return true; }
+
+/* ---- EXP (§3.2) ---- */
+// grantExp keeps the frozen shape {lvUp, jobUp}; Base-60 overflow gold goes straight to acct.gold (pgGrantExp also reports it)
+function grantExp(ch,base,job){ const r=pgGrantExp(ch,base,job); return {lvUp:r.lvUp, jobUp:r.jobUp}; }
+function pgGrantExp(ch,base,job){
+  const out={lvUp:0, jobUp:0, gold:0}; if(!pgCls(ch)||typeof ch.lv!=='number'||pgRO()) return out;
+  base=Math.max(0,Math.floor(+base||0)); job=Math.max(0,Math.floor(+job||0)); const cap=BAL.CAP;
+  if(ch.lv>=cap.base) out.gold+=Math.floor(base*BAL.OVER_GOLD);
+  else { ch.xp+=base;
+    while(ch.lv<cap.base&&ch.xp>=BAL.bxpNeed(ch.lv)){ ch.xp-=BAL.bxpNeed(ch.lv); ch.lv++; ch.pts+=BAL.statPtsFor(ch.lv); out.lvUp++; }
+    if(ch.lv>=cap.base){ out.gold+=Math.floor(ch.xp*BAL.OVER_GOLD); ch.xp=0; } }
+  const tier=pgTier(ch), jcap=pgJobCap(ch);
+  if(ch.jlv<jcap){ ch.jxp+=job;
+    while(ch.jlv<jcap&&ch.jxp>=BAL.jxpNeed(ch.jlv,tier)){ ch.jxp-=BAL.jxpNeed(ch.jlv,tier); ch.jlv++; ch.sp++; out.jobUp++; } }
+  if(ch.jlv>=jcap) ch.jxp=0;                                             // job EXP past the cap is not kept
+  const A=pgAcct(); if(out.gold&&A) A.gold=Math.min(cap.gold,A.gold+out.gold);
+  if(base||job) pgSave(ch,'exp');
+  return out; }
+// field kill (§3.2): mobExp(e.lv) · diffMul(e.lv − ch.lv) · P.xpMul → {base, job}
+function fieldKillExp(ch,e){
+  if(!ch||!e) return {base:0, job:0}; const m=Math.max(1,e.lv|0||(e.d&&e.d.lv)|0||1);
+  const xm=(typeof P!=='undefined'&&P&&P.xpMul)||1;
+  const base=Math.round(BAL.mobExp(m)*BAL.diffMul(m-(ch.lv|0))*xm);
+  return {base, job:Math.round(base*BAL.JOB_EXP)}; }
+// field death (§2.3): lose 1% of bxpNeed(lv) inside the current level (never below 0, never a level down)
+function pgFieldDeath(ch){ if(!ch||pgRO()) return 0; const loss=Math.min(ch.xp|0,Math.round(BAL.bxpNeed(ch.lv)*BAL.FIELD.deathExp));
+  ch.xp-=loss; ch.deaths=(ch.deaths|0)+1; pgSave(ch,'death'); return loss; }
+
+/* ---- skills, passives, loadout (§3.5) ---- */
+function canLearn(ch,id){
+  if(!ch) return 'ไม่มีตัวละคร';
+  if(pgRO()) return 'ข้อมูลเป็นเวอร์ชันใหม่กว่าแอป แก้ไขไม่ได้';
+  const c=pgCls(ch); if(!c) return 'ไม่พบอาชีพ';
+  if(svHas(PASSIVES,id)){ const d=PASSIVES[id], r=(ch.pas||{})[id]|0;
+    if(d.own!==ch.cls&&d.own!==ch.job){ const a=c.adv.find(x=>x.id===d.own); return a?'ต้องเลื่อนเป็น'+a.n+'ก่อน':'ไม่ใช่ความสามารถติดตัวของอาชีพนี้'; }
+    if(r>=BAL.CAP.rank) return 'ฝึกถึง ★'+BAL.CAP.rank+' แล้ว';
+    if(ch.sp<BAL.PAS_COST) return 'แต้มสกิลไม่พอ (ต้องใช้ '+BAL.PAS_COST+')';
+    return ''; }
+  if(!svHas(SK,id)) return 'ไม่พบสกิลนี้';
+  if(pgSkillPool(ch).indexOf(id)<0){ const a=c.adv.find(x=>x.skills.indexOf(id)>=0); return a&&!ch.job?'ต้องเลื่อนเป็น'+a.n+'ก่อน':'สกิลนี้ไม่ใช่ของอาชีพนี้'; }
+  const r=(ch.sk||{})[id]|0; if(r>=BAL.CAP.rank) return 'ฝึกถึง ★'+BAL.CAP.rank+' แล้ว';
+  const q=SKILL_REQ[id]; if(q&&((ch.sk||{})[q.need]|0)<q.r) return 'ต้องฝึก '+SK[q.need].n+' ถึง ★'+q.r+' ก่อน';
+  const cost=BAL.RANK_COST[r+1]; if(ch.sp<cost) return 'แต้มสกิลไม่พอ (ต้องใช้ '+cost+')';
+  return ''; }
+function learnSkill(ch,id){
+  if(svHas(PASSIVES,id)) return learnPassive(ch,id);
+  if(canLearn(ch,id)!=='') return false;
+  const r=ch.sk[id]|0; ch.sp-=BAL.RANK_COST[r+1]; ch.sk[id]=r+1;
+  if(r===0&&ch.load.indexOf(id)<0&&ch.load.length<BAL.LOADOUT[pgTier(ch)]) ch.load.push(id);   // a newly learned skill takes a free slot
+  pgSave(ch,'skill'); return true; }
+function learnPassive(ch,id){
+  if(!svHas(PASSIVES,id)||canLearn(ch,id)!=='') return false;
+  ch.sp-=BAL.PAS_COST; ch.pas[id]=(ch.pas[id]|0)+1; pgSave(ch,'passive'); return true; }
+function resetSkills(ch,o){
+  if(!ch||pgRO()) return false; const c=pgCls(ch); if(!c) return false;
+  const spent=pgSpSpent(ch); if(!spent) return false;
+  if(!pgPayReset(ch,'sk',o)) return false;
+  const first=c.skills[0]; ch.sk={[first]:1}; ch.pas={}; ch.sp+=spent;
+  ch.load=ch.load.filter(id=>ch.sk[id]>0); if(!ch.load.length) ch.load=[first];
+  pgSave(ch,'resetSkills',true); return true; }
+function setLoadout(ch,ids){
+  if(!ch||pgRO()||!Array.isArray(ids)) return false; const pool=pgSkillPool(ch), max=BAL.LOADOUT[pgTier(ch)];
+  if(!ids.length||ids.length>max) return false;
+  for(let i=0;i<ids.length;i++){ const id=ids[i]; if(pool.indexOf(id)<0||!((ch.sk[id]|0)>0)||ids.indexOf(id)!==i) return false; }
+  ch.load=ids.slice(); pgSave(ch,'loadout'); return true; }
+
+/* ---- job advancement (§3.4) ---- */
+function jobReqs(ch,advId){
+  const A=pgAcct(), gold=A?A.gold:0, R=BAL.ADV;
+  return [
+    {t:'เลเวลตัวละคร '+R.base+' ขึ้นไป (ตอนนี้ '+(ch.lv|0)+')', ok:(ch.lv|0)>=R.base},
+    {t:'เลเวลอาชีพ '+R.job+' (เต็มขั้นต้น · ตอนนี้ '+(ch.job?'เลื่อนแล้ว':ch.jlv|0)+')', ok:!ch.job&&(ch.jlv|0)>=R.job},
+    {t:'ผ่านบททดสอบเลื่อนขั้น', ok:!!(ch.trial&&ch.trial.t2===1)},
+    {t:'ค่าพิธี '+R.fee.toLocaleString('en-US')+' ทอง (มี '+gold.toLocaleString('en-US')+')', ok:gold>=R.fee}]; }
+function advanceJob(ch,advId){
+  if(!ch||pgRO()||ch.job) return false;                                 // once only, permanent
+  const c=pgCls(ch), a=c&&c.adv.find(x=>x.id===advId); if(!a) return false;
+  if(!jobReqs(ch,advId).every(q=>q.ok)) return false;
+  const A=pgAcct(); if(!A||A.gold<BAL.ADV.fee) return false;
+  A.gold-=BAL.ADV.fee; ch.job=a.id; ch.jlv=1; ch.jxp=0;
+  pgSave(ch,'advance',true); BUS.emit('char',ch); return true; }
+
+/* ---- runs ---- */
+// newRun → recalc → prepareRun: the run's player becomes the character (job, ★ caps, loadout, permanent bonus)
+function prepareRun(G,P,ch,modeId){
+  ch=pgLive(G,ch)||ch;                                                  // [เล่นอีกครั้ง] restarts with G.opts.char: maybe a reloaded-away object
+  const a=pgAdvOf(ch);
+  P.adv=a; P.advOffered=true;                                           // never the Lv15 job pick (G.ui never 'adv')
+  P.look=Object.assign({},P.cls.look,a?a.look:null,typeof gearLook==='function'?gearLook(ch):null);
+  P.bonus=buildRunBonus(ch);
+  P.rank={}; for(const id of pgSkillPool(ch)){ const r=(ch.sk||{})[id]|0; if(r>0) P.rank[id]=Math.min(BAL.CAP.rank,r); }
+  P.loadout=(ch.load||[]).filter(id=>P.rank[id]>0&&svHas(SK,id));
+  if(!P.loadout.length){ const f=P.cls.skills[0]; P.loadout=[f]; P.rank[f]=Math.max(1,P.rank[f]|0); }
+  P.lv=1; P.xp=0; P.need=xpNeed(1);                                     // proficiency restarts every run
+  const how=PG_START[modeId]||'first';
+  if(how==='first') P.skills=[makeSkill(P.loadout[0])];
+  else P.skills=P.loadout.map(id=>{ const s=makeSkill(id);
+    if(how==='rank'){ s.lv=P.rank[id]; const e=s.def.evo; if(s.lv>=5&&e&&((ch.st||{})[e.s]|0)>=25) s.evolved=true; }
+    return s; });
+  recalc(P); P.hp=P.maxHp;
+  G.goldRun=0; G.charTip=!ch.play&&!ch.kills&&how!=='rank'?PG_TIP:'';  // the tip is about cards: not for modes that start at ★ (CR-C1)
+}
+// endRun → onRunEnd: compute the Reward; keep it only when o.commit (core passes !G.auto || DEV.commit)
+function onRunEnd(G,won,o){
+  let ch=G&&G.char; if(!ch) return null;
+  if(typeof svlFresh==='function') svlFresh();                         // another tab saved during the run: reload, pay onto its data
+  const live=pgLive(G,ch); if(live) ch=live; else o={commit:false};    // always by id (SAVE may have been reloaded earlier) · deleted → keep nothing
+  const r={runId:G.runId, baseXp:0, jobXp:0, gold:0, marks:0, items:Array.isArray(G.loot)?G.loot.slice():[], lvUp:0, jobUp:0, unlocks:[],
+    mode:G.modeId, daily:false, committed:false, st:{t:+G.t||0, kills:G.kills|0, died:!won&&!!(G.player&&G.player.hp<=0), wave:G.wave|0, won:!!won}};
+  try{
+    const A=pgAcct(), today=svDay();
+    if(G.modeId==='survival'){
+      const S=BAL.SURV, T=Math.max(0,Math.min(S.maxT,G.tier|0)), waves=won?S.WAVES:Math.max(0,(G.wave|0)-1), rec=S.recLv(T), gpw=S.goldPerWave(T);
+      r.tier=T; r.waves=waves;
+      r.baseXp=Math.round(BAL.bxpNeed(rec)*S.expMul(waves,won)*S.overLv(ch.lv|0,rec));
+      r.gold=gpw*waves+(won?gpw*S.winGoldWaves:0)+(G.goldRun|0);
+      const used=A&&A.daily.day===today&&A.daily.surv[T];
+      if((G.wave|0)>=S.dailyWave&&!used){ r.daily=true; r.baseXp*=2; r.gold*=2; }
+      if((G.wave|0)>=S.unlockWave&&T<S.maxT&&A&&A.survTier<T+1) r.unlocks.push('survTier:'+(T+1));
+      for(const [w,b] of [[5,'colossus'],[10,'lich'],[20,'king']]) if((G.wave|0)>=w&&A&&!A.bossUnlock[b]) r.unlocks.push('boss:'+b);
+    } else if(G.modeId==='trial'){
+      if(won&&!(ch.trial&&ch.trial.t2===1)) r.unlocks.push('trial:t2');
+    } else {
+      r.gold=G.goldRun|0;                                               // field EXP is granted per kill; boss/field fill the rest
+      if(G.mode&&typeof G.mode.rewards==='function') G.mode.rewards(r,won);
+    }
+    r.jobXp=Math.round(r.baseXp*BAL.JOB_EXP);
+  }catch(e){ console.error(e); }
+  if(o&&o.commit) grantRewards(ch,r);
+  return r; }
+// apply a Reward once: a runId already in acct.runIds (last 30) is refused
+function grantRewards(ch,r){
+  if(!ch||!r||typeof r.runId!=='string'||!r.runId||pgRO()) return false;
+  const A=pgAcct(), ids=A?A.runIds:PG_RUNIDS; if(ids.indexOf(r.runId)>=0) return false;
+  ids.push(r.runId); while(ids.length>SV_RUNIDS) ids.shift();
+  const g=pgGrantExp(ch,r.baseXp,r.jobXp); r.lvUp=g.lvUp; r.jobUp=g.jobUp; r.overGold=g.gold;
+  if(A){ A.gold=Math.min(BAL.CAP.gold,A.gold+Math.max(0,Math.floor(+r.gold||0))); A.marks=Math.min(BAL.CAP.marks,A.marks+Math.max(0,Math.floor(+r.marks||0))); }
+  r.lost=[];
+  for(const it of r.items||[]){ const res=typeof invAdd==='function'?invAdd(ch,it,it&&it.n||1):null; if(!res||!res.ok) r.lost.push(it); }
+  const st=r.st||{}, t=Number.isFinite(+st.t)?Math.max(0,+st.t):0, kills=Math.max(0,st.kills|0), wave=Math.max(0,st.wave|0);   // never lowers totals
+  ch.play=(+ch.play||0)+t; ch.kills=(ch.kills|0)+kills; if(st.died) ch.deaths=(ch.deaths|0)+1;
+  if(SAVE) SAVE.play=(+SAVE.play||0)+t;
+  if(A){
+    const today=svDay(); if(A.daily.day!==today){ A.daily.day=today; A.daily.surv={}; A.daily.boss={}; }
+    if(r.mode==='survival'){ const T=String(r.tier|0), m=A.records.survival[ch.id]||(A.records.survival[ch.id]={}), old=m[T];
+      if(!old||wave>old.wave||(wave===old.wave&&kills>old.kills)||(st.won&&!old.won)) m[T]={wave, kills, won:!!st.won||!!(old&&old.won)};
+      if(r.daily) A.daily.surv[T]=1; }
+  }
+  for(const u of r.unlocks||[]){ const [k,v]=String(u).split(':');
+    if(k==='trial'&&v==='t2') ch.trial.t2=1;                            // trial won → the job page opens advancement
+    else if(!A) continue;
+    else if(k==='survTier') A.survTier=Math.max(A.survTier,Math.min(BAL.SURV.maxT,v|0));
+    else if(k==='boss'&&SV_ID.test(v||'')) A.bossUnlock[v]=1; }
+  r.committed=true; pgSave(ch,'reward',true); return true; }
 /* ================= 43-auth.js · lane N · GoTrue raw fetch + PKCE (§6.7) · the only file with the Supabase URL/key ================= */
 /* M0 stub: frozen signatures from DESIGN §7.8, neutral values — classic never calls these. Lane N writes the real body. */
 const SUPA={ url:'https://edmwctmnasggdtdbcxkb.supabase.co', key:'sb_publishable_uSbGPoK1lGd6PMUUGpu4uw_N_HfOIbF' };
@@ -2056,24 +3005,410 @@ function syncDecide(localState,srvHead){ return 'noop'; }   // 'adopt'|'push'|'c
 function linkDecide(guestSave,srvHead){ return 'noop'; }    // 'adopt'|'askMove'|'choose'|'noop'
 
 /* ================= 50-ui-shell.js · lane B · UI router, sheet, toast, confirmBox, sysLog, character window frame ================= */
-/* M0 stub: frozen signatures from DESIGN §7.8, neutral values — classic never calls these. Lane B writes the real body. */
-const UI={ go(id,args){}, back(){}, home(){}, stack(){ return []; } };
-function sheet(nodeOrHtml,o){ return null; }               // o = {title, onClose}
-function closeSheet(){}
-function toast(text,kind){}                                // kind: 'info'|'good'|'bad'
-function confirmBox(text,o){ return Promise.resolve(false); }   // o = {hold, okText}
-function sysLog(text,kind){}
-function openCharWindow(tab){}
-// lane B sets UIX.home / enter / hud / endExtra / pauseExtra here (all null in M0 = old behaviour)
+// UI.go(id,args) pushes a screen and shows it (core show) · every change emits BUS 'screen' (id, args): the owner lane renders then.
+// Back: confirm → sheet → screen · in a run pause (again = resume) · end screen → home. Android back (§8.0): history entries {rg,d}
+// mirror the stack (+1 per sheet / confirm / run); Chrome skips entries added without a gesture, so shSync adds ≤ 1 per tap / key.
+// At the stack bottom the first back only warns. User text → textContent / esc() only.
+const SH={stack:[], booted:false, hd:0, ign:0, ignK:0, tok:0, noHist:true, sheet:null, onClose:null, conf:null, menuAt:0,
+  lastMode:null, tab:null, txt:{}, cwCh:null};
+const SH_META=['scrChar','scrSkills','scrJob','scrAccount'];       // pages with the shared tab bar (§8.0)
+const SH_RET={classic:'scrTitle', trial:'scrJob'};                  // after toTitle: hub + this screen
+regScreen('scrChar');
+const UI={
+  go(id,args){ return shGo(id,args); },
+  back(){ shBack(); },
+  home(){ shHome(); },
+  stack(){ return SH.stack.slice(); }
+};
+UIX.home=shAfterRun;
+UIX.enter=function(){ const a=document.activeElement; if(SH.sheet||SH.conf||(a&&/^(BUTTON|INPUT|TEXTAREA|SELECT|A)$/.test(a.tagName))) return;
+  const f=HB_ENTER[shTop()]; if(f) f(); };
+// RG.ui() keeps the body of 90-dev-hook (DEV is merged over it) + RG.ui.go(id) / .stack() (§7.9)
+DEV.ui=Object.assign(function(){ if(G){ G.ui=null; checkUI(); updateHUD(); render(); return G.ui; } },
+  {go(id,a){ UI.go(id,a); return UI.stack(); }, back(){ UI.back(); return UI.stack(); }, home(){ UI.home(); return UI.stack(); }, stack(){ return UI.stack(); }});
 
+function shEl(id){ return document.getElementById(id); }
+function shMk(tag,cls,text){ const n=document.createElement(tag); if(cls) n.className=cls; if(text!=null) n.textContent=String(text); return n; }
+function shBtn(text,cls,fn){ const b=shMk('button',cls,text); b.type='button'; if(fn) b.addEventListener('click',fn); return b; }
+function shTop(){ return SH.stack[SH.stack.length-1]||null; }
+
+/* ---------- router ---------- */
+function shGo(id,a){
+  if(typeof id!=='string'||!shEl(id)){ toast('หน้านี้ยังไม่เปิดให้ใช้','info'); return false; }
+  if(G){ if(G.over) toTitle(); else if(G.ui!=='menu') return false; else if(!SH.menuAt) SH.menuAt=SH.stack.length; }
+  if(SH.conf) shConfDone(false); shSheetOff();
+  if(shTop()!==id) SH.stack.push(id);
+  shShow(id,a); return true; }
+function shShow(id,a){ regScreen(id); show(id); shChrome(id); BUS.emit('screen',id,a===undefined?null:a); shSync(); }
+function shBack(){
+  if(SH.conf){ shConfDone(false); return; }
+  if(SH.sheet){ closeSheet(); return; }
+  if(G&&!SH.menuAt){
+    if(G.over){ if(curScreen()==='scrEnd') toTitle(); }
+    else if(!G.ui) pauseGame(); else if(G.ui==='pause') resumeGame();   // level / job cards: a pick is required
+    shSync(); return; }
+  if(G&&SH.stack.length<=SH.menuAt+1){ SH.stack.length=SH.menuAt; SH.menuAt=0; G.ui=null; show(null); shChrome(null); shSync(); return; }
+  if(SH.stack.length>1){ SH.stack.pop(); shShow(shTop()); return; }
+  if(shTop()!=='scrHub') shHome(); }
+function shHome(){
+  if(G){ SH.lastMode=null; toTitle(); return; }                     // toTitle → UIX.home → here again with G = null
+  if(SH.conf) shConfDone(false); shSheetOff(); SH.menuAt=0; SH.stack=['scrHub']; shShow('scrHub'); }
+function shAfterRun(){ const r=SH_RET[SH.lastMode]; SH.lastMode=null; shHome(); if(r&&shEl(r)) shGo(r); }
+function shChrome(id){
+  const nav=shEl('shNav'), fab=shEl('shFab'); if(!nav||!fab) return;
+  const hub=id==='scrHub', meta=hub||SH_META.includes(id);
+  nav.hidden=!meta; document.body.classList.toggle('sh-navon',meta);
+  fab.hidden=!(id==='scrTitle'&&SH.stack.length>1); document.body.classList.toggle('sh-fabon',!fab.hidden);
+  if(!meta) return;
+  const ch=curChar(), rq=ch&&!ch.job?jobReqs(ch,''):null;
+  for(const b of nav.children){ const g=b.dataset.go;
+    b.hidden=g==='scrHub'?hub:g==='scrSettings'?!hub:!shEl(g);
+    b.setAttribute('aria-current',g===id?'page':'false');
+    const n=!ch?'':g==='scrChar'?(ch.pts>0?String(ch.pts):''):g==='scrSkills'?(ch.sp>0?String(ch.sp):''):g==='scrJob'&&rq&&rq[0].ok&&rq[1].ok?'!':'';
+    if(n) b.dataset.n=n; else delete b.dataset.n; } }
+function shNavGo(id){
+  if(id==='scrHub'){ UI.home(); return; }
+  if(!shEl(id)){ toast('หน้านี้ยังไม่เปิดให้ใช้','info'); return; }
+  if(id!=='scrSettings'&&!curChar()){ toast('สร้างตัวละครก่อน','info'); UI.go('scrNew'); return; }
+  if(shTop()===id) return;
+  if(SH_META.includes(shTop())) SH.stack.pop();                     // tab switch: back still goes to the hub
+  if(id==='scrChar') openCharWindow(); else UI.go(id); }
+function shKey(e){ if(e.code==='Escape'){ UI.back(); return true; } const t=e.target; return !!t&&/^(INPUT|TEXTAREA|SELECT)$/.test(t.tagName); }   // typing: keep core shortcuts (M = mute) off
+
+function shWant(){ return SH.stack.length+(SH.sheet?1:0)+(SH.conf?1:0)+(G&&!G.over&&!SH.menuAt?1:0); }
+function shSync(){
+  if(SH.noHist||!SH.booted||SH.ign) return;
+  const w=shWant();
+  try{
+    if(SH.hd>w){ const n=SH.hd-w, k=++SH.ignK; SH.ign=1; SH.hd=w; history.go(-n); setTimeout(()=>{ if(SH.ignK===k) SH.ign=0; },1500); }
+    else if(SH.hd<w&&SH.tok&&performance.now()-SH.tok<1500){ SH.tok=0; SH.hd++; history.pushState({rg:shTop()||'scrHub', d:SH.hd},''); }
+  }catch(e){ SH.ign=0; } }
+function shGest(e){   // user activation: mouse press, touch / pen release, key (not Escape)
+  if(e.type==='keydown'){ if(e.repeat||e.key==='Escape') return; } else if((e.pointerType==='mouse')!==(e.type==='pointerdown')) return;
+  SH.tok=performance.now(); setTimeout(shSync,0); }
+function shOnPop(e){
+  const s=e.state; SH.hd=s&&s.rg?s.d|0:0;
+  if(SH.ign){ SH.ign--; shSync(); return; }
+  if(!G&&!SH.sheet&&!SH.conf&&SH.stack.length<=1){ if(!SH.hd) toast('กดย้อนกลับอีกครั้งเพื่อออกจากเกม','info'); return; }
+  if(G&&!G.over&&!SH.menuAt&&!SH.hd&&!SH.sheet&&!SH.conf){            // run on the last entry: the next back leaves the page
+    if(!G.ui) pauseGame(); toast('กดย้อนกลับอีกครั้งเพื่อออกจากเกม','info'); return; }   // so pause (never resume) and warn
+  shBack(); }
+
+/* ---------- sheet (bottom, ≤ 80vh, swipe down or ✕) ---------- */
+function sheet(nodeOrHtml,o){
+  o=o||{}; const r=shEl('shSheet'), b=shEl('shSheetB'); if(!r||!b) return null;
+  if(SH.conf) shConfDone(false); shSheetOff();
+  if(typeof nodeOrHtml==='string') b.innerHTML=nodeOrHtml; else if(nodeOrHtml) b.append(nodeOrHtml);
+  shEl('shSheetT').textContent=o.title||''; shEl('shCard').style.transform=''; r.hidden=false;
+  SH.sheet=b; SH.onClose=typeof o.onClose==='function'?o.onClose:null; shSync(); return b; }
+function shSheetOff(){ if(!SH.sheet) return; const f=SH.onClose; SH.sheet=null; SH.onClose=null; shEl('shSheet').hidden=true; shEl('shSheetB').textContent='';
+  if(f) try{ f(); }catch(e){ console.error(e); } }
+function closeSheet(){ if(!SH.sheet) return; shSheetOff(); shSync(); }
+
+/* ---------- toast (top, 2.5 s) · sysLog (bottom left, 4 lines) ---------- */
+function toast(text,kind){
+  const box=shEl('shToasts'); if(!box) return; const s=String(text==null?'':text), tap=/แตะเพื่ออัปเดต/.test(s);
+  for(const o of Array.from(box.children)) if(o.textContent===s) o.remove();
+  const t=shMk('div','sh-toast '+(kind==='good'||kind==='bad'?kind:'info'),s); t.setAttribute('role',kind==='bad'?'alert':'status');
+  if(tap){ t.classList.add('tap'); t.addEventListener('click',shUpdateApp); }
+  box.append(t); while(box.children.length>3) box.firstElementChild.remove();
+  setTimeout(()=>{ t.classList.add('out'); setTimeout(()=>t.remove(),320); },tap?6000:2500); }
+function sysLog(text,kind){
+  if(G&&G.auto) return; const box=shEl('shLog'); if(!box) return;
+  const l=shMk('div','sh-ll'+(kind==='good'||kind==='bad'?' '+kind:''),text==null?'':text); box.append(l);
+  while(box.children.length>4) box.firstElementChild.remove();
+  setTimeout(()=>{ l.classList.add('out'); setTimeout(()=>l.remove(),420); },4000); }
+function shUpdateApp(){   // §6.3: newer save → new worker, skipWaiting, reload
+  const sw=navigator.serviceWorker, go=()=>setTimeout(()=>location.reload(),600);
+  if(!sw||!sw.getRegistration){ go(); return; }
+  sw.getRegistration().then(r=>r&&r.update().then(()=>{ if(r.waiting) r.waiting.postMessage({t:'skipWaiting'}); })).catch(()=>{}).then(go); }
+function shBuzz(){ try{ if(loadSettings().haptics&&navigator.vibrate) navigator.vibrate(30); }catch(e){} }
+
+/* ---------- confirmBox (hold = press and hold for that many ms) ---------- */
+function confirmBox(text,o){
+  o=o||{}; const r=shEl('shConf'), ok=shEl('shConfOk'); if(!r||!ok) return Promise.resolve(false);
+  if(SH.conf) shConfDone(false);
+  const hold=Math.max(0,+o.hold||0);
+  shEl('shConfT').textContent=String(text==null?'':text);
+  ok.textContent=o.okText||(hold?'กดค้างเพื่อยืนยัน':'ยืนยัน'); ok.classList.toggle('hold',hold>0); ok.classList.remove('on'); ok.style.setProperty('--hold',hold+'ms');
+  r.hidden=false;
+  return new Promise(res=>{ SH.conf={res, hold, timer:0}; shSync(); setTimeout(()=>{ try{ shEl('shConfNo').focus({preventScroll:true}); }catch(e){} },0); }); }
+function shConfDone(v){ const c=SH.conf; if(!c) return; SH.conf=null; clearTimeout(c.timer);
+  shEl('shConf').hidden=true; shEl('shConfOk').classList.remove('on'); if(v) shBuzz(); c.res(!!v); shSync(); }
+function shHoldOn(){ const c=SH.conf; if(!c||!c.hold||c.timer) return; shEl('shConfOk').classList.add('on'); c.timer=setTimeout(()=>shConfDone(true),c.hold); }
+function shHoldOff(){ const c=SH.conf; if(!c||!c.hold||!c.timer) return; clearTimeout(c.timer); c.timer=0; shEl('shConfOk').classList.remove('on'); }
+
+/* ---------- character window frame: header + tabs from CHARTABS (§8.8) ---------- */
+function shTabs(){ return Object.keys(CHARTABS).filter(k=>CHARTABS[k]&&typeof CHARTABS[k].render==='function').sort((a,b)=>(CHARTABS[a].order||0)-(CHARTABS[b].order||0)); }
+function openCharWindow(tab){
+  if(!curChar()){ toast('ยังไม่มีตัวละคร · สร้างตัวละครก่อน','info'); UI.go('scrNew'); return; }
+  const ids=shTabs(); SH.tab=ids.includes(tab)?tab:ids.includes(SH.tab)?SH.tab:(ids[0]||null);
+  if(shTop()==='scrChar'&&!shEl('scrChar').hidden) shCharRender(); else UI.go('scrChar',{tab:SH.tab}); }
+function shCharRender(a){
+  const ch=SH.cwCh=curChar(); if(!ch) return;
+  const ids=shTabs(); if(a&&ids.includes(a.tab)) SH.tab=a.tab; if(!ids.includes(SH.tab)) SH.tab=ids[0]||null;
+  shCharHead(ch);
+  const bar=shEl('cwTabs'), root=shEl('cwBody'); bar.textContent=''; root.textContent=''; bar.hidden=ids.length<2;
+  for(const id of ids){ const b=shBtn(CHARTABS[id].n||id,'',()=>{ if(SH.tab!==id){ SH.tab=id; shCharRender(); } });
+    b.setAttribute('role','tab'); b.setAttribute('aria-selected',String(id===SH.tab)); bar.append(b); }
+  if(!SH.tab){ root.append(shMk('p','hint','ยังไม่มีแท็บให้แสดง')); return; }
+  try{ CHARTABS[SH.tab].render(root,ch); }catch(e){ console.error(e); root.append(shMk('p','hint','แสดงแท็บนี้ไม่ได้')); } }
+function shCharHead(ch){
+  const h=shEl('cwHead'); if(!h||!ch) return; h.textContent='';
+  const n=shMk('div','cw-n'); n.append(shMk('b','',ch.name),shMk('small','',shJobName(ch)+(ch.pts>0?' · แต้มสถานะเหลือ '+ch.pts:'')+(ch.sp>0?' · แต้มสกิล '+ch.sp:'')));
+  const der=shMk('div','cw-der'), p=shDerived(ch);
+  if(p){ const red=Math.round(100*p.armor/(p.armor+22+.8*ch.lv));
+    for(const [k,v] of [['พลังโจมตี',Math.round(100*p.might)],['ป้องกัน',Math.round(p.armor*10)/10+' (−'+red+'%)'],['HP',Math.round(p.maxHp)],['คริ',Math.round(p.crit*100)+'%'],['คูลดาวน์','−'+Math.round((1-p.cdMul)*100)+'%']]){
+      const s=shMk('span','',k+' '); s.append(shMk('b','',v)); der.append(s); } }
+  h.append(shPortrait(ch,64),n,shBars(ch),der); }
+function shDerived(ch){   // §3.7 display numbers from a throw-away player (no run state touched)
+  const c=CLS[ch.cls]; if(!c) return null;
+  try{ const p=makePlayer(c); p.adv=c.adv.find(a=>a.id===ch.job)||null; p.bonus=buildRunBonus(ch); recalc(p); return p; }catch(e){ return null; } }
+
+/* ---------- shared bits (hub, character list, window header) ---------- */
+function shJobName(ch){ const c=CLS[ch&&ch.cls]; if(!c) return ''; const a=ch.job&&c.adv.find(x=>x.id===ch.job); return a?a.n:c.n; }
+function shLook(ch){ const c=CLS[ch.cls]||CLASSES[0], a=c.adv.find(x=>x.id===ch.job);
+  return Object.assign({},c.look,a?a.look:null,typeof gearLook==='function'?gearLook(ch):null); }
+function shPortrait(ch,sz){ const c=document.createElement('canvas'); c.className='sh-pt'; c.style.width=c.style.height=sz+'px'; c.setAttribute('aria-hidden','true');
+  try{ portrait(c,shLook(ch),sz); }catch(e){} return c; }
+function shBar(lbl,r,txt,cls){ const b=shMk('div','sh-bar'+(cls?' '+cls:'')), t=shMk('span','sh-bt'), f=shMk('i');
+  f.style.transform='scaleX('+clamp(+r||0,0,1).toFixed(3)+')'; t.append(f); b.append(shMk('span','sh-bl',lbl),t,shMk('span','sh-bv',txt||'')); return b; }
+function shBars(ch){ const w=shMk('div','sh-bars'), t2=!!ch.job, jc=t2?BAL.CAP.job2:BAL.CAP.job1, top=ch.lv>=BAL.CAP.base, jtop=ch.jlv>=jc;
+  w.append(shBar('Lv '+ch.lv,top?1:ch.xp/BAL.bxpNeed(ch.lv),top?'สูงสุด':fmtNum(ch.xp)+'/'+fmtNum(BAL.bxpNeed(ch.lv))),
+    shBar('Job '+ch.jlv,jtop?1:ch.jxp/BAL.jxpNeed(ch.jlv,t2?2:1),jtop?'เต็ม':fmtNum(ch.jxp)+'/'+fmtNum(BAL.jxpNeed(ch.jlv,t2?2:1)),'job'));
+  return w; }
+
+/* ---------- boot: 99-boot.js boot() calls shBoot() at runtime (nothing here runs at load, §7.4) ---------- */
+function shBoot(){
+  if(SH.booted) return; SH.booted=true;
+  try{ SH.noHist=window.parent!==window; }catch(e){ SH.noHist=true; }   // artifact iframe: back belongs to the host page
+  if(!SH.noHist){ const s=history.state; SH.hd=s&&s.rg?s.d|0:0; if(!SH.hd) try{ history.replaceState({rg:'root', d:0},''); }catch(e){}
+    addEventListener('popstate',shOnPop); for(const ev of ['pointerdown','pointerup','keydown']) addEventListener(ev,shGest,true); }
+  shWire(); for(const id of SH_META) if(!UIKEY[id]) UIKEY[id]=shKey;
+  hbBoot();
+  if(!(typeof authWantsScreen==='function'&&typeof uiaOpenAuth==='function'&&authWantsScreen()&&uiaOpenAuth('in'))) UI.home(); }
+function shWire(){
+  document.addEventListener('click',e=>{ const t=e.target&&e.target.closest&&e.target.closest('[data-back],[data-x]'); if(!t) return; if(t.hasAttribute('data-x')) closeSheet(); else UI.back(); });
+  for(const b of shEl('shNav').children) b.addEventListener('click',()=>shNavGo(b.dataset.go));
+  shEl('shFab').addEventListener('click',()=>UI.back());
+  const g=shEl('shGrip'), card=shEl('shCard'); let y0=null, dy=0;
+  g.addEventListener('pointerdown',e=>{ if(e.target.closest('button')) return; y0=e.clientY; dy=0; card.style.transition='none'; try{ g.setPointerCapture(e.pointerId); }catch(_){} });
+  g.addEventListener('pointermove',e=>{ if(y0==null) return; dy=Math.max(0,e.clientY-y0); card.style.transform='translateY('+dy+'px)'; });
+  const up=()=>{ if(y0==null) return; y0=null; card.style.transition=''; if(dy>70) closeSheet(); else card.style.transform=''; };
+  g.addEventListener('pointerup',up); g.addEventListener('pointercancel',up);
+  const c=shEl('shConf'), ok=shEl('shConfOk');
+  shEl('shConfNo').addEventListener('click',()=>shConfDone(false));
+  c.addEventListener('click',e=>{ if(e.target===c) shConfDone(false); });
+  ok.addEventListener('click',()=>{ if(SH.conf&&!SH.conf.hold) shConfDone(true); });
+  ok.addEventListener('pointerdown',e=>{ if(!SH.conf||!SH.conf.hold) return; e.preventDefault(); try{ ok.setPointerCapture(e.pointerId); }catch(_){} shHoldOn(); });
+  for(const ev of ['pointerup','pointercancel','lostpointercapture']) ok.addEventListener(ev,shHoldOff);
+  ok.addEventListener('keydown',e=>{ if((e.key==='Enter'||e.key===' ')&&SH.conf&&SH.conf.hold){ e.preventDefault(); if(!e.repeat) shHoldOn(); } });
+  ok.addEventListener('keyup',e=>{ if(e.key==='Enter'||e.key===' ') shHoldOff(); });
+  ok.addEventListener('contextmenu',e=>e.preventDefault()); }
 /* ================= 51-ui-auth.js · lane N · scrAuth, scrAccount, conflict / link sheets ================= */
 /* M0 stub: frozen signatures from DESIGN §7.8, neutral values — classic never calls these. Lane N writes the real body. */
 // M0: nothing yet (screens register with regScreen when they exist)
 
-/* ================= 52-ui-hub.js · lane B · scrHub, scrChars, scrSurv, scrSettings ================= */
-/* M0 stub: frozen signatures from DESIGN §7.8, neutral values — classic never calls these. Lane B writes the real body. */
-// M0: nothing yet
+/* ================= 52-ui-hub.js · lane B · scrHub, scrChars, scrNew (create), scrSurv, scrSettings ================= */
+// Screens render on BUS 'screen'. Data: SAVE via lane C's API (gold is account-wide: Q7). Player names → textContent only.
+const HB={tier:0, cls:'swordsman', t:0, sig:'', csig:''};
+const HB_TIER_OPEN=0;                                   // M1 ships hell tier T0 only · M2 (lane B CR) raises this to 10
+const HB_SCR=['scrHub','scrChars','scrNew','scrSurv','scrSettings'];
+for(const id of HB_SCR) regScreen(id);
+for(const id of HB_SCR.concat(['scrChar','scrTitle'])) UIKEY[id]=shKey;
+HUB.push({id:'survival', n:'เอาชีวิตรอด', i:'🛡', order:20, badge:hbSurvBadge, open(){ UI.go('scrSurv'); }});
+const HB_R={scrHub:hbHub, scrChars:hbChars, scrNew:hbNew, scrSurv:hbSurv, scrSettings:hbSet, scrChar:shCharRender, scrTitle:()=>renderTitle()};
+const HB_ENTER={scrHub:()=>UI.go(curChar()?'scrSurv':'scrNew'), scrSurv:()=>hbSurvGo(), scrNew:()=>hbCreate()};
+BUS.on('screen',(id,a)=>{ const f=HB_R[id]; if(f) f(a); });
+BUS.on('char',hbLater); BUS.on('save',hbLater);
 
+// a save rebuilds the hub / list only when what they show changed (a rebuild under a finger loses the tap)
+function hbLater(){ if(HB.t) return; HB.t=setTimeout(()=>{ HB.t=0; const c=curScreen();
+  if(c==='scrHub'){ if(hbHubSig()!==HB.sig) hbHub(); } else if(c==='scrChars'){ if(hbCharsSig()!==HB.csig) hbChars(); }
+  else if(c==='scrChar'){ if(curChar()!==SH.cwCh) shCharRender(); else shCharHead(curChar()); }   // another character object (reload from another tab): whole window
+  if(c==='scrHub'||SH_META.includes(c)) shChrome(c); },30); }   // tab-bar badges (points left) follow learn / commit (CR-B1)
+function hbOrd(a,b){ return (a.order||0)-(b.order||0); }
+function hbRun(d){ try{ d.open(); }catch(e){ console.error(e); } }
+function hbDay(){ const d=new Date(); return d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0'); }   // = svDay()
+function hbN(v){ return Math.floor(+v||0).toLocaleString('en-US'); }
+function hbPlay(sec){ sec=+sec||0; return sec<3600?Math.round(sec/60)+' นาที':(sec/3600).toFixed(1)+' ชม.'; }
+// §6.11 status line · st = svlState() · cs = cloudStatus() (AUTH_ON=false → guest / local)
+function hbStatusOf(st,cs){
+  st=st||{}; cs=cs||{k:'off'};
+  if(st.readonly) return {k:'newer', text:'⛔ ข้อมูลเป็นเวอร์ชันใหม่กว่าแอป · แตะเพื่ออัปเดต', tap:true};
+  if(st.sandbox) return {k:'sandbox', text:'🧪 โหมดทดสอบ · ไม่บันทึกลงเครื่อง', tap:false};
+  if(st.stored===false) return {k:'nostore', text:'⚠ บันทึกลงเครื่องไม่ได้ · ปิดหน้านี้แล้วความคืบหน้าหาย', tap:false};
+  if(cs.k==='off') return {k:'guest', text:'👤 ผู้เยี่ยมชม · บันทึกในเครื่อง', tap:false};
+  return {k:cs.k, text:String(cs.text||''), tap:cs.k!=='artifact'}; }
+// classic best: runeguard.best (read only, core loadBest) + records imported into the save
+function hbClassicBest(){
+  const all=Object.assign({},SAVE&&SAVE.acct.records.classic); let live={}; try{ live=loadBest()||{}; }catch(e){}
+  for(const k in live){ const o=live[k]; if(svHas(CLS,k)&&o&&(!all[k]||(+o.score||0)>(+all[k].score||0))) all[k]=o; }
+  let best=null, id=''; for(const k in all) if(svHas(CLS,k)&&all[k]&&(!best||(+all[k].score||0)>(+best.score||0))){ best=all[k]; id=k; }
+  return best&&+best.score>0?hbN(best.score)+' คะแนน ('+CLS[id].n+')':''; }
+
+/* ---------- scrHub ---------- */
+function hbHubSig(){ const ch=curChar(), S=SAVE, A=S&&S.acct; if(!A) return ''; let bd='';
+  for(const d of HUB) try{ bd+=(d.badge?d.badge():'')+'|'; }catch(e){}
+  const st=hbStatusOf(typeof svlState==='function'?svlState():null,typeof cloudStatus==='function'?cloudStatus():null);
+  return JSON.stringify([ch&&[ch.id,ch.name,ch.cls,ch.job,ch.lv,ch.xp,ch.jlv,ch.jxp,ch.eq],!!S.ro,A.gold,A.marks,st.text,A.flags.pioneer,A.flags.tips.pioneer,bd,HUB.length,SERVICES.length,hbClassicBest()]); }
+function hbHub(){
+  const ch=curChar(), S=SAVE, A=S&&S.acct; if(!A) return; HB.sig=hbHubSig();
+  hbSyncMute();
+  const top=shEl('hbTop'); top.textContent='';
+  if(ch){ const me=shBtn('','hb-me',()=>UI.go('scrChars')), t=shMk('span','hb-mt');
+    me.setAttribute('aria-label','ตัวละคร '+ch.name+' · แตะเพื่อเปลี่ยน');
+    t.append(shMk('b','',ch.name),shMk('small','',shJobName(ch)+' · '+(CLS[ch.cls]?CLS[ch.cls].e:'')));
+    me.append(shPortrait(ch,52),t,shMk('span','hb-dd','▾')); top.append(me,shBars(ch)); }
+  else top.append(shMk('p','hb-none',S.ro?'ข้อมูลเป็นเวอร์ชันใหม่กว่าแอป':'ยังไม่มีตัวละคร · สร้างได้ '+BAL.CAP.chars+' ตัว'));
+  const w=shMk('div','hb-wal'); w.append(shMk('span','','💰 '+hbN(A.gold)+' ทอง'));
+  if(A.marks>0||MODES.boss) w.append(shMk('span','','🏅 '+hbN(A.marks)));
+  const st=hbStatusOf(typeof svlState==='function'?svlState():null,typeof cloudStatus==='function'?cloudStatus():null);
+  const tap=st.k==='newer'?shUpdateApp:st.tap&&typeof uiaStatusTap==='function'?()=>uiaStatusTap():null;
+  w.append(tap?shBtn(st.text,'hb-st',tap):shMk('span','hb-st',st.text)); top.append(w);
+  const note=shEl('hbNote'), F=A.flags, showP=F.pioneer&&!(F.tips&&F.tips.pioneer); note.textContent=''; note.hidden=!showP;
+  if(showP){ const best=hbClassicBest(), x=shBtn('✕','hb-nx',()=>{ F.tips.pioneer=1; saveLocal('tip'); note.hidden=true; }); x.setAttribute('aria-label','ปิด');
+    note.append(shMk('b','','ยินดีต้อนรับกลับ!'),shMk('span','','สถิติเดิมอยู่ในโหมดคลาสสิก'+(best?' · สูงสุด '+best:'')),x); }
+  const m=shEl('hbModes'); m.textContent='';
+  if(!ch&&!S.ro) m.append(shBtn('✦ สร้างตัวละครแรก','btn primary sh-wide',()=>UI.go('scrNew')));
+  for(const d of HUB.slice().sort(hbOrd)){ const b=shBtn('','hb-mode',()=>hbRun(d)), t=shMk('span','hb-mt'); let bd='';
+    try{ bd=d.badge?d.badge():''; }catch(e){}
+    t.append(shMk('b','',d.n)); if(bd) t.append(shMk('small','',bd));
+    b.append(shMk('span','hb-mi',d.i||'▶'),t,shMk('span','hb-go','▶')); m.append(b); }
+  const sv=shEl('hbSvc'); sv.textContent=''; sv.hidden=!SERVICES.length;
+  if(SERVICES.length){ sv.append(shMk('h3','','ป้อมรูนทอง')); for(const d of SERVICES.slice().sort(hbOrd)) sv.append(shBtn((d.i?d.i+' ':'')+d.n,'',()=>hbRun(d))); }
+  const best=hbClassicBest(); shEl('hbClassicSub').textContent='ไม่ใช้ตัวละคร · เกมเดิมทุกอย่าง'+(best?' · สถิติ '+best:'');
+  shChrome('scrHub'); }
+function hbSyncMute(){ try{ if(loadSettings().mute!==!AU.on) saveSettings({mute:!AU.on}); }catch(e){} }   // keeps M key / pause toggles
+
+/* ---------- scrChars: pick (tap) · delete (hold or 🗑 + hold to confirm) ---------- */
+function hbCharsSig(){ const S=SAVE; return S?JSON.stringify([S.active,!!S.ro,S.chars.map(c=>[c.id,c.name,c.cls,c.job,c.lv,c.jlv,hbPlay(c.play),c.kills,c.eq])]):''; }
+function hbChars(){
+  if(!SAVE) curChar(); const S=SAVE, list=shEl('chList'); if(!S||!list) return; list.textContent=''; HB.csig=hbCharsSig();
+  shEl('chTitle').textContent='ตัวละคร ('+S.chars.length+'/'+BAL.CAP.chars+')';
+  for(const ch of S.chars){ const on=ch.id===S.active, row=shMk('div','ch-row'), card=shBtn('','ch-card'+(on?' on':'')), t=shMk('span','ch-t');
+    t.append(shMk('b','',ch.name),shMk('span','',shJobName(ch)+' · Lv '+ch.lv+' · Job '+ch.jlv),shMk('span','','เล่น '+hbPlay(ch.play)+' · สังหาร '+hbN(ch.kills)));
+    card.append(shPortrait(ch,56),t); if(on) card.append(shMk('span','ch-ok','✓')); card.setAttribute('aria-pressed',String(on));
+    hbHold(card,()=>{ setActiveChar(ch.id); UI.back(); },()=>hbDel(ch));
+    const del=shBtn('🗑','ch-del',()=>hbDel(ch)); del.setAttribute('aria-label','ลบตัวละคร '+ch.name);
+    row.append(card,del); list.append(row); }
+  if(!S.chars.length) list.append(shMk('p','hint','ยังไม่มีตัวละคร'));
+  const n=shEl('chNew'), full=S.chars.length>=BAL.CAP.chars; n.disabled=full||!!S.ro;
+  n.textContent=S.ro?'ข้อมูลเป็นเวอร์ชันใหม่กว่าแอป':full?'ครบ '+BAL.CAP.chars+' ตัวแล้ว':'+ สร้างตัวละครใหม่'; }
+function hbHold(el,tap,hold){ let t=0, held=false;
+  const off=()=>{ clearTimeout(t); t=0; el.classList.remove('hold'); };
+  el.addEventListener('pointerdown',e=>{ if(e.button>0) return; held=false; off(); el.classList.add('hold'); t=setTimeout(()=>{ t=0; held=true; el.classList.remove('hold'); hold(); },650); });
+  for(const ev of ['pointerup','pointerleave','pointercancel']) el.addEventListener(ev,off);
+  el.addEventListener('contextmenu',e=>e.preventDefault());
+  el.addEventListener('click',()=>{ if(held){ held=false; return; } tap(); }); }
+async function hbDel(ch){
+  if(!await confirmBox('ลบตัวละคร "'+ch.name+'" ('+shJobName(ch)+' Lv '+ch.lv+')? ลบแล้วกู้คืนไม่ได้',{hold:1000, okText:'กดค้างเพื่อลบ'})) return;
+  if(deleteChar(ch.id)){ toast('ลบ '+ch.name+' แล้ว','good'); hbChars(); } else toast('ลบไม่ได้ในตอนนี้','bad'); }
+
+/* ---------- scrNew: name + class + starting points ---------- */
+function hbNew(){
+  if(!SAVE) curChar(); const S=SAVE, grid=shEl('nwCls'), inp=shEl('nwName');
+  if(!grid.childElementCount) for(const c of CLASSES){ const b=shBtn('','',()=>{ HB.cls=c.id; hbNewCls(); }), cv=document.createElement('canvas');
+    b.dataset.id=c.id; b.setAttribute('role','radio'); try{ portrait(cv,c.look,48); }catch(e){} b.append(cv,shMk('span','',c.n)); grid.append(b); }
+  inp.value=''; hbNewCount(); hbNewCls();
+  const ro=!!(S&&S.ro), full=!!S&&S.chars.length>=BAL.CAP.chars; shEl('nwGo').disabled=ro||full;
+  shEl('nwErr').textContent=ro?'ข้อมูลเป็นเวอร์ชันใหม่กว่าแอป สร้างตัวละครไม่ได้':full?'สร้างได้สูงสุด '+BAL.CAP.chars+' ตัว':''; }
+function hbNewCount(){ shEl('nwCount').textContent=Array.from(shEl('nwName').value).length+'/16'; }
+function hbPreset(id){ const p=PRESETS[id]||{}; return STAT_ORDER.filter(k=>p[k]).map(k=>(k==='STR'?'ATK':STAT_TH[k])+' '+p[k]).join(' · '); }
+function hbNewCls(){ const c=CLS[HB.cls]||CLASSES[0], r=c.rating, sk=SK[c.skills[0]], pips=n=>'●'.repeat(n)+'○'.repeat(5-n);
+  for(const b of shEl('nwCls').children) b.setAttribute('aria-checked',String(b.dataset.id===c.id));
+  shEl('nwInfo').innerHTML=`<h3>${esc(c.n)} <small>${esc(c.e)}</small></h3><p>${esc(c.d)}</p>`
+    +`<p class="nw-rt">พลังชีวิต ${pips(r.hp)} · พลังโจมตี ${pips(r.atk)}<br>ความเร็ว ${pips(r.spd)} · ระยะโจมตี ${pips(r.rng)}</p>`
+    +`<p>สกิลแรก ${esc(sk.i+' '+sk.n)} ★1 · แต้มแนะนำ ${esc(hbPreset(c.id))}</p><p>เลื่อนอาชีพที่ Base 20: ${esc(c.adv.map(a=>a.n).join(' หรือ '))}</p>`; }
+function hbCreate(){
+  const err=shEl('nwErr'), r=createChar(shEl('nwName').value,HB.cls);
+  if(typeof r==='string'||!r){ err.textContent=r||'สร้างตัวละครไม่ได้'; return; }
+  if(shEl('nwAuto').checked&&PRESETS[r.cls]) commitStats(r,Object.assign({},PRESETS[r.cls]));
+  toast('สร้าง '+r.name+' แล้ว · ยินดีต้อนรับสู่ป้อมรูนทอง','good'); UI.home(); }
+
+/* ---------- scrSurv: hell tier (M1: T0 playable, T1–T10 shown locked) ---------- */
+function hbSurvInfo(ch,T,A,day){   // pure: §2.2 tier row + this character's full-clear estimate
+  const S=BAL.SURV, rec=S.recLv(T), gpw=S.goldPerWave(T), L=ch?ch.lv|0:1;
+  const exp=Math.round(BAL.bxpNeed(rec)*S.expMul(S.WAVES,true)*S.overLv(L,rec)), r=ch&&A&&A.records.survival[ch.id];
+  return {T, rec, hp:S.hpMul(T), dmg:S.dmgMul(T), gpw, gear:S.gearTier(T), exp, lvs:hbLvGain(ch,exp), gold:gpw*(S.WAVES+S.winGoldWaves),
+    daily:!(A&&A.daily.day===day&&A.daily.surv[T]), open:T<=HB_TIER_OPEN, unlocked:!!A&&T<=(A.survTier|0), record:r&&r[String(T)]||null}; }
+function hbLvGain(ch,exp){ let L=ch?ch.lv|0:1, x=(ch?ch.xp|0:0); const p=L+x/BAL.bxpNeed(L); x+=exp;   // levels gained (fraction)
+  while(L<BAL.CAP.base&&x>=BAL.bxpNeed(L)){ x-=BAL.bxpNeed(L); L++; } return L>=BAL.CAP.base?BAL.CAP.base-p:L+x/BAL.bxpNeed(L)-p; }
+function hbTier0(){ const A=SAVE&&SAVE.acct; return Math.min(A?A.survTier|0:0,HB_TIER_OPEN); }
+function hbSurvBadge(){ const ch=curChar(); if(!ch) return 'ต้องมีตัวละครก่อน'; const T=hbTier0();
+  return 'ระดับนรก T'+T+(hbSurvInfo(ch,T,SAVE.acct,hbDay()).daily?' · ✦ โบนัสวันนี้ ×2':''); }
+function hbSurv(){
+  const ch=curChar(), A=SAVE&&SAVE.acct, body=shEl('svBody'), go=shEl('svGo'); if(!A) return;
+  const T=HB.tier=clamp(HB.tier|0,0,BAL.SURV.maxT), I=hbSurvInfo(ch,T,A,hbDay());
+  shEl('svT').textContent='T'+T; shEl('svOpen').textContent='ปลดแล้วถึง T'+hbTier0();
+  shEl('svPrev').disabled=T<=0; shEl('svNext').disabled=T>=BAL.SURV.maxT; body.textContent='';
+  if(ch){ const who=shMk('div','sv-who'), t=shMk('span','');
+    t.append(shMk('b','',ch.name),shMk('small','',shJobName(ch)+' · Lv '+ch.lv)); who.append(shPortrait(ch,40),t,shBtn('เปลี่ยน','btn ghost',()=>UI.go('scrChars'))); body.append(who); }
+  const rows=[['เลเวลแนะนำ','Lv '+I.rec],['ศัตรู','HP ×'+I.hp.toFixed(1)+' · ดาเมจ ×'+I.dmg.toFixed(2)],['ทอง',I.gpw+' ต่อคลื่น'],
+    ['ชนะครบ 20 คลื่น','EXP '+hbN(I.exp)+(I.lvs>=.05?' (≈ '+I.lvs.toFixed(1)+' เลเวล)':'')+' · ทอง '+hbN(I.gold)],
+    ['โบนัสวันนี้',I.daily?'✦ ×2 เมื่อถึงคลื่น 10 (ยังไม่ใช้)':'ใช้แล้ววันนี้'],
+    ['สถิติ',I.record?'คลื่น '+I.record.wave+' · '+hbN(I.record.kills)+' ตัว'+(I.record.won?' · ชนะ':''):'ยังไม่มี']];
+  if(Object.keys(BAL.DROP.surv||{}).length) rows.splice(3,0,['ของที่ดรอป','tier '+I.gear]);
+  for(const [k,v] of rows){ const r=shMk('div','sv-row'); r.append(shMk('span','',k),shMk('b','',v)); body.append(r); }
+  if(!I.open) body.append(shMk('p','sv-lock','🔒 ระดับนรก T1–T10 จะเปิดในอัปเดตถัดไป'));
+  else if(!I.unlocked) body.append(shMk('p','sv-lock','🔒 ไปให้ถึงคลื่น 10 ในระดับ T'+(T-1)+' เพื่อปลดล็อก'));
+  body.append(shMk('p','hint','ตายก่อนจบก็ยังได้ EXP และทองตามคลื่นที่ผ่าน · ความชำนาญเริ่ม Lv 1 ทุกรอบ'));
+  go.disabled=!!ch&&!(I.open&&I.unlocked); go.textContent=ch?'เริ่ม · ระดับนรก T'+T:'สร้างตัวละครก่อน'; }
+function hbSurvGo(){
+  const ch=curChar(); if(!ch){ UI.go('scrNew'); return; }
+  const I=hbSurvInfo(ch,HB.tier,SAVE.acct,hbDay()); if(!I.open||!I.unlocked) return;
+  closeSheet(); shChrome(null); startRun(ch.cls,'survival',{char:ch, tier:HB.tier}); }
+
+/* ---------- scrSettings (the account part is lane N's scrAccount, only while AUTH_ON) ---------- */
+function hbSet(){
+  const L=shEl('stList'), s=loadSettings(); L.textContent='';
+  const row=(label,...ctl)=>{ const r=shMk('div','st-row'); r.append(shMk('span','',label),...ctl); L.append(r); return r; };
+  const seg=shMk('div','seg st-seg'); seg.setAttribute('role','group'); seg.setAttribute('aria-label','คุณภาพภาพ');
+  for(const [q,n] of [['auto','อัตโนมัติ'],['low','ต่ำ'],['mid','กลาง'],['high','สูง']]){ const b=shBtn(n,'',()=>{ setQuality(q); hbSet(); }); b.setAttribute('aria-pressed',String(QUAL.mode===q)); seg.append(b); }
+  row('คุณภาพภาพ'+(QUAL.mode==='auto'?' (ตอนนี้: '+['ต่ำ','กลาง','สูง'][QUAL.level]+')':''),seg);
+  row('เสียง',hbTog(AU.on,()=>{ toggleMute(); saveSettings({mute:!AU.on}); hbSet(); }));
+  row('สั่นเมื่อยืนยัน',hbTog(s.haptics,()=>{ saveSettings({haptics:!s.haptics}); hbSet(); }));
+  if(MODES.field){   // field options appear with the mode (M4)
+    const p=shMk('div','seg st-seg'); for(const v of [0,.25,.35,.5]){ const b=shBtn(v?Math.round(v*100)+'%':'ปิด','',()=>{ saveSettings({autoPot:v}); hbSet(); }); b.setAttribute('aria-pressed',String(Math.abs(s.autoPot-v)<.001)); p.append(b); }
+    row('ใช้ยาอัตโนมัติเมื่อ HP ต่ำกว่า',p);
+    row('เปิดการ์ดทันทีในทุ่ง',hbTog(s.cardAuto,()=>{ saveSettings({cardAuto:!s.cardAuto}); hbSet(); })); }
+  row('เซฟในเครื่อง',shBtn('ส่งออก','btn ghost',hbExport),shBtn('นำเข้า','btn ghost',hbImport));
+  if(typeof AUTH_ON!=='undefined'&&AUTH_ON&&typeof uiaOpenAccount==='function') row('บัญชีออนไลน์',shBtn('เปิด ›','btn ghost',()=>uiaOpenAccount()));
+  L.append(shMk('p','st-ver','Runeguard '+(typeof SV_APP==='string'?SV_APP:'')+' · ข้อมูลเก็บในเครื่องนี้')); }
+function hbTog(on,fn){ const b=shBtn(on?'เปิด':'ปิด','st-tg',fn); b.setAttribute('aria-pressed',String(!!on)); return b; }
+function hbExport(){
+  const j=exportSave(), box=shMk('div',''), ta=shMk('textarea','sh-ta'); ta.readOnly=true; ta.name='rgExport'; ta.value=j; ta.setAttribute('aria-label','ข้อความเซฟ');
+  box.append(shMk('p','hint','เก็บไฟล์นี้ไว้ แล้วใช้ [นำเข้า] บนเครื่องอื่นหรือหลังล้างเครื่องได้'),ta,
+    shBtn('ดาวน์โหลดไฟล์ .json','btn primary sh-wide',()=>hbDownload(j)),
+    shBtn('คัดลอกข้อความ','btn ghost sh-wide',()=>{ const ok=()=>toast('คัดลอกแล้ว','good'), no=()=>{ ta.focus(); ta.select(); toast('เลือกข้อความไว้แล้ว กดคัดลอกเอง','info'); };
+      try{ navigator.clipboard.writeText(j).then(ok,no); }catch(e){ no(); } }));
+  sheet(box,{title:'ส่งออกเซฟ'}); }
+function hbDownload(j){ try{ const u=URL.createObjectURL(new Blob([j],{type:'application/json'})), a=document.createElement('a');
+  a.href=u; a.download='runeguard-save-'+hbDay()+'.json'; document.body.append(a); a.click(); a.remove(); setTimeout(()=>URL.revokeObjectURL(u),2000); }
+  catch(e){ toast('ดาวน์โหลดไม่ได้ ใช้ปุ่มคัดลอกแทน','bad'); } }
+function hbImport(){
+  const box=shMk('div',''), ta=shMk('textarea','sh-ta'), out=shMk('p','nw-err'), f=document.createElement('input');
+  ta.name='rgImport'; f.name='rgImportFile'; ta.placeholder='วางข้อความเซฟที่นี่ หรือเลือกไฟล์ .json'; ta.setAttribute('aria-label','ข้อความเซฟ'); f.type='file'; f.accept='.json,application/json'; f.hidden=true;
+  f.addEventListener('change',()=>{ const x=f.files&&f.files[0]; if(!x) return; if(x.size>256*1024){ out.textContent='ไฟล์ใหญ่เกิน 256 KB'; return; }
+    const rd=new FileReader(); rd.onload=()=>{ ta.value=String(rd.result||''); out.textContent=''; }; rd.onerror=()=>{ out.textContent='อ่านไฟล์ไม่ได้'; }; rd.readAsText(x); });
+  box.append(shMk('p','hint','นำเข้าแล้วเซฟในเครื่องตอนนี้จะถูกแทนที่ · ถ้าอยากเก็บไว้ ให้ [ส่งออก] ก่อน (สำรองอัตโนมัติจะถูกแทนเมื่อบันทึกครั้งถัดไป)'),ta,out,f,shBtn('เลือกไฟล์ .json','btn ghost sh-wide',()=>f.click()),
+    shBtn('นำเข้า','btn primary sh-wide',async()=>{ const j=ta.value; if(!j.trim()){ out.textContent='ยังไม่มีข้อมูลเซฟ'; return; }
+      if(!await confirmBox('แทนที่เซฟในเครื่องด้วยข้อมูลนี้? เซฟเดิมจะหายไป ถ้ายังไม่ได้ส่งออกเก็บไว้',{okText:'นำเข้า'})) return;
+      const r=importSave(j); if(r.ok){ closeSheet(); toast('นำเข้าเซฟแล้ว','good'); UI.home(); } else out.textContent=r.err||'นำเข้าไม่ได้'; }));
+  sheet(box,{title:'นำเข้าเซฟ'}); }
+
+/* ---------- once, from shBoot (runtime) ---------- */
+function hbBoot(){
+  if(loadSettings().mute&&AU.on) toggleMute();
+  curChar(); HB.tier=hbTier0();
+  shEl('hbClassic').addEventListener('click',()=>UI.go('scrTitle'));
+  shEl('chNew').addEventListener('click',()=>UI.go('scrNew'));
+  const inp=shEl('nwName'); inp.addEventListener('input',()=>{ hbNewCount(); shEl('nwErr').textContent=''; });
+  inp.addEventListener('keydown',e=>{ if(e.key==='Enter'){ e.preventDefault(); hbCreate(); } });
+  shEl('nwGo').addEventListener('click',hbCreate);
+  shEl('svPrev').addEventListener('click',()=>{ HB.tier--; hbSurv(); });
+  shEl('svNext').addEventListener('click',()=>{ HB.tier++; hbSurv(); });
+  shEl('svGo').addEventListener('click',hbSurvGo); }
 /* ================= 53-ui-char.js · lane E · equipment/bag tabs, item / refine / rune / shop / stash sheets ================= */
 /* M0 stub: frozen signatures from DESIGN §7.8, neutral values — classic never calls these. Lane E writes the real body. */
 function openItemSheet(uid){}
@@ -2083,26 +3418,391 @@ function openShop(){}
 function openStash(){}
 // CHARTABS.equip / CHARTABS.bag are registered in M2
 
-/* ================= 54-ui-skills.js · lane P · scrSkills ================= */
-/* M0 stub: frozen signatures from DESIGN §7.8, neutral values — classic never calls these. Lane P writes the real body. */
-// M0: nothing yet
+/* ================= 54-ui-skills.js · lane P · scrSkills (+ helpers shared by 56 · 57 · 58) ================= */
+// §3.5 · §8.9: ★ ranks cost RANK_COST (★1–3: 1 · ★4–5: 2) · passives 1 per ★ · SKILL_REQ gates the advanced skills ·
+// loadout 4 (first job) / 5 (advanced) slots, slot 1 = the skill a survival run starts with · reset = the §3.3 rules.
+// All rules live in 42-progression.js (lane C): this file only draws them and calls learnSkill / setLoadout / resetSkills.
+// Opened by pksOpen() or by the router (BUS 'screen' with id 'scrSkills'). Nothing here runs at load except registration.
 
-/* ================= 55-ui-hud.js · lane B · HUD of character modes (EXP bar, quick potions, card button, log) ================= */
-/* M0 stub: frozen signatures from DESIGN §7.8, neutral values — classic never calls these. Lane B writes the real body. */
-// M0: nothing yet
+/* ---- helpers of lane P ---- */
+const PRG={hold:1000, rep:450, repEvery:280};
+function prgCh(){ try{ return curChar(); }catch(e){ console.error(e); return null; } }
+function prgStars(r){ r=Math.max(0,Math.min(BAL.CAP.rank,r|0)); return '★'.repeat(r)+'☆'.repeat(BAL.CAP.rank-r); }
+function prgVis(id){ const n=$('#'+id); return !!n&&!n.hidden; }
+function prgTop(t,sub){ return `<header class="prg-top"><button class="prg-back" type="button" data-a="back" aria-label="ย้อนกลับ">←</button><h2 class="prg-h">${esc(t)}</h2><span class="prg-sub">${sub||''}</span></header>`; }
+function prgRO(){ return '<p class="prg-ro">ข้อมูลเป็นเวอร์ชันใหม่กว่าแอป แก้ไขไม่ได้ · อัปเดตเกมก่อน</p>'; }
+function prgWire(root,fn){ if(root&&!root.dataset.prg){ root.dataset.prg='1'; root.addEventListener('click',fn); } }
+// navigation goes through lane B's router (it emits BUS 'screen' → render) · a router that shows nothing (M0 stub) → show() here
+function prgGo(id){ let r; try{ r=UI.go(id); }catch(e){ console.error(e); } if(r!==false&&curScreen()!==id) show(id); }
+function prgBackNav(){ try{ UI.back(); }catch(e){ console.error(e); } }
+// reset rules (§3.3, also used for skills §3.5): Base < 20 free · then one free reset · then a ม้วนลืมเลือน from the bag
+function prgResetInfo(ch,kind){
+  const way=pgResetWay(ch,kind), have=typeof invCount==='function'?invCount(ch,'u_forget')|0:0, spent=kind==='sk'?pgSpSpent(ch):pgStSpent(ch);
+  const label=way==='free'?'ฟรี (ก่อน Lv '+BAL.RESET.freeBelow+')':way==='freeOnce'?'ฟรี (เหลือ 1 ครั้ง)':'ใช้ม้วนลืมเลือน 1 ม้วน (มี '+have+')';
+  return {way, have, spent, label, can:!saveReadOnly()&&spent>0&&(way!=='scroll'||have>0)}; }
+function prgReset(ch,kind,after){
+  const R=prgResetInfo(ch,kind); if(!R.can) return; const w=kind==='sk'?'สกิล':'สถานะ';
+  Promise.resolve(confirmBox('รีเซ็ตแต้ม'+w+'ทั้งหมด? ได้แต้มคืน '+R.spent+' แต้ม · '+R.label,{okText:'รีเซ็ต'})).then(ok=>{
+    if(!ok) return; const done=(kind==='sk'?resetSkills:resetStats)(ch,{scroll:R.way==='scroll'});
+    toast(done?'รีเซ็ตแต้ม'+w+'แล้ว':'รีเซ็ตไม่ได้',done?'good':'bad'); if(after) after(); }).catch(e=>console.error(e)); }
+// press and hold `ms` (mouse, touch, pen, or Space / Enter) → done() · releasing early cancels · progress drawn by CSS (.holding)
+function prgHold(btn,ms,done){
+  let t=0; btn.style.setProperty('--hold',ms+'ms');
+  const stop=()=>{ if(t){ clearTimeout(t); t=0; } btn.classList.remove('holding'); };
+  const start=()=>{ if(btn.disabled||t) return; btn.classList.add('holding'); t=setTimeout(()=>{ t=0; btn.classList.remove('holding'); if(!btn.disabled) done(); },ms); };
+  btn.addEventListener('pointerdown',e=>{ if(e.button>0) return; try{ btn.setPointerCapture(e.pointerId); }catch(_){} start(); });
+  for(const k of ['pointerup','pointercancel','lostpointercapture','blur']) btn.addEventListener(k,stop);
+  btn.addEventListener('pointerleave',e=>{ let cap=false; try{ cap=btn.hasPointerCapture(e.pointerId); }catch(_){} if(!cap) stop(); });
+  btn.addEventListener('keydown',e=>{ if(e.code!=='Space'&&e.code!=='Enter') return; e.preventDefault(); e.stopPropagation(); if(!e.repeat) start(); });
+  btn.addEventListener('keyup',e=>{ if(e.code==='Space'||e.code==='Enter'){ e.preventDefault(); stop(); } });
+  btn.addEventListener('contextmenu',e=>e.preventDefault()); }
+// tap → step(1) · hold → step(5) at once, then every PRG.repEvery ms while step() still changes something
+function prgRepeat(btn,step){
+  let t=0, held=false; const stop=()=>{ clearTimeout(t); clearInterval(t); t=0; };
+  btn.addEventListener('pointerdown',e=>{ if(e.button>0) return; held=false; stop();
+    t=setTimeout(()=>{ held=true; t=0; if(step(5)) t=setInterval(()=>{ if(!step(5)) stop(); },PRG.repEvery); },PRG.rep); });
+  for(const k of ['pointerup','pointercancel','pointerleave']) btn.addEventListener(k,stop);
+  btn.addEventListener('click',()=>{ if(held){ held=false; return; } step(1); });
+  btn.addEventListener('contextmenu',e=>e.preventDefault()); }
 
+/* ---- skills page ---- */
+let pksTab=0, pksSel=-1;                             // tab 1 = first job · 2 = advanced · pksSel = picked loadout slot (−1 none)
+// one row per skill / passive: {id, pas, r, max, cost, lock (requirement or job missing → reason), can, inLoad}
+function pksRow(ch,id,pas){
+  const r=((pas?ch.pas:ch.sk)||{})[id]|0, max=r>=BAL.CAP.rank, cost=max?0:pas?BAL.PAS_COST:BAL.RANK_COST[r+1];
+  const own=pas&&PASSIVES[id].own, avail=pas?(own===ch.cls||own===ch.job):pgSkillPool(ch).indexOf(id)>=0, q=!pas&&SKILL_REQ[id];
+  const why=max?'':canLearn(ch,id), lock=!max&&(!avail||(q&&((ch.sk||{})[q.need]|0)<q.r))?why:'';
+  return {id, pas, r, max, cost, lock, can:!max&&why==='', inLoad:!pas&&(ch.load||[]).indexOf(id)>=0}; }
+// tab 1: class skills + class passive · tab 2: the chosen advanced path, or both paths (locked) before advancing
+function pksModel(ch,tab){
+  const c=pgCls(ch); if(!c) return [];
+  const paths=tab===1?[{a:null, own:c.id, sk:c.skills}]:(ch.job?c.adv.filter(x=>x.id===ch.job):c.adv).map(x=>({a:x, own:x.id, sk:x.skills}));
+  return paths.map(p=>({a:p.a, sk:p.sk.map(id=>pksRow(ch,id,false)),
+    pas:Object.keys(PASSIVES).filter(id=>PASSIVES[id].own===p.own).map(id=>pksRow(ch,id,true))})); }
+// loadout edits → setLoadout (lane C validates: learned, in the pool, no duplicates, 1…4/5 slots)
+function pksLoadAdd(ch,id,slot){ const L=ch.load.slice(), n=BAL.LOADOUT[pgTier(ch)]; if(L.indexOf(id)>=0) return false;
+  if(L.length<n) L.push(id); else if(slot>=0&&slot<L.length) L[slot]=id; else return false; return setLoadout(ch,L); }
+function pksLoadDel(ch,id){ const L=ch.load.filter(x=>x!==id); return L.length>0&&L.length<ch.load.length&&setLoadout(ch,L); }
+function pksLoadSwap(ch,i,j){ const L=ch.load.slice(); if(i===j||!(i>=0&&j>=0&&i<L.length&&j<L.length)) return false;
+  const t=L[i]; L[i]=L[j]; L[j]=t; return setLoadout(ch,L); }
+// skill numbers at ★lv and the change to the next ★ (labels and units from the level-up cards: PL / fmtP in 21-ui.js)
+function pksLv(d,lv){ const o=[]; for(const k in d.p){ const v=d.p[k]; if(Array.isArray(v)) o.push((PL[k]||k)+' '+fmtP(k,v[lv-1])); } return o.slice(0,4).join(' · '); }
+function pksNext(d,r){ if(r<1) return pksLv(d,1); const o=[];
+  for(const k in d.p){ const v=d.p[k]; if(Array.isArray(v)&&v[r-1]!==v[r]) o.push((PL[k]||k)+' '+fmtP(k,v[r-1])+' → '+fmtP(k,v[r])); }
+  return o.join(' · ')||'แรงขึ้น'; }
+function pksRowHtml(r){
+  const d=r.pas?PASSIVES[r.id]:SK[r.id];
+  let h=`<li class="pks-row${r.r?' got':''}${r.lock?' lock':''}"><span class="pks-ic" aria-hidden="true">${d.i}</span><div class="pks-m">`
+    +`<div class="pks-n">${esc(d.n)} <span class="pks-st" aria-label="ระดับ ${r.r} จาก ${BAL.CAP.rank}">${prgStars(r.r)}</span>${r.inLoad?'<em class="pks-in">ติดตัว</em>':''}</div>`;
+  if(r.pas){ if(r.r) h+=`<div class="pks-i">ตอนนี้: ${jdBonusText(jdPassiveAt(r.id,r.r))}</div>`;
+    if(!r.max) h+=`<div class="pks-x">→ ★${r.r+1}: ${jdBonusText(jdPassiveAt(r.id,r.r+1))}</div>`; }
+  else { if(r.r) h+=`<div class="pks-i">★${r.r}: ${pksLv(d,r.r)}</div>`;
+    if(!r.max) h+=`<div class="pks-x">→ ★${r.r+1}: ${pksNext(d,r.r)}</div>`;
+    if(d.evo) h+=`<div class="pks-e">วิวัฒนาการ: ★5 + การ์ด${STATS[d.evo.s].n}ในรอบ → ${esc(d.evo.n)}</div>`; }
+  if(r.lock) h+=`<div class="pks-lock">🔒 ${esc(r.lock)}</div>`;
+  h+='</div><div class="pks-side">'+(r.max?'<span class="pks-max">ตัน</span>'
+    :`<button type="button" class="pks-up" data-a="learn" data-id="${r.id}"${r.can?'':' disabled'} aria-label="ฝึก ${esc(d.n)} ใช้ ${r.cost} แต้ม">+<small>${r.cost} แต้ม</small></button>`);
+  if(!r.pas&&r.r>0) h+=`<button type="button" class="pks-lo${r.inLoad?' on':''}" data-a="load" data-id="${r.id}" aria-pressed="${r.inLoad}">${r.inLoad?'ถอด':'ใส่'}</button>`;
+  return h+'</div></li>'; }
+function pksOpen(){ pksSel=-1; pksTab=0; pksRender(); prgGo('scrSkills'); }
+function pksRender(){
+  const root=$('#pksRoot'); if(!root) return; prgWire(root,pksClick);
+  const ch=prgCh(), c=ch&&pgCls(ch);
+  if(!c){ root.innerHTML=prgTop('สกิล','')+'<p class="prg-empty">ยังไม่มีตัวละคร · สร้างตัวละครที่เมนูหลักก่อน</p>'; return; }
+  const tier=pgTier(ch), n=BAL.LOADOUT[tier], a=pgAdvOf(ch), load=ch.load||[];
+  if(pksTab!==1&&pksTab!==2) pksTab=tier; if(pksSel>=load.length) pksSel=-1;
+  let h=prgTop('สกิล','แต้มสกิล <b>'+(ch.sp|0)+'</b><br>Job '+(ch.jlv|0)+'/'+pgJobCap(ch))+(saveReadOnly()?prgRO():'');
+  h+=`<div class="box pks-load"><div class="pks-lh"><b>ช่องติดตัว (${load.length}/${n})</b><small>แตะสองช่องเพื่อสลับ · ช่องแรกคือสกิลเริ่มรอบเอาชีวิตรอด</small></div><div class="pks-slots">`;
+  for(let i=0;i<n;i++){ const id=load[i], d=id&&SK[id];
+    h+=d?`<button type="button" class="pks-sl${i===pksSel?' sel':''}" data-a="slot" data-i="${i}" aria-pressed="${i===pksSel}" aria-label="ช่อง ${i+1} ${esc(d.n)}"><span aria-hidden="true">${d.i}</span>${i?'':'<em>เริ่ม</em>'}<b>★${(ch.sk||{})[id]|0}</b></button>`
+       :'<span class="pks-sl empty" aria-hidden="true">+</span>'; }
+  h+=`</div>${pksSel>=0?'<p class="pks-tip">เลือกช่อง '+(pksSel+1)+' แล้ว · แตะช่องอื่นเพื่อสลับ หรือกด [ใส่] ที่สกิลเพื่อแทนช่องนี้</p>':''}</div>`;
+  h+=`<div class="seg prg-seg" role="group" aria-label="ขั้นอาชีพ"><button type="button" data-a="tab" data-t="1" aria-pressed="${pksTab===1}">ขั้นต้น · ${esc(c.n)}</button>`
+    +`<button type="button" data-a="tab" data-t="2" aria-pressed="${pksTab===2}">ขั้นสูง · ${a?esc(a.n):'ยังไม่เลื่อน'}</button></div>`;
+  for(const g of pksModel(ch,pksTab)){
+    h+='<section class="pks-grp">'+(g.a?`<h3 class="pks-path">${esc(g.a.n)} <small>${esc(g.a.e)}</small></h3>`:'')
+      +'<ul class="pks-list">'+g.sk.map(pksRowHtml).join('')+'</ul><p class="pks-sep">ความสามารถติดตัว (passive)</p><ul class="pks-list">'+g.pas.map(pksRowHtml).join('')+'</ul></section>'; }
+  const R=prgResetInfo(ch,'sk');
+  h+=`<div class="prg-reset"><span>รีเซ็ตสกิล: ${R.label} · ★1 ฟรีของสกิลแรกยังอยู่</span><button class="btn ghost" type="button" data-a="reset"${R.can?'':' disabled'}>รีเซ็ตสกิล</button></div>`;
+  root.innerHTML=h; }
+function pksClick(e){
+  const b=e.target.closest('[data-a]'); if(!b||b.disabled) return; const a=b.dataset.a, id=b.dataset.id;
+  if(a==='back'){ prgBackNav(); return; }
+  const ch=prgCh(); if(!ch) return;
+  if(a==='tab'){ pksTab=+b.dataset.t; }
+  else if(a==='learn'){ const pas=svHas(PASSIVES,id), d=pas?PASSIVES[id]:SK[id];
+    if(learnSkill(ch,id)) toast(d.n+' ★'+((pas?ch.pas:ch.sk)[id]|0),'good'); else toast(canLearn(ch,id)||'ฝึกไม่ได้','bad'); }
+  else if(a==='slot'){ const i=+b.dataset.i; if(pksSel<0) pksSel=i; else if(pksSel===i) pksSel=-1; else { pksLoadSwap(ch,pksSel,i); pksSel=-1; } }
+  else if(a==='load'){
+    if(ch.load.indexOf(id)>=0){ if(!pksLoadDel(ch,id)) toast('ต้องมีสกิลติดตัวอย่างน้อย 1 ช่อง','bad'); }
+    else if(pksLoadAdd(ch,id,pksSel)) pksSel=-1;
+    else toast(saveReadOnly()?'แก้ไขไม่ได้':'ช่องเต็ม · แตะช่องที่จะแทนก่อน','info'); }
+  else if(a==='reset'){ prgReset(ch,'sk',pksRender); return; }
+  else return;
+  pksRender(); }
+
+regScreen('scrSkills'); regScreen('scrJob');
+// keys (Escape = back) come from lane B's shared UIKEY handler of its tab-bar pages
+BUS.on('screen',x=>{ const id=typeof x==='string'?x:x&&x.id; if(id==='scrSkills') pksRender(); else if(id==='scrJob') pjbRender(); });
+BUS.on('char',()=>{ if(prgVis('scrSkills')) pksRender(); if(prgVis('scrJob')) pjbRender(); });
+// dev (§7.9): RG.prog.open('skills'|'job'|'stats') → the screen that is showing
+DEV.prog={ open(w){ if(w==='job') pjbOpen(); else if(w==='stats') openCharWindow('stats'); else pksOpen(); return curScreen(); } };
+/* ================= 55-ui-hud.js · lane B · HUD of character modes (EXP bar, card button, log), rewards on scrEnd, pause extras ================= */
+// UIX.hud = end of core updateHUD, every frame: classic (no G.char) costs two compares and changes nothing. Character runs (§8.13):
+// first-run tip, ★ cap line on level-up cards, loot in the log, field EXP/Job bars, card button (cards:'manual'). Rewards: endExtra.
+const HD={g:null, cards:null, bars:false, manual:false, auto:false, n:-1, xr:-1, jr:-1, lv:0, jl:0, loot:0, rew:null, wired:false};
+UIX.hud=hdTick; UIX.endExtra=hdEnd; UIX.pauseExtra=hdPause;
+
+function hdTick(){
+  if(HD.g!==G) hdStart();
+  if(!G.char) return;
+  if(G.ui==='level'&&G.choices!==HD.cards) hdCards();
+  if(G.loot&&G.loot.length>HD.loot){ for(let i=HD.loot;i<G.loot.length;i++) sysLog('ได้รับ '+hdItemName(G.loot[i]),'good'); HD.loot=G.loot.length; }
+  if(HD.bars) hdBars();
+  if(HD.manual) hdCardBtn(); }
+function hdStart(){   // first HUD frame of a run
+  HD.g=G; HD.cards=null; HD.n=-1; HD.xr=HD.jr=-1; HD.loot=G.loot?G.loot.length:0; SH.lastMode=G.modeId; shChrome(null);
+  const ch=G.char, box=shEl('hdBox'); HD.bars=!!ch&&G.modeId==='field'; HD.manual=!!ch&&G.mode.cards==='manual';
+  HD.auto=HD.manual&&!!loadSettings().cardAuto;
+  if(box){ box.hidden=!(HD.bars||HD.manual); shEl('hdBars').hidden=!HD.bars; shEl('hdCard').hidden=true;
+    if(!HD.wired){ HD.wired=true; shEl('hdCard').addEventListener('click',()=>{ if(G&&!G.ui&&!G.over) G.cardReq=true; }); } }
+  if(ch&&G.charTip&&!G.auto) toast(G.charTip,'info'); }
+// ★ caps (§3.6): one line per card after core renderCards (a reroll = new choices → added again)
+function hdCards(){
+  HD.cards=G.choices; const box=$('#lvCards'); if(!box||!P.rank) return;
+  const eb=$('#lvEyebrow'), lt=$('#lvTitle');                          // §2.2: proficiency, not the character's level
+  if(eb&&eb.textContent==='เลเวลอัพ'){ eb.textContent='ความชำนาญเพิ่มขึ้น'; if(lt&&/^Lv /.test(lt.textContent)) lt.textContent='ชำนาญ '+lt.textContent; }
+  G.choices.forEach((o,i)=>{ const c=box.children[i]; if(!c) return; let t='';
+    if(o.k==='up'){ const cap=P.rank[o.s.id]||0; t=o.s.lv+1>=cap?'ถึงเพดาน ★'+cap+' หลังเลือก · ฝึกเพิ่มที่หน้าสกิล':'เพดาน ★'+cap; }
+    else if(o.k==='new') t='ฝึกไว้ ★'+(P.rank[o.id]||0)+' · อัปในรอบนี้ได้ถึง Lv '+(P.rank[o.id]||0);
+    else if(o.k==='stat') t='เร่งชั่วคราวในรอบนี้ · ไม่ใช่สถานะถาวร';
+    else if(o.k==='gold') t='ได้ทองจริง +'+5*P.lv;
+    if(t) c.append(shMk('span','hd-cap',t)); });
+  // §3.6: a loadout skill already at its ★ is never offered → say so on one other card
+  const top=(P.skills||[]).filter(s=>!s.evolved&&(P.rank[s.id]||0)<BAL.CAP.rank&&s.lv>=(P.rank[s.id]||0));
+  if(top.length){ let i=G.choices.findIndex(o=>o.k!=='up'&&o.k!=='new'&&o.k!=='evo'); if(i<0) i=G.choices.length-1; const c=box.children[i];
+    if(c) c.append(shMk('span','hd-cap','ตันที่ '+top.map(s=>s.def.n+' ★'+(P.rank[s.id]||0)).join(', ')+' · ฝึกเพิ่มที่หน้าสกิล')); } }
+function hdBars(){
+  const ch=G.char, t2=!!ch.job, jc=t2?BAL.CAP.job2:BAL.CAP.job1;
+  const xr=ch.lv>=BAL.CAP.base?1:ch.xp/BAL.bxpNeed(ch.lv), jr=ch.jlv>=jc?1:ch.jxp/BAL.jxpNeed(ch.jlv,t2?2:1);
+  if(Math.abs(xr-HD.xr)<.002&&Math.abs(jr-HD.jr)<.002&&HD.lv===ch.lv&&HD.jl===ch.jlv) return;
+  HD.xr=xr; HD.jr=jr; HD.lv=ch.lv; HD.jl=ch.jlv; const b=shEl('hdBars'); b.textContent=''; b.append(shBar('Lv '+ch.lv,xr,''),shBar('Job '+ch.jlv,jr,'','job')); }
+function hdCardBtn(){
+  const n=(G.pendingLv|0)+(G.pendingChest|0), on=n>0&&!G.ui&&!G.over;
+  if(on&&HD.auto) G.cardReq=true;
+  const v=on?n:0; if(HD.n===v) return; HD.n=v; const b=shEl('hdCard'); b.hidden=!on; b.textContent='⬆ เลือกการ์ด ('+n+')'; }
+
+function hdEnd(dl,g){
+  hdMenuText(g); const r=g&&g.rewards, ch=g&&g.char, rows=r&&ch?hdRewardRows(r,ch):[], se=$('#scrEnd'), et=$('#endTitle');
+  if(se) se.classList.toggle('hd-on',!!ch);                           // character runs: solid backdrop (tall end screen over the HUD)
+  if(et&&g&&g.retreat) et.classList.remove('lose');
+  if(!HD.rew&&rows.length){ HD.rew=shMk('div','box hd-rew'); HD.rew.id='hdRew'; }
+  const box=HD.rew; if(!box) return;                                 // classic never creates it
+  box.hidden=!rows.length; if(box.hidden) return;
+  const host=dl&&dl.parentNode; if(host&&box.previousElementSibling!==host) host.after(box);
+  box.textContent=''; box.append(shMk('div','dmg-title','รางวัล'));
+  for(const [k,v,c] of rows){ const d=shMk('div','hd-rr'+(c?' '+c:'')); d.append(shMk('span','',k),shMk('b','',v)); box.append(d); } }
+function hdRewardRows(r,ch){   // pure: Reward (§7.8) → [label, value, class?]
+  const out=[], n=v=>Math.floor(+v||0).toLocaleString('en-US'), lost=r.lost||[];
+  if(!r.committed) out.push(['บันทึก',saveReadOnly()?'ไม่ได้บันทึก · ข้อมูลเป็นเวอร์ชันใหม่กว่าแอป':'ไม่ได้บันทึก','bad']);
+  if(r.mode==='survival') out.push(['คลื่นที่ผ่าน',(r.waves|0)+'/'+BAL.SURV.WAVES+' · ระดับนรก T'+(r.tier|0)]);
+  if(r.mode!=='trial') out.push(['Base EXP','+'+n(r.baseXp)+(r.daily?' (×2 วันนี้)':'')],['Job EXP','+'+n(r.jobXp)],['ทอง','+'+n((+r.gold||0)+(+r.overGold||0))+(r.daily?' (×2)':'')]);
+  if(r.marks) out.push(['ตราผู้พิชิต','+'+n(r.marks)]);
+  if(r.lvUp&&ch){ let p=0; for(let L=ch.lv-r.lvUp+1;L<=ch.lv;L++) p+=BAL.statPtsFor(L); out.push(['เลเวลอัป!','Lv '+ch.lv+' · แต้มสถานะ +'+p,'good']); }
+  if(r.jobUp&&ch) out.push(['เลเวลอาชีพอัป!','Job '+ch.jlv+' · แต้มสกิล +'+r.jobUp,'good']);
+  const got=(r.items||[]).filter(it=>lost.indexOf(it)<0); if(got.length) out.push(['ของ',got.map(hdItemName).join(' · ')]);
+  if(lost.length) out.push(['กระเป๋าเต็ม','ตกหล่น '+lost.length+' ชิ้น','bad']);
+  for(const u of r.unlocks||[]){ const [k,v]=String(u).split(':');
+    if(k==='survTier'&&(v|0)<=HB_TIER_OPEN) out.push(['ปลดล็อก','ระดับนรก T'+(v|0),'good']);
+    else if(k==='trial') out.push(['บททดสอบ','ผ่านแล้ว · เลื่อนอาชีพได้','good']);
+    else if(k==='boss'&&MODES.boss&&EN[v]) out.push(['ปลดล็อกบอส',EN[v].n,'good']); }
+  return out; }
+function hdItemName(it){ let s=''; try{ s=it&&it.u?itemName(it):((itemDef(it&&it.id)||{}).n||''); }catch(e){} return (s||String(it&&it.id||'?'))+(it&&it.n>1?' ×'+it.n:''); }
+// pause / end buttons say "กลับป้อม" in character runs; classic gets its own words back
+function hdMenuText(g){ const c=!!(g&&g.char);
+  for(const [id,t] of [['btnMenuP',g&&g.modeId==='survival'?'กลับป้อม (ไม่รับรางวัล)':'กลับป้อม'],['btnMenuE','กลับป้อม']]){ const b=$('#'+id); if(!b) continue;
+    if(!(id in SH.txt)) SH.txt[id]=b.textContent; const want=c?t:SH.txt[id]; if(b.textContent!==want) b.textContent=want; } }
+function hdPause(box){
+  hdMenuText(G); if(!G||!G.char||G.modeId!=='survival'||!box) return;
+  box.append(shBtn('🏳 ถอยทัพ · รับรางวัล','btn ghost sh-wide',()=>{ if(!G||G.over||G.ui!=='pause') return; G.retreat=true; G.ui=null; show(null); endRun(false); })); }
 /* ================= 56-ui-stats.js · lane P · stats tab (CHARTABS.stats) ================= */
-/* M0 stub: frozen signatures from DESIGN §7.8, neutral values — classic never calls these. Lane P writes the real body. */
-// M0: nothing yet
-
+// §3.3 · §8.8: every change waits as "pending" until [ยืนยัน] (commitStats) or [ยกเลิก] · [+] tap = 1 point, hold = 5 at a time ·
+// (n) = cost of the next point (statCost) · [แจกอัตโนมัติ] spends what is left by the class preset (pgAutoStats) ·
+// the preview runs the real recalc() on a scratch player with the would-be bonus (buildRunBonus) · reset = prgReset (54).
+let pstPend=null;                                    // {id, d:{STR:n,…}} pending points of one character (kept while tabs switch)
+let pstUI=null;                                      // {root, ch} of the tab that is drawn
+function pstD(ch){ if(!pstPend||pstPend.id!==ch.id) pstPend={id:ch.id, d:{}}; return pstPend.d; }
+function pstLeft(ch){ return (ch.pts|0)-pgStatCost(ch,pstD(ch)); }
+function pstSum(ch){ const d=pstD(ch), s={}; for(const k of STAT_ORDER) s[k]=((ch.st||{})[k]|0)+(d[k]|0); return s; }
+// +n / −n pending points on stat k (stops at the cap, at the points left, at 0 pending) → how many changed
+function pstStep(ch,k,n){ const d=pstD(ch); let done=0;
+  if(n>0){ for(;done<n;done++){ const x=((ch.st||{})[k]|0)+(d[k]|0); if(x>=BAL.CAP.stat||BAL.statCost(x)>pstLeft(ch)) break; d[k]=(d[k]|0)+1; } }
+  else { for(;done<-n&&(d[k]|0)>0;done++) d[k]--; if(!d[k]) delete d[k]; }
+  return done; }
+// [แจกอัตโนมัติ]: the points still left go by the class preset on top of what is pending
+function pstAuto(ch){ const add=pgAutoStats(Object.assign({},ch,{st:pstSum(ch)}),pstLeft(ch)), d=pstD(ch); let n=0;
+  for(const k in add){ d[k]=(d[k]|0)+add[k]; n+=add[k]; } return n; }
+// what one point of each stat gives (from BAL.META_K, so the text follows the balance file)
+function pstHint(k){ const K=BAL.META_K[k], o=[];
+  for(const q in K){ const v=K[q]; if(q==='speedMax'||q==='proj40') continue;
+    if(q==='cd'){ o.push('คูลดาวน์ −'+(+((1-v)*100).toFixed(2))+'%'); continue; }
+    o.push((JD_BONUS_TH[q]||q)+' +'+(JD_PCT[q]?(+(v*100).toFixed(2))+'%':+v.toFixed(3))+(q==='speed'&&K.speedMax?' (สูงสุด '+Math.round(K.speedMax*100)+'%)':'')); }
+  return o.join(' · ')+' ต่อแต้ม'+(K.proj40?' · ครบ 40 แต้ม: กระสุน +'+K.proj40:''); }
+// derived numbers of §3.7 for ch with stats st: a scratch player (no run, no G) through the real recalc
+function pstCalc(ch,st){
+  const c=pgCls(ch); if(!c) return []; const p=makePlayer(c); p.adv=pgAdvOf(ch); p.bonus=buildRunBonus(Object.assign({},ch,{st})); recalc(p);
+  const K=22+.8*(ch.lv|0), pc=v=>Math.round(v*100);
+  return [['พลังโจมตี',Math.round(100*p.might)],['HP',Math.round(p.maxHp)],['ป้องกัน',(+p.armor.toFixed(1))+' (−'+pc(p.armor/(p.armor+K))+'%)'],
+    ['ฟื้นฟู/วิ',+p.regen.toFixed(2)],['คริ',pc(p.crit)+'%'],['แรงคริ','×'+(+p.critMult.toFixed(2))],['คูลดาวน์','−'+pc(1-p.cdMul)+'%'],
+    ['ความเร็ว',Math.round(p.speed)],['พื้นที่สกิล','+'+pc(p.area-1)+'%'],['ระยะเวลาสกิล','+'+pc(p.durMul-1)+'%'],['กระสุน','+'+p.extraProj],
+    ['ดรอป','+'+pc(p.drop)+'%'],['EXP','+'+pc(p.xpMul-1)+'%']]; }
+function pstDraw(root,ch){
+  pstUI={root, ch:ch||null}; if(!root) return;
+  if(!ch||!pgCls(ch)){ root.innerHTML='<p class="prg-empty">ยังไม่มีตัวละคร</p>'; return; }
+  let h='<div class="pst">'+(saveReadOnly()?prgRO():'')+'<div class="pst-head"><span>แต้มเหลือ <b data-r="left"></b></span>'
+    +'<button class="btn ghost pst-auto" type="button" data-a="auto">แจกอัตโนมัติ</button></div><ul class="pst-list">';
+  for(const k of STAT_ORDER) h+=`<li class="pst-row" data-k="${k}"><div class="pst-n"><b>${STAT_TH[k]}</b><small>${pstHint(k)}</small></div>`
+    +`<span class="pst-v" data-r="v"></span><button class="pst-b" type="button" data-p="-1" aria-label="ลด ${STAT_TH[k]}">−</button>`
+    +`<button class="pst-b" type="button" data-p="1" aria-label="เพิ่ม ${STAT_TH[k]}">+</button><span class="pst-c" data-r="c"></span></li>`;
+  h+='</ul><p class="pst-tip">แตะ [+] เพิ่มทีละแต้ม · กดค้างเพิ่มทีละ 5 · (ตัวเลข) = แต้มที่ใช้สำหรับแต้มถัดไป</p>'
+    +'<div class="box pst-prev"><h3 class="pst-ph" data-r="ph"></h3><dl class="pst-dl" data-r="calc"></dl></div>'
+    +'<div class="btn-row pst-act"><button class="btn ghost" type="button" data-a="cancel">ยกเลิก</button><button class="btn primary" type="button" data-a="ok">ยืนยัน</button></div>'
+    +'<div class="prg-reset"><span data-r="rs"></span><button class="btn ghost" type="button" data-a="reset">รีเซ็ตแต้ม</button></div></div>';
+  root.innerHTML=h;
+  const box=root.querySelector('.pst'); box.addEventListener('click',pstClick);
+  for(const b of box.querySelectorAll('[data-p]')){ const k=b.closest('[data-k]').dataset.k, s=+b.dataset.p;
+    prgRepeat(b,n=>{ const U=pstUI; if(!U||!U.ch||saveReadOnly()) return 0; const m=pstStep(U.ch,k,s*n); if(m) pstPaint(); return m; }); }
+  pstPaint(); }
+function pstPaint(){
+  const U=pstUI; if(!U||!U.ch||!U.root) return; const R=U.root, ch=U.ch, box=R.querySelector('.pst'); if(!box) return;
+  const ro=saveReadOnly(), d=pstD(ch), left=pstLeft(ch), any=Object.keys(d).length>0, q=s=>box.querySelector(s);
+  q('[data-r="left"]').textContent=String(left);
+  for(const li of box.querySelectorAll('.pst-row')){ const k=li.dataset.k, x=(ch.st||{})[k]|0, p=d[k]|0, y=x+p, cap=y>=BAL.CAP.stat, cost=cap?0:BAL.statCost(y);
+    li.classList.toggle('pend',p>0); li.querySelector('[data-r="v"]').textContent=p?x+'→'+y:String(x);
+    li.querySelector('[data-r="c"]').textContent=cap?'ตัน':'('+cost+')';
+    li.querySelector('[data-p="1"]').disabled=ro||cap||cost>left; li.querySelector('[data-p="-1"]').disabled=ro||!p; }
+  q('[data-a="auto"]').disabled=ro||!STAT_ORDER.some(k=>{ const y=pstSum(ch)[k]; return y<BAL.CAP.stat&&BAL.statCost(y)<=left; });
+  q('[data-a="ok"]').disabled=ro||!any; q('[data-a="cancel"]').disabled=!any;
+  const A=pstCalc(ch,ch.st||{}), B=any?pstCalc(ch,pstSum(ch)):A;
+  q('[data-r="ph"]').textContent=any?'ผลถ้ายืนยัน':'ค่าปัจจุบัน';
+  q('[data-r="calc"]').innerHTML=A.map((r,i)=>{ const b=B[i][1], ch2=String(b)!==String(r[1]);
+    return `<div${ch2?' class="up"':''}><dt>${r[0]}</dt><dd>${ch2?r[1]+' → '+b:r[1]}</dd></div>`; }).join('');
+  const S=prgResetInfo(ch,'st'); q('[data-r="rs"]').textContent='รีเซ็ต: '+S.label; q('[data-a="reset"]').disabled=!S.can; }
+function pstClick(e){
+  const b=e.target.closest('[data-a]'); if(!b||b.disabled) return; const U=pstUI; if(!U||!U.ch) return; const ch=U.ch, a=b.dataset.a;
+  if(a==='auto'){ if(!pstAuto(ch)) toast('แต้มไม่พอสำหรับแต้มถัดไป','info'); }
+  else if(a==='cancel') pstPend=null;
+  else if(a==='ok'){ const d=Object.assign({},pstD(ch));
+    if(commitStats(ch,d)){ pstPend=null; toast('บันทึกแต้มสถานะแล้ว','good'); } else toast(saveReadOnly()?'แก้ไขไม่ได้':'ยืนยันไม่ได้ · ลองใหม่','bad'); }
+  else if(a==='reset'){ prgReset(ch,'st',()=>{ pstPend=null; pstPaint(); }); return; }
+  else return;
+  pstPaint(); }
+CHARTABS.stats={n:'สถานะ', order:30, render(root,ch){ pstDraw(root,ch); }};
 /* ================= 57-ui-job.js · lane P · scrJob ================= */
-/* M0 stub: frozen signatures from DESIGN §7.8, neutral values — classic never calls these. Lane P writes the real body. */
-// M0: nothing yet
-
+// §3.4 · §8.10: the 4 requirements come from jobReqs (lane C) · [ไปบททดสอบ] opens at Base 20 + Job 20 (§2.5) ·
+// pick one of the two advanced paths, then hold the button 1 s (mouse, touch or keyboard) → advanceJob, which is
+// once only and permanent (the page then shows the chosen job and no button at all).
+let pjbSel=null;                                     // advanced job id picked on the page (null = none yet)
+function pjbOpen(){ pjbSel=null; pjbRender(); prgGo('scrJob'); }
+// state of the page for ch: {done (already advanced), reqs, all (every requirement met), trial (trial button open), can (hold enabled)}
+function pjbState(ch,sel){
+  const c=pgCls(ch); if(!c) return null; const R=BAL.ADV, a=pgAdvOf(ch);
+  const reqs=a?[]:jobReqs(ch,sel||c.adv[0].id), all=!a&&reqs.length===4&&reqs.every(q=>q.ok);
+  const trial=!a&&!(ch.trial&&ch.trial.t2===1)&&(ch.lv|0)>=R.base&&(ch.jlv|0)>=R.job;
+  return {c, a, reqs, all, trial, can:all&&!!sel&&c.adv.some(x=>x.id===sel)&&!saveReadOnly()}; }
+function pjbCard(c,a,pick){
+  const pas=Object.keys(PASSIVES).filter(id=>PASSIVES[id].own===a.id), on=pjbSel===a.id, tag=pick?'button':'div';
+  return `<${tag}${pick?` type="button" data-a="pick" data-id="${a.id}" aria-pressed="${on}"`:''} class="pjb-card${on?' sel':''}">`
+    +`<canvas data-adv="${a.id}" width="80" height="80" aria-hidden="true"></canvas><span class="pjb-n">${esc(a.n)}<small>${esc(a.e)}</small></span>`
+    +`<span class="pjb-b">${esc(a.bt)}</span><span class="pjb-d">${esc(a.d)}</span>`
+    +`<span class="pjb-sk">${a.skills.map(id=>'<span>'+SK[id].i+' '+esc(SK[id].n)+'</span>').join('')}</span>`
+    +`<span class="pjb-ps">${pas.map(id=>'<span>'+PASSIVES[id].i+' '+esc(PASSIVES[id].n)+'</span>').join('')}</span></${tag}>`; }
+function pjbRender(){
+  const root=$('#pjbRoot'); if(!root) return; prgWire(root,pjbClick);
+  const ch=prgCh(), S=ch&&pjbState(ch,pjbSel);
+  if(!S){ root.innerHTML=prgTop('อาชีพ','')+'<p class="prg-empty">ยังไม่มีตัวละคร · สร้างตัวละครที่เมนูหลักก่อน</p>'; return; }
+  const c=S.c, R=BAL.ADV; let h;
+  if(S.a){
+    h=prgTop('อาชีพ',esc(S.a.n)+'<br>Job '+(ch.jlv|0)+'/'+BAL.CAP.job2)+'<p class="pjb-done">✔ เลื่อนอาชีพแล้ว · ถาวร เปลี่ยนไม่ได้</p>'
+      +`<div class="pjb-cards one">${pjbCard(c,S.a,false)}</div><div class="btn-row"><button class="btn ghost" type="button" data-a="skills">ไปหน้าสกิล ›</button></div>`;
+  } else {
+    h=prgTop('อาชีพ',esc(c.n)+'<br>Job '+(ch.jlv|0)+'/'+BAL.CAP.job1)+(saveReadOnly()?prgRO():'')+'<div class="box pjb-req"><h3>เงื่อนไขเลื่อนอาชีพ</h3><ul>';
+    S.reqs.forEach((q,i)=>{ h+=`<li class="${q.ok?'ok':'no'}"><span class="pjb-mk" aria-hidden="true">${q.ok?'✔':'✘'}</span><span class="pjb-t">${esc(q.t)}</span>`
+      +(i===2&&!q.ok?`<button class="btn ghost pjb-trial" type="button" data-a="trial"${S.trial?'':' disabled'}>ไปบททดสอบ ›</button>`:'')+'</li>'; });
+    h+='</ul>'+(S.trial||S.reqs[2].ok?'':`<p class="hint">บททดสอบเปิดเมื่อถึง Base ${R.base} + Job ${R.job} · รอดให้ครบ 60 วิ แล้วล้มผู้คุม · แพ้ได้ ลองใหม่ฟรี</p>`)+'</div>';
+    h+='<div class="pjb-cards" role="group" aria-label="เลือกสายอาชีพขั้นสูง">'+c.adv.map(x=>pjbCard(c,x,true)).join('')+'</div>';
+    h+=`<p class="pjb-warn">⚠ เลือกแล้วเปลี่ยนไม่ได้</p><button class="btn primary pjb-hold" type="button" data-a="hold"${S.can?'':' disabled'}><span>กดค้างเพื่อเลื่อนอาชีพ</span></button>`
+      +`<p class="hint">${!pjbSel?'แตะเลือกสายอาชีพก่อน':!S.all?'ยังไม่ครบเงื่อนไข':'กดค้าง 1 วินาทีเพื่อเลื่อนเป็น '+esc(c.adv.find(x=>x.id===pjbSel).n)}</p>`;
+  }
+  root.innerHTML=h;
+  for(const cv of root.querySelectorAll('canvas[data-adv]')){ const x=c.adv.find(y=>y.id===cv.dataset.adv); try{ portrait(cv,Object.assign({},c.look,x.look),80); }catch(e){ console.error(e); } }
+  const hb=root.querySelector('.pjb-hold'); if(hb) prgHold(hb,PRG.hold,pjbAdvance); }
+function pjbClick(e){
+  const b=e.target.closest('[data-a]'); if(!b||b.disabled) return; const a=b.dataset.a;
+  if(a==='back'){ prgBackNav(); return; }
+  if(a==='skills'){ pksOpen(); return; }
+  const ch=prgCh(); if(!ch) return;
+  if(a==='pick'){ pjbSel=b.dataset.id; pjbRender(); }
+  else if(a==='trial') trialStart(ch); }
+function pjbAdvance(){
+  const ch=prgCh(), S=ch&&pjbState(ch,pjbSel); if(!S||!S.can) return; const x=S.c.adv.find(y=>y.id===pjbSel);
+  if(advanceJob(ch,pjbSel)){ pjbSel=null; toast('เลื่อนอาชีพเป็น '+x.n+' แล้ว! ปลดสกิลขั้นสูง 2 ตัว','good'); try{ initAudio(); sfx('win'); }catch(e){} }
+  else toast('เลื่อนอาชีพไม่ได้ · ตรวจเงื่อนไขอีกครั้ง','bad');
+  pjbRender(); }
 /* ================= 58-mode-trial.js · lane P · MODES.trial + EN.trial_warden ================= */
-/* M0 stub: frozen signatures from DESIGN §7.8, neutral values — classic never calls these. Lane P writes the real body. */
-function trialStart(ch){}
-
+// §2.5 · §2.1: a circle arena r 650 · survive 60 s while 3 foes a second come in (shambler / runner / bat / spitter,
+// HP × hpByLv(Lv) and damage × dmgByLv(Lv) of the character) · then the warden "ผู้คุมบททดสอบรูน": the colossus painter
+// tinted rune green, colossus AI through d.ai, HP 700 · hpByLv(Lv) · win → onRunEnd (lane C) unlocks 'trial:t2' and the
+// committed reward sets ch.trial.t2 = 1 · loss = free retry (no cost) · no proficiency cards, no EXP, no drops ·
+// skills start at their ★ (prepareRun 'rank') · defK = 22 + 0.8·Lv.
+const PTR={R:650, SURVIVE:60, RATE:3, BOSS_RATE:1, HP:700, W:{shambler:4, runner:3, bat:2, spitter:1.5}};
+// boss:1 → never pre-built at boot · lazy:1 says the same for the §7.7 boot rule · the sprite is built when the trial starts
+Object.assign(EN,{trial_warden:{boss:1, lazy:1, base:'colossus', ai:'colossus', tint:'#2fe08a', n:'ผู้คุมบททดสอบรูน',
+  hp:PTR.HP, speed:62, r:44, dmg:22, mass:80, xp:150, goo:'#8ff0c0', bones:1}});
+function ptrLv(){ return Math.max(1,(G&&G.char&&G.char.lv)|0); }
+// a foe on a ring around the player but inside the arena (else on the far side of the circle)
+function ptrSpawn(){
+  const B=G.bounds, t=pickType(G.cfg.W), R=Math.min(Math.hypot(VW,VH)/2+rand(30,110),B.r*.92);
+  for(let k=0;k<6;k++){ const a=rand(0,TAU), x=P.x+Math.cos(a)*R, y=P.y+Math.sin(a)*R; if(Math.hypot(x-B.x,y-B.y)<B.r-24) return spawnEnemy(t,x,y); }
+  const a=Math.atan2(B.y-P.y,B.x-P.x)+rand(-.9,.9); return spawnEnemy(t,B.x+Math.cos(a)*(B.r-30),B.y+Math.sin(a)*(B.r-30)); }
+function ptrWarden(){
+  const e=spawnBoss('trial_warden',PTR.HP*BAL.FIELD.hpByLv(ptrLv())); G.trial.warden=e; G.boss=true; G.bosses=[e];
+  banner(EN.trial_warden.n,'ล้มผู้คุมเพื่อผ่านบททดสอบ'); sfx('boss'); return e; }
+MODES.trial={
+  id:'trial', n:'บททดสอบเลื่อนขั้น', cards:false, relocate:false,
+  init(opts){ const lv=ptrLv(), F=BAL.FIELD;
+    G.defK=22+.8*lv; G.bounds={k:'circle', x:0, y:0, r:PTR.R};
+    G.cfg={W:PTR.W, rate:PTR.RATE, hpMul:F.hpByLv(lv), dmgMul:F.dmgByLv(lv), spdMul:1};
+    G.wave=1; G.spawnAcc=0; G.trial={phase:1, warden:null};
+    try{ getSpr('trial_warden'); }catch(e){ console.error(e); }
+    banner('บททดสอบเลื่อนขั้น','รอดให้ครบ '+PTR.SURVIVE+' วิ แล้วล้ม'+EN.trial_warden.n);
+    for(let i=0;i<6;i++) ptrSpawn(); },
+  update(dt){ const T=G.trial;
+    if(T.phase===1&&G.t>=PTR.SURVIVE){ T.phase=2; G.wave=2; ptrWarden(); }
+    else if(T.phase===2&&T.warden&&T.warden.dead&&!G.waveEnding){ T.phase=3; G.waveEnding=true; healP(P.maxHp*.25); later(1.4,()=>endRun(true)); }
+    if(G.waveEnding||G.over) return;
+    G.spawnAcc+=(T.phase===1?G.cfg.rate:PTR.BOSS_RATE)*dt;
+    while(G.spawnAcc>=1){ G.spawnAcc-=1; if(G.enemies.length<CAP) ptrSpawn(); } },
+  // the warden is down and the win is 1.4 s away: a last hit cannot turn it into a loss
+  onDeath(){ if(G.trial&&G.trial.phase===3){ P.hp=1; return true; } return false; },
+  // the arena edge: darken outside the circle + a dashed rune-green ring (world coordinates, before the actors)
+  drawWorld(L,T,R,B){ const A=G.bounds; ctx.save(); ctx.beginPath(); ctx.rect(L,T,R-L,B-T); ctx.arc(A.x,A.y,A.r,0,TAU); ctx.fillStyle='rgba(4,8,6,.5)'; ctx.fill('evenodd');
+    ctx.beginPath(); ctx.arc(A.x,A.y,A.r,0,TAU); ctx.setLineDash([18,12]); ctx.lineWidth=5; ctx.strokeStyle='rgba(47,224,138,.6)'; ctx.stroke(); ctx.restore(); },
+  hud(){ const T=G.trial;
+    return {lv:'บททดสอบ · Lv '+ptrLv()+' · '+P.cls.n, wave:T.phase===1?'ช่วง 1/2 · เอาตัวรอด':'ช่วง 2/2 · ผู้คุม',
+      time:T.phase===1?'เหลือ '+fmtTime(PTR.SURVIVE-G.t):T.phase===2?'บอส!':'ผ่าน!'}; },
+  pauseTitle(){ return `บททดสอบเลื่อนขั้น · ${P.cls.n} Lv ${ptrLv()} · เวลา ${fmtClock(G.t)}`; },
+  end(won){
+    return {eyebrow:'บททดสอบเลื่อนขั้น · '+P.cls.n, title:won?'ผ่านบททดสอบ!':'ยังไม่ผ่าน',
+      rows:()=>{ const ch=G.char, ok=!!(ch&&ch.trial&&ch.trial.t2===1);
+        return [['ผล',won?(ok?'ปลดการเลื่อนอาชีพแล้ว':'ชนะ (ไม่ได้บันทึก)'):'ลองใหม่ได้ฟรี ไม่เสียอะไร'],['เวลา',fmtClock(G.t)],['สังหาร',fmtNum(G.kills)],
+          ['ผู้คุม',won?'ล้มแล้ว':G.trial.phase>=2?'ยังไม่ล้ม':'ยังไม่ปรากฏ']]; }}; }
+};   // after the run lane B's router lands on scrJob (SH_RET.trial in 50-ui-shell.js)
+// start the trial of ch (from the job page) · refuses (toast) before Base 20 + Job 20 or after advancing
+function trialStart(ch){
+  ch=ch||prgCh(); if(!ch||!pgCls(ch)) return false; const R=BAL.ADV;
+  if(ch.job||(ch.lv|0)<R.base||(ch.jlv|0)<R.job){ toast(ch.job?'เลื่อนอาชีพแล้ว ไม่ต้องทดสอบอีก':'บททดสอบเปิดเมื่อถึง Base '+R.base+' + Job '+R.job,'bad'); return false; }
+  startRun(ch.cls,'trial',{char:ch}); return true; }
 /* ================= 60-zones-data.js · lane F · pure · zones and mobs (merged into EN on load) ================= */
 /* M0 stub: frozen signatures from DESIGN §7.8, neutral values — classic never calls these. Lane F writes the real body. */
 const ZONES={};
@@ -2166,15 +3866,29 @@ if(location.hash==='#dev'){ const RG=Object.assign({
   Object.defineProperty(RG,'commit',{get(){ return !!DEV.commit; },set(v){ DEV.commit=!!v; },enumerable:true,configurable:true});
   window.RG=RG; }
 
+/* ================= boot (lane I from M1) ================= */
+// Order: canvas + sprites (as before) → settings (mute) → local save (load → .bak → migrate runeguard.best → validate)
+// → lane B shell → hub (scrHub). The classic title (scrTitle) is still rendered here and stays one tap away in the hub;
+// it is also the fallback when the shell is missing or throws, so the original game always starts.
+// Artifact (claude.ai): no service worker is registered by this page (only dist/index.html adds one), history is left to
+// the host page (lane B), and a blocked localStorage plays from memory (STORE). No network here (AUTH_ON=false, M3).
 function boot(data){
   resize(); groundPat=ctx.createPattern(makeGround(),'repeat'); buildNum();
   for(const t in EN) if(!EN[t].boss&&!EN[t].lazy) getSpr(t);   // zone mobs set lazy:1 and are built on entry
   if(data&&data.cls&&CLS[data.cls]) selected=data.cls;
-  renderTitle(); setMuteLabels(); renderQualityButtons(); show('scrTitle');
+  renderTitle(); setMuteLabels(); renderQualityButtons();
+  let hub=false;
+  try{
+    if(loadSettings().mute&&AU.on) toggleMute();               // runeguard.settings · lane B keeps it in sync afterwards
+    loadSaveFor(null);                                         // guest save (accounts come in M3) · emits BUS 'char'
+    if(data&&typeof data.char==='string'&&SAVE&&SAVE.active!==data.char) setActiveChar(data.char);   // hot reload keeps the pick
+    if(typeof shBoot==='function'){ shBoot(); hub=!!curScreen(); }
+  }catch(e){ console.error(e); }
+  if(!hub) show('scrTitle');                                   // the original boot screen
   if(document.fonts&&document.fonts.load){ document.fonts.load('700 16px Mali').then(()=>{ buildNum(); TXT.clear(); renderTitle(); }).catch(()=>{}); }
   requestAnimationFrame(frame);
 }
-try{ window.claude?.hot?.snapshot?.(()=>({cls:selected})); }catch(e){}
+try{ window.claude?.hot?.snapshot?.(()=>({cls:selected, char:SAVE?.active??null})); }catch(e){}
 if(window.claude?.hot?.ready) window.claude.hot.ready(boot); else boot(window.claude?.hot?.data??{});
 })();
 </script>

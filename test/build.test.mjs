@@ -1,7 +1,7 @@
 // test/build.test.mjs (lane A) — every lint rule L1–L11 of build.mjs must fire on a bad example, with the right Thai
 // message, and stay quiet on the real src/. Also: end-to-end runs of `node build.mjs` on a temp copy, and test/_vm.mjs.
 //   node test/build.test.mjs
-import { readSrc, assemble, lintAll, topDecls } from '../build.mjs';
+import { readSrc, assemble, lintAll, topDecls, SIZE_WARN, SIZE_FAIL } from '../build.mjs';
 import { loadSrc } from './_vm.mjs';
 import { spawnSync } from 'node:child_process';
 import { mkdtempSync, cpSync, writeFileSync, rmSync, readFileSync, unlinkSync } from 'node:fs';
@@ -117,10 +117,12 @@ fires('ชื่อไฟล์ผิดรูปแบบ', lint(s => s.stray.p
 
 console.log('L11 · ขนาด');
 {
+  // padding is relative to the real bundle, so each sample stays in its band while src/ grows (CR-A1, M1)
   const big = n => '/*' + 'x'.repeat(n * 1024) + '*/\n';
-  const r1 = lint(s => addJs(s, '97-x.js', big(470)));
+  const cur = Buffer.byteLength(assemble(base)), padTo = lim => Math.max(0, Math.ceil((lim - cur) / 1024)) + 2;
+  const r1 = lint(s => addJs(s, '97-x.js', big(padTo(SIZE_FAIL))));
   fires('เกิน 450 KB', r1, 'L11', 'ใหญ่เกิน 450 KB');
-  const r2 = lint(s => addJs(s, '97-x.js', big(170)));
+  const r2 = lint(s => addJs(s, '97-x.js', big(padTo(SIZE_WARN))));
   ok('L11 เตือนเมื่อเกิน 350 KB (ไม่ fail)', r2.errors.length === 0 && r2.warnings.some(w => w.rule === 'L11' && w.msg.includes('เกิน 350 KB')), show(r2));
 }
 

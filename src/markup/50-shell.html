@@ -1,1 +1,85 @@
-<!-- 50-shell.html · lane B · M0 stub (empty) -->
+<!-- 50-shell.html · lane B · hub, characters, new character, survival tier, settings, character window + shared layers (tab bar, sheet, confirm, toasts, log, run HUD extras) -->
+<section class="screen sh-scr" id="scrHub" hidden aria-label="เมนูหลัก ป้อมรูนทอง">
+  <div class="sh-panel">
+    <div class="hb-top" id="hbTop"></div>
+    <div class="hb-note" id="hbNote" hidden></div>
+    <div class="hb-mid" aria-hidden="true"><span class="hb-logo">Runeguard</span><span class="hb-sub">ป้อมรูนทอง · ป้อมสุดท้ายของอาณาจักรรูน</span></div>
+    <div class="hb-modes" id="hbModes"></div>
+    <div class="hb-svc" id="hbSvc" hidden></div>
+    <button class="hb-classic" id="hbClassic" type="button"><span>ทดลอง: เอาชีวิตรอดแบบคลาสสิก</span><small id="hbClassicSub">ไม่ใช้ตัวละคร · เกมเดิมทุกอย่าง</small><b aria-hidden="true">›</b></button>
+  </div>
+</section>
+
+<section class="screen sh-scr" id="scrChars" hidden aria-labelledby="chTitle">
+  <div class="sh-panel">
+    <header class="sh-head"><button class="sh-back" type="button" data-back aria-label="ย้อนกลับ">←</button><h2 id="chTitle">ตัวละคร</h2></header>
+    <div class="ch-list" id="chList"></div>
+    <div class="sh-foot"><button class="btn primary sh-wide" id="chNew" type="button">+ สร้างตัวละครใหม่</button><p class="hint">แตะการ์ดเพื่อเลือก · กดค้างที่การ์ดหรือแตะ 🗑 เพื่อลบ</p></div>
+  </div>
+</section>
+
+<section class="screen sh-scr" id="scrNew" hidden aria-labelledby="nwTitle">
+  <div class="sh-panel">
+    <header class="sh-head"><button class="sh-back" type="button" data-back aria-label="ย้อนกลับ">←</button><h2 id="nwTitle">สร้างตัวละคร</h2></header>
+    <label class="nw-f"><span>ชื่อตัวละคร <small id="nwCount">0/16</small></span><input id="nwName" type="text" maxlength="16" autocomplete="off" autocapitalize="off" spellcheck="false" enterkeyhint="done" placeholder="2–16 ตัวอักษร: ไทย อังกฤษ ตัวเลข เว้นวรรค"></label>
+    <div class="nw-cls" id="nwCls" role="radiogroup" aria-label="เลือกอาชีพ"></div>
+    <div class="nw-info" id="nwInfo"></div>
+    <fieldset class="nw-pts"><legend>แต้มสถานะเริ่มต้น 5 แต้ม</legend>
+      <label><input type="radio" name="nwPts" id="nwAuto" checked> แจกตามแบบแนะนำของอาชีพ</label>
+      <label><input type="radio" name="nwPts"> แจกเองทีหลังที่หน้าตัวละคร</label>
+    </fieldset>
+    <p class="nw-err" id="nwErr" role="alert"></p>
+    <div class="sh-foot"><button class="btn primary sh-wide" id="nwGo" type="button">สร้างตัวละคร</button></div>
+  </div>
+</section>
+
+<section class="screen sh-scr" id="scrSurv" hidden aria-labelledby="svTitle">
+  <div class="sh-panel">
+    <header class="sh-head"><button class="sh-back" type="button" data-back aria-label="ย้อนกลับ">←</button><h2 id="svTitle">เอาชีวิตรอด</h2></header>
+    <div class="sv-tier"><button class="sv-arr" id="svPrev" type="button" aria-label="ระดับนรกก่อนหน้า">◀</button><div class="sv-t" aria-live="polite"><small>ระดับนรก</small><b id="svT">T0</b><small id="svOpen"></small></div><button class="sv-arr" id="svNext" type="button" aria-label="ระดับนรกถัดไป">▶</button></div>
+    <div class="sv-body" id="svBody"></div>
+    <div class="sh-foot"><button class="btn primary sh-wide" id="svGo" type="button">เริ่ม</button></div>
+  </div>
+</section>
+
+<section class="screen sh-scr" id="scrSettings" hidden aria-labelledby="stTitle">
+  <div class="sh-panel">
+    <header class="sh-head"><button class="sh-back" type="button" data-back aria-label="ย้อนกลับ">←</button><h2 id="stTitle">ตั้งค่า</h2></header>
+    <div class="st-list" id="stList"></div>
+  </div>
+</section>
+
+<section class="screen sh-scr" id="scrChar" hidden aria-labelledby="cwTitle">
+  <div class="sh-panel">
+    <header class="sh-head"><button class="sh-back" type="button" data-back aria-label="ย้อนกลับ">←</button><h2 id="cwTitle">ตัวละคร</h2></header>
+    <div class="cw-head" id="cwHead"></div>
+    <div class="cw-tabs" id="cwTabs" role="tablist" aria-label="แท็บตัวละคร"></div>
+    <div class="cw-body" id="cwBody" role="tabpanel"></div>
+  </div>
+</section>
+
+<nav class="sh-nav" id="shNav" hidden aria-label="หน้าตัวละคร">
+  <button type="button" data-go="scrChar"><i aria-hidden="true">👤</i>ตัวละคร</button>
+  <button type="button" data-go="scrSkills"><i aria-hidden="true">✦</i>สกิล</button>
+  <button type="button" data-go="scrJob"><i aria-hidden="true">⚜</i>อาชีพ</button>
+  <button type="button" data-go="scrHub"><i aria-hidden="true">🏰</i>ป้อม</button>
+  <button type="button" data-go="scrSettings"><i aria-hidden="true">⚙</i>ตั้งค่า</button>
+</nav>
+<button class="sh-fab" id="shFab" type="button" hidden>← ป้อมรูนทอง</button>
+
+<div class="sh-sheet" id="shSheet" hidden>
+  <div class="sh-sbg" data-x></div>
+  <div class="sh-card" id="shCard" role="dialog" aria-modal="true" aria-labelledby="shSheetT">
+    <div class="sh-grip" id="shGrip"><span></span><h2 id="shSheetT"></h2><button class="sh-x" type="button" data-x aria-label="ปิด">✕</button></div>
+    <div class="sh-sb" id="shSheetB"></div>
+  </div>
+</div>
+<div class="sh-conf" id="shConf" hidden>
+  <div class="sh-cbox" role="alertdialog" aria-modal="true" aria-labelledby="shConfT">
+    <p id="shConfT"></p>
+    <div class="sh-crow"><button class="btn ghost" id="shConfNo" type="button">ยกเลิก</button><button class="btn primary" id="shConfOk" type="button">ยืนยัน</button></div>
+  </div>
+</div>
+<div class="sh-toasts" id="shToasts"></div>
+<div class="sh-log" id="shLog" aria-live="polite"></div>
+<div class="hd" id="hdBox" hidden><div class="hd-bars" id="hdBars" hidden></div><button class="hd-card" id="hdCard" type="button" hidden>⬆ เลือกการ์ด</button></div>

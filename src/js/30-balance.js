@@ -1,15 +1,63 @@
 /* ================= 30-balance.js · lane C · pure · every number of §2–§5 (single source) ================= */
-/* M0 stub: frozen signatures from DESIGN §7.8, neutral values — classic never calls these. Lane C writes the real body. */
-const BAL={ CAP:{base:60, job1:20, job2:25, stat:50, chars:3, bag:120, stash:120},
-  mobExp(m){ return 0; }, minPerLv(L){ return 0; }, bxpNeed(L){ return 0; }, diffMul(d){ return 1; }, jxpNeed(J,tier){ return 0; },
-  statCost(x){ return 0; }, statPtsFor(L){ return 0; }, START_PTS:5,
-  META_K:{STR:{might:.008}, VIT:{hp:4,regen:.015,armor:.06}, AGI:{speed:.003,cd:.996}, DEX:{cd:.997,proj40:1},
+// Tune here, then measure with RG.sim. Formulas are DESIGN §2.2 · §2.4 · §3.2–3.5 · §4.6–4.12 · §5.3–5.6.
+// Rule for every multiplier at its neutral input (T0, Lv1, +0): it returns exactly 1 / 22 / 0, so classic-equal paths stay bit-equal.
+const BAL={ CAP:{base:60, job1:20, job2:25, stat:50, chars:3, bag:120, stash:120, rank:5, gold:999999999, marks:999999},
+  // §3.2 levels and EXP
+  mobExp(m){ return Math.round(4+1.5*Math.pow(m,1.25)); },                       // Base EXP per mob of Lv m
+  minPerLv(L){ return 1+.6*L; },                                                // minutes per level at 30 same-level kills/min
+  bxpNeed(L){ return Math.round(BAL.mobExp(L)*30*BAL.minPerLv(L)/10)*10; },     // EXP to go from L to L+1
+  diffMul(d){ return d>=0 ? 1+.04*Math.min(d,8) : Math.max(.15,1+.07*d); },     // d = mob Lv − character Lv
+  jxpNeed(J,tier){ return tier===2 ? Math.round(.8*BAL.bxpNeed(Math.min(59,Math.round(20+1.6*J)))/10)*10
+                                   : Math.round(.72*BAL.bxpNeed(J)/10)*10; },   // tier 1 = first job, 2 = advanced job
+  JOB_EXP:.8,                                                                   // Job EXP = 0.8 × Base EXP (every source)
+  OVER_GOLD:.02,                                                                // at Base 60 excess EXP → 2% gold
+  // §3.3 stat points
+  statCost(x){ return 1+Math.floor(x*x/600); },                                 // cost to raise a stat from x to x+1
+  statPtsFor(L){ return 2+Math.floor(L/20); },                                  // points gained on reaching Lv L (L ≥ 2)
+  START_PTS:5,
+  META_K:{STR:{might:.008}, VIT:{hp:4,regen:.015,armor:.06}, AGI:{speed:.003,cd:.996,speedMax:.15}, DEX:{cd:.997,proj40:1},
           INT:{area:.006,dur:.006}, LUK:{crit:.003,critMult:.006,drop:.012,xp:.004}, LV:{hp:4,might:.004}},
-  RANK_COST:[0,1,1,1,2,2], ADV:{base:20, job:20, fee:500}, LOADOUT:{1:4, 2:5},
-  SURV:{recLv(T){ return 1; }, hpMul(T){ return 1; }, dmgMul(T){ return 1; }, defK(T){ return 22; }, goldPerWave(T){ return 0; }, gearTier(T){ return 1; }, expMul(waves,won){ return 0; }, overLv(L,rec){ return 1; }},
-  FIELD:{hpByLv(m){ return 1; }, dmgByLv(m){ return 1; }, gold(m){ return 0; }, cap:{touch:45, desk:70}, deathExp:.01, respawn:[8,15], rampage:{every:150, jitter:20, n:{touch:14, desk:18}}},
-  BOSS:{diff:[{n:'ปกติ',hp:1,dmg:1,lv:0},{n:'ยาก',hp:2.2,dmg:1.4,lv:10},{n:'ฝันร้าย',hp:4.5,dmg:2,lv:20}], hp(lv,d){ return 1; }, exp(lv,d){ return 0; }, gold(lv,d){ return 0; }, marks:[4,8,15], rune:[.08,.15,.25], uniq:[.10,.18,.30]},
+  ptsAt(L){ let n=BAL.START_PTS; for(let l=2;l<=L;l++) n+=BAL.statPtsFor(l); return n; },   // stat points earned by Lv L (incl. start)
+  statSpent(x){ let n=0; for(let i=0;i<x;i++) n+=BAL.statCost(i); return n; },             // points to raise one stat 0 → x
+  // §3.5 skill ranks (index r = cost of ★(r−1) → ★r) · passives cost 1 per ★ · loadout slots per job tier
+  RANK_COST:[0,1,1,1,2,2], PAS_COST:1, ADV:{base:20, job:20, fee:500}, LOADOUT:{1:4, 2:5},
+  rankSpent(r){ let n=0; for(let i=1;i<=r;i++) n+=BAL.RANK_COST[i]; return n; },            // skill points for ★0 → ★r
+  spAt(tier,jlv){ return tier===2 ? BAL.CAP.job1-1+jlv-1 : jlv-1; },                        // skill points earned at that job level
+  // §2.2 survival hell tiers T0–T10 (M1 ships T0 only)
+  SURV:{ maxT:10, WAVES:20, unlockWave:10, dailyWave:10,
+    recLv(T){ return Math.max(1,6*T); }, hpMul(T){ return 1+.3*T; }, dmgMul(T){ return 1+.12*T; }, defK(T){ return 22+3*T; },
+    goldPerWave(T){ return 15+5*T; }, gearTier(T){ return Math.min(5,1+Math.floor(T/2)); },
+    expMul(waves,won){ return .04*waves+(won?.3:0); },                          // × bxpNeed(recLv)
+    overLv(L,rec){ return L>rec+5 ? Math.max(.2,1-.08*(L-rec-5)) : 1; },
+    winGoldWaves:10 },                                                          // a win adds goldPerWave × 10
+  // §5.3–5.6 field
+  FIELD:{ hpByLv(m){ return 1+.12*(m-1)+.0015*(m-1)*(m-1); }, dmgByLv(m){ return 1+.06*(m-1); },
+    gold(m,u){ if(u===undefined) u=Math.random(); return Math.round((2+.35*m)*(.7+.6*u)); },   // u ∈ [0,1) → U(0.7, 1.3)
+    cap:{touch:45, desk:70}, deathExp:.01, respawn:[8,15], rampage:{every:150, jitter:20, n:{touch:14, desk:18}, extra:20, sec:30},
+    gemMul:3, size:{w:3200, h:2400}, points:[24,36], wander:120, aggro:260, packR:200, leash:900,
+    boss:{first:120, warn:60, appear:10, leash:800, jitter:[.9,1.1]}, potCd:8, autoPot:.35 },
+  // §2.4 boss hunt (lv = the boss's effective level: base Lv + diff.lv)
+  BOSS:{diff:[{n:'ปกติ',hp:1,dmg:1,lv:0},{n:'ยาก',hp:2.2,dmg:1.4,lv:10},{n:'ฝันร้าย',hp:4.5,dmg:2,lv:20}],
+    hp(lv,d){ return 900*BAL.FIELD.hpByLv(lv)*BAL.BOSS.diff[d].hp; },
+    exp(lv,d){ return Math.round(BAL.bxpNeed(lv)*.12*[1,1.5,2.2][d]); },
+    gold(lv,d){ return Math.round((100+10*lv)*[1,1.6,2.5][d]); },
+    marks:[4,8,15], rune:[.08,.15,.25], uniq:[.10,.18,.30], par:[60,75,120], medalA:1.5, dailyMul:2, rush:{n:5, heal:.25, marks:30} },
+  // §4.9 refine (+0 → +10). p[t] = base chance to reach +t · fail[t]: '' | 'keep' | 'down'
   REFINE:{p:[1,1,1,1,1,.80,.65,.50,.38,.26,.15], fail:['','','','','','keep','keep','down','down','down','down'],
-          mat(t){ return null; }, pity:.04, pityMax:.20, fee(tier,t){ return 0; }, weapon(r){ return 0; }, armor(r){ return 0; }},
-  PRICE:{}, DROP:{field:{}, fboss:{}, surv:{}}, RESET:{gold:2000, marks:40, freeBelow:20} };
-
+    mat(t){ return t<=6 ? 'm_dust' : 'm_crystal'; }, pity:.04, pityMax:.20,
+    fee(tier,t){ return 20*tier*t; },
+    weapon(r){ return {might:Math.round((r<=6 ? .02*r : .12+.03*(r-6))*1000)/1000}; },   // +10 → might +0.24
+    armor(r){ return {armor:.5*r, hp:5*r}; }, max:10 },
+  // §4.6 / §4.8 / §4.10 / §4.11 prices (gold unless "marks")
+  PRICE:{ u_potion_s:{buy:30, sell:8}, u_potion_l:{buy:120, sell:30}, m_dust:{buy:80, sell:20},
+    m_crystal:{marks:12, sell:150}, m_seal:{marks:50, sell:300}, u_forget:{buy:2000, marks:40}, m_shard:{sell:10},
+    u_dye:{buy:1500, marks:20}, u_bag10:{marks:60},
+    gear(tier,rar,r){ return Math.round(15*tier*tier*(1+rar)*(1+.1*(r||0))); },
+    bag:[2000,6000,15000,40000], bagStep:10, bagStart:80, stash:{marks:80, step:20, start:60},
+    combine:300, shardsPerRune:4, unsocket(tier){ return 100*tier; }, stack:{use:99, mat:999} },
+  // §4.12 drop rates. surv: tables in rollDrops() format, read by MODES.survival.onKill — empty until M2 (lane E/C CR)
+  DROP:{ field:{gold:1, gem:1, dust:.03, crystal2:.003, crystal4:.006, shard:.01, gear:.006, potion:.02},
+    fboss:{gold(L){ return 150+15*L; }, dust:[4,8], crystal:[1,3], gear:[1,2], uniq:.25, rune:.12, seal:.10},
+    rampage:{dust:2, gold(L){ return 20*L; }},
+    surv:{} },
+  RESET:{gold:2000, marks:40, freeBelow:20} };

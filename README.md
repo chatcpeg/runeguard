@@ -6,6 +6,27 @@
 
 - artifact (ส่วนตัว): https://claude.ai/artifact/4AqpfLcBm7h7yffbCXVSjX
 - สร้าง 2026-11-08 · v1.1 = อัปเกรดกราฟิก/เอฟเฟกต์ + PWA
+- v2 (branch `v2`, แผนทั้งหมดใน `docs/DESIGN.md`) · **M1 = ตัวละคร** (เซฟในเครื่องอย่างเดียว · บัญชีออนไลน์มาใน M3)
+
+## หน้าจอ (v2 · M1)
+
+เปิดเกมแล้วเข้า **ป้อมรูนทอง** (`scrHub`) ก่อนเสมอ เกมเดิมทั้งเกมยังอยู่ที่ปุ่ม "ทดลอง: เอาชีวิตรอดแบบคลาสสิก"
+
+| หน้า | มีอะไร |
+|---|---|
+| ป้อมรูนทอง `scrHub` | ตัวละครที่เลือกอยู่ + แถบ Base/Job EXP · ทอง (ใช้ร่วมทั้งบัญชี) · สถานะเซฟ · ปุ่มโหมด · ผู้เล่นเก่าที่มีสถิติคลาสสิกจะเห็น "ยินดีต้อนรับกลับ!" |
+| ตัวละคร `scrChars` · สร้าง `scrNew` | 3 ช่อง · แตะการ์ด = เลือก · ลบ = แตะ 🗑 แล้ว**กดค้าง 1 วิ** · สร้าง: ชื่อ 2–16 ตัว (ไทย/อังกฤษ/ตัวเลข) + อาชีพ + แจกแต้มเริ่มต้น 5 แต้ม |
+| หน้าตัวละคร `scrChar` (แท็บสถานะ) | แจกแต้มสถานะ (แตะ [+] / กดค้าง +5) แล้ว [ยืนยัน] · ดูค่าที่คำนวณได้ · รีเซ็ตฟรีก่อน Lv 20 |
+| สกิล `scrSkills` | ใช้แต้มสกิลฝึก ★1–★5 + passive · จัดช่องติดตัว (loadout) · ในรอบ การ์ดอัปสกิลได้ไม่เกิน ★ ที่ฝึกไว้ |
+| อาชีพ `scrJob` | เงื่อนไขเลื่อนอาชีพ 4 ข้อ (Base 20 · Job 20 · ผ่านบททดสอบ · 500 ทอง) · [ไปบททดสอบ] · เลือกสายแล้ว**กดค้าง 1 วิ** (ถาวร) |
+| บททดสอบ (โหมด `trial`) | สนามวงกลม เอาตัวรอด 60 วิ แล้วล้มผู้คุม · ชนะแล้วกลับมาที่หน้าอาชีพ |
+| เอาชีวิตรอด `scrSurv` → รอบ | ระดับนรก T0 (M1) · รางวัล EXP/Job EXP/ทองตามคลื่นที่ผ่าน · พักเกมมี "🏳 ถอยทัพ · รับรางวัล" |
+| ตั้งค่า `scrSettings` | คุณภาพภาพ · เสียง (จำไว้) · สั่น · ส่งออก/นำเข้าเซฟ (.json) |
+| คลาสสิก `scrTitle` | หน้าเลือกอาชีพเดิมทุกอย่าง (คะแนน/สถิติ `runeguard.best` เดิม) + ปุ่ม "← ป้อมรูนทอง" |
+
+แถบล่าง `ตัวละคร | สกิล | อาชีพ | ป้อม/ตั้งค่า` (ตัวเลขบนปุ่ม = แต้มที่ยังไม่ใช้) · ปุ่มย้อนกลับของ Android ย้อนทีละหน้า
+(ระหว่างรอบ = พักเกม · กดอีกครั้ง = เล่นต่อ · ที่ป้อมจะเตือนก่อนออก) · เซฟอยู่ใน `runeguard.save.guest` (+ `.bak`)
+ถ้าเครื่องเก็บข้อมูลไม่ได้ (เช่น artifact บางแบบ) เกมยังเล่นได้จากหน่วยความจำ และป้อมจะขึ้น "⚠ บันทึกลงเครื่องไม่ได้"
 
 ## ไฟล์
 
@@ -14,7 +35,7 @@
 | `src/` | **ต้นฉบับ** (ตั้งแต่ v2 M0) — `head.html` · `css/NN-*.css` · `markup/NN-*.html` · `js/NN-*.js` ต่อกันตามลำดับชื่อไฟล์ ผังไฟล์และเจ้าของแต่ละไฟล์อยู่ใน `docs/DESIGN.md` §7.1 |
 | `runeguard.html` | **ไฟล์ที่ build สร้าง ห้ามแก้ด้วยมือ** — ตัวที่ publish เป็น artifact และเป็นที่มาของ PWA (จงใจไม่มี `<!doctype>`/`<head>` เพราะ artifact ห่อให้เอง) commit ไว้เพราะเป็นตัว publish |
 | `build.mjs` | ประกอบ `src/` → `runeguard.html`, ตรวจกฎ L1–L11 (§7.3), สร้าง PWA: `index.html` (+ CSP), `manifest.webmanifest`, `sw.js`, ไอคอน PNG (วาดด้วยโค้ด) |
-| `test/` | `build.test.mjs` ทดสอบกฎตรวจทุกข้อ · `_vm.mjs` โหลดไฟล์ใน `src/js` มาทดสอบใน node · `golden/` ผล golden run ของโหมดคลาสสิก + วิธีวัด |
+| `test/` | `run.mjs` รันเทสต์ทุกไฟล์ · `build.test.mjs` กฎตรวจทุกข้อ · `names.test.mjs` ชื่อที่แสดงห้ามซ้ำ · `NN-*.test.mjs` เทสต์ของแต่ละ lane · `_vm.mjs` โหลดไฟล์ใน `src/js` มาทดสอบใน node · `golden/` ผล golden run ของโหมดคลาสสิก + วิธีวัด |
 | `vercel.json` | ให้ Vercel รัน `node build.mjs` แล้วเสิร์ฟโฟลเดอร์ `dist/` + security header + header ของ service worker |
 | `package.json` | สคริปต์ `build` `lint` `check` `test` ไม่มี dependency |
 
@@ -27,9 +48,22 @@ node build.mjs                    # ประกอบ src/ + ตรวจ L1–
 node build.mjs --lint             # ตรวจอย่างเดียว
 node build.mjs --check            # fail ถ้า runeguard.html ไม่ตรงกับ src/ (ลืม build)
 node build.mjs --verify-split=F   # เทียบ sha256 ผลประกอบกับไฟล์ F (ไม่เขียนอะไร)
-npm test                          # test/build.test.mjs + --check
+npm test                          # node test/run.mjs (เทสต์ทุกไฟล์) + --check
 ```
 แก้เกม = แก้ไฟล์ใน `src/` แล้วรัน `node build.mjs` ทุกครั้ง · แก้ core (`04–25`, `90`) ต้องรัน golden ใหม่ (`test/golden/README.md`)
+
+### เทสต์
+
+```
+node test/run.mjs                 # รัน test/*.test.mjs ทุกไฟล์ทีละ process สรุปเป็นไทย · ไม่ผ่านแม้ไฟล์เดียว = exit 1
+node test/run.mjs -v              # แสดงผลเต็มของทุกไฟล์
+node test/run.mjs 30 names        # เฉพาะไฟล์ที่ชื่อมีคำเหล่านี้
+node test/names.test.mjs          # ไฟล์เดียวก็รันตรง ๆ ได้
+```
+- ไม่มี dependency · เทสต์ของ lane รันไฟล์จริงใน `src/js` ผ่าน `node:vm` (`test/_vm.mjs`) พร้อม localStorage ในหน่วยความจำ
+- lane เพิ่มเทสต์ได้โดยสร้าง `test/NN-name.test.mjs` ที่จบด้วย `process.exit(fail ? 1 : 0)` — `run.mjs` เจอเอง
+- `names.test.mjs` รวม `n` จาก SK (+ `evo.n`), PASSIVES, ITEMS, RUNES, EN, MOBS, ZONES, BOSS_LIST และชื่ออาชีพ ชื่อซ้ำ = ไม่ผ่าน
+- golden run ของคลาสสิก (ต้องตรงทุกตัวอักษร รวมถึงตอนเลือกตัวละครค้างไว้) รันในเบราว์เซอร์ตาม `test/golden/README.md`
 ผลลัพธ์ไปที่ `D:/Comfy-Desktop/ComfyUI-Shared/output/Runeguard/dist` (ตามกติกา repo: ห้ามเก็บไฟล์ภาพใน `D:\AntigravityRepo`)
 ตั้ง `OUT_DIR=...` ถ้าอยาก build ไปที่อื่น · บน Vercel (`VERCEL=1`) จะออกที่ `./dist`
 
@@ -64,7 +98,13 @@ py -m http.server 8793 --bind 127.0.0.1 --directory D:/Comfy-Desktop/ComfyUI-Sha
 | `RG.info()` / `RG.state()` | สรุปสถานะ / object เกมทั้งหมด (`RG.state().player` = ผู้เล่น) |
 | `RG.god(true)` · `RG.ui()` · `RG.quality('low')` | อมตะ · เปิดหน้าเลเวลอัพ/เปลี่ยนอาชีพที่ค้าง · ตั้งคุณภาพกราฟิก |
 | `RG.seed(42)` | ทำให้สุ่มซ้ำได้ (ใช้กับ golden run: `RG.seed(42); RG.start(c); RG.sim(600)`) |
-| `RG.run(mode, opts)` | เริ่มโหมดอื่น (`MODES` ใน `src/js/25-mode-survival.js` และไฟล์ของแต่ละ lane) · lane เติม `DEV.<ns>` แล้วจะโผล่เป็น `RG.<ns>` |
+| `RG.run(mode, opts)` | เริ่มโหมดอื่น (`MODES` ใน `src/js/25-mode-survival.js` และไฟล์ของแต่ละ lane) · lane เติม `DEV.<ns>` แล้วจะโผล่เป็น `RG.<ns>` · โหมดที่ใช้ตัวละครจะใช้ตัวที่เลือกอยู่ (`RG.run('survival', {tier: 0})`) · `RG.run('classic', {cls: 'mage'})` ไม่ใช้ตัวละคร |
+| `RG.profile.sandbox(true)` | เซฟชั่วคราวในหน่วยความจำ ไม่เขียนลงเครื่องเลย (`'copy'` = สำเนาเซฟปัจจุบัน · `false` = กลับไปใช้เซฟในเครื่อง) |
+| `RG.profile.char({cls, name, lv, jlv, job, st, sk, pas, load, trial})` | แก้/สร้างตัวละครที่เลือกอยู่ เช่น `RG.profile.char({cls:'mage', lv:20, jlv:20, sk:{mbolt:5, flame:3}})` |
+| `RG.profile.get()` · `.json()` · `.state()` · `.reset()` · `.gold(n)` · `.exp(base, job)` · `.give(id, n)` | อ่านเซฟ · เซฟเป็นข้อความ · สถานะการเก็บ · ล้างเซฟ (ไม่ทับเซฟจากเวอร์ชันใหม่กว่า) · ตั้งทอง · ให้ EXP · ให้ไอเทม (M2) |
+| `RG.commit = true` | ให้ `RG.sim` บันทึกรางวัลจบรอบลงเซฟจริง (ค่าเริ่มต้น: sim ไม่บันทึก) |
+| `RG.ui()` · `RG.ui.go('scrSkills')` · `RG.ui.back()` · `RG.ui.home()` · `RG.ui.stack()` | `RG.ui()` แบบเดิม · ไปหน้าต่าง ๆ ของ v2 · ดู stack ของหน้า |
+| `RG.prog.open('skills' \| 'job' \| 'stats')` | เปิดหน้าสกิล / อาชีพ / แท็บสถานะ |
 
 ## ปรับสมดุลตรงไหน (ค้นหาใน `src/js/`)
 

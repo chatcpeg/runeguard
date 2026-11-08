@@ -21,6 +21,7 @@ MODES.survival=Object.assign({},MODES.classic,{
   onKill(e){ if(!e.elite&&!e.boss) return; const t=BAL.DROP.surv&&BAL.DROP.surv[e.boss?'boss'+G.wave:'elite']; if(!t) return;
     for(const it of rollDrops(t,1+(P.drop||0))) G.loot.push(it); },
   hud(){ const h=MODES.classic.hud(); h.lv='ชำนาญ Lv '+P.lv+' · '+(P.adv?P.adv.n:P.cls.n); return h; },
-  end(won){ const r=MODES.classic.end(won); r.eyebrow='เอาชีวิตรอด · ระดับนรก T'+(G.tier||0)+' · '+r.eyebrow; return r; }
+  end(won){ const r=MODES.classic.end(won), T='ระดับนรก T'+(G.tier||0);   // G.retreat = pause → ถอยทัพ (55-ui-hud.js)
+    if(G.retreat){ r.eyebrow=T+' · ถอยทัพกลับป้อมพร้อมรางวัล'; r.title='ถอยทัพ'; } else r.eyebrow=T+' · '+r.eyebrow; return r; }
 });
 

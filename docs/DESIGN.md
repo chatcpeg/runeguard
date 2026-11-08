@@ -2092,8 +2092,8 @@ scrAccount                          scrSettings
 |---|---|---|
 | **A · Core** | `build.mjs`, `vercel.json`, `package.json`, `src/head.html`, `css/00-core.css`, `markup/00-core.html`, `js/04–25`, `js/90`, `js/99` (เฉพาะ M0), `test/_vm.mjs`, `test/build.test.mjs`, `test/golden/*` และ **stub ของทุกไฟล์ lane** ใน M0 | M0 · หลังจากนั้นรับ CR |
 | **C · Profile** | `js/30, 31, 40, 41, 42`, `test/30-profile.test.mjs` | M1 · M2 (รางวัลระดับนรก) |
-| **B · Hub/Shell** | `js/50, 52, 55`, `css/50-shell.css`, `markup/50-shell.html` | M1 · ปรับเล็กน้อยใน M2–M5 |
-| **P · Prog-UI** | `js/54, 56, 57, 58`, `css/54-progress.css`, `markup/54-progress.html` | M1 |
+| **B · Hub/Shell** | `js/50, 52, 55`, `css/50-shell.css`, `markup/50-shell.html`, `test/50-shell.test.mjs` (เพิ่มใน M1) | M1 · ปรับเล็กน้อยใน M2–M5 |
+| **P · Prog-UI** | `js/54, 56, 57, 58`, `css/54-progress.css`, `markup/54-progress.html`, `test/54-progress.test.mjs` (เพิ่มใน M1) | M1 |
 | **E · Items** | `js/33, 34, 35, 53`, `css/53-char.css`, `markup/53-char.html`, `test/33-items.test.mjs` | M2 · M4 (เนื้อหาโซน) · M5 (ของบอส) |
 | **N · Auth/Cloud** | `js/43, 44, 51`, `css/51-auth.css`, `markup/51-auth.html`, `sql/*`, `test/43-sync.test.mjs` | เริ่มคู่ขนานตั้งแต่ M1 · merge ใน M3 |
 | **F · Field** | `js/60–65`, `css/60-field.css`, `markup/60-field.html`, `test/60-field.test.mjs` | M4 · M6 (Z4–Z5) |
@@ -2152,6 +2152,13 @@ scrAccount                          scrSettings
   6. หน้าจอ 360×740 ไม่มีการเลื่อนแนวนอน
   7. เลื่อนอาชีพแบบกดค้างทำงาน · บททดสอบชนะแล้วตั้ง `trial.t2`
 - **ประตู:** golden + ความเร็วตาม §7.10 · tester ตรวจชั้นเซฟ (ความถูกต้องของข้อมูล) · เจ้าของตรวจบนมือถือ
+- **บันทึกหลังทำ M1 (2026-11-08)**
+  - **N ยังไม่ merge:** โค้ด N (43/44/51, css/markup 51, `sql/`, `test/43-sync.test.mjs`) เขียนเสร็จและผ่านเทสต์ 166/166 แต่ใน repo ยังเป็น stub ของ M0 ตาม §9.5 · ของจริงเก็บไว้ที่ `D:\AntigravityRepo\ReverseEng\Runeguard-hold-m3\` (นอก repo, ตรวจ sha256 แล้ว) · M3 คัดลอกกลับแล้วทำ CR ที่ค้าง: 99 เรียก `authHandleRedirect()` · 41 ส่ง `BUS.emit('save')` ทุกครั้งที่เขียน · `.bak` ของ N ต้องผ่าน guard ใหม่ของ 41
+  - **CR ที่ทำแล้ว:** CR-A1 (L11 test เติมขนาดเทียบ bundle จริง) · CR-A2 (`runId` ต่อท้ายสุ่ม 4 ตัวจาก `rngUnit()` ไม่แตะ `Math.random`) · CR-I1 (`package.json` → `npm test` = `test/run.mjs && --check`) · 25 แสดง "ถอยทัพ" เมื่อผู้เล่นถอยเอง (`G.retreat`)
+  - **สองแท็บ:** 41 จำข้อความเซฟที่อ่าน/เขียนล่าสุด ถ้าในเครื่องไม่ตรงจะไม่เขียนทับ แต่โหลดใหม่และแจ้ง "ข้อมูลถูกแก้จากอีกแท็บ" · รางวัลจบรอบจ่ายลงตัวละครตัวล่าสุดในเซฟ (`pgLive`)
+  - **ปุ่ม back ระหว่างรอบ:** ครั้งแรกหยุดเกม · ถึงรายการสุดท้ายของ history จะเตือน "กดย้อนกลับอีกครั้งเพื่อออกจากเกม" (Chrome ไม่นับ history ที่เพิ่มโดยไม่มีการแตะ) ยังไม่ได้ลองบน Android จริง
+  - **ตัวใหม่ยังอ่อนกว่าคลาสสิกมาก:** มีแค่สกิลแรก ★1 และการ์ดอัปเกิน ★ ไม่ได้ บอทตายที่คลื่น 2–5 (คลาสสิกถึง 8–13) · ตรงตาม §3.6/§3.8 แต่ขัดกับ §2.2 · ต้องแก้ให้ผ่านประตู M2 (ต่างไม่เกิน ±1 คลื่น)
+  - **ขนาด:** 353.8 KB เกินงบ 350 KB (ยังไม่ถึง 450) · ต้องตัดสินก่อน M2 (ปรับงบหรือย่อโค้ด)
 
 ### 9.4 M2 · อุปกรณ์
 - **ส่งมอบ**

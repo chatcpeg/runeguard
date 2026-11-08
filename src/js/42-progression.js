@@ -1,20 +1,236 @@
 /* ================= 42-progression.js · lane C · pure per ch · levels, points, jobs, skills, prepareRun, onRunEnd ================= */
-/* M0 stub: frozen signatures from DESIGN §7.8, neutral values — classic never calls these. Lane C writes the real body. */
-function metaBonus(ch){ return {}; }
-function passiveBonus(ch){ return {}; }
-function buildRunBonus(ch){ return {}; }
-function commitStats(ch,delta){ return false; }
-function resetStats(ch,o){ return false; }                 // o = {scroll}
-function grantExp(ch,base,job){ return {lvUp:0, jobUp:0}; }
-function canLearn(ch,id){ return 'ยังไม่เปิดระบบสกิล'; }
-function learnSkill(ch,id){ return false; }
-function learnPassive(ch,id){ return false; }
-function resetSkills(ch,o){ return false; }                // o = {scroll}
-function setLoadout(ch,ids){ return false; }
-function jobReqs(ch,advId){ return []; }                   // → [{t, ok}]
-function advanceJob(ch,advId){ return false; }
-function prepareRun(G,P,ch,modeId){}
-function onRunEnd(G,won,o){ return null; }                 // o = {commit} → Reward {runId, baseXp, jobXp, gold, marks, items, lvUp, jobUp, unlocks}
-function grantRewards(ch,r){ return false; }               // idempotent by r.runId
-function fieldKillExp(ch,e){ return {base:0, job:0}; }
+// Rules: DESIGN §3 (levels, stat/skill points, job tree, ★ ranks, loadout, passives, derived stats) · §2.2 survival rewards.
+// Account-wide data (gold, marks, runIds, records, daily — Q7) lives in SAVE.acct. Mutators return false on a read-only save,
+// and save themselves when ch belongs to SAVE (saveLocal = debounced · saveNow for job change and rewards).
+const PG_START={survival:'first', field:'all1', boss:'rank', trial:'rank'};   // skills at run start (§3.6) · other modes: 'first'
+const PG_TIP='ความชำนาญเริ่มที่ 1 ทุกครั้ง · สกิลอัปได้ถึง ★ ที่ฝึกไว้';
+const PG_RUNIDS=[];                                                            // fallback when there is no SAVE (never in the game)
+function pgAcct(){ return SAVE&&SAVE.acct||null; }
+function pgCls(ch){ return ch&&typeof CLS!=='undefined'&&svHas(CLS,ch.cls)?CLS[ch.cls]:null; }
+function pgAdvOf(ch){ const c=pgCls(ch); return c&&ch.job&&c.adv.find(a=>a.id===ch.job)||null; }
+function pgTier(ch){ return pgAdvOf(ch)?2:1; }
+function pgJobCap(ch){ return pgAdvOf(ch)?BAL.CAP.job2:BAL.CAP.job1; }
+function pgSkillPool(ch){ const c=pgCls(ch), a=pgAdvOf(ch); return c?c.skills.concat(a?a.skills:[]):[]; }   // skills ch may train now
+function pgPasPool(ch){ const out=[]; if(!ch) return out; for(const id in PASSIVES){ const w=PASSIVES[id].own; if(w===ch.cls||(ch.job&&w===ch.job)) out.push(id); } return out; }
+function pgRO(){ return typeof saveReadOnly==='function'&&saveReadOnly(); }
+function pgSave(ch,reason,now){ if(!SAVE||!Array.isArray(SAVE.chars)) return;
+  if(SAVE.chars.indexOf(ch)<0){ if(ch&&SAVE.chars.some(c=>c&&c.id===ch.id)) console.warn('Runeguard: ไม่ได้บันทึก · ตัวละครถูกโหลดใหม่จากอีกแท็บแล้ว'); return; }
+  if(now) saveNow(reason); else saveLocal(reason); }
+// a held character re-found by id in the current SAVE (a reload from another tab leaves the old object behind) → G.char and
+// G.opts.char follow it · null = SAVE has no such character any more (deleted in another tab)
+function pgLive(G,ch){
+  if(!ch||!SAVE||!Array.isArray(SAVE.chars)||SAVE.chars.indexOf(ch)>=0) return ch;
+  const f=SAVE.chars.find(c=>c&&c.id===ch.id)||null;
+  if(f&&G){ if(G.char===ch) G.char=f; if(G.opts&&G.opts.char===ch) G.opts.char=f; }
+  return f; }
+function pgR6(v){ return Math.round(v*1e6)/1e6; }
+// points bookkeeping (also used by validateSave)
+function pgSpSpent(ch){ const c=pgCls(ch); let n=0; if(!c) return 0;
+  for(const id in ch.sk||{}) n+=BAL.rankSpent(ch.sk[id]|0);
+  if((ch.sk||{})[c.skills[0]]>0) n-=BAL.RANK_COST[1];                   // ★1 of the first skill is free (§3.5)
+  for(const id in ch.pas||{}) n+=(ch.pas[id]|0)*BAL.PAS_COST; return n; }
+function pgStSpent(ch){ return STAT_ORDER.reduce((n,k)=>n+BAL.statSpent((ch.st||{})[k]|0),0); }
+function pgStatCost(ch,delta){ let n=0; for(const k in delta||{}){ const x=(ch.st||{})[k]|0, d=delta[k]|0; for(let i=x;i<x+d&&i<BAL.CAP.stat;i++) n+=BAL.statCost(i); } return n; }
 
+/* ---- derived stats: P.bonus = mergeBonus(adv.bonus, metaBonus, passiveBonus, gearBonus) (§3.7) ---- */
+function metaBonus(ch){
+  const b={}; if(!ch) return b; const K=BAL.META_K, s=ch.st||{}, L=Math.max(0,(ch.lv|0)-1);
+  const add=(k,v)=>{ v=pgR6(v); if(v) b[k]=pgR6((b[k]||0)+v); };
+  add('might',K.STR.might*(s.STR|0)+K.LV.might*L);
+  add('hp',K.VIT.hp*(s.VIT|0)+K.LV.hp*L); add('regen',K.VIT.regen*(s.VIT|0)); add('armor',K.VIT.armor*(s.VIT|0));
+  add('speed',Math.min(K.AGI.speedMax,K.AGI.speed*(s.AGI|0)));
+  const cd=pgR6(Math.pow(K.AGI.cd,s.AGI|0)*Math.pow(K.DEX.cd,s.DEX|0)); if(cd!==1) b.cd=cd;
+  if((s.DEX|0)>=40) b.proj=K.DEX.proj40;
+  add('area',K.INT.area*(s.INT|0)); add('dur',K.INT.dur*(s.INT|0));
+  add('crit',K.LUK.crit*(s.LUK|0)); add('critMult',K.LUK.critMult*(s.LUK|0)); add('drop',K.LUK.drop*(s.LUK|0)); add('xp',K.LUK.xp*(s.LUK|0));
+  return b; }
+function passiveBonus(ch){
+  if(!ch) return {}; const b=mergeBonus(...pgPasPool(ch).map(id=>jdPassiveAt(id,Math.min(BAL.CAP.rank,(ch.pas||{})[id]|0))));
+  for(const k in b) if(typeof b[k]==='number') b[k]=pgR6(b[k]); return b; }
+// the complete permanent bonus of a run — exactly what prepareRun puts in P.bonus (a fresh character with no gear → {})
+function buildRunBonus(ch){
+  if(!ch) return {}; const a=pgAdvOf(ch), g=typeof gearBonus==='function'?gearBonus(ch):null;
+  const b=mergeBonus(a&&a.bonus, metaBonus(ch), passiveBonus(ch), g);
+  for(const k in b) if(typeof b[k]==='number') b[k]=pgR6(b[k]); return b; }
+
+/* ---- stat points (§3.3) ---- */
+function commitStats(ch,delta){
+  if(!ch||!svObj(delta)||pgRO()) return false; let cost=0, any=false; const nx={};
+  for(const k in delta){ if(STAT_ORDER.indexOf(k)<0) return false; const n=delta[k];
+    if(!Number.isInteger(n)||n<0) return false; if(!n) continue;
+    const x=ch.st[k]|0; if(x+n>BAL.CAP.stat) return false;
+    for(let i=x;i<x+n;i++) cost+=BAL.statCost(i); nx[k]=x+n; any=true; }
+  if(!any||cost>ch.pts) return false;
+  Object.assign(ch.st,nx); ch.pts-=cost; pgSave(ch,'stats'); return true; }
+// [แจกอัตโนมัติ]: spend up to `pts` (default all) by the class preset ratio → delta for commitStats (pure, no change)
+function pgAutoStats(ch,pts){
+  const w=PRESETS[ch.cls]||{STR:1}, d={}; let left=pts==null?ch.pts|0:pts|0;
+  for(let guard=0;guard<400;guard++){ let best=null, bv=1e9;
+    for(const k of STAT_ORDER){ if(!w[k]) continue; const x=(ch.st[k]|0)+(d[k]|0); if(x>=BAL.CAP.stat||BAL.statCost(x)>left) continue;
+      const v=x/w[k]; if(v<bv){ bv=v; best=k; } }
+    if(!best) break; left-=BAL.statCost((ch.st[best]|0)+(d[best]|0)); d[best]=(d[best]|0)+1; }
+  return d; }
+// how a reset is paid now: 'free' (Base < 20) · 'freeOnce' (the one free reset) · 'scroll' (ม้วนลืมเลือน)
+function pgResetWay(ch,kind){ if((ch.lv|0)<BAL.RESET.freeBelow) return 'free'; const f=kind==='sk'?ch.resets.skFree:ch.resets.free; return f?'freeOnce':'scroll'; }
+function pgPayReset(ch,kind,o){ const way=pgResetWay(ch,kind);
+  if(way==='scroll'){ if(!(o&&o.scroll)) return false; if(!(typeof invRemove==='function'&&invRemove(ch,'u_forget',1))) return false; }
+  if(way==='freeOnce'){ if(kind==='sk') ch.resets.skFree=0; else ch.resets.free=0; }
+  return true; }
+function resetStats(ch,o){
+  if(!ch||pgRO()) return false; const spent=pgStSpent(ch); if(!spent) return false;
+  if(!pgPayReset(ch,'st',o)) return false;
+  for(const k of STAT_ORDER) ch.st[k]=0; ch.pts+=spent; pgSave(ch,'resetStats',true); return true; }
+
+/* ---- EXP (§3.2) ---- */
+// grantExp keeps the frozen shape {lvUp, jobUp}; Base-60 overflow gold goes straight to acct.gold (pgGrantExp also reports it)
+function grantExp(ch,base,job){ const r=pgGrantExp(ch,base,job); return {lvUp:r.lvUp, jobUp:r.jobUp}; }
+function pgGrantExp(ch,base,job){
+  const out={lvUp:0, jobUp:0, gold:0}; if(!pgCls(ch)||typeof ch.lv!=='number'||pgRO()) return out;
+  base=Math.max(0,Math.floor(+base||0)); job=Math.max(0,Math.floor(+job||0)); const cap=BAL.CAP;
+  if(ch.lv>=cap.base) out.gold+=Math.floor(base*BAL.OVER_GOLD);
+  else { ch.xp+=base;
+    while(ch.lv<cap.base&&ch.xp>=BAL.bxpNeed(ch.lv)){ ch.xp-=BAL.bxpNeed(ch.lv); ch.lv++; ch.pts+=BAL.statPtsFor(ch.lv); out.lvUp++; }
+    if(ch.lv>=cap.base){ out.gold+=Math.floor(ch.xp*BAL.OVER_GOLD); ch.xp=0; } }
+  const tier=pgTier(ch), jcap=pgJobCap(ch);
+  if(ch.jlv<jcap){ ch.jxp+=job;
+    while(ch.jlv<jcap&&ch.jxp>=BAL.jxpNeed(ch.jlv,tier)){ ch.jxp-=BAL.jxpNeed(ch.jlv,tier); ch.jlv++; ch.sp++; out.jobUp++; } }
+  if(ch.jlv>=jcap) ch.jxp=0;                                             // job EXP past the cap is not kept
+  const A=pgAcct(); if(out.gold&&A) A.gold=Math.min(cap.gold,A.gold+out.gold);
+  if(base||job) pgSave(ch,'exp');
+  return out; }
+// field kill (§3.2): mobExp(e.lv) · diffMul(e.lv − ch.lv) · P.xpMul → {base, job}
+function fieldKillExp(ch,e){
+  if(!ch||!e) return {base:0, job:0}; const m=Math.max(1,e.lv|0||(e.d&&e.d.lv)|0||1);
+  const xm=(typeof P!=='undefined'&&P&&P.xpMul)||1;
+  const base=Math.round(BAL.mobExp(m)*BAL.diffMul(m-(ch.lv|0))*xm);
+  return {base, job:Math.round(base*BAL.JOB_EXP)}; }
+// field death (§2.3): lose 1% of bxpNeed(lv) inside the current level (never below 0, never a level down)
+function pgFieldDeath(ch){ if(!ch||pgRO()) return 0; const loss=Math.min(ch.xp|0,Math.round(BAL.bxpNeed(ch.lv)*BAL.FIELD.deathExp));
+  ch.xp-=loss; ch.deaths=(ch.deaths|0)+1; pgSave(ch,'death'); return loss; }
+
+/* ---- skills, passives, loadout (§3.5) ---- */
+function canLearn(ch,id){
+  if(!ch) return 'ไม่มีตัวละคร';
+  if(pgRO()) return 'ข้อมูลเป็นเวอร์ชันใหม่กว่าแอป แก้ไขไม่ได้';
+  const c=pgCls(ch); if(!c) return 'ไม่พบอาชีพ';
+  if(svHas(PASSIVES,id)){ const d=PASSIVES[id], r=(ch.pas||{})[id]|0;
+    if(d.own!==ch.cls&&d.own!==ch.job){ const a=c.adv.find(x=>x.id===d.own); return a?'ต้องเลื่อนเป็น'+a.n+'ก่อน':'ไม่ใช่ความสามารถติดตัวของอาชีพนี้'; }
+    if(r>=BAL.CAP.rank) return 'ฝึกถึง ★'+BAL.CAP.rank+' แล้ว';
+    if(ch.sp<BAL.PAS_COST) return 'แต้มสกิลไม่พอ (ต้องใช้ '+BAL.PAS_COST+')';
+    return ''; }
+  if(!svHas(SK,id)) return 'ไม่พบสกิลนี้';
+  if(pgSkillPool(ch).indexOf(id)<0){ const a=c.adv.find(x=>x.skills.indexOf(id)>=0); return a&&!ch.job?'ต้องเลื่อนเป็น'+a.n+'ก่อน':'สกิลนี้ไม่ใช่ของอาชีพนี้'; }
+  const r=(ch.sk||{})[id]|0; if(r>=BAL.CAP.rank) return 'ฝึกถึง ★'+BAL.CAP.rank+' แล้ว';
+  const q=SKILL_REQ[id]; if(q&&((ch.sk||{})[q.need]|0)<q.r) return 'ต้องฝึก '+SK[q.need].n+' ถึง ★'+q.r+' ก่อน';
+  const cost=BAL.RANK_COST[r+1]; if(ch.sp<cost) return 'แต้มสกิลไม่พอ (ต้องใช้ '+cost+')';
+  return ''; }
+function learnSkill(ch,id){
+  if(svHas(PASSIVES,id)) return learnPassive(ch,id);
+  if(canLearn(ch,id)!=='') return false;
+  const r=ch.sk[id]|0; ch.sp-=BAL.RANK_COST[r+1]; ch.sk[id]=r+1;
+  if(r===0&&ch.load.indexOf(id)<0&&ch.load.length<BAL.LOADOUT[pgTier(ch)]) ch.load.push(id);   // a newly learned skill takes a free slot
+  pgSave(ch,'skill'); return true; }
+function learnPassive(ch,id){
+  if(!svHas(PASSIVES,id)||canLearn(ch,id)!=='') return false;
+  ch.sp-=BAL.PAS_COST; ch.pas[id]=(ch.pas[id]|0)+1; pgSave(ch,'passive'); return true; }
+function resetSkills(ch,o){
+  if(!ch||pgRO()) return false; const c=pgCls(ch); if(!c) return false;
+  const spent=pgSpSpent(ch); if(!spent) return false;
+  if(!pgPayReset(ch,'sk',o)) return false;
+  const first=c.skills[0]; ch.sk={[first]:1}; ch.pas={}; ch.sp+=spent;
+  ch.load=ch.load.filter(id=>ch.sk[id]>0); if(!ch.load.length) ch.load=[first];
+  pgSave(ch,'resetSkills',true); return true; }
+function setLoadout(ch,ids){
+  if(!ch||pgRO()||!Array.isArray(ids)) return false; const pool=pgSkillPool(ch), max=BAL.LOADOUT[pgTier(ch)];
+  if(!ids.length||ids.length>max) return false;
+  for(let i=0;i<ids.length;i++){ const id=ids[i]; if(pool.indexOf(id)<0||!((ch.sk[id]|0)>0)||ids.indexOf(id)!==i) return false; }
+  ch.load=ids.slice(); pgSave(ch,'loadout'); return true; }
+
+/* ---- job advancement (§3.4) ---- */
+function jobReqs(ch,advId){
+  const A=pgAcct(), gold=A?A.gold:0, R=BAL.ADV;
+  return [
+    {t:'เลเวลตัวละคร '+R.base+' ขึ้นไป (ตอนนี้ '+(ch.lv|0)+')', ok:(ch.lv|0)>=R.base},
+    {t:'เลเวลอาชีพ '+R.job+' (เต็มขั้นต้น · ตอนนี้ '+(ch.job?'เลื่อนแล้ว':ch.jlv|0)+')', ok:!ch.job&&(ch.jlv|0)>=R.job},
+    {t:'ผ่านบททดสอบเลื่อนขั้น', ok:!!(ch.trial&&ch.trial.t2===1)},
+    {t:'ค่าพิธี '+R.fee.toLocaleString('en-US')+' ทอง (มี '+gold.toLocaleString('en-US')+')', ok:gold>=R.fee}]; }
+function advanceJob(ch,advId){
+  if(!ch||pgRO()||ch.job) return false;                                 // once only, permanent
+  const c=pgCls(ch), a=c&&c.adv.find(x=>x.id===advId); if(!a) return false;
+  if(!jobReqs(ch,advId).every(q=>q.ok)) return false;
+  const A=pgAcct(); if(!A||A.gold<BAL.ADV.fee) return false;
+  A.gold-=BAL.ADV.fee; ch.job=a.id; ch.jlv=1; ch.jxp=0;
+  pgSave(ch,'advance',true); BUS.emit('char',ch); return true; }
+
+/* ---- runs ---- */
+// newRun → recalc → prepareRun: the run's player becomes the character (job, ★ caps, loadout, permanent bonus)
+function prepareRun(G,P,ch,modeId){
+  ch=pgLive(G,ch)||ch;                                                  // [เล่นอีกครั้ง] restarts with G.opts.char: maybe a reloaded-away object
+  const a=pgAdvOf(ch);
+  P.adv=a; P.advOffered=true;                                           // never the Lv15 job pick (G.ui never 'adv')
+  P.look=Object.assign({},P.cls.look,a?a.look:null,typeof gearLook==='function'?gearLook(ch):null);
+  P.bonus=buildRunBonus(ch);
+  P.rank={}; for(const id of pgSkillPool(ch)){ const r=(ch.sk||{})[id]|0; if(r>0) P.rank[id]=Math.min(BAL.CAP.rank,r); }
+  P.loadout=(ch.load||[]).filter(id=>P.rank[id]>0&&svHas(SK,id));
+  if(!P.loadout.length){ const f=P.cls.skills[0]; P.loadout=[f]; P.rank[f]=Math.max(1,P.rank[f]|0); }
+  P.lv=1; P.xp=0; P.need=xpNeed(1);                                     // proficiency restarts every run
+  const how=PG_START[modeId]||'first';
+  if(how==='first') P.skills=[makeSkill(P.loadout[0])];
+  else P.skills=P.loadout.map(id=>{ const s=makeSkill(id);
+    if(how==='rank'){ s.lv=P.rank[id]; const e=s.def.evo; if(s.lv>=5&&e&&((ch.st||{})[e.s]|0)>=25) s.evolved=true; }
+    return s; });
+  recalc(P); P.hp=P.maxHp;
+  G.goldRun=0; G.charTip=!ch.play&&!ch.kills&&how!=='rank'?PG_TIP:'';  // the tip is about cards: not for modes that start at ★ (CR-C1)
+}
+// endRun → onRunEnd: compute the Reward; keep it only when o.commit (core passes !G.auto || DEV.commit)
+function onRunEnd(G,won,o){
+  let ch=G&&G.char; if(!ch) return null;
+  if(typeof svlFresh==='function') svlFresh();                         // another tab saved during the run: reload, pay onto its data
+  const live=pgLive(G,ch); if(live) ch=live; else o={commit:false};    // always by id (SAVE may have been reloaded earlier) · deleted → keep nothing
+  const r={runId:G.runId, baseXp:0, jobXp:0, gold:0, marks:0, items:Array.isArray(G.loot)?G.loot.slice():[], lvUp:0, jobUp:0, unlocks:[],
+    mode:G.modeId, daily:false, committed:false, st:{t:+G.t||0, kills:G.kills|0, died:!won&&!!(G.player&&G.player.hp<=0), wave:G.wave|0, won:!!won}};
+  try{
+    const A=pgAcct(), today=svDay();
+    if(G.modeId==='survival'){
+      const S=BAL.SURV, T=Math.max(0,Math.min(S.maxT,G.tier|0)), waves=won?S.WAVES:Math.max(0,(G.wave|0)-1), rec=S.recLv(T), gpw=S.goldPerWave(T);
+      r.tier=T; r.waves=waves;
+      r.baseXp=Math.round(BAL.bxpNeed(rec)*S.expMul(waves,won)*S.overLv(ch.lv|0,rec));
+      r.gold=gpw*waves+(won?gpw*S.winGoldWaves:0)+(G.goldRun|0);
+      const used=A&&A.daily.day===today&&A.daily.surv[T];
+      if((G.wave|0)>=S.dailyWave&&!used){ r.daily=true; r.baseXp*=2; r.gold*=2; }
+      if((G.wave|0)>=S.unlockWave&&T<S.maxT&&A&&A.survTier<T+1) r.unlocks.push('survTier:'+(T+1));
+      for(const [w,b] of [[5,'colossus'],[10,'lich'],[20,'king']]) if((G.wave|0)>=w&&A&&!A.bossUnlock[b]) r.unlocks.push('boss:'+b);
+    } else if(G.modeId==='trial'){
+      if(won&&!(ch.trial&&ch.trial.t2===1)) r.unlocks.push('trial:t2');
+    } else {
+      r.gold=G.goldRun|0;                                               // field EXP is granted per kill; boss/field fill the rest
+      if(G.mode&&typeof G.mode.rewards==='function') G.mode.rewards(r,won);
+    }
+    r.jobXp=Math.round(r.baseXp*BAL.JOB_EXP);
+  }catch(e){ console.error(e); }
+  if(o&&o.commit) grantRewards(ch,r);
+  return r; }
+// apply a Reward once: a runId already in acct.runIds (last 30) is refused
+function grantRewards(ch,r){
+  if(!ch||!r||typeof r.runId!=='string'||!r.runId||pgRO()) return false;
+  const A=pgAcct(), ids=A?A.runIds:PG_RUNIDS; if(ids.indexOf(r.runId)>=0) return false;
+  ids.push(r.runId); while(ids.length>SV_RUNIDS) ids.shift();
+  const g=pgGrantExp(ch,r.baseXp,r.jobXp); r.lvUp=g.lvUp; r.jobUp=g.jobUp; r.overGold=g.gold;
+  if(A){ A.gold=Math.min(BAL.CAP.gold,A.gold+Math.max(0,Math.floor(+r.gold||0))); A.marks=Math.min(BAL.CAP.marks,A.marks+Math.max(0,Math.floor(+r.marks||0))); }
+  r.lost=[];
+  for(const it of r.items||[]){ const res=typeof invAdd==='function'?invAdd(ch,it,it&&it.n||1):null; if(!res||!res.ok) r.lost.push(it); }
+  const st=r.st||{}, t=Number.isFinite(+st.t)?Math.max(0,+st.t):0, kills=Math.max(0,st.kills|0), wave=Math.max(0,st.wave|0);   // never lowers totals
+  ch.play=(+ch.play||0)+t; ch.kills=(ch.kills|0)+kills; if(st.died) ch.deaths=(ch.deaths|0)+1;
+  if(SAVE) SAVE.play=(+SAVE.play||0)+t;
+  if(A){
+    const today=svDay(); if(A.daily.day!==today){ A.daily.day=today; A.daily.surv={}; A.daily.boss={}; }
+    if(r.mode==='survival'){ const T=String(r.tier|0), m=A.records.survival[ch.id]||(A.records.survival[ch.id]={}), old=m[T];
+      if(!old||wave>old.wave||(wave===old.wave&&kills>old.kills)||(st.won&&!old.won)) m[T]={wave, kills, won:!!st.won||!!(old&&old.won)};
+      if(r.daily) A.daily.surv[T]=1; }
+  }
+  for(const u of r.unlocks||[]){ const [k,v]=String(u).split(':');
+    if(k==='trial'&&v==='t2') ch.trial.t2=1;                            // trial won → the job page opens advancement
+    else if(!A) continue;
+    else if(k==='survTier') A.survTier=Math.max(A.survTier,Math.min(BAL.SURV.maxT,v|0));
+    else if(k==='boss'&&SV_ID.test(v||'')) A.bossUnlock[v]=1; }
+  r.committed=true; pgSave(ch,'reward',true); return true; }
