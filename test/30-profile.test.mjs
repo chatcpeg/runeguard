@@ -1279,6 +1279,48 @@ console.log('m2-orch r5 · นำเข้าเซฟว่างไม่ว�
     ok('กลางรอบ: สำเนาที่เก่ากว่าของสายเดียวกันไม่แทนที่เซฟล่าสุดที่จำไว้ (svlSeen) · เขียนอันล่าสุดคืน', W.base.getItem(K) === newer && W.B.X(`svlSeen`) === newer, { stored: JSON.parse(W.base.getItem(K)).wc, seenWc: JSON.parse(W.B.X(`svlSeen`) || '{}').wc });
   }
 }
+console.log('m2-orch r6 · ที่เก็บเต็มตอนถือเซฟล่าสุดที่เห็น (svlSeen): จบรอบไม่ค้าง · คีย์ว่างแล้วเขียนไม่ผ่านไม่ได้เซฟว่าง · คำสั่งแรกหลังเขียนคืนสำเร็จ');
+{
+  const K = 'runeguard.save.guest';
+  const tabs = () => {
+    let t = 1.9e12; const clk = () => (t += 7); const base = memStorage(), fail = [{ on: false }, { on: false }];
+    const T = fail.map(f => { const ls = { getItem: k => base.getItem(k), removeItem: k => base.removeItem(k), clear: () => base.clear(), key: j => base.key(j), get length() { return base.length; },
+      setItem: (k, v) => { if (f.on) throw new Error('QuotaExceededError'); base.setItem(k, v); } };
+      const x = fresh({ localStorage: ls, __clk: clk }); x.X(`Date.now=()=>__clk()`); return x; });
+    T[0].X(`loadSaveFor(null); createChar('เต็ม','swordsman'); DEV.profile.gold(50000)`); T[1].X(`loadSaveFor(null)`);
+    const got = () => { const s = JSON.parse(base.getItem(K) || 'null'); if (!s) return null; const c = s.chars[0]; return { gold: s.acct.gold, chars: s.chars.length, dust: c ? c.inv.filter(x => x.id === 'm_dust').reduce((a, x) => a + x.n, 0) : -1, runIds: s.acct.runIds }; };
+    return { base, T, fail, got, ev: x => x.X(`svlOnStorage({key:'${K}'})`) };
+  };
+  const endRun = (x, id) => x.X(`(()=>{ try{ const r=onRunEnd({char:G.char, modeId:'survival', tier:0, wave:2, kills:3, t:20, runId:'${id}', loot:[], goldRun:0, player:{hp:0}},false,{commit:true}); G=null; return r.committed; }catch(e){ G=null; return 'THREW '+e.message; } })()`);
+  // storage back to C's own older text while C (mid-run) holds B's newer one, and C's writes keep failing: no endless recursion at run end
+  {
+    const W = tabs(), [B, C] = W.T;
+    C.X(`G={char:curChar(), over:false}`); const t1 = W.base.getItem(K);
+    B.X(`buyItem(curChar(),'m_dust',2)`); W.ev(C);                                 // C remembers B's text
+    W.fail[1].on = true; W.base.setItem(K, t1); W.ev(C);                             // a lagging tab put C's own text back · C cannot write
+    const r = endRun(C, 'r_q1');
+    ok('จบรอบตอนที่เก็บปฏิเสธการเขียนคืน (ถือเซฟล่าสุดที่เห็นไว้): ไม่ล้ม ไม่วนเรียกตัวเอง', r !== undefined && !/THREW/.test(String(r)), r);
+  }
+  // the key is gone, C (mid-run) holds B's newer text, B closed, C's write fails: C keeps its memory and that text, puts it back later
+  {
+    const W = tabs(), [B, C] = W.T;
+    C.X(`G={char:curChar(), over:false}`);
+    B.X(`buyItem(curChar(),'m_dust',1)`); W.ev(C);                                 // C remembers B's text · B then closes
+    W.base.clear();
+    W.fail[1].on = true; C.X(`saveNow('potion')`); W.fail[1].on = false;          // C writes into the empty key and storage refuses
+    const mem = C.X(`({chars:SAVE.chars.length, gold:SAVE.acct.gold, seen:!!svlSeen})`);
+    W.ev(C); const rr = endRun(C, 'r_q2'); const g = W.got();
+    ok('คีย์ว่างแล้วเขียนไม่ผ่าน: ไม่โหลดเซฟว่างมาแทน (ยังถือตัวละครและเซฟล่าสุดที่เห็น) · event ถัดไปเขียนคืน · จบรอบได้ทั้งผงของอีกแท็บและรางวัล', mem.chars === 1 && mem.gold > 0 && mem.seen && rr === true && g.dust === 1 && g.runIds.includes('r_q2'), { mem, rr, g });
+  }
+  // an idle tab that still holds svlSeen (a run left without onRunEnd) and meets the wipe first through an action: the action works at once
+  {
+    const W = tabs(), [B, C] = W.T;
+    C.X(`G={char:curChar(), over:false}`); B.X(`buyItem(curChar(),'m_dust',3)`); W.ev(C); C.X(`G=null`);   // run quit without onRunEnd
+    W.base.clear();
+    const r = C.X(`buyItem(curChar(),'u_potion_s',1)`); const g = W.got();
+    ok('แท็บที่ยังถือเซฟล่าสุดที่เห็น เจอการล้างผ่านคำสั่งซื้อ: เขียนเซฟนั้นคืนแล้วซื้อได้ทันที (ไม่ต้องกดซ้ำ) · ผงของอีกแท็บอยู่', r === '' && g.dust === 3, { r, g });
+  }
+}
 console.log('carry-over (c) · id ที่เป็นชื่อสมาชิก Object.prototype ถูกปฏิเสธ');
 {
   const { X } = fresh();

@@ -3507,7 +3507,9 @@ function svlWrite(reason,keepMt){
   let over='';
   // the key is gone while this tab holds a newer text from another tab (svlSeen, mid-run): that text goes back and this tab reloads it
   // (the action that wanted to write is not stored · its caller reports the race) — this tab's older memory never goes out over it
-  if(prev===null&&svlSeenP()){ if(svlPut(null,svlSeen)) svlPersist=true; if(!svlBusy) svlReload(false); return false; }
+  // (if storage refuses even that, memory and svlSeen stay as they are: plays from memory, the next event or write tries again)
+  if(prev===null&&svlSeenP()){ if(!svlPut(null,svlSeen)){ svlStored=false; BUS.emit('save',reason||''); return false; }
+    svlPersist=true; if(!svlBusy) svlReload(false); return false; }
   if(prev!==svlLast&&prev!==null){ const j=svlJudge(prev); if(j.act==='reload'){ if(!svlBusy) svlReload(j.tie); return false; }
     if(j.act==='same'&&pp.k==='ok') try{ svlMergeBest(SAVE,svRecsToBest(pp.o)); }catch(e){}   // its classic records are kept (svlAdopt)
     over=j.kind||''; }
@@ -3545,9 +3547,10 @@ function svlReload(tie){ svlBusy=1; try{ loadSaveFor(svlOwner); }finally{ svlBus
 function svlFresh(){ if(!SAVE||svlSandbox||SAVE.ro||svlBusy) return false;
   const cur=STORE.get(svlKeyFor(svlOwner));
   if(cur===svlLast){ if(!(svlSeenP()&&cur!==svlSeen&&svlStaleP(svlParse(cur)))) return false;
-    svlRestore(cur,'stale'); return svlFresh(); }                     // own older text back while svlSeen is newer: put it back, then reload it
+    if(svlRestore(cur,'stale')!=='seen') return false;              // own older text back while svlSeen is newer: put it back, then reload it
+    svlReload(false); return true; }
   const j=svlJudge(cur);
-  if(j.act==='restore'){ svlRestore(cur,j.kind); return false; }
+  if(j.act==='restore'){ if(svlRestore(cur,j.kind)!=='seen') return false; svlReload(false); return true; }   // svlSeen went back: adopt it now
   if(j.act==='same'){ svlAdopt(cur); return false; }
   svlReload(j.tie); return true; }
 // what to do with a main text cur that differs from svlLast (another tab wrote, or it was wiped / broken):
@@ -3614,13 +3617,13 @@ const SVL_RESTORE_TH={wipe:'ข้อมูลเซฟในเครื่อ�
 function svlRestore(cur,kind){
   const was=svlLast, dirty=!!svlTimer||!svlStored, note=()=>svlNote(SVL_RESTORE_TH[kind]||SVL_RESTORE_TH.wipe,'info');
   if(svlSeenP()&&svlSeen!==cur){
-    if(svlPut(cur,svlSeen)){ svlPersist=true; BUS.emit('save','restore'); note(); } return; }
+    if(svlPut(cur,svlSeen)){ svlPersist=true; BUS.emit('save','restore'); note(); return 'seen'; } return ''; }
   const w=typeof was==='string'&&was!==cur?svlParse(was):null;
   if(dirty&&w&&w.k==='ok'&&w.o.sid===SAVE.sid&&w.o.wb===SAVE.wb&&svlWcOf(w.o)===svlWcOf(SAVE)){
-    if(svlPut(cur,was)){ svlPersist=true; BUS.emit('save','restore'); note(); if(!svlTimer) saveLocal('restore'); }
-    return; }
+    if(svlPut(cur,was)){ svlPersist=true; BUS.emit('save','restore'); note(); if(!svlTimer) saveLocal('restore'); return 'own'; }
+    return ''; }
   clearTimeout(svlTimer); svlTimer=0; svlLast=cur;
-  if(svlWrite('restore',true)) note(); else svlLast=was; }
+  if(svlWrite('restore',true)){ note(); return 'own'; } svlLast=was; return ''; }
 // write text over the main text cur with the same write-ahead rules as svlWrite (a usable cur → .bak when svlBakOk · a cur that does
 // not parse → .bak raw first when .bak is unusable, else main is left alone)
 function svlPut(cur,text){ const key=svlKeyFor(svlOwner), cp=svlParse(cur);
