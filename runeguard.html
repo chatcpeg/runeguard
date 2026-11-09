@@ -3505,10 +3505,11 @@ function svlWrite(reason,keepMt){
   // another tab saved since this tab read: keep its progress (reload, svlJudge) · prev null = the key was removed elsewhere: write this
   // one back · an older copy of this save (svlStaleP), a wipe, a broken text, or the same content in other text → written over
   let over='';
-  // the key is gone while this tab holds a newer text from another tab (svlSeen, mid-run): that text goes back and this tab reloads it
+  // the key is gone (or its text no longer parses and .bak is not newer) while this tab holds a newer text from another tab (svlSeen,
+  // mid-run): that text goes back (a broken text goes to .bak raw first when .bak is unusable) and this tab reloads it
   // (the action that wanted to write is not stored · its caller reports the race) — this tab's older memory never goes out over it
   // (if storage refuses even that, memory and svlSeen stay as they are: plays from memory, the next event or write tries again)
-  if(prev===null&&svlSeenP()){ if(!svlPut(null,svlSeen)){ svlStored=false; BUS.emit('save',reason||''); return false; }
+  if((prev===null||(pp.k==='bad'&&!svlBakNewer()))&&svlSeenP()){ if(!svlPut(prev,svlSeen)){ svlStored=false; BUS.emit('save',reason||''); return false; }
     svlPersist=true; if(!svlBusy) svlReload(false); return false; }
   if(prev!==svlLast&&prev!==null){ const j=svlJudge(prev); if(j.act==='reload'){ if(!svlBusy) svlReload(j.tie); return false; }
     if(j.act==='same'&&pp.k==='ok') try{ svlMergeBest(SAVE,svRecsToBest(pp.o)); }catch(e){}   // its classic records are kept (svlAdopt)
@@ -3547,10 +3548,10 @@ function svlReload(tie){ svlBusy=1; try{ loadSaveFor(svlOwner); }finally{ svlBus
 function svlFresh(){ if(!SAVE||svlSandbox||SAVE.ro||svlBusy) return false;
   const cur=STORE.get(svlKeyFor(svlOwner));
   if(cur===svlLast){ if(!(svlSeenP()&&cur!==svlSeen&&svlStaleP(svlParse(cur)))) return false;
-    if(svlRestore(cur,'stale')!=='seen') return false;              // own older text back while svlSeen is newer: put it back, then reload it
-    svlReload(false); return true; }
+    const tie=svlSeenTie(); if(svlRestore(cur,'stale')!=='seen') return false;   // own older text back while svlSeen is newer: put it back, then reload it
+    svlReload(tie); return true; }
   const j=svlJudge(cur);
-  if(j.act==='restore'){ if(svlRestore(cur,j.kind)!=='seen') return false; svlReload(false); return true; }   // svlSeen went back: adopt it now
+  if(j.act==='restore'){ const tie=svlSeenTie(); if(svlRestore(cur,j.kind)!=='seen') return false; svlReload(tie); return true; }   // svlSeen went back: adopt it now
   if(j.act==='same'){ svlAdopt(cur); return false; }
   svlReload(j.tie); return true; }
 // what to do with a main text cur that differs from svlLast (another tab wrote, or it was wiped / broken):
@@ -3582,6 +3583,9 @@ function svlBakNewer(){ const b=svlRead(svlKeyFor(svlOwner)+'.bak'), sn=svlSeenP
 function svlSeeAdd(cur){ const c=svlParse(cur); if(c.k!=='ok') return; const sn=svlSeenP();
   if(sn&&c.o.sid===sn.o.sid&&c.o.wb===sn.o.wb&&Number.isInteger(c.o.wc)&&c.o.wc<svlWcOf(sn.o)) return;
   svlSeen=cur; }
+// svlSeen carries this tab's own last stamped wc in this lineage with other content: another tab wrote on the same base at once (a
+// stale cache), so reloading svlSeen drops this tab's last write → the red note, as svlJudge's tie (checked before it goes back)
+function svlSeenTie(){ const sn=svlSeenP(); return !!sn&&sn.o.sid===SAVE.sid&&sn.o.wb===SAVE.wb&&svlWcOf(sn.o)===svlWcOf(SAVE)&&svlMine===SAVE.wb+':'+svlWcOf(SAVE)&&!svlSame(sn.o); }
 function svlSeenP(){ if(typeof svlSeen!=='string') return null; const c=svlParse(svlSeen); return c.k==='ok'&&c.o.v<=SCHEMA_V?c:null; }
 // storage was wiped elsewhere → 'wipe' (the main key is gone, or holds another save (other sid) with no progress while this one has
 // progress) · 'bad' (the main text no longer parses: this tab's copy is newer than .bak, which is one write behind) · '' = no

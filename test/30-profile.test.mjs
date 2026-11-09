@@ -1321,6 +1321,40 @@ console.log('m2-orch r6 · ที่เก็บเต็มตอนถือ�
     ok('แท็บที่ยังถือเซฟล่าสุดที่เห็น เจอการล้างผ่านคำสั่งซื้อ: เขียนเซฟนั้นคืนแล้วซื้อได้ทันที (ไม่ต้องกดซ้ำ) · ผงของอีกแท็บอยู่', r === '' && g.dust === 3, { r, g });
   }
 }
+console.log('m2-orch r7 · เซฟหลักเสียตอนแท็บกลางรอบบันทึก ใช้เซฟล่าสุดที่จำไว้ · เตือนแดงเมื่อโหลดเซฟที่จำไว้แล้วการบันทึกของตัวเองถูกทับ');
+{
+  const K = 'runeguard.save.guest';
+  const pair = () => {
+    let t = 1.9e12; const clk = () => (t += 7); const base = memStorage(), stale = { on: false, text: null };
+    const mk = isB => { const ls = { getItem: k => (isB && stale.on && k === K ? stale.text : base.getItem(k)), removeItem: k => base.removeItem(k), clear: () => base.clear(), key: j => base.key(j), get length() { return base.length; }, setItem: (k, v) => base.setItem(k, v) };
+      const x = fresh({ localStorage: ls, __clk: clk }); x.X(`Date.now=()=>__clk()`); return x; };
+    const A = mk(false), B = mk(true);
+    A.X(`loadSaveFor(null); createChar('ซีน','swordsman'); DEV.profile.gold(50000)`); B.X(`loadSaveFor(null)`);
+    const pots = id => { const s = JSON.parse(base.getItem(K) || 'null'); return s && s.chars ? s.chars[0].inv.filter(i => i.id === id).reduce((a, i) => a + (i.n | 0), 0) : null; };
+    return { base, A, B, stale, pots, ev: (...xs) => { for (const x of xs) x.X(`svlOnStorage({key:'${K}'})`); } };
+  };
+  // A mid-run holds B's newer text (svlSeen); the main key breaks and A writes before it handles that event
+  {
+    const W = pair(), { A, B } = W;
+    A.X(`G={char:curChar(), over:false}`);
+    B.X(`buyItem(curChar(),'u_potion_l',2)`); W.ev(A);                            // A remembers B's purchase
+    W.base.setItem(K, '{"v":1,"acct":');                                            // broken · A has not handled it
+    A.X(`itSortBag(curChar(),'tier')`);                                            // A writes mid-run
+    const mid = W.pots('u_potion_l'); W.ev(B, A, B, A);
+    ok('เซฟหลักเสีย แล้วแท็บกลางรอบบันทึกก่อนรู้ตัว: เขียนเซฟล่าสุดที่จำไว้คืน ไม่ใช่สำเนาเก่าของตัวเอง (ยา 2 ขวดที่อีกแท็บซื้ออยู่) · ไม่มีเตือนแดง', mid === 2 && W.pots('u_potion_l') === 2 && !B.notes.some(m => m[1] === 'bad'), { mid, fin: W.pots('u_potion_l'), b: B.notes.slice(-2) });
+  }
+  // C (= A here) wrote a potion mid-run; B, reading a stale cache, wrote another copy at the same wc; A holds it as svlSeen; wipe; run end
+  {
+    const W = pair(), { A, B } = W;
+    const t3 = W.base.getItem(K);
+    A.X(`G={char:curChar(), over:false}; invRemove(G.char,'u_potion_s',1); saveNow('potion')`);     // A's own write (wc k+1)
+    W.stale.on = true; W.stale.text = t3; B.X(`buyItem(curChar(),'m_dust',1)`); W.stale.on = false;   // B writes k+1 on base k
+    W.ev(A);                                                                          // A (mid-run) remembers B's copy
+    W.base.clear();                                                                   // wiped before the run ends · event not handled
+    const e = A.X(`(()=>{ const r=onRunEnd({char:G.char, modeId:'survival', tier:0, wave:3, kills:5, t:30, runId:'r_t7', loot:[], goldRun:0, player:{hp:0}},false,{commit:true}); G=null; return r&&r.committed; })()`);
+    ok('โหลดเซฟที่จำไว้ (ของอีกแท็บที่เขียนทับบนฐานเดียวกัน) ตอนจบรอบ: เตือนแดงว่าการบันทึกล่าสุดของแท็บนี้อาจหาย', e === true && A.notes.some(m => m[1] === 'bad' && /บันทึกทับพร้อมกัน/.test(m[0])), A.notes.slice(-3));
+  }
+}
 console.log('carry-over (c) · id ที่เป็นชื่อสมาชิก Object.prototype ถูกปฏิเสธ');
 {
   const { X } = fresh();
