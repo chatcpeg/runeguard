@@ -187,3 +187,14 @@ button.hb-st{padding:0;border:0;background:none;text-decoration:underline dotted
 @media (prefers-reduced-motion:reduce){.hd-edge.big i{animation:none}}
 .sk.cd::after{box-shadow:inset 0 0 0 1px rgba(240,199,90,.25)}
 .sk[data-cd]::before{content:attr(data-cd);position:absolute;inset:0;display:grid;place-items:center;z-index:1;font-size:13px;font-weight:800;color:#fff;text-shadow:0 0 3px #000,0 1px 2px #000;pointer-events:none;font-variant-numeric:tabular-nums}
+/* account upgrades sheet */
+.hb-up{display:grid;gap:10px}
+.hb-up-gold{margin:0;color:#f0c75a;font-weight:700}
+.hb-up-row{display:grid;grid-template-columns:36px minmax(0,1fr) auto;gap:10px;align-items:center;padding:8px 10px;border:1px solid rgba(255,255,255,.08);border-radius:12px}
+.hb-up-i{font-size:24px;text-align:center}
+.hb-up-m{display:grid;gap:3px;min-width:0}
+.hb-up-m b{font-size:14px;color:var(--bone,#f3ead2)}
+.hb-up-v{font-size:12.5px;color:#9fd6c4;font-variant-numeric:tabular-nums}
+.hb-up-bar{display:block;height:5px;border-radius:3px;background:linear-gradient(90deg,#f0c75a calc(var(--p)*100%),rgba(255,255,255,.1) 0)}
+.hb-up-row .uc-b{white-space:nowrap;font-size:13px;padding:0 10px}
+.hb-up-note{margin:0;font-size:12px;color:var(--muted,#b9b3a0)}

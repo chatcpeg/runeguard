@@ -62,8 +62,28 @@ function passiveBonus(ch){
 // the complete permanent bonus of a run — exactly what prepareRun puts in P.bonus (a fresh character with no gear → {})
 function buildRunBonus(ch){
   if(!ch) return {}; const a=pgAdvOf(ch), g=typeof gearBonus==='function'?gearBonus(ch):null;
-  const b=mergeBonus(a&&a.bonus, metaBonus(ch), passiveBonus(ch), g);
+  const b=mergeBonus(a&&a.bonus, metaBonus(ch), passiveBonus(ch), g, upBonus(ch,null));
+  const hp=pgUpLv('hp'); if(hp){ const c=pgCls(ch); b.hp=(b.hp||0)+Math.round(BAL.UP.def.hp.per*hp*((c?c.hp:0)+(b.hp||0))); }   // HP % of class base + every flat HP above
   for(const k in b) if(typeof b[k]==='number') b[k]=pgR6(b[k]); return b; }
+/* ---- account upgrades (gold · BAL.UP · acct.up) ---- */
+function pgUpLv(k){ const A=pgAcct(), u=A&&A.up; return u&&svHas(u,k)?Math.max(0,Math.min(BAL.UP.max,u[k]|0)):0; }
+// the run bonus part of the upgrades (hp is added by buildRunBonus as a % of the rest · gold is paid in onRunEnd)
+function upBonus(){ const U=BAL.UP.def, b={}, v=k=>pgUpLv(k)*U[k].per;
+  if(v('xp')) b.xp=pgR6(v('xp')); if(v('mag')) b.magnet=pgR6(1+v('mag')); if(v('dmg')) b.might=pgR6(v('dmg')); if(v('drop')) b.drop=pgR6(v('drop'));
+  return b; }
+function upCost(k){ const lv=pgUpLv(k); return svHas(BAL.UP.def,k)&&lv<BAL.UP.max?BAL.UP.cost(lv):0; }
+// buy one level of upgrade k → '' = done (saved) · otherwise the reason, nothing changed
+function buyUpgrade(k){
+  if(!svHas(BAL.UP.def,k)) return 'ไม่มีหัวข้อนี้'; if(pgRO()) return 'เซฟนี้อ่านอย่างเดียว';
+  if(typeof G!=='undefined'&&G&&G.char&&!G.over) return 'อัปเกรดได้ที่ป้อมเท่านั้น';
+  if(typeof svlFresh==='function') svlFresh();                         // another tab's write first: pay from its gold, not ours
+  if(pgRO()) return 'เซฟนี้อ่านอย่างเดียว';                            // svlFresh may have loaded a newer app's (read-only) save
+  const A=pgAcct(); if(!A) return 'ไม่มีข้อมูลบัญชี'; if(!svObj(A.up)) A.up={};
+  const lv=pgUpLv(k), price=upCost(k); if(!price) return 'อัปเกรดเต็มแล้ว';
+  if((A.gold|0)<price) return 'ทองไม่พอ (ต้องใช้ '+price.toLocaleString('en-US')+')';
+  A.gold-=price; A.up[k]=lv+1;
+  const S0=SAVE; if(typeof saveNow==='function') saveNow('upgrade');
+  return SAVE===S0?'':typeof SVL_RACE==='string'?SVL_RACE:'ข้อมูลถูกแก้จากอีกแท็บ'; }   // a reload in svlWrite = the purchase is in neither copy
 
 /* ---- stat points (§3.3) ---- */
 function commitStats(ch,delta){
@@ -221,6 +241,7 @@ function onRunEnd(G,won,o){
       r.gold=G.goldRun|0;                                               // field EXP is granted per kill; boss/field fill the rest
       if(G.mode&&typeof G.mode.rewards==='function') G.mode.rewards(r,won);
     }
+    const gu=pgUpLv('gold'); if(gu&&r.gold>0) r.gold=Math.round(r.gold*(1+BAL.UP.def.gold.per*gu));   // upgrade: gold +4%/level (every mode)
     r.jobXp=Math.round(r.baseXp*BAL.JOB_EXP);
   }catch(e){ console.error(e); }
   if(o&&o.commit) grantRewards(ch,r);

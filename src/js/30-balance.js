@@ -72,4 +72,13 @@ const BAL={ CAP:{base:60, job1:20, job2:25, stat:50, chars:3, bag:120, stash:120
     fboss:{gold(L){ return 150+15*L; }, dust:[4,8], crystal:[1,3], gear:[1,2], uniq:.25, rune:.12, seal:.10},
     rampage:{dust:2, gold(L){ return 20*L; }},
     surv:{elite:'surv.elite', boss5:'surv.boss5', boss10:'surv.boss10', boss15:'surv.boss15', boss20:'surv.boss20'} },
-  RESET:{gold:2000, marks:40, freeBelow:20} };
+  RESET:{gold:2000, marks:40, freeBelow:20},
+  // account upgrades bought with gold (every character, every mode except classic) · acct.up[k] = 0–max
+  // per: what one level adds · cost(lv) = gold to go from lv to lv+1 (500 · 750 · 1,125 … 19,222 · total ≈ 56k per line)
+  UP:{ max:10, order:['xp','mag','gold','hp','dmg','drop'],
+    def:{ xp:{n:'EXP ที่ได้', i:'📘', per:.03}, mag:{n:'ระยะดูดของ', i:'🧲', per:.08}, gold:{n:'ทองที่ได้จากรอบ', i:'💰', per:.04},
+      hp:{n:'HP สูงสุด', i:'❤️', per:.02}, dmg:{n:'ดาเมจ', i:'⚔️', per:.015}, drop:{n:'โอกาสดรอปของ', i:'🎁', per:.03} },
+    cost(lv){ return Math.round(500*Math.pow(1.5,lv)/5)*5; } },
+  // survival loot boxes (25-mode-survival.js): one appears every every[0]–every[1] s near the player · elites leave a small one
+  BOX:{ every:[45,60], dist:[380,600], max:3, maxSmall:4, life:120, elite:.15,
+    w:{gold:30, potion:15, dust:15, gear:10, magnet:15, bomb:10, heart:5}, gearPerT:1.5, gold:[2,4], small:.5 } };

@@ -18,10 +18,45 @@ MODES.survival=Object.assign({},MODES.classic,{
   id:'survival', n:'เอาชีวิตรอด',
   init(opts){ const T=G.tier=(opts&&opts.tier)||0; G.defK=BAL.SURV.defK(T); G.bossHpMul=BAL.SURV.hpMul(T); MODES.classic.init(opts); },
   cfgFor(w){ const c=waveCfg(w),T=G.tier||0; c.hpMul*=BAL.SURV.hpMul(T); c.dmgMul*=BAL.SURV.dmgMul(T); return c; },
-  onKill(e){ if(!e.elite&&!e.boss) return; const t=BAL.DROP.surv&&BAL.DROP.surv[e.boss?'boss'+G.wave:'elite']; if(!t) return;
-    for(const it of rollDrops(t,1+(P.drop||0))) G.loot.push(it); },
+  onKill(e){ if(!e.elite&&!e.boss) return; const t=BAL.DROP.surv&&BAL.DROP.surv[e.boss?'boss'+G.wave:'elite'];
+    if(t) for(const it of rollDrops(t,1+(P.drop||0))) G.loot.push(it);
+    if(e.elite&&!e.boss&&rngUnit()<BAL.BOX.elite&&Array.isArray(G.gems)&&G.gems.filter(g=>!g.dead&&g.kind==='lootbox'&&g.small).length<BAL.BOX.maxSmall) svBoxDrop(e.x,e.y,true); },
+  update(dt){ updateWave(dt); if(!G.over) svBoxTick(dt); },
   hud(){ const h=MODES.classic.hud(); h.lv='ชำนาญ Lv '+P.lv+' · '+(P.adv?P.adv.n:P.cls.n); return h; },
   end(won){ const r=MODES.classic.end(won), T='ระดับนรก T'+(G.tier||0);   // G.retreat = pause → ถอยทัพ (55-ui-hud.js)
     if(G.retreat){ r.eyebrow=T+' · ถอยทัพกลับป้อมพร้อมรางวัล'; r.title='ถอยทัพ'; } else r.eyebrow=T+' · '+r.eyebrow; return r; }
 });
 
+
+/* ---- loot boxes (survival only · BAL.BOX): a box every 45–60 s near the player, elites sometimes leave a small one ----
+   A box is a ground item (ITEMKIND.lootbox) · walking into its pickup range opens it · items go to G.loot and gold to G.goldRun,
+   which onRunEnd → grantRewards pays once per runId (nothing here writes the save) · rngUnit (crypto): a seeded sim keeps its stream */
+function svBoxDrop(x,y,small){ return typeof ltGem!=='function'?null:ltGem(x,y,'lootbox',{small:!!small, vx:0, vy:0}); }
+function svBoxTick(dt){
+  const B=BAL.BOX; if(G.boxT==null) G.boxT=B.every[0]+rngUnit()*(B.every[1]-B.every[0]);
+  G.boxT-=dt; if(G.boxT>0) return;
+  for(const g of G.gems) if(!g.dead&&g.kind==='lootbox'&&g.t>B.life) g.dead=true;   // unopened for 2 min → gone, so far-away boxes never block new ones
+  G.boxT=B.every[0]+rngUnit()*(B.every[1]-B.every[0]);
+  let n=0; for(const g of G.gems) if(!g.dead&&g.kind==='lootbox'&&!g.small) n++; if(n>=B.max) return;
+  const a=rngUnit()*TAU, d=B.dist[0]+rngUnit()*(B.dist[1]-B.dist[0]);
+  if(svBoxDrop(P.x+Math.cos(a)*d,P.y+Math.sin(a)*d,false)) addText(P.x,P.y-56,'กล่องสุ่มปรากฏ!','#c9a7ff',true); }
+function svBoxPick(T){ const w=Object.assign({},BAL.BOX.w); w.gear+=BAL.BOX.gearPerT*T; let r=rngUnit()*Object.values(w).reduce((a,b)=>a+b,0);
+  for(const k in w){ r-=w[k]; if(r<0) return k; } return 'gold'; }
+function svBoxOpen(g){
+  const B=BAL.BOX, T=G.tier|0, k=svBoxPick(T), x=P.x, y=P.y-50, sm=g.small?B.small:1, L=G.loot||(G.loot=[]);
+  burst(g.x,g.y,12,'#c9a7ff',150,.5,3); sfx('level');
+  if(k==='gold'){ const n=Math.max(1,Math.round(BAL.SURV.goldPerWave(T)*(B.gold[0]+rngUnit()*(B.gold[1]-B.gold[0]))*sm));
+    G.goldRun=(G.goldRun|0)+n; addText(x,y,'+'+n+' ทอง','#f0c75a',true); return; }
+  if(k==='potion'){ L.push({id:T>=4?'u_potion_l':'u_potion_s', n:1}); addText(x,y,'ได้ยา!','#ff6a7a',true); return; }
+  if(k==='dust'){ const n=1+(rngUnit()<.35+.04*T?1:0); L.push({id:'m_dust', n}); addText(x,y,'ผงรูน ×'+n,'#ffd36a',true); return; }
+  if(k==='gear'){ const got=rollDrops([{gear:'T'}],1+(P.drop||0)); if(got.length){ for(const it of got) L.push(it);
+      addText(x,y,typeof ltName==='function'?ltName(got[0]):'ได้อุปกรณ์!',typeof ltColor==='function'?ltColor(got[0]):'#8fb8ff',true); return; }
+    G.goldRun=(G.goldRun|0)+BAL.SURV.goldPerWave(T)*2; addText(x,y,'+'+BAL.SURV.goldPerWave(T)*2+' ทอง','#f0c75a',true); return; }
+  // magnet / bomb / heart: the core pickups' own effect, right where the player stands
+  addText(x,y,k==='magnet'?'แม่เหล็ก!':k==='bomb'?'ระเบิด!':'ฟื้น HP!','#c9a7ff',true); collect({kind:k, dead:false}); }
+function svPaintBox(c){ const k=1.15;
+  c.fillStyle='#1a1028'; rrect(c,-10*k,-9*k,20*k,18*k,3.5); c.fill(); c.fillStyle='#7a4fd0'; rrect(c,-9*k,-8*k,18*k,16*k,3); c.fill();
+  c.fillStyle='#b58cff'; c.fillRect(-9*k,-3*k,18*k,2.4*k); c.fillStyle='#f3ead2'; c.font='bold '+Math.round(12*k)+'px sans-serif'; c.textAlign='center'; c.textBaseline='middle'; c.fillText('?',0,2.5*k); }
+ITEMKIND.lootbox={
+  collect(g){ try{ svBoxOpen(g); }catch(e){ console.error(e); } },
+  draw(c,g){ const s=g.spr||(g.spr=ltSpr('lootbox',svPaintBox)), b=Math.sin(G.t*4+g.x*.05)*2; if(g.small){ c.save(); c.translate(g.x,g.y+b); c.scale(.75,.75); ltBlit(c,s,0,0); c.restore(); } else ltBlit(c,s,g.x,g.y+b); }};

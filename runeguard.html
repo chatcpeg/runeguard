@@ -355,6 +355,17 @@ button.hb-st{padding:0;border:0;background:none;text-decoration:underline dotted
 @media (prefers-reduced-motion:reduce){.hd-edge.big i{animation:none}}
 .sk.cd::after{box-shadow:inset 0 0 0 1px rgba(240,199,90,.25)}
 .sk[data-cd]::before{content:attr(data-cd);position:absolute;inset:0;display:grid;place-items:center;z-index:1;font-size:13px;font-weight:800;color:#fff;text-shadow:0 0 3px #000,0 1px 2px #000;pointer-events:none;font-variant-numeric:tabular-nums}
+/* account upgrades sheet */
+.hb-up{display:grid;gap:10px}
+.hb-up-gold{margin:0;color:#f0c75a;font-weight:700}
+.hb-up-row{display:grid;grid-template-columns:36px minmax(0,1fr) auto;gap:10px;align-items:center;padding:8px 10px;border:1px solid rgba(255,255,255,.08);border-radius:12px}
+.hb-up-i{font-size:24px;text-align:center}
+.hb-up-m{display:grid;gap:3px;min-width:0}
+.hb-up-m b{font-size:14px;color:var(--bone,#f3ead2)}
+.hb-up-v{font-size:12.5px;color:#9fd6c4;font-variant-numeric:tabular-nums}
+.hb-up-bar{display:block;height:5px;border-radius:3px;background:linear-gradient(90deg,#f0c75a calc(var(--p)*100%),rgba(255,255,255,.1) 0)}
+.hb-up-row .uc-b{white-space:nowrap;font-size:13px;padding:0 10px}
+.hb-up-note{margin:0;font-size:12px;color:var(--muted,#b9b3a0)}
 /* 51-auth.css · lane N · M0 stub (empty) */
 /* 53-char.css · lane E · equipment / bag tabs, item sheet, smith (refine), rune scribe, shop, stash · phone first (360 px, 44 px targets) */
 .uc{display:flex;flex-direction:column;gap:10px;min-width:0}
@@ -2420,13 +2431,48 @@ MODES.survival=Object.assign({},MODES.classic,{
   id:'survival', n:'เอาชีวิตรอด',
   init(opts){ const T=G.tier=(opts&&opts.tier)||0; G.defK=BAL.SURV.defK(T); G.bossHpMul=BAL.SURV.hpMul(T); MODES.classic.init(opts); },
   cfgFor(w){ const c=waveCfg(w),T=G.tier||0; c.hpMul*=BAL.SURV.hpMul(T); c.dmgMul*=BAL.SURV.dmgMul(T); return c; },
-  onKill(e){ if(!e.elite&&!e.boss) return; const t=BAL.DROP.surv&&BAL.DROP.surv[e.boss?'boss'+G.wave:'elite']; if(!t) return;
-    for(const it of rollDrops(t,1+(P.drop||0))) G.loot.push(it); },
+  onKill(e){ if(!e.elite&&!e.boss) return; const t=BAL.DROP.surv&&BAL.DROP.surv[e.boss?'boss'+G.wave:'elite'];
+    if(t) for(const it of rollDrops(t,1+(P.drop||0))) G.loot.push(it);
+    if(e.elite&&!e.boss&&rngUnit()<BAL.BOX.elite&&Array.isArray(G.gems)&&G.gems.filter(g=>!g.dead&&g.kind==='lootbox'&&g.small).length<BAL.BOX.maxSmall) svBoxDrop(e.x,e.y,true); },
+  update(dt){ updateWave(dt); if(!G.over) svBoxTick(dt); },
   hud(){ const h=MODES.classic.hud(); h.lv='ชำนาญ Lv '+P.lv+' · '+(P.adv?P.adv.n:P.cls.n); return h; },
   end(won){ const r=MODES.classic.end(won), T='ระดับนรก T'+(G.tier||0);   // G.retreat = pause → ถอยทัพ (55-ui-hud.js)
     if(G.retreat){ r.eyebrow=T+' · ถอยทัพกลับป้อมพร้อมรางวัล'; r.title='ถอยทัพ'; } else r.eyebrow=T+' · '+r.eyebrow; return r; }
 });
 
+
+/* ---- loot boxes (survival only · BAL.BOX): a box every 45–60 s near the player, elites sometimes leave a small one ----
+   A box is a ground item (ITEMKIND.lootbox) · walking into its pickup range opens it · items go to G.loot and gold to G.goldRun,
+   which onRunEnd → grantRewards pays once per runId (nothing here writes the save) · rngUnit (crypto): a seeded sim keeps its stream */
+function svBoxDrop(x,y,small){ return typeof ltGem!=='function'?null:ltGem(x,y,'lootbox',{small:!!small, vx:0, vy:0}); }
+function svBoxTick(dt){
+  const B=BAL.BOX; if(G.boxT==null) G.boxT=B.every[0]+rngUnit()*(B.every[1]-B.every[0]);
+  G.boxT-=dt; if(G.boxT>0) return;
+  for(const g of G.gems) if(!g.dead&&g.kind==='lootbox'&&g.t>B.life) g.dead=true;   // unopened for 2 min → gone, so far-away boxes never block new ones
+  G.boxT=B.every[0]+rngUnit()*(B.every[1]-B.every[0]);
+  let n=0; for(const g of G.gems) if(!g.dead&&g.kind==='lootbox'&&!g.small) n++; if(n>=B.max) return;
+  const a=rngUnit()*TAU, d=B.dist[0]+rngUnit()*(B.dist[1]-B.dist[0]);
+  if(svBoxDrop(P.x+Math.cos(a)*d,P.y+Math.sin(a)*d,false)) addText(P.x,P.y-56,'กล่องสุ่มปรากฏ!','#c9a7ff',true); }
+function svBoxPick(T){ const w=Object.assign({},BAL.BOX.w); w.gear+=BAL.BOX.gearPerT*T; let r=rngUnit()*Object.values(w).reduce((a,b)=>a+b,0);
+  for(const k in w){ r-=w[k]; if(r<0) return k; } return 'gold'; }
+function svBoxOpen(g){
+  const B=BAL.BOX, T=G.tier|0, k=svBoxPick(T), x=P.x, y=P.y-50, sm=g.small?B.small:1, L=G.loot||(G.loot=[]);
+  burst(g.x,g.y,12,'#c9a7ff',150,.5,3); sfx('level');
+  if(k==='gold'){ const n=Math.max(1,Math.round(BAL.SURV.goldPerWave(T)*(B.gold[0]+rngUnit()*(B.gold[1]-B.gold[0]))*sm));
+    G.goldRun=(G.goldRun|0)+n; addText(x,y,'+'+n+' ทอง','#f0c75a',true); return; }
+  if(k==='potion'){ L.push({id:T>=4?'u_potion_l':'u_potion_s', n:1}); addText(x,y,'ได้ยา!','#ff6a7a',true); return; }
+  if(k==='dust'){ const n=1+(rngUnit()<.35+.04*T?1:0); L.push({id:'m_dust', n}); addText(x,y,'ผงรูน ×'+n,'#ffd36a',true); return; }
+  if(k==='gear'){ const got=rollDrops([{gear:'T'}],1+(P.drop||0)); if(got.length){ for(const it of got) L.push(it);
+      addText(x,y,typeof ltName==='function'?ltName(got[0]):'ได้อุปกรณ์!',typeof ltColor==='function'?ltColor(got[0]):'#8fb8ff',true); return; }
+    G.goldRun=(G.goldRun|0)+BAL.SURV.goldPerWave(T)*2; addText(x,y,'+'+BAL.SURV.goldPerWave(T)*2+' ทอง','#f0c75a',true); return; }
+  // magnet / bomb / heart: the core pickups' own effect, right where the player stands
+  addText(x,y,k==='magnet'?'แม่เหล็ก!':k==='bomb'?'ระเบิด!':'ฟื้น HP!','#c9a7ff',true); collect({kind:k, dead:false}); }
+function svPaintBox(c){ const k=1.15;
+  c.fillStyle='#1a1028'; rrect(c,-10*k,-9*k,20*k,18*k,3.5); c.fill(); c.fillStyle='#7a4fd0'; rrect(c,-9*k,-8*k,18*k,16*k,3); c.fill();
+  c.fillStyle='#b58cff'; c.fillRect(-9*k,-3*k,18*k,2.4*k); c.fillStyle='#f3ead2'; c.font='bold '+Math.round(12*k)+'px sans-serif'; c.textAlign='center'; c.textBaseline='middle'; c.fillText('?',0,2.5*k); }
+ITEMKIND.lootbox={
+  collect(g){ try{ svBoxOpen(g); }catch(e){ console.error(e); } },
+  draw(c,g){ const s=g.spr||(g.spr=ltSpr('lootbox',svPaintBox)), b=Math.sin(G.t*4+g.x*.05)*2; if(g.small){ c.save(); c.translate(g.x,g.y+b); c.scale(.75,.75); ltBlit(c,s,0,0); c.restore(); } else ltBlit(c,s,g.x,g.y+b); }};
 /* ================= 30-balance.js · lane C · pure · every number of §2–§5 (single source) ================= */
 // Tune here, then measure with RG.sim. Formulas are DESIGN §2.2 · §2.4 · §3.2–3.5 · §4.6–4.12 · §5.3–5.6.
 // Rule for every multiplier at its neutral input (T0, Lv1, +0): it returns exactly 1 / 22 / 0, so classic-equal paths stay bit-equal.
@@ -2501,7 +2547,16 @@ const BAL={ CAP:{base:60, job1:20, job2:25, stat:50, chars:3, bag:120, stash:120
     fboss:{gold(L){ return 150+15*L; }, dust:[4,8], crystal:[1,3], gear:[1,2], uniq:.25, rune:.12, seal:.10},
     rampage:{dust:2, gold(L){ return 20*L; }},
     surv:{elite:'surv.elite', boss5:'surv.boss5', boss10:'surv.boss10', boss15:'surv.boss15', boss20:'surv.boss20'} },
-  RESET:{gold:2000, marks:40, freeBelow:20} };
+  RESET:{gold:2000, marks:40, freeBelow:20},
+  // account upgrades bought with gold (every character, every mode except classic) · acct.up[k] = 0–max
+  // per: what one level adds · cost(lv) = gold to go from lv to lv+1 (500 · 750 · 1,125 … 19,222 · total ≈ 56k per line)
+  UP:{ max:10, order:['xp','mag','gold','hp','dmg','drop'],
+    def:{ xp:{n:'EXP ที่ได้', i:'📘', per:.03}, mag:{n:'ระยะดูดของ', i:'🧲', per:.08}, gold:{n:'ทองที่ได้จากรอบ', i:'💰', per:.04},
+      hp:{n:'HP สูงสุด', i:'❤️', per:.02}, dmg:{n:'ดาเมจ', i:'⚔️', per:.015}, drop:{n:'โอกาสดรอปของ', i:'🎁', per:.03} },
+    cost(lv){ return Math.round(500*Math.pow(1.5,lv)/5)*5; } },
+  // survival loot boxes (25-mode-survival.js): one appears every every[0]–every[1] s near the player · elites leave a small one
+  BOX:{ every:[45,60], dist:[380,600], max:3, maxSmall:4, life:120, elite:.15,
+    w:{gold:30, potion:15, dust:15, gear:10, magnet:15, bomb:10, heart:5}, gearPerT:1.5, gold:[2,4], small:.5 } };
 /* ================= 31-jobs-data.js · lane C · pure · passives, skill requirements, stat order/names, presets ================= */
 // PASSIVES[id] = {own, n, i, per} · own = class id (first job) or adv id (advanced job) · per = bonus per ★ (§3.5)
 // additive keys scale linearly (★5 = ×5) · multiplier keys (cd, magnet) are raised to the ★ (cd ×0.99 at ★5 = ×0.99⁵)
@@ -3244,8 +3299,8 @@ DEV.loot={
 // Forward compatibility inside v1: an item / rune id this app does not know survives validation (item → unk:1, rune id kept in
 // its socket), so a newer client's loot is never destroyed. A new class, job, skill or passive does NOT survive (they are matched
 // against CLS / SK / PASSIVES): adding one needs a SCHEMA_V bump, so older apps open such a save read-only instead.
-const SCHEMA_V=1;
-const SV_APP='2.0.0-m2';                                 // app version stamped into every local write (saveSummary.appVer)
+const SCHEMA_V=2;                                    // 2: acct.up (gold upgrades) · a v1 app opens a v2 save read-only, so it never drops them
+const SV_APP='2.1.0';                                 // app version stamped into every local write (saveSummary.appVer)
 const SV_NAME_RE=/^[\p{L}\p{M}\p{N} ]{2,16}$/u;
 const SV_SLOTS=['weapon','off','head','face','body','cloak','hands','feet','neck','ring'];
 const SV_WEAPON={swordsman:'w_sword_1', mage:'w_staff_1', archer:'w_bow_1', cleric:'w_rod_1', thief:'w_dagger_1'};   // §3.8 starter (M2)
@@ -3286,7 +3341,7 @@ function svOwner(o){ return typeof o==='string'&&/^[A-Za-z0-9_-]{1,64}$/.test(o)
 function svEmptyEq(){ const o={}; for(const k of SV_SLOTS) o[k]=null; return o; }
 function svNewAcct(){ return {gold:0, marks:0, stash:[], stashMax:BAL.PRICE.stash.start, survTier:0, kits:0,
   records:{classic:{}, survival:{}, boss:{}}, fboss:{}, bossUnlock:{colossus:0, lich:0, king:0},
-  daily:{day:'', surv:{}, boss:{}, rushWeek:''}, flags:{pioneer:false, migratedBest:false, pioneerCloak:false, tips:{}}, runIds:[]}; }
+  daily:{day:'', surv:{}, boss:{}, rushWeek:''}, up:{}, flags:{pioneer:false, migratedBest:false, pioneerCloak:false, tips:{}}, runIds:[]}; }
 
 function newSave(owner){ const t=Date.now();
   return {v:SCHEMA_V, sid:uid('s_'), owner:svOwner(owner), created:t, mt:t, wc:0, wb:uid('w_'), play:0, app:SV_APP, acct:svNewAcct(), chars:[], active:null}; }
@@ -3329,7 +3384,8 @@ function svMig0(o,best){   // v0 = the old single-file game: nothing but runegua
   const s=newSave(o&&o.owner), imp=svImportBest(best);
   if(imp){ s.acct.records.classic=imp; s.acct.flags.pioneer=true; s.acct.flags.migratedBest=true; }
   return s; }
-const SV_MIG={0:svMig0};      // SV_MIG[v](o) → save of version v+1 (add 1→2 here when SCHEMA_V becomes 2)
+function svMig1(o){ const s=Object.assign({},o); s.v=2; return s; }   // v1 → v2: only adds acct.up (validateSave fills it empty)
+const SV_MIG={0:svMig0, 1:svMig1};      // SV_MIG[v](o) → save of version v+1
 function migrateSave(o,legacyBest){
   if(!svObj(o)) o=null;
   const v=o?o.v:undefined;
@@ -3396,6 +3452,7 @@ function svAcct(a){
   const d=svObj(a.daily)?a.daily:{};
   o.daily={day:svStr(d.day,/^\d{4}-\d{2}-\d{2}$/,''), surv:svFlagMap(d.surv,/^(10|[0-9])$/,16), boss:svFlagMap(d.boss,/^[a-z0-9_:-]{1,40}$/,64),
     rushWeek:svStr(d.rushWeek,/^\d{4}-W\d{2}$/,'')};
+  const u=svObj(a.up)?a.up:{}; for(const k of BAL.UP.order){ const n=svInt(u[k],0,BAL.UP.max,0); if(n) o.up[k]=n; }
   const f=svObj(a.flags)?a.flags:{};
   o.flags={pioneer:f.pioneer===true, migratedBest:f.migratedBest===true, pioneerCloak:f.pioneerCloak===true, tips:svFlagMap(f.tips,/^[A-Za-z0-9_:-]{1,40}$/,64)};
   const ids=[]; for(const x of Array.isArray(a.runIds)?a.runIds:[]) if(svStr(x,SV_RUNID_RE,'')&&ids.indexOf(x)<0) ids.push(x);
@@ -3470,7 +3527,7 @@ function saveSummary(s){ s=svObj(s)?s:{};
 function isTrivialSave(s){
   if(!svObj(s)) return true; const a=svObj(s.acct)?s.acct:{}, r=svObj(a.records)?a.records:{};
   if((a.gold|0)>0||(a.marks|0)>0||(Array.isArray(a.stash)&&a.stash.length)) return false;
-  if(svKeys(r.survival).length||svKeys(r.boss).length) return false;
+  if(svKeys(r.survival).length||svKeys(r.boss).length||svKeys(a.up).some(k=>(a.up[k]|0)>0)) return false;   // bought upgrades = real progress
   for(const c of Array.isArray(s.chars)?s.chars:[]) if((c.lv|0)>1||(c.xp|0)>0||(c.jlv|0)>1||(c.jxp|0)>0||(c.kills|0)>0||(c.job)) return false;
   return true; }
 /* ================= 41-save-local.js · lane C · local save (the only file that assigns SAVE) · curChar ================= */
@@ -3847,8 +3904,28 @@ function passiveBonus(ch){
 // the complete permanent bonus of a run — exactly what prepareRun puts in P.bonus (a fresh character with no gear → {})
 function buildRunBonus(ch){
   if(!ch) return {}; const a=pgAdvOf(ch), g=typeof gearBonus==='function'?gearBonus(ch):null;
-  const b=mergeBonus(a&&a.bonus, metaBonus(ch), passiveBonus(ch), g);
+  const b=mergeBonus(a&&a.bonus, metaBonus(ch), passiveBonus(ch), g, upBonus(ch,null));
+  const hp=pgUpLv('hp'); if(hp){ const c=pgCls(ch); b.hp=(b.hp||0)+Math.round(BAL.UP.def.hp.per*hp*((c?c.hp:0)+(b.hp||0))); }   // HP % of class base + every flat HP above
   for(const k in b) if(typeof b[k]==='number') b[k]=pgR6(b[k]); return b; }
+/* ---- account upgrades (gold · BAL.UP · acct.up) ---- */
+function pgUpLv(k){ const A=pgAcct(), u=A&&A.up; return u&&svHas(u,k)?Math.max(0,Math.min(BAL.UP.max,u[k]|0)):0; }
+// the run bonus part of the upgrades (hp is added by buildRunBonus as a % of the rest · gold is paid in onRunEnd)
+function upBonus(){ const U=BAL.UP.def, b={}, v=k=>pgUpLv(k)*U[k].per;
+  if(v('xp')) b.xp=pgR6(v('xp')); if(v('mag')) b.magnet=pgR6(1+v('mag')); if(v('dmg')) b.might=pgR6(v('dmg')); if(v('drop')) b.drop=pgR6(v('drop'));
+  return b; }
+function upCost(k){ const lv=pgUpLv(k); return svHas(BAL.UP.def,k)&&lv<BAL.UP.max?BAL.UP.cost(lv):0; }
+// buy one level of upgrade k → '' = done (saved) · otherwise the reason, nothing changed
+function buyUpgrade(k){
+  if(!svHas(BAL.UP.def,k)) return 'ไม่มีหัวข้อนี้'; if(pgRO()) return 'เซฟนี้อ่านอย่างเดียว';
+  if(typeof G!=='undefined'&&G&&G.char&&!G.over) return 'อัปเกรดได้ที่ป้อมเท่านั้น';
+  if(typeof svlFresh==='function') svlFresh();                         // another tab's write first: pay from its gold, not ours
+  if(pgRO()) return 'เซฟนี้อ่านอย่างเดียว';                            // svlFresh may have loaded a newer app's (read-only) save
+  const A=pgAcct(); if(!A) return 'ไม่มีข้อมูลบัญชี'; if(!svObj(A.up)) A.up={};
+  const lv=pgUpLv(k), price=upCost(k); if(!price) return 'อัปเกรดเต็มแล้ว';
+  if((A.gold|0)<price) return 'ทองไม่พอ (ต้องใช้ '+price.toLocaleString('en-US')+')';
+  A.gold-=price; A.up[k]=lv+1;
+  const S0=SAVE; if(typeof saveNow==='function') saveNow('upgrade');
+  return SAVE===S0?'':typeof SVL_RACE==='string'?SVL_RACE:'ข้อมูลถูกแก้จากอีกแท็บ'; }   // a reload in svlWrite = the purchase is in neither copy
 
 /* ---- stat points (§3.3) ---- */
 function commitStats(ch,delta){
@@ -4006,6 +4083,7 @@ function onRunEnd(G,won,o){
       r.gold=G.goldRun|0;                                               // field EXP is granted per kill; boss/field fill the rest
       if(G.mode&&typeof G.mode.rewards==='function') G.mode.rewards(r,won);
     }
+    const gu=pgUpLv('gold'); if(gu&&r.gold>0) r.gold=Math.round(r.gold*(1+BAL.UP.def.gold.per*gu));   // upgrade: gold +4%/level (every mode)
     r.jobXp=Math.round(r.baseXp*BAL.JOB_EXP);
   }catch(e){ console.error(e); }
   if(o&&o.commit) grantRewards(ch,r);
@@ -4570,6 +4648,24 @@ function hbBoot(){
   shEl('svPrev').addEventListener('click',()=>hbSurvPick((HB.tier|0)-1));
   shEl('svNext').addEventListener('click',()=>hbSurvPick((HB.tier|0)+1));
   shEl('svGo').addEventListener('click',hbSurvGo); }
+
+/* ---------- account upgrades (gold · BAL.UP · buyUpgrade in 42) — a fort service, every character shares them ---------- */
+SERVICES.push({id:'upgrade', npc:'ปู่ทองดี', n:'ปู่ทองดี · อัปเกรดถาวร', i:'🌟', order:15, open(){ hbUpOpen(); }});
+function hbUpOpen(){ const box=shMk('div','hb-up'); hbUpFill(box); sheet(box,{title:'🌟 อัปเกรดถาวร (ทุกตัวละคร)'}); }
+function hbUpFill(box){
+  box.textContent=''; const A=SAVE&&SAVE.acct, U=BAL.UP, fmt=n=>Math.floor(+n||0).toLocaleString('en-US');
+  box.append(shMk('p','hb-up-gold','ทองของบัญชี: '+fmt(A?A.gold:0)+' · ใช้ได้ทุกโหมดยกเว้นคลาสสิก'));
+  for(const k of U.order){ const d=U.def[k], lv=pgUpLv(k), cost=upCost(k), row=shMk('div','hb-up-row');
+    const pct=v=>(Math.round(v*1000)/10)+'%', now=lv*d.per, nx=(lv+1)*d.per;
+    row.append(shMk('span','hb-up-i',d.i));
+    const mid=shMk('div','hb-up-m'); mid.append(shMk('b',null,d.n+' · ขั้น '+lv+'/'+U.max));
+    mid.append(shMk('span','hb-up-v',lv>=U.max?'+'+pct(now)+' (เต็มแล้ว)':'+'+pct(now)+' → +'+pct(nx)));
+    const bar=shMk('i','hb-up-bar'); bar.style.setProperty('--p',String(lv/U.max)); mid.append(bar); row.append(mid);
+    const b=shBtn(cost?fmt(cost)+' ทอง':'เต็ม','uc-b pri',()=>{ const r=buyUpgrade(k);
+      if(r) toast(r,'bad'); else { toast(d.n+' ขั้น '+pgUpLv(k)+' แล้ว','good'); try{ initAudio(); tone(880,.12,'triangle',.08); tone(1320,.2,'sine',.06,0,.08); }catch(e){} }
+      hbUpFill(box); });
+    b.disabled=!cost||!A||(A.gold|0)<cost; row.append(b); box.append(row); }
+  box.append(shMk('p','hb-up-note','ซื้อได้เฉพาะตอนอยู่ในป้อม · ค่าที่ได้รวมในหน้าพักเกมแล้ว')); }
 /* ================= 53-ui-char.js · lane E · equipment / bag tabs, item / refine / rune / shop / stash sheets ================= */
 // DESIGN §8.8 · §4.8–4.11 · §5.1. Rules and saving live in 34-items-logic.js (write-ahead: refineTry has stored its result before it
 // returns); this file only draws and calls it. Item / player text reaches the DOM through textContent only (never as HTML).
@@ -5134,8 +5230,8 @@ UIX.hud=hdTick; UIX.endExtra=hdEnd; UIX.pauseExtra=hdPause;
 /* ---------- skill bar cooldown clock (every mode) · card details: concrete numbers (every mode) ---------- */
 const HD_NOCD={passive:1, orbit:1, aura:1};
 function hdCdBar(){
-  const bar=document.getElementById('skillBar'); if(!bar||!P) return;
-  P.skills.forEach((s,i)=>{ const n=bar.children[i]; if(!n) return;
+  const bar=document.getElementById('skillBar'); if(!bar||!P||!Array.isArray(P.skills)||typeof cdOf!=='function') return;
+  P.skills.forEach((s,i)=>{ const n=bar.children[i]; if(!n||!s||!s.def) return;
     const cd=HD_NOCD[s.def.type]||pv(s,'cd')==null?0:cdOf(s), f=cd>0?Math.max(0,Math.min(1,(s.cdT||0)/cd)):0, q=Math.round(f*40)/40;
     if(n.__cdq!==q){ n.__cdq=q; n.style.setProperty('--cd',String(q)); n.classList.toggle('cd',q>0); }
     const left=f>0?s.cdT:0, lt=left>=1?String(Math.ceil(left)):left>0&&cd>=1?(Math.ceil(left*10)/10).toFixed(1):'';   // seconds left on long cooldowns
@@ -5170,18 +5266,18 @@ function hdCardInfo(){
     for(const t of lines.slice(0,6)){ const r=document.createElement('span'); r.textContent=t; d.append(r); }
     const kb=c.querySelector('kbd'); if(kb) c.insertBefore(d,kb); else c.append(d); }); }
 // special drops outside the view → an arrow on the screen edge pointing at them (every mode · DOM only, no RNG, no sim state)
-const HD_EDGE_I={chest:'🎁', bosschest:'🎁', heart:'❤️', magnet:'🧲', bomb:'💣'}, HD_EDGE_MAX=8;
+const HD_EDGE_I={chest:'🎁', bosschest:'🎁', lootbox:'🎲', heart:'❤️', magnet:'🧲', bomb:'💣'}, HD_EDGE_MAX=8;
 function hdEdgeIcon(g){ if(HD_EDGE_I[g.kind]) return HD_EDGE_I[g.kind]; if(g.kind==='loot'){ const d=typeof itemDef==='function'&&g.it&&itemDef(g.it.id); return d&&d.i||'💎'; } return ''; }
 function hdEdge(){
   let box=HD.edge; if(!box||!box.isConnected){ box=HD.edge=document.createElement('div'); box.id='hdEdge'; box.setAttribute('aria-hidden','true'); document.body.append(box); HD.edgeN=[]; }
-  const live=G&&P&&!G.ui&&!G.over, pick=[];
+  const live=G&&P&&!G.ui&&!G.over&&typeof cam!=='undefined'&&typeof H!=='undefined'&&Array.isArray(G.gems), pick=[];
   if(live){ const now=performance.now();
     if(!HD.edgeR||now-HD.edgeRT>1000){ const t=$('.hud-top'), b=$('.hud-bot'), rt=t&&t.getBoundingClientRect(), rb=b&&b.getBoundingClientRect(), ok=rt&&rt.height>0&&rb&&rb.height>0;
       HD.edgeRT=ok?now:0; HD.edgeR=[ok?rt.bottom:90, ok?rb.top:H-50]; }   // HUD not laid out yet → safe guess, measure again next frame
     const m=26, x0=m, y0=Math.min(H/2,HD.edgeR[0]+m), x1=W-m, y1=Math.max(H/2,HD.edgeR[1]-m-12);
     for(const g of G.gems){ if(g.dead) continue; const ic=hdEdgeIcon(g); if(!ic) continue;
       const sx=(g.x-cam.x)*ZOOM+W/2, sy=(g.y-cam.y)*ZOOM+H/2; if(sx>=0&&sx<=W&&sy>=0&&sy<=H) continue;
-      const dx=g.x-P.x, dy=g.y-P.y; pick.push({ic, d:dx*dx+dy*dy, sx, sy, big:g.kind==='bosschest'||g.kind==='chest'}); }
+      const dx=g.x-P.x, dy=g.y-P.y; pick.push({ic, d:dx*dx+dy*dy, sx, sy, big:g.kind==='bosschest'||g.kind==='chest'||g.kind==='lootbox'&&!g.small}); }
     pick.sort((a,b)=>(b.big-a.big)||(a.d-b.d)); pick.length=Math.min(pick.length,HD_EDGE_MAX);
     for(const p of pick){ const cx=W/2, cy=H/2, vx=p.sx-cx, vy=p.sy-cy, k=Math.min(vx?Math.abs((vx>0?x1-cx:cx-x0)/vx):1e9, vy?Math.abs((vy>0?y1-cy:cy-y0)/vy):1e9);
       p.x=cx+vx*k; p.y=cy+vy*k; p.a=Math.atan2(vy,vx); p.m=Math.round(Math.sqrt(p.d)/10); } }

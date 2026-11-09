@@ -294,7 +294,7 @@ console.log('M2 · บริการในป้อม (§8.3 · §5.1)');
   X('shBoot()');
   const sv = dom.ids.get('hbSvc'), btn = t => sv.children.find(b => b.tagName === 'BUTTON' && b.textContent.includes(t));
   const names = () => sv.children.filter(b => b.tagName === 'BUTTON').map(b => b.children[0].textContent);
-  ok('ปุ่มบริการ: ช่างตีเหล็ก · ผู้จารึกรูน (ของ lane) · ร้านป้านวล · คลัง · ไม่มีหน้าอาชีพในเทสต์นี้', JSON.stringify(names()) === JSON.stringify(['⚒ ช่างตีเหล็ก', '✦ ผู้จารึกรูน', '🛒 ร้านป้านวล', '📦 คลัง']) && !sv.hidden, names());
+  ok('ปุ่มบริการ: ช่างตีเหล็ก · ผู้จารึกรูน (ของ lane) · ร้านป้านวล · คลัง · ไม่มีหน้าอาชีพในเทสต์นี้', JSON.stringify(names()) === JSON.stringify(['⚒ ช่างตีเหล็ก', '🌟 อัปเกรดถาวร', '✦ ผู้จารึกรูน', '🛒 ร้านป้านวล', '📦 คลัง']) && !sv.hidden, names());
   ok('ชื่อ NPC เป็นบรรทัดเล็ก (ร้านป้านวลไม่ซ้ำชื่อ)', btn('ช่างตีเหล็ก').textContent === '⚒ ช่างตีเหล็กลุงบัณฑ์' && btn('ร้านป้านวล').children.length === 1);
   X('SERVICES.push({id:"x", npc:"ผู้เฝ้าประตู", n:"ผู้เฝ้าประตู · ประตูรูน", i:"🌀", order:60, open(){}}); hbHub()');
   ok('n = "NPC · บริการ" → หัวปุ่มเป็นบริการ + NPC บรรทัดเล็ก', btn('ประตูรูน') && btn('ประตูรูน').children[0].textContent === '🌀 ประตูรูน' && btn('ประตูรูน').children[1].textContent === 'ผู้เฝ้าประตู');

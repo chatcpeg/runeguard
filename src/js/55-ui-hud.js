@@ -9,8 +9,8 @@ UIX.hud=hdTick; UIX.endExtra=hdEnd; UIX.pauseExtra=hdPause;
 /* ---------- skill bar cooldown clock (every mode) · card details: concrete numbers (every mode) ---------- */
 const HD_NOCD={passive:1, orbit:1, aura:1};
 function hdCdBar(){
-  const bar=document.getElementById('skillBar'); if(!bar||!P) return;
-  P.skills.forEach((s,i)=>{ const n=bar.children[i]; if(!n) return;
+  const bar=document.getElementById('skillBar'); if(!bar||!P||!Array.isArray(P.skills)||typeof cdOf!=='function') return;
+  P.skills.forEach((s,i)=>{ const n=bar.children[i]; if(!n||!s||!s.def) return;
     const cd=HD_NOCD[s.def.type]||pv(s,'cd')==null?0:cdOf(s), f=cd>0?Math.max(0,Math.min(1,(s.cdT||0)/cd)):0, q=Math.round(f*40)/40;
     if(n.__cdq!==q){ n.__cdq=q; n.style.setProperty('--cd',String(q)); n.classList.toggle('cd',q>0); }
     const left=f>0?s.cdT:0, lt=left>=1?String(Math.ceil(left)):left>0&&cd>=1?(Math.ceil(left*10)/10).toFixed(1):'';   // seconds left on long cooldowns
@@ -45,18 +45,18 @@ function hdCardInfo(){
     for(const t of lines.slice(0,6)){ const r=document.createElement('span'); r.textContent=t; d.append(r); }
     const kb=c.querySelector('kbd'); if(kb) c.insertBefore(d,kb); else c.append(d); }); }
 // special drops outside the view → an arrow on the screen edge pointing at them (every mode · DOM only, no RNG, no sim state)
-const HD_EDGE_I={chest:'🎁', bosschest:'🎁', heart:'❤️', magnet:'🧲', bomb:'💣'}, HD_EDGE_MAX=8;
+const HD_EDGE_I={chest:'🎁', bosschest:'🎁', lootbox:'🎲', heart:'❤️', magnet:'🧲', bomb:'💣'}, HD_EDGE_MAX=8;
 function hdEdgeIcon(g){ if(HD_EDGE_I[g.kind]) return HD_EDGE_I[g.kind]; if(g.kind==='loot'){ const d=typeof itemDef==='function'&&g.it&&itemDef(g.it.id); return d&&d.i||'💎'; } return ''; }
 function hdEdge(){
   let box=HD.edge; if(!box||!box.isConnected){ box=HD.edge=document.createElement('div'); box.id='hdEdge'; box.setAttribute('aria-hidden','true'); document.body.append(box); HD.edgeN=[]; }
-  const live=G&&P&&!G.ui&&!G.over, pick=[];
+  const live=G&&P&&!G.ui&&!G.over&&typeof cam!=='undefined'&&typeof H!=='undefined'&&Array.isArray(G.gems), pick=[];
   if(live){ const now=performance.now();
     if(!HD.edgeR||now-HD.edgeRT>1000){ const t=$('.hud-top'), b=$('.hud-bot'), rt=t&&t.getBoundingClientRect(), rb=b&&b.getBoundingClientRect(), ok=rt&&rt.height>0&&rb&&rb.height>0;
       HD.edgeRT=ok?now:0; HD.edgeR=[ok?rt.bottom:90, ok?rb.top:H-50]; }   // HUD not laid out yet → safe guess, measure again next frame
     const m=26, x0=m, y0=Math.min(H/2,HD.edgeR[0]+m), x1=W-m, y1=Math.max(H/2,HD.edgeR[1]-m-12);
     for(const g of G.gems){ if(g.dead) continue; const ic=hdEdgeIcon(g); if(!ic) continue;
       const sx=(g.x-cam.x)*ZOOM+W/2, sy=(g.y-cam.y)*ZOOM+H/2; if(sx>=0&&sx<=W&&sy>=0&&sy<=H) continue;
-      const dx=g.x-P.x, dy=g.y-P.y; pick.push({ic, d:dx*dx+dy*dy, sx, sy, big:g.kind==='bosschest'||g.kind==='chest'}); }
+      const dx=g.x-P.x, dy=g.y-P.y; pick.push({ic, d:dx*dx+dy*dy, sx, sy, big:g.kind==='bosschest'||g.kind==='chest'||g.kind==='lootbox'&&!g.small}); }
     pick.sort((a,b)=>(b.big-a.big)||(a.d-b.d)); pick.length=Math.min(pick.length,HD_EDGE_MAX);
     for(const p of pick){ const cx=W/2, cy=H/2, vx=p.sx-cx, vy=p.sy-cy, k=Math.min(vx?Math.abs((vx>0?x1-cx:cx-x0)/vx):1e9, vy?Math.abs((vy>0?y1-cy:cy-y0)/vy):1e9);
       p.x=cx+vx*k; p.y=cy+vy*k; p.a=Math.atan2(vy,vx); p.m=Math.round(Math.sqrt(p.d)/10); } }
