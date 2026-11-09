@@ -1225,6 +1225,60 @@ console.log('m2-orch r4 · เขียนคืนล้มไม่วนท�
     ok('บันทึกทับพร้อมกัน: เตือนแดงในแท็บที่เขียน wc นั้นเอง (A) · แท็บที่แค่อ่าน (B) ได้แค่แจ้งโหลดใหม่', ta !== tk && W.red(A) === 1 && W.red(B) === 0, { a: W.red(A), b: W.red(B) });
   }
 }
+console.log('m2-orch r5 · นำเข้าเซฟว่างไม่วนเขียนทับ · สถิติคลาสสิกไม่หายในทาง svlWrite · นำเข้าไม่ล้มกับ wp เสีย · svlSeen ไม่ถอยหลัง');
+{
+  const K = 'runeguard.save.guest';
+  const two = () => {
+    let t = 1.9e12; const clk = () => (t += 7); const base = memStorage(); let writes = 0;
+    const ls = { getItem: k => base.getItem(k), removeItem: k => base.removeItem(k), clear: () => base.clear(), key: j => base.key(j), get length() { return base.length; },
+      setItem: (k, v) => { if (k === K) writes++; base.setItem(k, v); } };
+    const mk = () => { const x = fresh({ localStorage: ls, __clk: clk }); x.X(`Date.now=()=>__clk()`); return x; };
+    const A = mk(), B = mk();
+    A.X(`loadSaveFor(null); createChar('ของจริง','swordsman'); DEV.profile.gold(50000); buyItem(curChar(),'m_dust',3)`); B.X(`loadSaveFor(null)`);
+    return { base, A, B, writes: () => writes, ev: (...xs) => { for (const x of xs) x.X(`svlOnStorage({key:'${K}'})`); } };
+  };
+  // an export from a fresh device (no progress, another sid) imported while another tab holds progress: the import is meant, no fight
+  for (const [label, setup, mid] of [['เซฟว่าง', `(()=>{ loadSaveFor(null); return exportSave(); })()`, false],
+                                     ['ตัวใหม่ Lv1 ทอง 0', `(()=>{ loadSaveFor(null); createChar('มือใหม่','mage'); return exportSave(); })()`, false],
+                                     ['ตัวใหม่ Lv1 · อีกแท็บกลางรอบ', `(()=>{ loadSaveFor(null); createChar('มือใหม่','mage'); return exportSave(); })()`, true]]) {
+    const W = two(); const other = fresh(); const triv = other.X(setup);
+    if (mid) W.B.X(`G={char:curChar(), over:false}`);
+    const imp = W.A.X(`importSave(${JSON.stringify(triv)}).ok`);
+    const w0 = W.writes(); for (let i = 0; i < 20; i++) W.ev(W.B, W.A); const dw = W.writes() - w0;
+    const s = JSON.parse(W.base.getItem(K));
+    ok('นำเข้าเซฟที่ยังไม่มีความคืบหน้า (' + label + ') ตอนอีกแท็บมีของ: ไม่วนเขียนทับ (≤ 2 ครั้งใน 20 รอบ) · เซฟที่นำเข้าอยู่ (ทอง 0)', imp === true && dw <= 2 && s.acct.gold === 0, { imp, dw, gold: s.acct.gold });
+  }
+  // a 'same' copy met inside svlWrite (a debounced write fires before the storage event): its classic records are kept
+  {
+    const W = two();
+    W.base.setItem('runeguard.best', JSON.stringify({ swordsman: { score: 99999, wave: 12, kills: 300, won: false } }));
+    W.B.X(`loadSaveFor(null)`);                                                   // B merged the record in memory only
+    W.A.X(`DEV.profile.give('m_crystal',1)`);                                     // A: a debounced write pending
+    W.base.removeItem(K); W.base.removeItem('runeguard.best');                     // site data cleared (records too)
+    W.ev(W.B);                                                                     // B writes its copy back (with the record)
+    W.A.X(`saveNow('flush')`);                                                    // A's write meets B's copy first
+    const s = JSON.parse(W.base.getItem(K));
+    ok('สำเนาเดียวกันที่เจอในทางเขียน (svlWrite): สถิติคลาสสิกของอีกแท็บไม่หาย · ของที่ค้างของแท็บนี้ลงด้วย', (s.acct.records.classic.swordsman || {}).score === 99999 && s.chars[0].inv.some(x => x.id === 'm_crystal'), s.acct.records.classic);
+  }
+  // a stored copy with a broken wp list (hand-edited) does not break importSave
+  {
+    const W = two(); const ex = W.A.X(`exportSave()`);
+    const st = JSON.parse(W.base.getItem(K)); st.wp = [null, { wb: 'w_abc', wc: 'nope' }, { wb: 'w_ok1', wc: 1e300 }]; W.base.setItem(K, JSON.stringify(st)); W.ev(W.A);
+    let r; try { r = W.A.X(`importSave(${JSON.stringify(ex)})`); } catch (e) { r = { threw: e.message }; }
+    const wp = JSON.parse(W.base.getItem(K)).wp;
+    ok('นำเข้าตอนเซฟในเครื่องมี wp เสีย: ไม่ล้ม · เก็บเฉพาะรายการที่ถูกรูปแบบ (wc จำกัดที่เพดาน)', r && r.ok === true && Array.isArray(wp) && wp.every(p => typeof p.wb === 'string' && Number.isInteger(p.wc) && p.wc <= 9e15), { r, wp });
+  }
+  // mid-run: an older copy of the save svlSeen holds (a lagging tab put it back) does not replace svlSeen
+  {
+    const W = two();
+    W.B.X(`G={char:curChar(), over:false}`);
+    const old = W.base.getItem(K);
+    W.A.X(`buyItem(curChar(),'m_dust',4)`); W.ev(W.B);                             // B mid-run sees the newer text
+    const newer = W.base.getItem(K);
+    W.base.setItem(K, old); W.ev(W.B);                                              // an older copy shows up (lagging tab)
+    ok('กลางรอบ: สำเนาที่เก่ากว่าของสายเดียวกันไม่แทนที่เซฟล่าสุดที่จำไว้ (svlSeen) · เขียนอันล่าสุดคืน', W.base.getItem(K) === newer && W.B.X(`svlSeen`) === newer, { stored: JSON.parse(W.base.getItem(K)).wc, seenWc: JSON.parse(W.B.X(`svlSeen`) || '{}').wc });
+  }
+}
 console.log('carry-over (c) · id ที่เป็นชื่อสมาชิก Object.prototype ถูกปฏิเสธ');
 {
   const { X } = fresh();

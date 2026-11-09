@@ -3484,7 +3484,7 @@ function loadSaveFor(owner){
   svlHook();
   const key=svlKeyFor(owner), best=svlBest(), raw=STORE.get(key);
   let r=svlParse(raw), from='main';
-  svlLast=raw; svlSeen=null;                                             // what this tab saw in the main key
+  svlLast=raw; svlSeen=null; svlMine='';                                 // what this tab saw in the main key
   if(r.k!=='ok'){ const b=svlRead(key+'.bak'); if(b.k==='ok'){ r=b; from='bak'; } else from=r.k==='none'&&b.k==='none'?'new':'lost'; }
   let s;
   try{ s=migrateSave(r.k==='ok'?r.o:null,best); }catch(e){ console.error(e); s=migrateSave(null,best); from='lost'; }
@@ -3505,7 +3505,12 @@ function svlWrite(reason,keepMt){
   // another tab saved since this tab read: keep its progress (reload, svlJudge) · prev null = the key was removed elsewhere: write this
   // one back · an older copy of this save (svlStaleP), a wipe, a broken text, or the same content in other text → written over
   let over='';
-  if(prev!==svlLast&&prev!==null){ const j=svlJudge(prev); if(j.act==='reload'){ if(!svlBusy) svlReload(j.tie); return false; } over=j.kind||''; }
+  // the key is gone while this tab holds a newer text from another tab (svlSeen, mid-run): that text goes back and this tab reloads it
+  // (the action that wanted to write is not stored · its caller reports the race) — this tab's older memory never goes out over it
+  if(prev===null&&svlSeenP()){ if(svlPut(null,svlSeen)) svlPersist=true; if(!svlBusy) svlReload(false); return false; }
+  if(prev!==svlLast&&prev!==null){ const j=svlJudge(prev); if(j.act==='reload'){ if(!svlBusy) svlReload(j.tie); return false; }
+    if(j.act==='same'&&pp.k==='ok') try{ svlMergeBest(SAVE,svRecsToBest(pp.o)); }catch(e){}   // its classic records are kept (svlAdopt)
+    over=j.kind||''; }
   // wc (write counter) orders copies of one save: +1 past both this save's own and the copy this write replaces, so the newest write
   // always carries the highest wc whatever the clock does (NTP, a date changed by hand) · mt stays the wall clock (shown to people)
   // · a write that reaches nothing puts both back (undo), so a failed write never makes this tab's copy look newer than it is
@@ -3538,7 +3543,9 @@ function svlReload(tie){ svlBusy=1; try{ loadSaveFor(svlOwner); }finally{ svlBus
 // holds a different save with no progress while this one has progress (a tab that started over after the clear) → this tab's
 // save is written back + toast, instead of reloading into an empty save.
 function svlFresh(){ if(!SAVE||svlSandbox||SAVE.ro||svlBusy) return false;
-  const cur=STORE.get(svlKeyFor(svlOwner)); if(cur===svlLast) return false;
+  const cur=STORE.get(svlKeyFor(svlOwner));
+  if(cur===svlLast){ if(!(svlSeenP()&&cur!==svlSeen&&svlStaleP(svlParse(cur)))) return false;
+    svlRestore(cur,'stale'); return svlFresh(); }                     // own older text back while svlSeen is newer: put it back, then reload it
   const j=svlJudge(cur);
   if(j.act==='restore'){ svlRestore(cur,j.kind); return false; }
   if(j.act==='same'){ svlAdopt(cur); return false; }
@@ -3567,12 +3574,21 @@ function svRecsToBest(o){ const r=o&&o.acct&&o.acct.records&&o.acct.records.clas
 // the older copy back
 function svlBakNewer(){ const b=svlRead(svlKeyFor(svlOwner)+'.bak'), sn=svlSeenP(), base=sn?sn.o:SAVE;
   return b.k==='ok'&&b.o.v<=SCHEMA_V&&b.o.sid===base.sid&&b.o.wb===base.wb&&Number.isInteger(b.o.wc)&&b.o.wc>svlWcOf(base); }
+// mid-run: keep the newest text another tab wrote · an older copy of svlSeen's own save and lineage (a lagging tab put it back) does
+// not replace it
+function svlSeeAdd(cur){ const c=svlParse(cur); if(c.k!=='ok') return; const sn=svlSeenP();
+  if(sn&&c.o.sid===sn.o.sid&&c.o.wb===sn.o.wb&&Number.isInteger(c.o.wc)&&c.o.wc<svlWcOf(sn.o)) return;
+  svlSeen=cur; }
 function svlSeenP(){ if(typeof svlSeen!=='string') return null; const c=svlParse(svlSeen); return c.k==='ok'&&c.o.v<=SCHEMA_V?c:null; }
 // storage was wiped elsewhere → 'wipe' (the main key is gone, or holds another save (other sid) with no progress while this one has
 // progress) · 'bad' (the main text no longer parses: this tab's copy is newer than .bak, which is one write behind) · '' = no
+// Judged against svlBase(), the copy this tab would write back (svlSeen mid-run, else its own) · a save with no progress that lists
+// that copy's lineage in wp (wc ≥ its wc) is an import the player made on purpose, not a wipe: reloaded, never fought over
+function svlBase(){ const sn=svlSeenP(); return sn?sn.o:SAVE; }
 function svlWiped(cur){ if(cur===null) return 'wipe';
-  const c=svlParse(cur); if(c.k==='bad') return 'bad';
-  if(!(c.k==='ok'&&c.o.v<=SCHEMA_V&&c.o.sid!==SAVE.sid&&!isTrivialSave(SAVE))) return '';
+  const c=svlParse(cur); if(c.k==='bad') return 'bad'; const B=svlBase();
+  if(!(c.k==='ok'&&c.o.v<=SCHEMA_V&&c.o.sid!==B.sid&&!isTrivialSave(B))) return '';
+  if(Array.isArray(c.o.wp)&&c.o.wp.some(p=>p&&p.wb===B.wb&&Number.isInteger(p.wc)&&p.wc>=svlWcOf(B))) return '';
   try{ return isTrivialSave(validateSave(c.o))?'wipe':''; }catch(e){ return ''; } }
 // the main key holds this same save (same sid) but an older copy than this tab's (smaller write counter wc): after a wipe, a tab
 // that had not seen this tab's later writes put its copy back (svlRestore keeps wc). Reloading it would undo this tab's purchases
@@ -3583,8 +3599,8 @@ function svlWiped(cur){ if(cur===null) return 'wipe';
 // (SAVE.wp, any sid) with wc ≤ the wc it had then: the import is newer than it.
 // Rule for later code (M3 cloud adopt / restore / resolve): replacing SAVE must go through a stamping svlWrite the same way.
 function svlStaleP(c){ if(!(c&&c.k==='ok'&&SAVE&&!SAVE.ro&&c.o.v<=SCHEMA_V&&typeof c.o.wb==='string'&&Number.isInteger(c.o.wc))) return false;
-  if(c.o.sid===SAVE.sid&&c.o.wb===SAVE.wb&&c.o.wc<svlWcOf(SAVE)) return true;
-  return Array.isArray(SAVE.wp)&&SAVE.wp.some(p=>p&&p.wb===c.o.wb&&c.o.wc<=p.wc); }
+  const B=svlBase(); if(c.o.sid===B.sid&&c.o.wb===B.wb&&c.o.wc<svlWcOf(B)) return true;   // older than the copy this tab would write back
+  return Array.isArray(B.wp)&&B.wp.some(p=>p&&p.wb===c.o.wb&&c.o.wc<=p.wc); }
 function svlWcOf(o){ return o&&Number.isInteger(o.wc)&&o.wc>0?o.wc:0; }
 const SVL_RESTORE_TH={wipe:'ข้อมูลเซฟในเครื่องถูกล้างจากที่อื่น · บันทึกคืนจากเกมที่เปิดอยู่แล้ว', bad:'เซฟในเครื่องเสีย · บันทึกคืนจากเกมที่เปิดอยู่แล้ว',
   stale:'อีกแท็บเขียนข้อมูลที่เก่ากว่าทับ · บันทึกคืนจากแท็บนี้แล้ว'};
@@ -3619,7 +3635,10 @@ function svlOnStorage(e){
   // another tab that makes progress before this run ends would win at onRunEnd and this tab's save, held only in memory, is gone
   // (svlStaleP too: a tab that is behind wrote its copy back over this tab's newer one → this one goes back at once, so neither the
   // stale tab's later writes nor a reload in a third tab can build on the older copy)
-  if(typeof G!=='undefined'&&G&&G.char&&!G.over){ if(!SAVE.ro&&!svlBusy){ const cur=STORE.get(svlKeyFor(svlOwner)); if(cur!==svlLast){ const j=svlJudge(cur); if(j.act==='restore') svlRestore(cur,j.kind); else if(j.act==='same') svlAdopt(cur); else if(svlParse(cur).k==='ok') svlSeen=cur; } } return; }
+  if(typeof G!=='undefined'&&G&&G.char&&!G.over){ if(!SAVE.ro&&!svlBusy){ const cur=STORE.get(svlKeyFor(svlOwner));
+    // storage came back to this tab's own text while it holds a newer one from another tab (svlSeen): that one goes back
+    if(cur===svlLast){ if(svlSeenP()&&cur!==svlSeen&&svlStaleP(svlParse(cur))) svlRestore(cur,'stale'); return; }
+    { const j=svlJudge(cur); if(j.act==='restore') svlRestore(cur,j.kind); else if(j.act==='same') svlAdopt(cur); else svlSeeAdd(cur); } } return; }
   svlFresh(); }
 function svlHook(){ if(svlHooked) return; svlHooked=true;            // flush a pending debounced save when the page goes away
   try{ const f=()=>{ if(svlTimer) saveNow('hide'); }; document.addEventListener('visibilitychange',()=>{ if(document.visibilityState==='hidden') f(); }); window.addEventListener('pagehide',f); }catch(e){}
@@ -3667,9 +3686,11 @@ function importSave(json){
   // for an older copy of its own save (svlStaleP) · the file's wc is ignored (a hand-edited 9e15 would pin it): svlWrite stamps wc
   // above this tab's and the stored copy's
   const key=svlKeyFor(svlOwner), sc=svlParse(STORE.get(key)), par=sc.k==='ok'&&typeof sc.o.wb==='string'&&Number.isInteger(sc.o.wc)?sc.o:s;
-  n.wp=[{wb:par.wb, wc:Math.max(svlWcOf(par),par.wb===s.wb?svlWcOf(s):0)}].concat(Array.isArray(par.wp)?par.wp:[]).filter(p=>typeof p.wb==='string').slice(0,4);
+  const okWp=p=>svObj(p)&&typeof p.wb==='string'&&/^w_[a-z0-9_]{1,24}$/.test(p.wb)&&Number.isInteger(p.wc)&&p.wc>=0;   // as validateSave keeps them
+  n.wp=[{wb:par.wb, wc:Math.max(svlWcOf(par),par.wb===s.wb?svlWcOf(s):0)}].concat(Array.isArray(par.wp)?par.wp:[]).filter(okWp).slice(0,4).map(p=>({wb:p.wb, wc:Math.min(SV_WCMAX,p.wc)}));
   n.wb=uid('w_'); n.wc=svlWcOf(s);                                       // a new lineage, ordered after the ones it replaced (wp)
   SAVE=n; svlLast=STORE.get(svlKeyFor(svlOwner)); const stored=svlWrite('import',false);
+  if(SAVE!==n) return {ok:false, err:SVL_RACE};                            // the write found another tab's save and reloaded instead
   svlMark(); BUS.emit('char',curChar());
   return {ok:true, err:'', warn:stored||svlSandbox?'':'บันทึกลงเครื่องไม่ได้ · เซฟที่นำเข้าอยู่ในหน่วยความจำเท่านั้น ปิดหน้านี้แล้วจะหาย'}; }
 function saveReadOnly(){ return !!(SAVE&&SAVE.ro); }
