@@ -46,7 +46,7 @@ function hdCardInfo(){
   G.choices.forEach((o,i)=>{ const c=box.children[i]; if(!c||c.querySelector('.hd-ci')) return; let lines=[];
     if(typeof tfCardQ==='function') tfCardQ(c,o);                        // ? → full details of this card (59)
     if(o.k==='new') lines=hdSkillLines(makeSkill(o.id)).map(([k,v])=>k+' '+String(v).split(' (')[0]);
-    else if(o.k==='up'||o.k==='evo'){ const t=hdNextText(o.s), cd=hdSkillLines(o.s).find(x=>x[0]==='คูลดาวน์');
+    else if(o.k==='up'||o.k==='evo'){ const t=hdNextText(o.s,o.k), cd=hdSkillLines(o.s).find(x=>x[0]==='คูลดาวน์');
       if(t) lines.push(...t.replace(/^[^:]*: /,'').split(' · '));
       if(cd&&!(t&&t.indexOf('คูลดาวน์')>=0)) lines.push('คูลดาวน์ '+String(cd[1]).split(' (')[0]+' (ไม่เปลี่ยน)'); }
     else if(o.k==='stat'){ lines=hdStatEffect(o.stat); const ds=c.querySelector('.ds');
@@ -269,10 +269,10 @@ function hdSkillLines(s){
   if(v('burn')) out.push(['ทิ้งทะเลเพลิง','มี']);
   return out; }
 // what the next card of this skill would change (★+1, or the evolution) · same effective numbers as hdSkillLines
-function hdNextText(s){
+function hdNextText(s,kind){   // kind 'up' / 'evo' = the card asking (★6–8 up cards of an unevolved skill are not its evolution)
   const cap=P.rank?(P.rank[s.id]||5):5;                                 // ★6–8 (27): Lv past 5 up to the trained ★
   if(s.def.type==='passive'&&s.lv>=Math.max(5,cap)) return ''; const now=new Map(hdSkillLines(s)); let label;
-  if(s.lv<5||s.lv<cap&&(s.evolved||!s.def.evo)){ s.lv++; try{ label='การ์ดถัดไป ★'+s.lv; var nxt=hdSkillLines(s); } finally{ s.lv--; } }
+  if(kind!=='evo'&&(s.lv<5||s.lv<cap&&(kind==='up'||s.evolved||!s.def.evo))){ s.lv++; try{ label='การ์ดถัดไป ★'+s.lv; var nxt=hdSkillLines(s); } finally{ s.lv--; } }
   else if(s.def.evo&&!s.evolved){ s.evolved=true; try{ label='เมื่อวิวัฒนาการเป็น '+s.def.evo.n; var nxt=hdSkillLines(s); } finally{ s.evolved=false; } }
   else return '';
   const ch=nxt.filter(([k,v])=>now.get(k)!==v).map(([k,v])=>k+' '+(now.has(k)?String(now.get(k)).split(' (')[0]+' → ':'')+String(v).split(' (')[0]);

@@ -12,7 +12,7 @@ function pv(s,k){ let v; if(s.evolved&&k in s.def.evo.set) v=s.def.evo.set[k]; e
   if(k in m.set) v=m.set[k]; if(k in m.add) v=(v||0)+m.add[k]; if(k in m.mul&&v!=null) v*=m.mul[k];
   if(k==='slow'&&v>.8) v=.8; else if(k==='dodge'&&v>.5) v=.5;          // milestone caps (slow ≥ 1 would stop / reverse enemies)
   return v; }
-function cdOf(s){ return Math.max(.08,pv(s,'cd')*P.cdMul); }
+function cdOf(s){ if(s.tfW) s.tfK=true; return Math.max(.08,pv(s,'cd')*P.cdMul); }   // tfW/tfK: cast seen by tfRun (27) · only inside its BEH call
 function countOf(s){ let n=pv(s,'count')||1; const t=s.def.type; if(t==='proj') n+=pv(s,'radial')?P.extraProj*2:P.extraProj; else if(t==='orbit') n+=P.extraProj; return n; }
 function makePlayer(cls){
   const p={cls,adv:null,x:0,y:0,vx:0,vy:0,kx:0,ky:0,r:15,hp:cls.hp,maxHp:0,lv:1,xp:0,need:xpNeed(1),skills:[],stats:{STR:0,AGI:0,VIT:0,INT:0,DEX:0,LUK:0},

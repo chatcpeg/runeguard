@@ -1567,7 +1567,7 @@ console.log('ต้นไม้สกิล (27) · ★6–8 · เซฟ v4');
     // save: junk nodes / levels / skills are dropped · tr survives a round trip
     ch.tr={thunder:{A1:9, ZZ:2, B1:'2', A3:1}, slash:{A1:1}, __proto__x:{A1:1}};
     const v=svChar(JSON.parse(JSON.stringify(ch))); o.tr=v.tr;
-    o.mig=migrateSave({v:3, acct:{}, chars:[Object.assign({},ch,{tr:{flame:{A1:2}}})]}).chars[0].tr;
+    o.mig=migrateSave({v:3, acct:{}, chars:[Object.assign({},ch,{sk:Object.assign({},ch.sk,{flame:2}), tr:{flame:{A1:2}}})]}).chars[0].tr;
     o.v=SCHEMA_V;
     // ★ caps: 5 before the advance · 8 for first-job skills after it · advanced skills stay 5
     o.cap=[rankCap(ch,'mbolt'), (ch.job='archmage', rankCap(ch,'mbolt')), rankCap(ch,'meteor')];
@@ -1580,7 +1580,7 @@ console.log('ต้นไม้สกิล (27) · ★6–8 · เซฟ v4');
   ok('มงกุฎต้องเลื่อนอาชีพก่อน', /เลื่อนอาชีพ/.test(r.crown), r.crown);
   ok('แต้มไม่พอ = ฝึกไม่ได้ (บอกจำนวน)', /แต้มรูนไม่พอ/.test(r.poor), r.poor);
   ok('รีเซ็ตต้นไม้ (Lv 30 ใช้สิทธิ์ฟรี 1 ครั้ง) → แต้มคืนครบ · trFree = 0', r.reset === true && r.after === 0 && r.freeFlag === 0, r);
-  ok('เซฟ: โหนดแปลก/ขั้นเกินถูกตัด · ขั้นเกิน max = max · สกิลต่างอาชีพถูกทิ้ง', JSON.stringify(r.tr) === JSON.stringify({thunder:{A1:3, A3:1, B1:2}}), r.tr);
+  ok('เซฟ: โหนดแปลก/ขั้นเกินถูกตัด · ขั้นเกิน max = max · สกิลต่างอาชีพถูกทิ้ง · A3 ที่ A2 ยังไม่เต็มถูกตัด', JSON.stringify(r.tr) === JSON.stringify({thunder:{A1:3, B1:2}}), r.tr);
   ok('เซฟ v3 → v4 ไม่เสียต้นไม้ · SCHEMA_V = 4', r.v === 4 && JSON.stringify(r.mig) === JSON.stringify({flame:{A1:2}}), r);
   ok('เพดาน ★: ก่อนเลื่อน 5 · หลังเลื่อนสกิลขั้นต้น 8 · สกิลขั้นสูง 5 · เซฟเก็บ ★8 เฉพาะตอนเลื่อนแล้ว', JSON.stringify(r.cap) === '[5,8,5]' && r.sv8 === 8 && r.sv5 === 5, r);
 }
@@ -1605,6 +1605,21 @@ console.log('ต้นไม้สกิล (27) · ★6–8 · เซฟ v4');
   ok('ในรอบ: ต้นไม้เข้า s.mod (ดาเมจ ×1.24 · ชิ่ง +2) · ความพิเศษเข้า s.fx · P.tf เปิด', JSON.stringify(r.mod) === '[1.24,2,true,true]', r.mod);
   ok('สกิลติดตัว: ความพิเศษไปอยู่ P.tfg (ทำงานกับทุกสกิล) ไม่ใช่ s.fx', JSON.stringify(r.glob) === '[true,true,true]', r.glob);
   ok('คลาสสิก: ไม่มี P.tf และไม่มี s.cx', r.classicTf === true, r);
+}
+
+console.log('ต้นไม้สกิล: ข้อที่ tester รอบ 1 เจอ');
+{
+  const { X } = fresh();
+  const r = X(`(()=>{ const o={}; const full={}; for(const n of tfNodes('holy')) full[n.id]=n.max;
+    const raw={cls:'cleric', name:'โกง', lv:1, job:null, sk:{holy:1}, tr:{holy:full, heal:full}};
+    const v=svChar(raw); o.f1=[tfSpent(v), JSON.stringify(v.tr)];
+    const ok={cls:'mage', name:'ดี', lv:40, job:'archmage', sk:{mbolt:8}, tr:{mbolt:{A1:3,A2:2,A3:1,B1:2,B2:2,C1:3}}};
+    const w=svChar(ok); o.keep=tfSpent(w);
+    SAVE=newSave(null); SAVE.chars.push(w); SAVE.active=w.id; w.sp=0; resetSkills(w); o.f2=JSON.stringify(w.tr);
+    return o; })()`);
+  ok('เซฟ: ต้นไม้ที่เงื่อนไขไม่ครบ/แต้มรูนเกิน Base Lv ถูกตัด (Lv1 ★1 = ไม่มีโหนด)', r.f1[0] === 0 && r.f1[1] === '{}', r.f1);
+  ok('เซฟ: ต้นไม้ที่ถูกกติกายังอยู่ครบ', r.keep === 3 + 4 + 4 + 2 + 4 + 3, r.keep);
+  ok('รีเซ็ตสกิล (★ เหลือ 1): โหนดที่ต้อง ★2/★4 ถูกล้าง แต้มรูนกลับมา', r.f2 === '{}', r.f2);
 }
 
 console.log(`\nผล: ผ่าน ${pass} · ไม่ผ่าน ${fail}`);

@@ -1387,7 +1387,7 @@ function pv(s,k){ let v; if(s.evolved&&k in s.def.evo.set) v=s.def.evo.set[k]; e
   if(k in m.set) v=m.set[k]; if(k in m.add) v=(v||0)+m.add[k]; if(k in m.mul&&v!=null) v*=m.mul[k];
   if(k==='slow'&&v>.8) v=.8; else if(k==='dodge'&&v>.5) v=.5;          // milestone caps (slow ≥ 1 would stop / reverse enemies)
   return v; }
-function cdOf(s){ return Math.max(.08,pv(s,'cd')*P.cdMul); }
+function cdOf(s){ if(s.tfW) s.tfK=true; return Math.max(.08,pv(s,'cd')*P.cdMul); }   // tfW/tfK: cast seen by tfRun (27) · only inside its BEH call
 function countOf(s){ let n=pv(s,'count')||1; const t=s.def.type; if(t==='proj') n+=pv(s,'radial')?P.extraProj*2:P.extraProj; else if(t==='orbit') n+=P.extraProj; return n; }
 function makePlayer(cls){
   const p={cls,adv:null,x:0,y:0,vx:0,vy:0,kx:0,ky:0,r:15,hp:cls.hp,maxHp:0,lv:1,xp:0,need:xpNeed(1),skills:[],stats:{STR:0,AGI:0,VIT:0,INT:0,DEX:0,LUK:0},
@@ -1498,7 +1498,7 @@ function addNum(x,y,s,k){ if(G.auto||G.texts.length>140) return; G.texts.push({x
 /* ================= combat core ================= */
 function damageEnemy(e,base,s,o){
   if(e.dead) return 0; o=o||{};
-  const tf=s!==undefined&&P.tf&&!o.fxd; if(tf) base*=tfPre(e,s);          // skill-tree effects (27) · character runs only
+  const tf=!!s&&P.tf&&!o.fxd; if(tf) base*=tfPre(e,s);          // skill-tree effects (27) · character runs only
   const crit=Math.random()<P.crit+(o.crit||0);
   let dmg=base*P.might*(crit?P.critMult:1);
   if(P.rage) dmg*=1+P.rage*(1-P.hp/P.maxHp);
@@ -2710,7 +2710,7 @@ const TF_KN={dmg:'ดาเมจ', cd:'คูลดาวน์', count:'จำ
   crit:'คริติคอล', knock:'แรงกระแทก', range:'ระยะฟัน', r:'รัศมี', stun:'สตัน', slow:'ชะลอ', freeze:'แช่แข็ง', spin:'ความเร็วหมุน', absorb:'โล่ดูดซับ',
   nova:'ดาเมจระเบิด', tick:'ช่วงห่างแต่ละครั้ง', bounces:'ชิ่ง', jump:'ระยะกระโดด', hits:'จำนวนครั้งที่โดน', dur:'ระยะเวลา', pull:'แรงดูด', trap:'ระเบิดกับดัก',
   heal:'ฟื้น HP', healPct:'ฟื้น HP ตาม % HP สูงสุด', targets:'เป้าต่อครั้ง', rage:'โทสะ', steal:'ฟื้นต่อการสังหาร', dodge:'หลบหลีก'};
-const TF_PCTK={slow:1, dodge:1, crit:1, healPct:1}, TF_SECK={stun:1, freeze:1};
+const TF_PCTK={slow:1, dodge:1, crit:1, healPct:1}, TF_SECK={stun:1, freeze:1}, TF_REL={rage:1, steal:1};
 const tfPc=v=>(Math.round(v*1000)/10)+'%', tfM=r=>(Math.round(r)/10)+' ม.', tfN=v=>String(+(+v).toFixed(2));
 const TF_ZK={fire:'เปลวไฟ', ice:'น้ำแข็ง', poison:'พิษ', wind:'ลมคม'};
 // special effects: n = node name when used as a proc node · d(p) = text · glob = also allowed on passive skills (hit by any skill)
@@ -2821,7 +2821,7 @@ rain:[['ศรหนัก','🌧️',['dmg','*',.08,3],['hits','+',1,2],{fx:'sh
 trap:[['ดินปืน','💣',['trap','*',.1,3],['knock','*',.15,2],{fx:'burst',nm:'ระเบิดลูกโซ่',i:'💥',r:60,pct:.5}],
   ['ดักเพิ่ม','➕',['count','+',1,2],['r','*',.06,2],{fx:'chill',nm:'กับดักน้ำแข็ง',i:'❄️',ch:1,t:.8}],
   ['วางไว','⏱️',['cd','c',.05,3],['dur','*',.15,2],{fx:'trail',nm:'พื้นไฟหลังระเบิด',i:'🔥',kind:'fire',r:55,pct:.25,dur:3}],
-  {fx:'echo',nm:'วางคู่',i:'👑',every:2}],
+  {fx:'echo',nm:'วางคู่',i:'👑',every:3}],
 hawk:[['กรงเล็บ','🦅',['dmg','*',.08,3],['r','*',.1,2],{fx:'burst',nm:'โฉบระเบิด',i:'💥',r:45,pct:.4}],
   ['ฝูงเหยี่ยว','➕',['count','+',1,1],['cd','c',.06,2],{fx:'shock',nm:'จิกตาบอด',i:'⚡',ch:.25,t:.6}],
   ['ล่าเหยื่อ','🎯',['@ignite',.15,3],['@chill',.05,2],{fx:'execute',nm:'ล่าตัวอ่อนแอ',i:'💀',hp:.35,m:1.6}],
@@ -2907,13 +2907,13 @@ smoke:[['ควันพิษ','💨',['dmg','*',.08,3],['stun','+',.1,2],{fx:'
 const TF_COST=[0,1,2,4], TF_CROWN=6;
 
 /* ---- node list of a tree (cached) ---- */
-const TF_CACHE={};
+const TF_CACHE=Object.create(null);
 function tfNumText(k,op,per,l){ const n=TF_KN[k]||k, v=per*l;
   if(op==='c') return n+' −'+tfPc(v);
-  if(op==='*') return n+' '+(v<0?'−':'+')+tfPc(Math.abs(v));
+  if(op==='*') return TF_REL[k]?n+' ×'+tfN(1+v)+' (คูณค่าเดิม)':n+' '+(v<0?'−':'+')+tfPc(Math.abs(v));
   return n+' '+(v<0?'−':'+')+(TF_PCTK[k]?tfPc(Math.abs(v)):TF_SECK[k]?tfN(Math.abs(v))+' วิ':tfN(Math.abs(v))); }
 function tfNodes(id){
-  if(TF_CACHE[id]) return TF_CACHE[id]; const T=TFD[id]; if(!T) return (TF_CACHE[id]=[]);
+  if(typeof id!=='string') return []; if(TF_CACHE[id]) return TF_CACHE[id]; const T=svHas(TFD,id)?TFD[id]:null; if(!T) return (TF_CACHE[id]=[]);
   const out=[];
   T.slice(0,3).forEach((br,b)=>{ const L='ABC'[b];
     [br[2],br[3]].forEach((x,j)=>{ const t=j+1, proc=typeof x[0]==='string'&&x[0][0]==='@';
@@ -2932,7 +2932,7 @@ function tfText(nd,l){
   return TFX[nd.fx].d(nd.p); }
 
 /* ---- rune points + rules (character side) ---- */
-function tfOf(ch,id){ return ch&&ch.tr&&ch.tr[id]||{}; }
+function tfOf(ch,id){ return ch&&ch.tr&&svHas(ch.tr,id)&&ch.tr[id]||{}; }
 function tfLv(ch,id,nid){ return tfOf(ch,id)[nid]|0; }
 function tfSpentOne(ch,id){ let n=0; const t=tfOf(ch,id); for(const nd of tfNodes(id)) n+=(t[nd.id]|0)*nd.cost; return n; }
 function tfSpent(ch){ let n=0; for(const id in (ch&&ch.tr)||{}) n+=tfSpentOne(ch,id); return n; }
@@ -2971,8 +2971,16 @@ function tfReset(ch,id,o){
   if(way==='scroll'){ if(!(o&&o.scroll)||!(typeof invRemove==='function'&&invRemove(ch,'u_forget',1))) return false; }
   if(way==='freeOnce') ch.resets.trFree=0;
   delete ch.tr[id]; if(typeof pgSave==='function') pgSave(ch,'resetTree',true); return true; }
+// keep only what the rules allow (save load · after resetSkills · prepareRun): nodes in tree order whose requirements hold with
+// the nodes kept so far · then whole trees dropped from the last until the spend fits the rune points (tester r1 F1/F2)
+function tfSanitize(ch){ if(!ch||!ch.tr) return ch; const tmp={sk:ch.sk||{}, job:ch.job, lv:ch.lv, tr:{}}, out={};
+  for(const id of Object.keys(ch.tr)){ const t=ch.tr[id]; if(!t||!TFD[id]||!svHas(TFD,id)) continue; tmp.tr[id]={};
+    for(const nd of tfNodes(id)){ const want=Math.min(nd.max,t[nd.id]|0); for(let l=0;l<want;l++){ if(!tfReqs(tmp,id,nd).every(q=>q.ok)) break; tmp.tr[id][nd.id]=l+1; } }
+    if(Object.keys(tmp.tr[id]).length) out[id]=tmp.tr[id]; else delete tmp.tr[id]; }
+  const ids=Object.keys(out); while(ids.length&&tfSpent({tr:out})>tfTotal(ch)) delete out[ids.pop()];
+  ch.tr=out; return ch; }
 // run copy (prepareRun): only skills of the character's pool
-function tfRunTree(ch){ const o={}; const pool=typeof pgSkillPool==='function'?pgSkillPool(ch):Object.keys(ch.tr||{});
+function tfRunTree(ch){ const o={}; ch=tfSanitize(JSON.parse(JSON.stringify({sk:ch.sk, job:ch.job, lv:ch.lv, tr:ch.tr||{}, cls:ch.cls}))); const pool=typeof pgSkillPool==='function'?pgSkillPool(ch):Object.keys(ch.tr||{});
   for(const id of pool){ const t=tfOf(ch,id); if(Object.keys(t).length) o[id]=Object.assign({},t); } return o; }
 
 /* ---- in-run: numbers + effects of one skill (called from sxMods) ---- */
@@ -3025,7 +3033,7 @@ function tfHit(e,s,base,dealt){
       if(F.pull&&tfICD(s||P,'pull',.25)){ const r=F.pull.r*P.area;
         for(const q of query(e.x,e.y,r+60)){ if(q.dead||q.boss||q===e) continue; const dx=e.x-q.x, dy=e.y-q.y, d=Math.hypot(dx,dy); if(d>r||d<1) continue; const f=220/Math.max(.5,q.mass); q.kx+=dx/d*f; q.ky+=dy/d*f; } } }
     if(F.leech&&dealt>0) healP(dealt*F.leech.pct);
-    if(F.trail&&s&&tfICD(s,'trail',.35)&&tfRoom()) addZone({x:e.x,y:e.y,r:F.trail.r*P.area,dur:F.trail.dur,tick:.5,dmg:base*F.trail.pct,slow:F.trail.slow||0,kind:F.trail.kind||'fire',src:s,fxd:true});
+    if(F.trail&&s&&tfICD(s,'trail',.35)&&G.zones.reduce((n,z)=>n+(z.fxd?1:0),0)<12&&tfRoom()) addZone({x:e.x,y:e.y,r:F.trail.r*P.area,dur:F.trail.dur,tick:.5,dmg:base*F.trail.pct,slow:F.trail.slow||0,kind:F.trail.kind||'fire',src:s,fxd:true});
     if(F.shards&&F.shards.on!=='kill'&&s&&Math.random()<F.shards.ch&&tfICD(s,'shards',.1)&&tfRoom()){ const n=F.shards.n, a0=Math.random()*TAU;
       for(let i=0;i<n;i++) tfBolt(e.x,e.y,a0+i*TAU/n,base*F.shards.pct,s,'dagger',.45); } } }
 // a skill cast (detected by tfRun) → echo / radial / mend
@@ -3042,9 +3050,8 @@ function tfRun(dt){
   G.tfN=0;
   for(const s of P.skills){
     if(!s.fx){ BEH[s.def.type](s,dt); continue; }
-    const c0=s.cdT, t0=s.st.t; BEH[s.def.type](s,dt);
-    const cast=s.def.type==='shield'?(s.st.t!==undefined&&t0!==undefined&&s.st.t>t0+.2):(s.cdT>c0+1e-9&&s.cdT>=cdOf(s)-1e-6);
-    if(cast) tfCast(s); }
+    s.tfW=true; s.tfK=false; try{ BEH[s.def.type](s,dt); } finally{ s.tfW=false; }   // a real cast asks cdOf for its cooldown (15 cdOf sets s.tfK)
+    if(s.tfK) tfCast(s); }
   const B=G.tfBurn; if(B&&B.length){ for(const b of B){ b.t-=dt; b.nt-=dt; if(b.e.dead||b.t<=0){ b.dead=true; continue; }
       if(b.nt<=0){ b.nt=.5; damageEnemy(b.e,b.d,b.s,{fxd:true,quiet:true});
         if(!G.auto) part({x:b.e.x+rand(-5,5),y:b.e.y-b.e.r*.6,vx:rand(-8,8),vy:rand(-50,-25),life:.45,s:2.5,c:'#ff9a3a',g:-10,drag:1,k:'sq',add:true}); } }
@@ -4066,6 +4073,7 @@ function svChar(c,seen){
   const tr=svObj(c.tr)?c.tr:{}; o.tr={};                                // skill trees (27): known nodes only, each 0…max
   for(const id of cls.skills.concat(adv?adv.skills:[])){ const t=svObj(tr[id])?tr[id]:null; if(!t) continue; const q={};
     for(const nd of tfNodes(id)){ const l=svInt(t[nd.id],0,nd.max,0); if(l) q[nd.id]=l; } if(Object.keys(q).length) o.tr[id]=q; }
+  tfSanitize(o);                                                         // requirements + rune points (lv) hold, like sp / pts
   if(!o.sk[first]) o.sk[first]=1;                                   // the free ★1 of the first skill never goes away
   const pas=svObj(c.pas)?c.pas:{}; o.pas={};
   for(const id in PASSIVES){ const w=PASSIVES[id].own; if(w!==cls.id&&w!==o.job) continue; const r=svInt(pas[id],0,cap.rank,0); if(r) o.pas[id]=r; }
@@ -4604,7 +4612,7 @@ function resetSkills(ch,o){
   ch=pgFresh(ch); if(!ch||pgRO()) return false; const c=pgCls(ch); if(!c) return false;
   const spent=pgSpSpent(ch); if(!spent) return false;
   if(!pgPayReset(ch,'sk',o)) return false;
-  const first=c.skills[0]; ch.sk={[first]:1}; ch.pas={}; ch.sp+=spent;
+  const first=c.skills[0]; ch.sk={[first]:1}; ch.pas={}; ch.sp+=spent; tfSanitize(ch);   // trees whose ★ requirement is gone go too (rune points back)
   ch.load=ch.load.filter(id=>ch.sk[id]>0); if(!ch.load.length) ch.load=[first];
   pgSave(ch,'resetSkills',true); return true; }
 function setLoadout(ch,ids){
@@ -5868,7 +5876,7 @@ function hdCardInfo(){
   G.choices.forEach((o,i)=>{ const c=box.children[i]; if(!c||c.querySelector('.hd-ci')) return; let lines=[];
     if(typeof tfCardQ==='function') tfCardQ(c,o);                        // ? → full details of this card (59)
     if(o.k==='new') lines=hdSkillLines(makeSkill(o.id)).map(([k,v])=>k+' '+String(v).split(' (')[0]);
-    else if(o.k==='up'||o.k==='evo'){ const t=hdNextText(o.s), cd=hdSkillLines(o.s).find(x=>x[0]==='คูลดาวน์');
+    else if(o.k==='up'||o.k==='evo'){ const t=hdNextText(o.s,o.k), cd=hdSkillLines(o.s).find(x=>x[0]==='คูลดาวน์');
       if(t) lines.push(...t.replace(/^[^:]*: /,'').split(' · '));
       if(cd&&!(t&&t.indexOf('คูลดาวน์')>=0)) lines.push('คูลดาวน์ '+String(cd[1]).split(' (')[0]+' (ไม่เปลี่ยน)'); }
     else if(o.k==='stat'){ lines=hdStatEffect(o.stat); const ds=c.querySelector('.ds');
@@ -6091,10 +6099,10 @@ function hdSkillLines(s){
   if(v('burn')) out.push(['ทิ้งทะเลเพลิง','มี']);
   return out; }
 // what the next card of this skill would change (★+1, or the evolution) · same effective numbers as hdSkillLines
-function hdNextText(s){
+function hdNextText(s,kind){   // kind 'up' / 'evo' = the card asking (★6–8 up cards of an unevolved skill are not its evolution)
   const cap=P.rank?(P.rank[s.id]||5):5;                                 // ★6–8 (27): Lv past 5 up to the trained ★
   if(s.def.type==='passive'&&s.lv>=Math.max(5,cap)) return ''; const now=new Map(hdSkillLines(s)); let label;
-  if(s.lv<5||s.lv<cap&&(s.evolved||!s.def.evo)){ s.lv++; try{ label='การ์ดถัดไป ★'+s.lv; var nxt=hdSkillLines(s); } finally{ s.lv--; } }
+  if(kind!=='evo'&&(s.lv<5||s.lv<cap&&(kind==='up'||s.evolved||!s.def.evo))){ s.lv++; try{ label='การ์ดถัดไป ★'+s.lv; var nxt=hdSkillLines(s); } finally{ s.lv--; } }
   else if(s.def.evo&&!s.evolved){ s.evolved=true; try{ label='เมื่อวิวัฒนาการเป็น '+s.def.evo.n; var nxt=hdSkillLines(s); } finally{ s.evolved=false; } }
   else return '';
   const ch=nxt.filter(([k,v])=>now.get(k)!==v).map(([k,v])=>k+' '+(now.has(k)?String(now.get(k)).split(' (')[0]+' → ':'')+String(v).split(' (')[0]);
@@ -6343,7 +6351,7 @@ const TF_HELP={
   <h4>ลำต้น ★</h4><p>ฝึกที่หน้าสกิลด้วย<b>แต้มสกิล</b> (ได้จาก Job Lv) · ★ คือ Lv สูงสุดที่การ์ดในรอบอัปสกิลนี้ได้ · ★1–5 ขั้นต้น · ✦★6–8 ขั้นสอง เปิดให้สกิลขั้นต้นหลังเลื่อนอาชีพ</p>
   <h4>3 สาย × 3 ชั้น</h4><p>แต่ละสายทำให้สกิลเก่งคนละทาง · ชั้น 1–2 (สี่เหลี่ยม) เพิ่มตัวเลขหรือโอกาสติดผล · ชั้น 3 (วงกลม) คือ<b>ความพิเศษ</b>ที่เปลี่ยนวิธีทำงานของสกิล</p>
   <h4>เงื่อนไข</h4><table>${tfRow('ชั้น 1','ลำต้น ★2')}${tfRow('ชั้น 2','ลำต้น ★4 + ชั้น 1 ของสายเดียวกันเต็ม')}${tfRow('ชั้น 3','ชั้น 2 ของสายเดียวกันเต็ม')}${tfRow('สายกลาง','ชั้น 2 ต้องมีชั้น 1 ของสายซ้ายขั้น 2 · ชั้น 3 ต้องมีชั้น 2 ของสายซ้ายขั้น 1 (เส้นประ = ข้ามสาย)')}${tfRow('👑 มงกุฎ','เลื่อนอาชีพแล้ว + ลำต้น ★5 + ความพิเศษ 2 ใน 3 สาย')}</table>
-  <h4>แต้มรูน</h4><table>${tfRow('ได้','1 แต้มต่อ Base Lv (ตัวละคร Lv 60 = 60 แต้ม) ใช้ร่วมกันทุกต้น')}${tfRow('ชั้น 1','1 แต้มต่อขั้น')}${tfRow('ชั้น 2','2 แต้มต่อขั้น')}${tfRow('ชั้น 3','4 แต้ม')}${tfRow('มงกุฎ','6 แต้ม')}${tfRow('เต็มต้น','ประมาณ 38–39 แต้ม · ต้องเลือกว่าจะลงลึกสกิลไหน')}</table>
+  <h4>แต้มรูน</h4><table>${tfRow('ได้','1 แต้มต่อ Base Lv (ตัวละคร Lv 60 = 60 แต้ม) ใช้ร่วมกันทุกต้น')}${tfRow('ชั้น 1','1 แต้มต่อขั้น')}${tfRow('ชั้น 2','2 แต้มต่อขั้น')}${tfRow('ชั้น 3','4 แต้ม')}${tfRow('มงกุฎ','6 แต้ม')}${tfRow('เต็มต้น','37–39 แต้ม · ต้องเลือกว่าจะลงลึกสกิลไหน')}</table>
   <h4>รีเซ็ต</h4><p>รีเซ็ตทีละต้น ได้แต้มรูนคืนครบ · ฟรีก่อน Lv ${BAL.RESET.freeBelow} · หลังจากนั้นฟรี 1 ครั้งต่อตัวละคร · ครั้งต่อไปใช้ม้วนลืมเลือน 1 ม้วน</p>
   <h4>ผลพิเศษทำงานอย่างไร</h4><p>"ร่ายครั้งที่ N" นับเฉพาะตอนสกิลทำงานจริง · ผลที่เกิดจากความพิเศษ (ระเบิด สะเก็ด พื้นไฟ) ไม่ทำให้เกิดผลพิเศษซ้อนอีก · ความพิเศษของสกิลติดตัว (passive) ทำงานกับการโจมตีของทุกสกิล</p>`],
   skills:['หน้าสกิล',()=>`<p>ที่นี่ใช้แต้ม 2 แบบ</p><table>${tfRow('แต้มสกิล','ได้ 1 แต้มต่อ Job Lv · ใช้ฝึก ★ ของสกิลและความสามารถติดตัว')}${tfRow('แต้มรูน','ได้ 1 แต้มต่อ Base Lv · ใช้ในต้นไม้สกิล 🌳')}</table>
@@ -6360,8 +6368,8 @@ function tfHelp(key){ const h=TF_HELP[key]; if(h) tfHelpBox(h[0],h[1]()); }
 /* ---- tree window ---- */
 let TFW={id:null, sel:'A1', box:null};
 function tfCh(){ try{ return curChar(); }catch(e){ return null; } }
-function tfOpen(id){ if(!SK[id]||!TFD[id]) return; TFW.id=id; TFW.sel='A1'; const box=shMk('div','tf-win'); TFW.box=box;
-  box.addEventListener('click',tfClick); sheet(box,{title:'🌳 ต้นไม้สกิล · '+SK[id].n, onClose:()=>{ TFW.box=null; }}); tfRender(); }
+function tfOpen(id){ if(!svHas(SK,id)||!svHas(TFD,id)) return; TFW.id=id; TFW.sel='A1'; const box=shMk('div','tf-win'); TFW.box=box;
+  box.addEventListener('click',tfClick); sheet(box,{title:'🌳 ต้นไม้สกิล · '+SK[id].n, onClose:()=>{ if(TFW.box===box) TFW.box=null; }}); tfRender(); }
 function tfState(ch,id,nd){ const l=tfLv(ch,id,nd.id), ok=tfReqs(ch,id,nd).every(q=>q.ok); return l>=nd.max?'full':l>0?'got':ok?'ready':'lock'; }
 function tfRender(){
   const box=TFW.box, id=TFW.id, ch=tfCh(); if(!box||!id) return; if(!ch){ box.textContent='ไม่มีตัวละคร'; return; }
@@ -6430,7 +6438,7 @@ function tfCardDetail(o){
   if(o.k==='new'){ const d=SK[o.id], s=makeSkill(o.id); if(P.sx){ s.cx=true; s.mod=null; }
     T.push('<p>'+tfE(d.d)+'</p><h4>ตัวเลข Lv 1</h4><p>'+P2(s).map(tfE).join('<br>')+'</p>');
     if(P.rank) T.push('<h4>เพดาน</h4><p>ฝึกไว้ ★'+cap(o.id)+' → รอบนี้อัปได้ถึง Lv '+cap(o.id)+'</p>'); skill(d,o.id); return [d.i+' สกิลใหม่: '+d.n,T.join('')]; }
-  if(o.k==='up'||o.k==='evo'){ const s=o.s, d=s.def, nx=hdNextText(s);
+  if(o.k==='up'||o.k==='evo'){ const s=o.s, d=s.def, nx=hdNextText(s,o.k);
     T.push('<p>'+tfE(o.k==='evo'?d.evo.d:d.d)+'</p><h4>ตอนนี้ (Lv '+s.lv+(s.evolved?' · วิวัฒนาการแล้ว':'')+')</h4><p>'+P2(s).map(tfE).join('<br>')+'</p>');
     if(nx) T.push('<h4>หลังเลือก</h4><p>'+tfE(nx).replace(/ · /g,'<br>')+'</p>');
     if(P.rank) T.push('<h4>เพดาน</h4><p>ฝึกไว้ ★'+cap(s.id)+(rankCap(G.char,s.id)>cap(s.id)?' · ฝึกเพิ่มได้ถึง ★'+rankCap(G.char,s.id)+' ที่หน้าสกิล':'')+'</p>');
@@ -6448,7 +6456,7 @@ function tfCardQ(c,o){
   if(c.querySelector('.tf-cq')) return; const q=document.createElement('span'); q.className='tf-cq'; q.textContent='?'; q.setAttribute('role','button');
   q.setAttribute('aria-label','อธิบายการ์ดนี้ละเอียด'); q.title='อธิบายละเอียด';
   const go=e=>{ e.preventDefault(); e.stopPropagation(); try{ const [t,h]=tfCardDetail(o); tfHelpBox(t,h); }catch(er){ console.error(er); } };
-  q.addEventListener('click',go); q.addEventListener('pointerdown',e=>e.stopPropagation()); c.append(q);
+  q.tabIndex=0; q.addEventListener('click',go); q.addEventListener('keydown',e=>{ if(e.key==='Enter'||e.key===' ') go(e); }); q.addEventListener('pointerdown',e=>e.stopPropagation()); c.append(q);
   const head=document.getElementById('lvTitle'); if(head&&!document.getElementById('tfLvQ')){ const b=document.createElement('button'); b.type='button'; b.id='tfLvQ'; b.className='tf-q tf-lvq';
     b.textContent='?'; b.setAttribute('aria-label','อธิบายการเลือกการ์ด'); b.addEventListener('click',e=>{ e.stopPropagation(); tfHelp('level'); }); head.after(b); } }
 // dev (§7.9): RG.tree.buy('thunder','A1') on the active character · RG.tree.info() = rune points + trees · RG.tree.open(id) · RG.tree.fx() = effects of the running skills

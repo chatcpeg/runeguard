@@ -170,7 +170,7 @@ function resetSkills(ch,o){
   ch=pgFresh(ch); if(!ch||pgRO()) return false; const c=pgCls(ch); if(!c) return false;
   const spent=pgSpSpent(ch); if(!spent) return false;
   if(!pgPayReset(ch,'sk',o)) return false;
-  const first=c.skills[0]; ch.sk={[first]:1}; ch.pas={}; ch.sp+=spent;
+  const first=c.skills[0]; ch.sk={[first]:1}; ch.pas={}; ch.sp+=spent; tfSanitize(ch);   // trees whose ★ requirement is gone go too (rune points back)
   ch.load=ch.load.filter(id=>ch.sk[id]>0); if(!ch.load.length) ch.load=[first];
   pgSave(ch,'resetSkills',true); return true; }
 function setLoadout(ch,ids){

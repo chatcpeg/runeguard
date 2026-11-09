@@ -24,7 +24,7 @@ const TF_KN={dmg:'ดาเมจ', cd:'คูลดาวน์', count:'จำ
   crit:'คริติคอล', knock:'แรงกระแทก', range:'ระยะฟัน', r:'รัศมี', stun:'สตัน', slow:'ชะลอ', freeze:'แช่แข็ง', spin:'ความเร็วหมุน', absorb:'โล่ดูดซับ',
   nova:'ดาเมจระเบิด', tick:'ช่วงห่างแต่ละครั้ง', bounces:'ชิ่ง', jump:'ระยะกระโดด', hits:'จำนวนครั้งที่โดน', dur:'ระยะเวลา', pull:'แรงดูด', trap:'ระเบิดกับดัก',
   heal:'ฟื้น HP', healPct:'ฟื้น HP ตาม % HP สูงสุด', targets:'เป้าต่อครั้ง', rage:'โทสะ', steal:'ฟื้นต่อการสังหาร', dodge:'หลบหลีก'};
-const TF_PCTK={slow:1, dodge:1, crit:1, healPct:1}, TF_SECK={stun:1, freeze:1};
+const TF_PCTK={slow:1, dodge:1, crit:1, healPct:1}, TF_SECK={stun:1, freeze:1}, TF_REL={rage:1, steal:1};
 const tfPc=v=>(Math.round(v*1000)/10)+'%', tfM=r=>(Math.round(r)/10)+' ม.', tfN=v=>String(+(+v).toFixed(2));
 const TF_ZK={fire:'เปลวไฟ', ice:'น้ำแข็ง', poison:'พิษ', wind:'ลมคม'};
 // special effects: n = node name when used as a proc node · d(p) = text · glob = also allowed on passive skills (hit by any skill)
@@ -135,7 +135,7 @@ rain:[['ศรหนัก','🌧️',['dmg','*',.08,3],['hits','+',1,2],{fx:'sh
 trap:[['ดินปืน','💣',['trap','*',.1,3],['knock','*',.15,2],{fx:'burst',nm:'ระเบิดลูกโซ่',i:'💥',r:60,pct:.5}],
   ['ดักเพิ่ม','➕',['count','+',1,2],['r','*',.06,2],{fx:'chill',nm:'กับดักน้ำแข็ง',i:'❄️',ch:1,t:.8}],
   ['วางไว','⏱️',['cd','c',.05,3],['dur','*',.15,2],{fx:'trail',nm:'พื้นไฟหลังระเบิด',i:'🔥',kind:'fire',r:55,pct:.25,dur:3}],
-  {fx:'echo',nm:'วางคู่',i:'👑',every:2}],
+  {fx:'echo',nm:'วางคู่',i:'👑',every:3}],
 hawk:[['กรงเล็บ','🦅',['dmg','*',.08,3],['r','*',.1,2],{fx:'burst',nm:'โฉบระเบิด',i:'💥',r:45,pct:.4}],
   ['ฝูงเหยี่ยว','➕',['count','+',1,1],['cd','c',.06,2],{fx:'shock',nm:'จิกตาบอด',i:'⚡',ch:.25,t:.6}],
   ['ล่าเหยื่อ','🎯',['@ignite',.15,3],['@chill',.05,2],{fx:'execute',nm:'ล่าตัวอ่อนแอ',i:'💀',hp:.35,m:1.6}],
@@ -221,13 +221,13 @@ smoke:[['ควันพิษ','💨',['dmg','*',.08,3],['stun','+',.1,2],{fx:'
 const TF_COST=[0,1,2,4], TF_CROWN=6;
 
 /* ---- node list of a tree (cached) ---- */
-const TF_CACHE={};
+const TF_CACHE=Object.create(null);
 function tfNumText(k,op,per,l){ const n=TF_KN[k]||k, v=per*l;
   if(op==='c') return n+' −'+tfPc(v);
-  if(op==='*') return n+' '+(v<0?'−':'+')+tfPc(Math.abs(v));
+  if(op==='*') return TF_REL[k]?n+' ×'+tfN(1+v)+' (คูณค่าเดิม)':n+' '+(v<0?'−':'+')+tfPc(Math.abs(v));
   return n+' '+(v<0?'−':'+')+(TF_PCTK[k]?tfPc(Math.abs(v)):TF_SECK[k]?tfN(Math.abs(v))+' วิ':tfN(Math.abs(v))); }
 function tfNodes(id){
-  if(TF_CACHE[id]) return TF_CACHE[id]; const T=TFD[id]; if(!T) return (TF_CACHE[id]=[]);
+  if(typeof id!=='string') return []; if(TF_CACHE[id]) return TF_CACHE[id]; const T=svHas(TFD,id)?TFD[id]:null; if(!T) return (TF_CACHE[id]=[]);
   const out=[];
   T.slice(0,3).forEach((br,b)=>{ const L='ABC'[b];
     [br[2],br[3]].forEach((x,j)=>{ const t=j+1, proc=typeof x[0]==='string'&&x[0][0]==='@';
@@ -246,7 +246,7 @@ function tfText(nd,l){
   return TFX[nd.fx].d(nd.p); }
 
 /* ---- rune points + rules (character side) ---- */
-function tfOf(ch,id){ return ch&&ch.tr&&ch.tr[id]||{}; }
+function tfOf(ch,id){ return ch&&ch.tr&&svHas(ch.tr,id)&&ch.tr[id]||{}; }
 function tfLv(ch,id,nid){ return tfOf(ch,id)[nid]|0; }
 function tfSpentOne(ch,id){ let n=0; const t=tfOf(ch,id); for(const nd of tfNodes(id)) n+=(t[nd.id]|0)*nd.cost; return n; }
 function tfSpent(ch){ let n=0; for(const id in (ch&&ch.tr)||{}) n+=tfSpentOne(ch,id); return n; }
@@ -285,8 +285,16 @@ function tfReset(ch,id,o){
   if(way==='scroll'){ if(!(o&&o.scroll)||!(typeof invRemove==='function'&&invRemove(ch,'u_forget',1))) return false; }
   if(way==='freeOnce') ch.resets.trFree=0;
   delete ch.tr[id]; if(typeof pgSave==='function') pgSave(ch,'resetTree',true); return true; }
+// keep only what the rules allow (save load · after resetSkills · prepareRun): nodes in tree order whose requirements hold with
+// the nodes kept so far · then whole trees dropped from the last until the spend fits the rune points (tester r1 F1/F2)
+function tfSanitize(ch){ if(!ch||!ch.tr) return ch; const tmp={sk:ch.sk||{}, job:ch.job, lv:ch.lv, tr:{}}, out={};
+  for(const id of Object.keys(ch.tr)){ const t=ch.tr[id]; if(!t||!TFD[id]||!svHas(TFD,id)) continue; tmp.tr[id]={};
+    for(const nd of tfNodes(id)){ const want=Math.min(nd.max,t[nd.id]|0); for(let l=0;l<want;l++){ if(!tfReqs(tmp,id,nd).every(q=>q.ok)) break; tmp.tr[id][nd.id]=l+1; } }
+    if(Object.keys(tmp.tr[id]).length) out[id]=tmp.tr[id]; else delete tmp.tr[id]; }
+  const ids=Object.keys(out); while(ids.length&&tfSpent({tr:out})>tfTotal(ch)) delete out[ids.pop()];
+  ch.tr=out; return ch; }
 // run copy (prepareRun): only skills of the character's pool
-function tfRunTree(ch){ const o={}; const pool=typeof pgSkillPool==='function'?pgSkillPool(ch):Object.keys(ch.tr||{});
+function tfRunTree(ch){ const o={}; ch=tfSanitize(JSON.parse(JSON.stringify({sk:ch.sk, job:ch.job, lv:ch.lv, tr:ch.tr||{}, cls:ch.cls}))); const pool=typeof pgSkillPool==='function'?pgSkillPool(ch):Object.keys(ch.tr||{});
   for(const id of pool){ const t=tfOf(ch,id); if(Object.keys(t).length) o[id]=Object.assign({},t); } return o; }
 
 /* ---- in-run: numbers + effects of one skill (called from sxMods) ---- */
@@ -339,7 +347,7 @@ function tfHit(e,s,base,dealt){
       if(F.pull&&tfICD(s||P,'pull',.25)){ const r=F.pull.r*P.area;
         for(const q of query(e.x,e.y,r+60)){ if(q.dead||q.boss||q===e) continue; const dx=e.x-q.x, dy=e.y-q.y, d=Math.hypot(dx,dy); if(d>r||d<1) continue; const f=220/Math.max(.5,q.mass); q.kx+=dx/d*f; q.ky+=dy/d*f; } } }
     if(F.leech&&dealt>0) healP(dealt*F.leech.pct);
-    if(F.trail&&s&&tfICD(s,'trail',.35)&&tfRoom()) addZone({x:e.x,y:e.y,r:F.trail.r*P.area,dur:F.trail.dur,tick:.5,dmg:base*F.trail.pct,slow:F.trail.slow||0,kind:F.trail.kind||'fire',src:s,fxd:true});
+    if(F.trail&&s&&tfICD(s,'trail',.35)&&G.zones.reduce((n,z)=>n+(z.fxd?1:0),0)<12&&tfRoom()) addZone({x:e.x,y:e.y,r:F.trail.r*P.area,dur:F.trail.dur,tick:.5,dmg:base*F.trail.pct,slow:F.trail.slow||0,kind:F.trail.kind||'fire',src:s,fxd:true});
     if(F.shards&&F.shards.on!=='kill'&&s&&Math.random()<F.shards.ch&&tfICD(s,'shards',.1)&&tfRoom()){ const n=F.shards.n, a0=Math.random()*TAU;
       for(let i=0;i<n;i++) tfBolt(e.x,e.y,a0+i*TAU/n,base*F.shards.pct,s,'dagger',.45); } } }
 // a skill cast (detected by tfRun) → echo / radial / mend
@@ -356,9 +364,8 @@ function tfRun(dt){
   G.tfN=0;
   for(const s of P.skills){
     if(!s.fx){ BEH[s.def.type](s,dt); continue; }
-    const c0=s.cdT, t0=s.st.t; BEH[s.def.type](s,dt);
-    const cast=s.def.type==='shield'?(s.st.t!==undefined&&t0!==undefined&&s.st.t>t0+.2):(s.cdT>c0+1e-9&&s.cdT>=cdOf(s)-1e-6);
-    if(cast) tfCast(s); }
+    s.tfW=true; s.tfK=false; try{ BEH[s.def.type](s,dt); } finally{ s.tfW=false; }   // a real cast asks cdOf for its cooldown (15 cdOf sets s.tfK)
+    if(s.tfK) tfCast(s); }
   const B=G.tfBurn; if(B&&B.length){ for(const b of B){ b.t-=dt; b.nt-=dt; if(b.e.dead||b.t<=0){ b.dead=true; continue; }
       if(b.nt<=0){ b.nt=.5; damageEnemy(b.e,b.d,b.s,{fxd:true,quiet:true});
         if(!G.auto) part({x:b.e.x+rand(-5,5),y:b.e.y-b.e.r*.6,vx:rand(-8,8),vy:rand(-50,-25),life:.45,s:2.5,c:'#ff9a3a',g:-10,drag:1,k:'sq',add:true}); } }

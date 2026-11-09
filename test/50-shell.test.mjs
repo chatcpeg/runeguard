@@ -441,5 +441,12 @@ console.log('m2-orch · สถิติคลาสสิกบนหน้า�
   ok('สถิติที่ถูกแก้ (9e999 / ข้อความ / ติดลบ) ถูกล้างเหมือนตอนนำเข้า → ไม่แสดง · สถิติปกติยังแสดง', a === '' && /^1,500 คะแนน \(/.test(b) && !/∞|Infinity/.test(a + b), [a, b]);
 }
 
+console.log('★6–8: ข้อความการ์ดอัปของสกิลที่ยังไม่วิวัฒนาการ (tester รอบ 1 ข้อ 3)');
+{
+  const { X } = fresh();
+  const r = X(`(()=>{ const s=makeSkill('mbolt'); s.lv=5; P=makePlayer(CLS.mage); P.rank={mbolt:8}; return [hdNextText(s,'up'), hdNextText(s,'evo')]; })()`);
+  ok('การ์ดอัป ★6 = ตัวเลข Lv6 ไม่ใช่ร่างวิวัฒนาการ · การ์ดวิวัฒนาการยังบอกร่างใหม่', /★6/.test(r[0]) && !/วิวัฒนาการ/.test(r[0]) && /วิวัฒนาการ/.test(r[1]), r);
+}
+
 console.log(`\nสรุป: ผ่าน ${pass} · ไม่ผ่าน ${fail}`);
 process.exit(fail ? 1 : 0);

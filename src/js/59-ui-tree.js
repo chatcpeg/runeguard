@@ -20,7 +20,7 @@ const TF_HELP={
   <h4>ลำต้น ★</h4><p>ฝึกที่หน้าสกิลด้วย<b>แต้มสกิล</b> (ได้จาก Job Lv) · ★ คือ Lv สูงสุดที่การ์ดในรอบอัปสกิลนี้ได้ · ★1–5 ขั้นต้น · ✦★6–8 ขั้นสอง เปิดให้สกิลขั้นต้นหลังเลื่อนอาชีพ</p>
   <h4>3 สาย × 3 ชั้น</h4><p>แต่ละสายทำให้สกิลเก่งคนละทาง · ชั้น 1–2 (สี่เหลี่ยม) เพิ่มตัวเลขหรือโอกาสติดผล · ชั้น 3 (วงกลม) คือ<b>ความพิเศษ</b>ที่เปลี่ยนวิธีทำงานของสกิล</p>
   <h4>เงื่อนไข</h4><table>${tfRow('ชั้น 1','ลำต้น ★2')}${tfRow('ชั้น 2','ลำต้น ★4 + ชั้น 1 ของสายเดียวกันเต็ม')}${tfRow('ชั้น 3','ชั้น 2 ของสายเดียวกันเต็ม')}${tfRow('สายกลาง','ชั้น 2 ต้องมีชั้น 1 ของสายซ้ายขั้น 2 · ชั้น 3 ต้องมีชั้น 2 ของสายซ้ายขั้น 1 (เส้นประ = ข้ามสาย)')}${tfRow('👑 มงกุฎ','เลื่อนอาชีพแล้ว + ลำต้น ★5 + ความพิเศษ 2 ใน 3 สาย')}</table>
-  <h4>แต้มรูน</h4><table>${tfRow('ได้','1 แต้มต่อ Base Lv (ตัวละคร Lv 60 = 60 แต้ม) ใช้ร่วมกันทุกต้น')}${tfRow('ชั้น 1','1 แต้มต่อขั้น')}${tfRow('ชั้น 2','2 แต้มต่อขั้น')}${tfRow('ชั้น 3','4 แต้ม')}${tfRow('มงกุฎ','6 แต้ม')}${tfRow('เต็มต้น','ประมาณ 38–39 แต้ม · ต้องเลือกว่าจะลงลึกสกิลไหน')}</table>
+  <h4>แต้มรูน</h4><table>${tfRow('ได้','1 แต้มต่อ Base Lv (ตัวละคร Lv 60 = 60 แต้ม) ใช้ร่วมกันทุกต้น')}${tfRow('ชั้น 1','1 แต้มต่อขั้น')}${tfRow('ชั้น 2','2 แต้มต่อขั้น')}${tfRow('ชั้น 3','4 แต้ม')}${tfRow('มงกุฎ','6 แต้ม')}${tfRow('เต็มต้น','37–39 แต้ม · ต้องเลือกว่าจะลงลึกสกิลไหน')}</table>
   <h4>รีเซ็ต</h4><p>รีเซ็ตทีละต้น ได้แต้มรูนคืนครบ · ฟรีก่อน Lv ${BAL.RESET.freeBelow} · หลังจากนั้นฟรี 1 ครั้งต่อตัวละคร · ครั้งต่อไปใช้ม้วนลืมเลือน 1 ม้วน</p>
   <h4>ผลพิเศษทำงานอย่างไร</h4><p>"ร่ายครั้งที่ N" นับเฉพาะตอนสกิลทำงานจริง · ผลที่เกิดจากความพิเศษ (ระเบิด สะเก็ด พื้นไฟ) ไม่ทำให้เกิดผลพิเศษซ้อนอีก · ความพิเศษของสกิลติดตัว (passive) ทำงานกับการโจมตีของทุกสกิล</p>`],
   skills:['หน้าสกิล',()=>`<p>ที่นี่ใช้แต้ม 2 แบบ</p><table>${tfRow('แต้มสกิล','ได้ 1 แต้มต่อ Job Lv · ใช้ฝึก ★ ของสกิลและความสามารถติดตัว')}${tfRow('แต้มรูน','ได้ 1 แต้มต่อ Base Lv · ใช้ในต้นไม้สกิล 🌳')}</table>
@@ -37,8 +37,8 @@ function tfHelp(key){ const h=TF_HELP[key]; if(h) tfHelpBox(h[0],h[1]()); }
 /* ---- tree window ---- */
 let TFW={id:null, sel:'A1', box:null};
 function tfCh(){ try{ return curChar(); }catch(e){ return null; } }
-function tfOpen(id){ if(!SK[id]||!TFD[id]) return; TFW.id=id; TFW.sel='A1'; const box=shMk('div','tf-win'); TFW.box=box;
-  box.addEventListener('click',tfClick); sheet(box,{title:'🌳 ต้นไม้สกิล · '+SK[id].n, onClose:()=>{ TFW.box=null; }}); tfRender(); }
+function tfOpen(id){ if(!svHas(SK,id)||!svHas(TFD,id)) return; TFW.id=id; TFW.sel='A1'; const box=shMk('div','tf-win'); TFW.box=box;
+  box.addEventListener('click',tfClick); sheet(box,{title:'🌳 ต้นไม้สกิล · '+SK[id].n, onClose:()=>{ if(TFW.box===box) TFW.box=null; }}); tfRender(); }
 function tfState(ch,id,nd){ const l=tfLv(ch,id,nd.id), ok=tfReqs(ch,id,nd).every(q=>q.ok); return l>=nd.max?'full':l>0?'got':ok?'ready':'lock'; }
 function tfRender(){
   const box=TFW.box, id=TFW.id, ch=tfCh(); if(!box||!id) return; if(!ch){ box.textContent='ไม่มีตัวละคร'; return; }
@@ -107,7 +107,7 @@ function tfCardDetail(o){
   if(o.k==='new'){ const d=SK[o.id], s=makeSkill(o.id); if(P.sx){ s.cx=true; s.mod=null; }
     T.push('<p>'+tfE(d.d)+'</p><h4>ตัวเลข Lv 1</h4><p>'+P2(s).map(tfE).join('<br>')+'</p>');
     if(P.rank) T.push('<h4>เพดาน</h4><p>ฝึกไว้ ★'+cap(o.id)+' → รอบนี้อัปได้ถึง Lv '+cap(o.id)+'</p>'); skill(d,o.id); return [d.i+' สกิลใหม่: '+d.n,T.join('')]; }
-  if(o.k==='up'||o.k==='evo'){ const s=o.s, d=s.def, nx=hdNextText(s);
+  if(o.k==='up'||o.k==='evo'){ const s=o.s, d=s.def, nx=hdNextText(s,o.k);
     T.push('<p>'+tfE(o.k==='evo'?d.evo.d:d.d)+'</p><h4>ตอนนี้ (Lv '+s.lv+(s.evolved?' · วิวัฒนาการแล้ว':'')+')</h4><p>'+P2(s).map(tfE).join('<br>')+'</p>');
     if(nx) T.push('<h4>หลังเลือก</h4><p>'+tfE(nx).replace(/ · /g,'<br>')+'</p>');
     if(P.rank) T.push('<h4>เพดาน</h4><p>ฝึกไว้ ★'+cap(s.id)+(rankCap(G.char,s.id)>cap(s.id)?' · ฝึกเพิ่มได้ถึง ★'+rankCap(G.char,s.id)+' ที่หน้าสกิล':'')+'</p>');
@@ -125,7 +125,7 @@ function tfCardQ(c,o){
   if(c.querySelector('.tf-cq')) return; const q=document.createElement('span'); q.className='tf-cq'; q.textContent='?'; q.setAttribute('role','button');
   q.setAttribute('aria-label','อธิบายการ์ดนี้ละเอียด'); q.title='อธิบายละเอียด';
   const go=e=>{ e.preventDefault(); e.stopPropagation(); try{ const [t,h]=tfCardDetail(o); tfHelpBox(t,h); }catch(er){ console.error(er); } };
-  q.addEventListener('click',go); q.addEventListener('pointerdown',e=>e.stopPropagation()); c.append(q);
+  q.tabIndex=0; q.addEventListener('click',go); q.addEventListener('keydown',e=>{ if(e.key==='Enter'||e.key===' ') go(e); }); q.addEventListener('pointerdown',e=>e.stopPropagation()); c.append(q);
   const head=document.getElementById('lvTitle'); if(head&&!document.getElementById('tfLvQ')){ const b=document.createElement('button'); b.type='button'; b.id='tfLvQ'; b.className='tf-q tf-lvq';
     b.textContent='?'; b.setAttribute('aria-label','อธิบายการเลือกการ์ด'); b.addEventListener('click',e=>{ e.stopPropagation(); tfHelp('level'); }); head.after(b); } }
 // dev (§7.9): RG.tree.buy('thunder','A1') on the active character · RG.tree.info() = rune points + trees · RG.tree.open(id) · RG.tree.fx() = effects of the running skills

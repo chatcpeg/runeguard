@@ -1,7 +1,7 @@
 /* ================= combat core ================= */
 function damageEnemy(e,base,s,o){
   if(e.dead) return 0; o=o||{};
-  const tf=s!==undefined&&P.tf&&!o.fxd; if(tf) base*=tfPre(e,s);          // skill-tree effects (27) · character runs only
+  const tf=!!s&&P.tf&&!o.fxd; if(tf) base*=tfPre(e,s);          // skill-tree effects (27) · character runs only
   const crit=Math.random()<P.crit+(o.crit||0);
   let dmg=base*P.might*(crit?P.critMult:1);
   if(P.rage) dmg*=1+P.rage*(1-P.hp/P.maxHp);
