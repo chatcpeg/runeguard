@@ -59,6 +59,8 @@ def main():
     pending = {}
     for j in spec["jobs"]:
         prefix = "Runeguard/art/%s/%s" % (sub, j["name"])
+        if "prompt" not in j:                                    # style + description + tail (production jobs)
+            j["prompt"] = spec.get("style", "").replace("{kind}", j.get("kind", "character")) + j["d"] + spec.get("tail", "")
         body = {"prompt": graph(j["prompt"], j["seed"], j.get("w", 1024), j.get("h", 1024), prefix),
                 "client_id": str(uuid.uuid4()),
                 "comfyq": {"lane": LANE, "who": WHO, "label": "%s/%s" % (sub, j["name"])}}
