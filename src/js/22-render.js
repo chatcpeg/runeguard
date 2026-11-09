@@ -60,9 +60,18 @@ function drawItem(g){
     default: if(ITEMKIND[g.kind]) ITEMKIND[g.kind].draw(ctx,g);
   }
 }
+// lane item kinds (ITEMKIND · never in classic) are drawn after the loop in two passes: all glows (+ the kind's own glow(c,g) in the
+// same 'lighter' pass), then all bodies · keeps the GPU canvas batching (one blend mode, one texture per pass)
+const GEM_EXT=[];
+function drawItemsExt(list){   // = glow(x,y,18,'#d8e8ff',a) per item, with the texture and alpha set once for the pass
+  const tex=glowTex('#d8e8ff'), t4=G.t*4; ctx.globalCompositeOperation='lighter'; ctx.globalAlpha=Math.min(1,.45+.2*Math.sin(G.t*6));
+  for(const g of list) ctx.drawImage(tex,g.x-18,g.y+Math.sin(t4+g.x*.05)*2-18,36,36);
+  ctx.globalAlpha=1; for(const g of list){ const k=ITEMKIND[g.kind]; if(k.glow) k.glow(ctx,g); } ctx.globalCompositeOperation='source-over';
+  for(const g of list) ITEMKIND[g.kind].draw(ctx,g); }
 function drawGems(L,T,R,B){
-  const tiers=[[],[],[],[]],cols=['#5fd3c3','#7fe07a','#ff6a5a','#c38bff'],sz=[4,5.5,7,9],q=qLv();
-  for(const g of G.gems){ if(g.x<L||g.x>R||g.y<T||g.y>B) continue; if(g.kind==='xp') tiers[g.v<5?0:g.v<20?1:g.v<100?2:3].push(g); else drawItem(g); }
+  const tiers=[[],[],[],[]],cols=['#5fd3c3','#7fe07a','#ff6a5a','#c38bff'],sz=[4,5.5,7,9],q=qLv(); GEM_EXT.length=0;
+  for(const g of G.gems){ if(g.x<L||g.x>R||g.y<T||g.y>B) continue; if(g.kind==='xp') tiers[g.v<5?0:g.v<20?1:g.v<100?2:3].push(g); else if(ITEMKIND[g.kind]) GEM_EXT.push(g); else drawItem(g); }
+  if(GEM_EXT.length) drawItemsExt(GEM_EXT);
   if(q>=1){ ctx.globalCompositeOperation='lighter'; for(let i=(q>=2?0:1);i<4;i++){ const tex=glowTex(cols[i]),s=sz[i]*2.4; ctx.globalAlpha=.35; for(const g of tiers[i]) ctx.drawImage(tex,g.x-s,g.y-s,s*2,s*2); } ctx.globalAlpha=1; ctx.globalCompositeOperation='source-over'; }
   for(let i=0;i<4;i++){ const arr=tiers[i]; if(!arr.length) continue; const s=sz[i];
     ctx.fillStyle=shade(cols[i],-.55); ctx.beginPath(); for(const g of arr){ const y=g.y+Math.sin(G.t*4+g.x*.05)*1.5,o=s+1.2; ctx.moveTo(g.x,y-o); ctx.lineTo(g.x+o*.72,y); ctx.lineTo(g.x,y+o); ctx.lineTo(g.x-o*.72,y); ctx.closePath(); } ctx.fill();

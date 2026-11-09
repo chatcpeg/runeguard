@@ -22,11 +22,22 @@ const BAL={ CAP:{base:60, job1:20, job2:25, stat:50, chars:3, bag:120, stash:120
   // §3.5 skill ranks (index r = cost of ★(r−1) → ★r) · passives cost 1 per ★ · loadout slots per job tier
   RANK_COST:[0,1,1,1,2,2], PAS_COST:1, ADV:{base:20, job:20, fee:500}, LOADOUT:{1:4, 2:5},
   rankSpent(r){ let n=0; for(let i=1;i<=r;i++) n+=BAL.RANK_COST[i]; return n; },            // skill points for ★0 → ★r
-  spAt(tier,jlv){ return tier===2 ? BAL.CAP.job1-1+jlv-1 : jlv-1; },                        // skill points earned at that job level
-  // §2.2 survival hell tiers T0–T10 (M1 ships T0 only)
-  SURV:{ maxT:10, WAVES:20, unlockWave:10, dailyWave:10,
-    recLv(T){ return Math.max(1,6*T); }, hpMul(T){ return 1+.3*T; }, dmgMul(T){ return 1+.12*T; }, defK(T){ return 22+3*T; },
-    goldPerWave(T){ return 15+5*T; }, gearTier(T){ return Math.min(5,1+Math.floor(T/2)); },
+  // START_SP: a new character (Job Lv1) starts with 6 skill points = exactly the first skill's free ★1 → ★5 (1+1+2+2).
+  // Why (M2 gate §9.4, measured with RG.sim): in-run cards stop at the trained ★ and a skill only evolves at Lv5, so a character
+  // without one ★5 skill stalls at the wave-10 boss (T0 bot: ★1 → wave 5.4, ★4 → ~12, ★5 → 19.5, classic 16.1).
+  START_SP:6,
+  // §3.8 starter kit vs create → sell → delete loops: the training weapon is bound (inst.b · never sells) and the 3 small potions
+  // come with the first KIT_POTS characters an account ever creates (acct.kits counts them · deleting does not give one back)
+  KIT_POTS:6,
+  spAt(tier,jlv){ return BAL.START_SP+(tier===2 ? BAL.CAP.job1-1+jlv-1 : jlv-1); },        // skill points earned at that job level (incl. start)
+  // §2.2 survival hell tiers T0–T10 · T = integer 0–10 (anything else is clamped: tier('x') = 0, tier(99) = 10)
+  // hpMul / dmgMul are integer ÷ power of ten, so every row is the exact double of the §2.2 table (T3 = 1.9, not 1.8999…)
+  // and T0 is strictly classic: hpMul 1 · dmgMul 1 · defK 22
+  SURV:{ maxT:10, WAVES:20, unlockWave:10, dailyWave:10, dailyMul:2,
+    tier(T){ const t=Math.floor(+T||0); return t<0?0:t>10?10:t; },
+    recLv(T){ return Math.max(1,6*BAL.SURV.tier(T)); }, hpMul(T){ return (10+3*BAL.SURV.tier(T))/10; },
+    dmgMul(T){ return (100+12*BAL.SURV.tier(T))/100; }, defK(T){ return 22+3*BAL.SURV.tier(T); },
+    goldPerWave(T){ return 15+5*BAL.SURV.tier(T); }, gearTier(T){ return Math.min(5,1+Math.floor(BAL.SURV.tier(T)/2)); },
     expMul(waves,won){ return .04*waves+(won?.3:0); },                          // × bxpNeed(recLv)
     overLv(L,rec){ return L>rec+5 ? Math.max(.2,1-.08*(L-rec-5)) : 1; },
     winGoldWaves:10 },                                                          // a win adds goldPerWave × 10
@@ -55,9 +66,10 @@ const BAL={ CAP:{base:60, job1:20, job2:25, stat:50, chars:3, bag:120, stash:120
     gear(tier,rar,r){ return Math.round(15*tier*tier*(1+rar)*(1+.1*(r||0))); },
     bag:[2000,6000,15000,40000], bagStep:10, bagStart:80, stash:{marks:80, step:20, start:60},
     combine:300, shardsPerRune:4, unsocket(tier){ return 100*tier; }, stack:{use:99, mat:999} },
-  // §4.12 drop rates. surv: tables in rollDrops() format, read by MODES.survival.onKill — empty until M2 (lane E/C CR)
+  // §4.12 drop rates. surv: MODES.survival.onKill looks up surv.elite / surv['boss'+wave] and passes it to rollDrops, which
+  // resolves the name in DROPS (33-items-data.js: §2.2 item table, gear tier = SURV.gearTier). No key = nothing drops.
   DROP:{ field:{gold:1, gem:1, dust:.03, crystal2:.003, crystal4:.006, shard:.01, gear:.006, potion:.02},
     fboss:{gold(L){ return 150+15*L; }, dust:[4,8], crystal:[1,3], gear:[1,2], uniq:.25, rune:.12, seal:.10},
     rampage:{dust:2, gold(L){ return 20*L; }},
-    surv:{} },
+    surv:{elite:'surv.elite', boss5:'surv.boss5', boss10:'surv.boss10', boss15:'surv.boss15', boss20:'surv.boss20'} },
   RESET:{gold:2000, marks:40, freeBelow:20} };

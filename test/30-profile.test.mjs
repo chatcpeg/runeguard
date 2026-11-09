@@ -93,7 +93,7 @@ console.log('§3.7 ตัวใหม่ = คลาสสิกทุก field'
     ok(`${c}: metaBonus(ตัวใหม่) = {} · buildRunBonus(ตัวใหม่ ไม่มีของ) = {}`, r.m === '{}' && r.b === '{}', r);
     ok(`${c}: recalc หลัง prepareRun เท่าคลาสสิกทุก field (${r.n} field ยกเว้น bonus/rank/loadout/advOffered)`, r.diff.length === 0 && r.adv === null && r.offered === true, r.diff);
   }
-  const adv = X(`(()=>{ const out=[]; for(const c of CLASSES) for(const a of c.adv){ const ch=newChar('ทดสอบ',c.id); ch.job=a.id;
+  const adv = X(`(()=>{ const out=[]; for(const c of CLASSES) for(const a of c.adv){ const ch=newChar('ทดสอบ',c.id); ch.inv=[]; ch.eq=svEmptyEq(); ch.job=a.id;
       const A=makePlayer(c); A.adv=a; recalc(A); A.hp=A.maxHp; const B=makePlayer(c); recalc(B); B.hp=B.maxHp; prepareRun({},B,ch,'survival');
       const keys=['maxHp','hp','speed','armor','crit','critMult','regen','might','area','durMul','cdMul','magnet','xpMul','extraProj','dodge','rage','steal','drop','bossDmg','fam'];
       const bad=keys.filter(k=>JSON.stringify(A[k])!==JSON.stringify(B[k])); if(bad.length||B.adv!==a) out.push(a.id+':'+bad.join('/')); } return out; })()`);
@@ -106,7 +106,7 @@ console.log('§3.7 ตัวใหม่ = คลาสสิกทุก field'
   ok('META_K ที่ 50: ปัญญา area/dur +0.30 · โชค crit +0.15 critMult +0.30 drop +0.60 xp +0.20 · Lv60 hp +236 might +0.236',
     deq(m50.INT, { area: 0.3, dur: 0.3 }) && deq(m50.LUK, { crit: 0.15, critMult: 0.3, drop: 0.6, xp: 0.2 }) && deq(m50.LV, { might: 0.236, hp: 236 }), m50);
   const pb = X(`(()=>{ const ch=newChar('ทดสอบ','mage'); ch.pas={p_runefocus:5, p_manasea:5}; const a=passiveBonus(ch); ch.job='archmage'; const b=passiveBonus(ch);
-    const t=newChar('ทดสอบ','thief'); t.job='nightblade'; t.pas={p_thinsmoke:2, p_catstep:1}; return {a,b,t:buildRunBonus(t)}; })()`);
+    const t=newChar('ทดสอบ','thief'); t.inv=[]; t.eq=svEmptyEq(); t.job='nightblade'; t.pas={p_thinsmoke:2, p_catstep:1}; return {a,b,t:buildRunBonus(t)}; })()`);
   ok('passive: ค่าบวกคูณ ★ · cd ยกกำลัง ★ (สมาธิแห่งรูน ★5 = area +0.10 · cd ×0.99⁵) · passive ขั้นสูงนับเมื่อเลื่อนแล้วเท่านั้น',
     deq(pb.a, { area: 0.1, cd: 0.95099 }) && Math.abs(pb.b.area - 0.25) < 1e-9 && pb.b.cd === 0.95099, pb);
   ok('buildRunBonus รวม adv.bonus + passive: magnet คูณ (1.4 × 1.04²) · xp บวก (0.2 + 0.06) · dodge/speed จากฝีเท้าแมว',
@@ -160,13 +160,15 @@ console.log('§3.5 สกิล ★ · SKILL_REQ · loadout');
 }
 
 // ------------------------------------------------------------------------------------------------
-console.log('§3.5 แต้มสกิลรวม 43 · ใช้ได้รวม 56 (จากข้อมูลจริง)');
+console.log('§3.5 แต้มสกิลรวม 49 (เริ่ม 6 + ขั้นต้น 19 + ขั้นสูง 24) · ใช้ได้รวม 56 (จากข้อมูลจริง)');
 {
   const { X } = fresh();
   const earn = X(`(()=>{ SAVE=newSave(null); const ch=newChar('ทดสอบ','archer'); SAVE.chars.push(ch); SAVE.acct.gold=500; const sp=[];
     while(ch.jlv<20) grantExp(ch,0,BAL.jxpNeed(ch.jlv,1)-ch.jxp); sp.push(ch.sp); grantExp(ch,0,1e9); sp.push(ch.sp,ch.jlv);
     ch.lv=20; ch.trial.t2=1; advanceJob(ch,'ranger'); while(ch.jlv<25) grantExp(ch,0,BAL.jxpNeed(ch.jlv,2)-ch.jxp); sp.push(ch.sp); grantExp(ch,0,1e9); sp.push(ch.sp,ch.jlv); return sp; })()`);
-  ok('แต้มที่ได้: Job ขั้นต้น 2–20 = 19 · ขั้นสูง 2–25 = 24 · รวม 43 (EXP เกินเพดานไม่ให้แต้มเพิ่ม)', deq(earn, [19, 19, 20, 43, 43, 25]), earn);
+  ok('แต้มที่ได้: ตัวใหม่เริ่ม 6 (BAL.START_SP) · Job ขั้นต้น 2–20 = 19 · ขั้นสูง 2–25 = 24 · รวม 49 (EXP เกินเพดานไม่ให้แต้มเพิ่ม)', deq(earn, [25, 25, 20, 49, 49, 25]), earn);
+  ok('แต้มเริ่มต้น 6 = ★1 ฟรี → ★5 ของสกิลแรกพอดี · spAt(1,1) = 6 · spAt(1,20) = 25 = spAt(2,1) · spAt(2,25) = 49',
+    X(`BAL.START_SP===6&&BAL.rankSpent(5)-BAL.RANK_COST[1]===BAL.START_SP&&BAL.spAt(1,1)===6&&BAL.spAt(1,20)===25&&BAL.spAt(2,1)===25&&BAL.spAt(2,25)===49`));
   const spend = X(`(()=>{ const out=[]; for(const c of CLASSES) for(const a of c.adv){
       const ch=newChar('ทดสอบ',c.id); ch.sp=999; let t1=0, t2=0, n=0;
       const learnAll=()=>{ let any=true, s=0; while(any){ any=false; for(const id of pgSkillPool(ch).concat(pgPasPool(ch))){ const b=ch.sp; if(learnSkill(ch,id)){ s+=b-ch.sp; any=true; } } } return s; };
@@ -176,7 +178,7 @@ console.log('§3.5 แต้มสกิลรวม 43 · ใช้ได้ร
       out.push({a:a.id,t1,t2,data1,data2,all:pgSpSpent(ch)}); } return out; })()`);
   ok('ใช้ได้: ขั้นต้น 32 (สกิล 4 ตัว ★5 − ★1 ฟรี + passive ★5) · ขั้นสูง 24 (สกิล 2 ตัว + passive 2 ตัว) · รวม 56 ทั้ง 10 สาย',
     spend.length === 10 && spend.every(s => s.t1 === 32 && s.t2 === 24 && s.data1 === 32 && s.data2 === 24 && s.all === 56), spend);
-  ok('ขาด 13 แต้มเมื่อตัน (56 − 43) · ตอนจบขั้นต้นขาด 13 (32 − 19)', 56 - earn[3] === 13 && 32 - earn[0] === 13);
+  ok('ขาด 7 แต้มเมื่อตัน (56 − 49) · ตอนจบขั้นต้นขาด 7 (32 − 25)', 56 - earn[3] === 7 && 32 - earn[0] === 7);
   ok('PASSIVES ครบ 25 ตัว: อาชีพขั้นต้นละ 1 · ขั้นสูงละ 2 · ชื่อไม่ซ้ำ', X(`(()=>{ const ids=Object.keys(PASSIVES), names=new Set(ids.map(k=>PASSIVES[k].n));
     return ids.length===25&&names.size===25&&CLASSES.every(c=>ids.filter(k=>PASSIVES[k].own===c.id).length===1&&c.adv.every(a=>ids.filter(k=>PASSIVES[k].own===a.id).length===2)); })()`));
 }
@@ -212,14 +214,14 @@ console.log('§3.6 prepareRun');
     const mk=m=>{ const p=makePlayer(CLS.archer); recalc(p); p.hp=p.maxHp; const g={}; prepareRun(g,p,ch,m); return {p,g}; };
     let {p,g}=mk('survival'); out.adv=p.adv===CLS.archer.adv[1]; out.offered=p.advOffered; out.rank=p.rank; out.load=p.loadout; out.lv=p.lv;
     out.surv=p.skills.map(s=>s.id+':'+s.lv); out.bonus=JSON.stringify(p.bonus)===JSON.stringify(buildRunBonus(ch)); out.might=p.might; out.tip=g.charTip; out.gold=g.goldRun;
-    out.look=p.look.weapon; out.field=mk('field').p.skills.map(s=>s.id+':'+s.lv).join(' ');
+    out.look=p.look.weapon; const nog=JSON.parse(JSON.stringify(ch)); nog.inv=[]; nog.eq=svEmptyEq(); const q=makePlayer(CLS.archer); recalc(q); prepareRun({},q,nog,'survival'); out.look0=q.look.weapon; out.field=mk('field').p.skills.map(s=>s.id+':'+s.lv).join(' ');
     out.trial=mk('trial').p.skills.map(s=>s.id+':'+s.lv+(s.evolved?'E':'')).join(' ');
     ch.st.DEX=25; out.boss=mk('boss').p.skills.map(s=>s.id+':'+s.lv+(s.evolved?'E':'')).join(' ');
     ch.st.DEX=24; out.boss24=mk('boss').p.skills.map(s=>s.id+':'+s.lv+(s.evolved?'E':'')).join(' ');
     ch.play=12; out.tip2=mk('survival').g.charTip; return out; })()`);
   ok('P.adv = อาชีพสูงสุด (object เดียวกับ CLS) · P.advOffered = true · P.lv = 1', pr.adv && pr.offered === true && pr.lv === 1, pr);
   ok('P.rank = ★ ที่ฝึก (เฉพาะ ★ ≥ 1) · P.loadout = load', deq(pr.rank, { arrow: 5, spread: 2, trap: 1, deadeye: 3, blast: 1 }) && deq(pr.load, ['deadeye', 'arrow', 'trap', 'blast', 'spread']), pr);
-  ok('P.bonus = buildRunBonus(ch) และเข้า recalc (might > 1)', pr.bonus && pr.might > 1 && pr.look === 'longbow', pr);
+  ok('P.bonus = buildRunBonus(ch) และเข้า recalc (might > 1) · P.look: ไม่มีของ = ธนูยาวของอาชีพ · สวมธนูฝึกหัด = ธนู (gearLook ทับ)', pr.bonus && pr.might > 1 && pr.look0 === 'longbow' && pr.look === 'bow', pr);
   ok('เริ่มรอบ: เอาชีวิตรอด = load[0] Lv1 · ท่องแดน = ทุกช่อง Lv1', deq(pr.surv, ['deadeye:1']) && pr.field === 'deadeye:1 arrow:1 trap:1 blast:1 spread:1', pr);
   ok('เริ่มรอบ: บททดสอบ / ล่าบอส = Lv ★ · ★5 วิวัฒน์เองเมื่อสถานะถาวร evo.s ≥ 25 (DEX 30/25 ได้ · 24 ไม่ได้)',
     pr.trial === 'deadeye:3 arrow:5E trap:1 blast:1 spread:2' && pr.boss === pr.trial && pr.boss24 === 'deadeye:3 arrow:5 trap:1 blast:1 spread:2', pr);
@@ -255,8 +257,8 @@ console.log('§6.3 validateSave clamp');
       {id:'c_aaa', name:'\\u0000ลูน่า\\n<img src=x onerror=alert(1)>', cls:'mage', job:'knight', lv:999, xp:-4, pts:9999, st:{STR:80, VIT:-3, AGI:'12', DEX:2.7, INT:null, LUK:50, HAX:9},
        jlv:44, jxp:1e9, sp:999, sk:{mbolt:9, flame:2, meteor:5, slash:3}, pas:{p_runefocus:7, p_heavyarms:2}, load:['meteor','flame','flame','slash','frost'],
        eq:{weapon:'i_missing', body:'i_b1', head:'i_b1', hat:'i_b1'}, bagMax:5,
-       inv:[{u:'i_b1',id:'b_cotton',r:15,f:99,s:['x_rune','BAD',1,2],lk:'y'},{id:'m_dust',n:-4},{id:'<x>',n:1},{u:'i_b1',id:'w_dup',r:1}, 'str', null,
-            {id:'u_potion_s',n:5000},{u:'i_c1',id:'c_old'},{u:'i_c2',id:'c_old'},{u:'i_c3',id:'c_old'},{u:'i_c4',id:'c_old'}],
+       inv:[{u:'i_b1',id:'b_unk_x',r:15,f:99,s:['x_rune','BAD',1,2],lk:'y'},{id:'m_dust',n:-4},{id:'<x>',n:1},{u:'i_b1',id:'w_dup',r:1}, 'str', null,
+            {id:'u_unk_x',n:5000},{u:'i_c1',id:'c_unk_x'},{u:'i_c2',id:'c_unk_x'},{u:'i_c3',id:'c_unk_x'},{u:'i_c4',id:'c_unk_x'}],
        quick:['u_potion_s','<b>',3], trial:{t2:5}, zone:'Z!', visited:['z1','z1','z2'], bestiary:{beetle:-1, Bad:3}, resets:{free:0}},
       {id:'c_aaa', name:'a', cls:'thief'},
       {id:'c_bbb', name:'ผู้กล้า', cls:'necromancer'},
@@ -266,7 +268,7 @@ console.log('§6.3 validateSave clamp');
     const s=validateSave(evil), c=s.chars[0];
     return {s, c, ids:s.chars.map(x=>x.id), names:s.chars.map(x=>x.name), polluted:({}).polluted, again:JSON.stringify(validateSave(JSON.parse(JSON.stringify(s))))===JSON.stringify(s)}; })()`);
   const s = v.s, c = v.c;
-  ok('เซฟ: sid/owner/เวลา/app ผิดรูป → ค่าที่ปลอดภัย · owner ที่เป็นอีเมล → null', /^s_[a-z0-9]+$/.test(s.sid) && s.owner === null && s.created === 0 && s.play === 0 && s.app === '2.0.0-m1', s);
+  ok('เซฟ: sid/owner/เวลา/app ผิดรูป → ค่าที่ปลอดภัย · owner ที่เป็นอีเมล → null', /^s_[a-z0-9]+$/.test(s.sid) && s.owner === null && s.created === 0 && s.play === 0 && s.app === '2.0.0-m2', s);
   ok('acct: gold ≥ 0 · marks ≤ เพดาน · stashMax ≤ 120 · survTier ≤ 10 · ของซ้อน n ≥ 1 · runIds เฉพาะรูปแบบถูก ไม่ซ้ำ เก็บ 30 ล่าสุด',
     s.acct.gold === 0 && s.acct.marks === 999999 && s.acct.stashMax === 120 && s.acct.survTier === 10 && s.acct.stash[0].n === 1 && s.acct.runIds.length === 30 && s.acct.runIds[29] === 'r_39' && !s.acct.runIds.includes('bad id'), s.acct);
   ok('records/daily/flags: ค่าถูก clamp · key แปลกถูกตัด · ไม่มี prototype pollution',
@@ -278,20 +280,20 @@ console.log('§6.3 validateSave clamp');
   ok('ชื่อ: ตัดอักขระควบคุมและสัญลักษณ์ · ไม่เกิน 16 ตัวอักษร · สั้นเกินใช้ชื่ออาชีพ', c.name === 'ลูน่าimg srcx on' && [...c.name].length <= 16 && /^[\p{L}\p{M}\p{N} ]{2,16}$/u.test(c.name) && v.names[1] === 'โจร', v.names);
   ok('ตัวละคร: lv 1–60 · xp ≥ 0 · job ที่ไม่ใช่ของอาชีพ → null · jlv ≤ 20 · st 0–50 (สตริง/เศษ/null ถูกแปลง) · คีย์แปลกถูกตัด',
     c.lv === 60 && c.xp === 0 && c.job === null && c.jlv === 20 && c.jxp === 0 && deq(c.st, { STR: 50, VIT: 0, AGI: 12, DEX: 2, INT: 0, LUK: 50 }), c);
-  ok('แต้มสถานะ ≤ แต้มที่ได้ − ที่ใช้แล้ว (ใช้เกิน → 0) · แต้มสกิล ≤ 19 − ที่ใช้แล้ว 13 = 6',
-    c.pts === Math.max(0, 186 - (98 + 98 + 12 + 2)) && c.sp === 19 - (7 - 1 + 2 + 5), [c.pts, c.sp]);
+  ok('แต้มสถานะ ≤ แต้มที่ได้ − ที่ใช้แล้ว (ใช้เกิน → 0) · แต้มสกิล ≤ (6 + 19) − ที่ใช้แล้ว 13 = 12',
+    c.pts === Math.max(0, 186 - (98 + 98 + 12 + 2)) && c.sp === 6 + 19 - (7 - 1 + 2 + 5), [c.pts, c.sp]);
   ok('sk / pas: ★ 0–5 · เฉพาะสกิลของอาชีพ (สกิลขั้นสูงต้องมี job) · passive ของอาชีพอื่นถูกตัด · ★1 ฟรีของสกิลแรกคงอยู่',
     deq(c.sk, { mbolt: 5, flame: 2 }) && deq(c.pas, { p_runefocus: 5 }), [c.sk, c.pas]);
   ok('load: ไม่ซ้ำ · ★ ≥ 1 เท่านั้น · ไม่เกินช่อง', deq(c.load, ['flame']), c.load);
-  ok('inv: r 0–10 · ช่องรูนไม่เกิน 2 · uid ซ้ำได้ uid ใหม่ · ของซ้อน n 1–999 · id ผิดรูปถูกตัด · id ที่ไม่รู้จักเก็บไว้แบบ unk:1 · ไม่เกิน bagMax (80)',
-    c.inv[0].r === 10 && c.inv[0].f === 20 && deq(c.inv[0].s, ['x_rune', null]) && c.inv[0].lk === 1 && c.inv[0].unk === 1 && c.inv[1].n === 1 && c.inv[2].id === 'w_dup' && c.inv[2].u !== 'i_b1'
-    && c.inv.find(x => x.id === 'u_potion_s').n === 999 && !c.inv.some(x => x.id === '<x>') && c.bagMax === 80 && c.inv.length === 8, c.inv);
+  ok('inv: r 0–10 · f 0–5 · ช่องรูนไม่เกิน 2 · uid ซ้ำได้ uid ใหม่ · ของซ้อน n 1–999 · id ผิดรูปถูกตัด · id ที่ไม่รู้จักเก็บไว้แบบ unk:1 · ไม่เกิน bagMax (80)',
+    c.inv[0].r === 10 && c.inv[0].f === 5 && deq(c.inv[0].s, ['x_rune', null]) && c.inv[0].lk === 1 && c.inv[0].unk === 1 && c.inv[1].n === 1 && c.inv[2].id === 'w_dup' && c.inv[2].u !== 'i_b1'
+    && c.inv.find(x => x.id === 'u_unk_x').n === 999 && !c.inv.some(x => x.id === '<x>') && c.bagMax === 80 && c.inv.length === 8, c.inv);
   ok('eq: uid ที่ไม่มีใน inv → null · uid เดียวสวมสองช่องไม่ได้ (ช่องแรกตามลำดับได้ไป เมื่อไม่รู้จักไอเทม) · ช่องแปลกถูกตัด', c.eq.weapon === null && c.eq.head === 'i_b1' && c.eq.body === null && !('hat' in c.eq) && Object.keys(c.eq).length === 10, c.eq);
   ok('quick / trial / zone / visited / bestiary / resets ถูก clamp', deq(c.quick, ['u_potion_s', null]) && c.trial.t2 === 0 && c.zone === 'z1' && deq(c.visited, ['z1', 'z2']) && deq(c.bestiary, { beetle: 0 }) && c.resets.free === 0 && c.resets.skFree === 1, c);
   ok('validateSave ซ้ำได้ผลเดิม (idempotent)', v.again === true);
   const trim = X(`(()=>{ const ch=newChar('ทดสอบ','mage'); ch.bagMax=80; ch.inv=[]; for(let i=0;i<90;i++) ch.inv.push({u:'i_'+i, id:'w_x'}); ch.eq.weapon='i_85';
     const c=validateSave({v:1, chars:[ch]}).chars[0]; return [c.inv.length, c.eq.weapon, c.inv.some(x=>x.u==='i_85')]; })()`);
-  ok('inv เกิน bagMax: ตัดส่วนเกิน แต่ของที่สวมอยู่ไม่หาย', deq(trim, [80, 'i_85', true]), trim);
+  ok('inv เกิน bagMax: ตัดส่วนเกิน (เหลือ 80 ช่อง + ของที่สวม 1) · ของที่สวมอยู่ไม่หาย', deq(trim, [81, 'i_85', true]), trim);
 }
 
 // ------------------------------------------------------------------------------------------------
@@ -370,10 +372,10 @@ console.log('§3.8 / §6.3 ตัวละคร: สร้าง · เลื�
   ok('ชื่อ 2–16 ตัวอักษร (ไทย/อังกฤษ/ตัวเลข/เว้นวรรค): สั้น/ยาว/อักขระควบคุม/HTML ถูกปฏิเสธพร้อมเหตุผล · อาชีพไม่รู้จักถูกปฏิเสธ',
     [c.short, c.long, c.ctl, c.html].every(x => /^ชื่อต้องยาว/.test(x)) && c.cls === 'ไม่พบอาชีพนี้', c);
   ok('เว้นวรรคซ้ำ/หัวท้ายถูกตัด · ชื่อซ้ำไม่ได้ · ครบ 3 ตัวแล้วสร้างไม่ได้', c.a === 'ลูน่า ดาว' && c.dup === 'มีตัวละครชื่อนี้แล้ว' && /สูงสุด 3/.test(c.full), c);
-  ok('ตัวใหม่ (§3.8): Lv1 · แต้มสถานะ 5 · สกิลแรก ★1 · load = [skills[0]] · trial.t2 = 0 · ตัวที่สร้างล่าสุดเป็นตัวที่เลือก',
-    c.new.lv === 1 && c.new.pts === 5 && deq(c.new.sk, { mbolt: 1 }) && deq(c.new.load, ['mbolt']) && c.new.trial.t2 === 0 && c.new.jlv === 1 && c.new.sp === 0 && c.new.job === null && c.active, c.new);
+  ok('ตัวใหม่ (§3.8): Lv1 · แต้มสถานะ 5 · แต้มสกิล 6 · สกิลแรก ★1 · load = [skills[0]] · trial.t2 = 0 · ตัวที่สร้างล่าสุดเป็นตัวที่เลือก',
+    c.new.lv === 1 && c.new.pts === 5 && deq(c.new.sk, { mbolt: 1 }) && deq(c.new.load, ['mbolt']) && c.new.trial.t2 === 0 && c.new.jlv === 1 && c.new.sp === 6 && c.new.job === null && c.active, c.new);
   ok('setActiveChar / curChar / deleteChar (ลบตัวที่เลือก → เลือกตัวแรกแทน · ลบซ้ำไม่ได้)', c.set && c.cur && c.setBad === false && c.del && c.after && c.del2 === false, c);
-  ok('saveSummary · isTrivialSave', c.sum.chars.length === 2 && c.sum.chars[0].lv === 1 && c.sum.appVer === '2.0.0-m1' && c.trivial === true && c.trivial2 === false, c.sum);
+  ok('saveSummary · isTrivialSave', c.sum.chars.length === 2 && c.sum.chars[0].lv === 1 && c.sum.appVer === '2.0.0-m2' && c.trivial === true && c.trivial2 === false, c.sum);
   const st = X(`(()=>{ const a=loadSettings(); const b=saveSettings({autoPot:5, mute:1, cardAuto:true, haptics:false}); const c=saveSettings({autoPot:0}); return [a,b,c]; })()`);
   ok('ตั้งค่า: ค่าเริ่มต้น {mute:false, autoPot:0.35, cardAuto:false, haptics:true} · clamp ค่าแปลก · autoPot 0 = ปิด',
     deq(st[0], { mute: false, autoPot: 0.35, cardAuto: false, haptics: true }) && deq(st[1], { mute: false, autoPot: 0.9, cardAuto: true, haptics: false }) && st[2].autoPot === 0, st);
@@ -426,7 +428,9 @@ console.log('§10 / §6.10 ส่งออก → นำเข้า');
     const r=importSave(json); const after=JSON.parse(exportSave());
     const bad=[importSave('{'), importSave('[]'), importSave(JSON.stringify({v:9, chars:[], acct:{}})), importSave(''), importSave('x'.repeat(300000))];
     return {r, same:JSON.stringify(before), after:JSON.stringify(after), bad, still:SAVE.acct.gold}; })()`);
-  ok('export → import ได้ค่าเท่าเดิมทุก field', ex.r.ok === true && deq(JSON.parse(ex.same), JSON.parse(ex.after)), ex.r);
+  // m2-orch: an import starts its own lineage (wb new) and counts one write past this tab's wc · mt = wall clock
+  const exB = JSON.parse(ex.same), exA = JSON.parse(ex.after), wcB = exB.wc, wcA = exA.wc, wbNew = exA.wb !== exB.wb && /^w_/.test(exA.wb); const wpOk = Array.isArray(exA.wp) && exA.wp[0] && exA.wp[0].wb === exB.wb; for (const o of [exB, exA]) { delete o.mt; delete o.wc; delete o.wb; delete o.wp; }
+  ok('export → import ได้ค่าเท่าเดิมทุก field (ยกเว้น wc ที่นับเพิ่ม · wb สายใหม่ · mt = เวลาที่นำเข้า)', ex.r.ok === true && deq(exB, exA) && wcA > wcB && wbNew && wpOk, { r: ex.r, wcA, wcB, wbNew, wpOk });
   ok('import ที่ผิด (JSON พัง / ไม่ใช่เซฟ / เวอร์ชันใหม่กว่า / ว่าง / ใหญ่เกิน 256 KB) ถูกปฏิเสธพร้อมเหตุผลไทย และไม่แตะเซฟ',
     ex.bad.every(b => b.ok === false && typeof b.err === 'string' && /[ก-๙]/.test(b.err)) && ex.still === 1234, ex.bad);
   ok('import เขียนผ่าน write-ahead (เซฟก่อนนำเข้าอยู่ใน .bak)', JSON.parse(ls.getItem('runeguard.save.guest.bak')).acct.gold === 0);
@@ -437,7 +441,9 @@ console.log('§10 / §6.10 ส่งออก → นำเข้า');
   const rt = X(`(()=>{ loadSaveFor(null); const ch=createChar('เล่นจริง','archer'); commitStats(ch,{DEX:3,AGI:2}); while(ch.jlv<7) grantExp(ch,0,BAL.jxpNeed(ch.jlv,1)-ch.jxp); learnSkill(ch,'arrow'); learnSkill(ch,'spread'); learnSkill(ch,'p_huntereye');
     setLoadout(ch,['spread','arrow']); onRunEnd({char:ch, modeId:'survival', tier:0, wave:12, kills:900, t:400, runId:'r_rt1', loot:[], goldRun:25, player:{hp:0}},false,{commit:true});
     SAVE.acct.flags.tips.first=1; const before=exportSave(); const r=importSave(before); return {r, eq:before, after:exportSave()}; })()`);
-  ok('export → import หลังเล่นจริง (แจกแต้ม · เรียนสกิล · loadout · รางวัลจบรอบ) ได้ค่าเท่าเดิมทุก field', rt.r.ok && deq(JSON.parse(rt.eq), JSON.parse(rt.after)), rt.r);
+  // m2-orch: an import starts a new lineage and stamps wc/mt, so those are compared on their own (mt was flaky when run-end and import fell in one ms)
+  const rtB = JSON.parse(rt.eq), rtA = JSON.parse(rt.after), rtWc = [rtB.wc, rtA.wc], rtWb = rtA.wb !== rtB.wb && rtA.wp[0].wb === rtB.wb; for (const o of [rtB, rtA]) { delete o.mt; delete o.wc; delete o.wb; delete o.wp; }
+  ok('export → import หลังเล่นจริง (แจกแต้ม · เรียนสกิล · loadout · รางวัลจบรอบ) ได้ค่าเท่าเดิมทุก field (wc ใหม่ > เดิม · wb สายใหม่)', rt.r.ok && deq(rtB, rtA) && rtWc[1] > rtWc[0] && rtWb, { r: rt.r, wc: rtWc, rtWb });
 }
 
 // ------------------------------------------------------------------------------------------------
@@ -449,7 +455,7 @@ console.log('dev hook RG.profile.*');
     const k=DEV.profile.char({job:'knight', jlv:3, sk:{lance:2}}); const b={job:k.job, jlv:k.jlv, load:k.load.slice(), same:k===ch};
     const m=DEV.profile.char({cls:'mage'}); return {a, b, n:SAVE.chars.length, cls:m.cls, keys:Object.keys(DEV.profile).sort().join(), gold:DEV.profile.gold(42), get:DEV.profile.get()===SAVE, json:typeof DEV.profile.json()}; })()`);
   ok('RG.profile.char({lv:20, jlv:20, sk}) สร้าง/แก้ตัวที่เลือก · load = สกิลที่ ★ ≥ 1 (≤ 4 ช่อง) · แต้มที่เหลือคำนวณเอง',
-    d.a.lv === 20 && d.a.jlv === 20 && deq(d.a.load, ['slash', 'slam', 'blades', 'bulwark']) && d.a.pts === 44 && d.a.sp === 19 - (7 - 1) - 3 - 3 - 1, d.a);
+    d.a.lv === 20 && d.a.jlv === 20 && deq(d.a.load, ['slash', 'slam', 'blades', 'bulwark']) && d.a.pts === 44 && d.a.sp === 6 + 19 - (7 - 1) - 3 - 3 - 1, d.a);
   ok('RG.profile.char({job, sk}) แก้ตัวเดิม (object เดิม) · cls ใหม่ → สร้างตัวใหม่', d.b.job === 'knight' && d.b.jlv === 3 && d.b.load.includes('lance') && d.b.same && d.n === 2 && d.cls === 'mage', d.b);
   ok('RG.profile มี sandbox/get/json/reset/char/give/gold/exp/state', d.keys === 'char,exp,get,give,gold,json,reset,sandbox,state' && d.gold === 42 && d.get && d.json === 'string', d.keys);
 }
@@ -539,13 +545,14 @@ console.log('fix-r2 · ตัวละครที่รอบถือไว้
     r2.live && r2.c && m.chars[0].kills === 140 && m.acct.runIds.includes('r_o2') && m.acct.gold === g1 + r2.gold, { r2, kills: m.chars[0].kills, ids: m.acct.runIds, gold: m.acct.gold, g1 });
 }
 {
-  // the running tab's own debounced write (setActiveChar 800 ms) fires mid-run after another tab saved → reload mid-run
+  // the running tab's own debounced write (saveLocal 800 ms: a tip dismissal, a field EXP tick) fires mid-run after another tab saved
+  // → reload mid-run (player actions such as setActiveChar save at once since fix-r2, so the debounce is started directly here)
   const shared = memStorage(), K = 'runeguard.save.guest';
   const A = fresh({ localStorage: shared }), B = fresh({ localStorage: shared });
   A.X(`loadSaveFor(null); createChar('หนึ่ง','mage'); createChar('สอง','thief')`);
   B.X(`loadSaveFor(null)`);
-  A.X(`(()=>{ setActiveChar(SAVE.chars[0].id); const ch=curChar(); G={char:ch, opts:{char:ch}, over:false, modeId:'survival', tier:0, wave:6, kills:50, t:45, runId:'r_d1', loot:[], goldRun:0, player:{hp:0}}; })()`);
-  B.X(`DEV.profile.gold(700)`); A.X(`svlOnStorage({key:'${K}'})`);           // mid-run: the event waits
+  A.X(`(()=>{ setActiveChar(SAVE.chars[0].id); const ch=curChar(); G={char:ch, opts:{char:ch}, over:false, modeId:'survival', tier:0, wave:6, kills:50, t:45, runId:'r_d1', loot:[], goldRun:0, player:{hp:0}}; saveLocal('t'); })()`);
+  B.X(`svlOnStorage({key:'${K}'}); DEV.profile.gold(700)`); A.X(`svlOnStorage({key:'${K}'})`);   // B follows A's pick · A mid-run: the event waits
   await new Promise(res => setTimeout(res, 900));                           // A's debounce fires → refused → reload mid-run
   const mid = A.X(`({gold:SAVE.acct.gold, held:SAVE.chars.indexOf(G.char)>=0})`);
   const rr = A.X(`(()=>{ const r=onRunEnd(G,false,{commit:true}); return {c:r.committed, gold:r.gold}; })()`);
@@ -565,6 +572,730 @@ console.log('fix-r2 · ตัวละครที่รอบถือไว้
     const a=grantRewards(ch,{runId:'r_neg_1', mode:'survival', tier:0, st:{t:-100, kills:-5, wave:-3}}); const b=grantRewards(ch,{runId:'r_neg_2', st:{t:Infinity, kills:2}});
     return {a, b, play:ch.play, kills:ch.kills, rec:SAVE.acct.records.survival[ch.id][0], sp:SAVE.play}; })()`);
   ok('grantRewards: เวลา / kills / คลื่นติดลบหรือ Infinity ไม่ลดค่าสะสม', n.a && n.b && n.play === 10 && n.kills === 5 && n.rec.kills === 0 && n.rec.wave === 0 && Number.isFinite(n.sp), n);
+}
+
+// ================================================================================================
+// M2 (§9.4 C) · hell tiers · survival drops · rewards with items · starter kit · pioneer cloak · item validation
+// ================================================================================================
+console.log('M2 · §2.2 ระดับนรก T0–T10 (ตารางในเอกสาร) · ตารางดรอปเอาชีวิตรอด');
+{
+  const { X } = fresh();
+  //            T  recLv HP×  ดาเมจ× defK ทอง/คลื่น tier
+  const TBL = [[0, 1, 1.0, 1.00, 22, 15, 1], [1, 6, 1.3, 1.12, 25, 20, 1], [2, 12, 1.6, 1.24, 28, 25, 2], [3, 18, 1.9, 1.36, 31, 30, 2],
+    [4, 24, 2.2, 1.48, 34, 35, 3], [5, 30, 2.5, 1.60, 37, 40, 3], [6, 36, 2.8, 1.72, 40, 45, 4], [7, 42, 3.1, 1.84, 43, 50, 4],
+    [8, 48, 3.4, 1.96, 46, 55, 5], [9, 54, 3.7, 2.08, 49, 60, 5], [10, 60, 4.0, 2.20, 52, 65, 5]];
+  const got = X(`[0,1,2,3,4,5,6,7,8,9,10].map(T=>{ const S=BAL.SURV; return [T,S.recLv(T),S.hpMul(T),S.dmgMul(T),S.defK(T),S.goldPerWave(T),S.gearTier(T)]; })`);
+  for (const row of TBL) ok(`T${row[0]}: เลเวลแนะนำ ${row[1]} · HP× ${row[2].toFixed(1)} · ดาเมจ× ${row[3].toFixed(2)} · defK ${row[4]} · ทอง/คลื่น ${row[5]} · tier ของ ${row[6]} (=== ตรงตาราง)`,
+    row.every((v, i) => got[row[0]][i] === v), got[row[0]]);
+  const f = X(`(()=>{ const S=BAL.SURV, bad=[]; for(let T=0;T<=10;T++){
+      if(S.recLv(T)!==Math.max(1,6*T)) bad.push('rec'+T); if(S.goldPerWave(T)!==15+5*T) bad.push('gold'+T); if(S.gearTier(T)!==Math.min(5,1+Math.floor(T/2))) bad.push('gear'+T);
+      if(Math.abs(S.hpMul(T)-(1+.3*T))>1e-12) bad.push('hp'+T); if(Math.abs(S.dmgMul(T)-(1+.12*T))>1e-12) bad.push('dmg'+T); if(S.defK(T)!==22+3*T) bad.push('k'+T); }
+    return {bad, clamp:[S.tier(-1),S.tier(11),S.tier('3'),S.tier(NaN),S.tier(2.7),S.tier(undefined),S.hpMul(99),S.defK(-4)]}; })()`);
+  ok('สูตร §2.2: recLv = max(1, 6T) · goldPerWave = 15 + 5T · gearTier = min(5, 1 + floor(T/2)) · HP× 1 + 0.3T · ดาเมจ× 1 + 0.12T · defK 22 + 3T', f.bad.length === 0, f.bad);
+  ok('T นอกช่วงถูก clamp เป็นจำนวนเต็ม 0–10 (−1 → 0 · 11 → 10 · "3" → 3 · NaN → 0 · 2.7 → 2)', deq(f.clamp, [0, 10, 3, 0, 2, 0, 4, 22]), f.clamp);
+  const c3 = X(`(()=>{ G={tier:3}; const a=MODES.survival.cfgFor(7), b=waveCfg(7); G=null; return [a.hpMul/b.hpMul, a.dmgMul/b.dmgMul]; })()`);
+  ok('cfgFor(w) ที่ T3: HP ศัตรู ×1.9 · ดาเมจ ×1.36', Math.abs(c3[0] - 1.9) < 1e-12 && Math.abs(c3[1] - 1.36) < 1e-12, c3);
+  const d = X(`(()=>{ const out={}; out.names=BAL.DROP.surv; out.res={}; for(const k in BAL.DROP.surv) out.res[k]=itTable(BAL.DROP.surv[k])===DROPS.surv[k];
+    itDropRng=mulberry(99); const mr=Math.random; let calls=0; Math.random=()=>{ calls++; return mr(); };
+    const kill=(T,w,e)=>{ G={tier:T, wave:w, loot:[]}; P={drop:0}; MODES.survival.onKill(e); return G.loot; };
+    out.plain=kill(3,4,{}).length;
+    out.b5=kill(3,5,{boss:true}).filter(x=>x.u).map(x=>ITEMS[x.id].tier);
+    out.b10=kill(3,10,{boss:true}).map(x=>x.u?'gear'+ITEMS[x.id].tier:x.id+'×'+x.n);
+    out.b20=kill(10,20,{boss:true}).filter(x=>x.u).map(x=>ITEMS[x.id].tier);
+    const el=[]; for(let i=0;i<400;i++) el.push(...kill(6,8,{elite:true}));
+    out.dust=el.filter(x=>x.id==='m_dust').every(x=>x.n>=1&&x.n<=2); out.eGear=[...new Set(el.filter(x=>x.u).map(x=>ITEMS[x.id].tier))];
+    out.shard=el.some(x=>/^m_shard_/.test(x.id)); out.calls=calls; Math.random=mr; itDropRng=null; G=null; P=null; return out; })()`);
+  ok('BAL.DROP.surv ชี้ตารางของ lane E ครบ 5 ตัว (elite · บอสคลื่น 5/10/15/20)', deq(Object.keys(d.names).sort(), ['boss10', 'boss15', 'boss20', 'boss5', 'elite']) && Object.values(d.res).every(Boolean), d);
+  ok('onKill: มอนธรรมดาไม่ดรอป · บอสคลื่น 5 ที่ T3 = อุปกรณ์ tier 2 · คลื่น 10 = อุปกรณ์ + ผลึกรูน ×1 · คลื่น 20 ที่ T10 = tier+1 (ตันที่ 4 ใน M2)',
+    d.plain === 0 && deq(d.b5, [2]) && d.b10.includes('gear2') && d.b10.includes('m_crystal×1') && deq(d.b20, [4]), d);
+  ok('elite (T6, 400 ตัว): ผงรูน 1–2 ทุกตัว · มีเศษรูน · อุปกรณ์ tier 4 เท่านั้น · Math.random ไม่ถูกเรียกเลย', d.dust && d.shard && deq(d.eGear, [4]) && d.calls === 0, d);
+}
+
+console.log('M2 · §3.8 ชุดเริ่มต้น (อาวุธฝึกหัดสวมอยู่ + ยาเล็ก ×3) · prepareRun ใช้ gearBonus / gearLook');
+{
+  const { X } = fresh();
+  const k = X(`(()=>{ const mr=Math.random; let calls=0; Math.random=()=>{ calls++; return mr(); }; const out={};
+    for(const c of ['swordsman','mage','archer','cleric','thief']){ const ch=newChar('ชุดเริ่ม',c), w=ch.inv[0], d=ITEMS[w.id];
+      const p=makePlayer(CLS[c]); recalc(p); p.hp=p.maxHp; prepareRun({},p,ch,'survival');
+      out[c]={n:ch.inv.length, id:w.id, tier:d.tier, cls:d.cls, worn:ch.eq.weapon===w.u, clean:w.r===0&&w.f===0&&w.s.length===0&&w.lk===0&&/^i_[a-z0-9]{8}$/.test(w.u),
+        pot:JSON.stringify(ch.inv[1]), quick:ch.quick[0], can:canEquip(ch,w), used:itBagUsed(ch), gear:JSON.stringify(gearBonus(ch)), st:JSON.stringify(d.st),
+        bonus:JSON.stringify(p.bonus), might:p.might, look:p.look.weapon, clsLook:CLS[c].look.weapon, dye:JSON.stringify(ch.dye),
+        ch:JSON.parse(JSON.stringify(ch)), v:validateSave({v:1,chars:[ch]}).chars[0]}; }
+    Math.random=mr; out.calls=calls; return out; })()`);
+  for (const c of CLASSES) {
+    const r = k[c];
+    ok(`${c}: อาวุธฝึกหัดของอาชีพ (${r.id} · tier 1 · ${r.cls}) สวมอยู่ · ยาฟื้นพลังเล็ก ×3 ในช่องด่วน 1 · กระเป๋าใช้ 1/80 (ของที่สวมไม่นับ)`,
+      r.n === 2 && r.tier === 1 && deq(r.cls, [c]) && r.worn && r.clean && r.pot === '{"id":"u_potion_s","n":3}' && r.quick === 'u_potion_s' && r.can === '' && r.used === 1 && r.dye === '{}', r);
+    ok(`${c}: P.bonus = gearBonus = ค่าของอาวุธ (${r.st}) · might ${r.might} · P.look.weapon = ${r.look} · validateSave ไม่เปลี่ยนอะไร`,
+      r.bonus === r.gear && r.gear === r.st && Math.abs(r.might - 1.05) < 1e-9 && r.look === r.clsLook && deq(r.v, r.ch), r);
+  }
+  ok('สร้างตัวละคร 5 อาชีพไม่เรียก Math.random (uid ใช้ crypto)', k.calls === 0, k.calls);
+  const g = X(`(()=>{ const ch=newChar('อุปกรณ์','swordsman'); ch.lv=40; ch.pas={p_heavyarms:2};
+    const w=makeInst('w_sword_3',{sockets:1}); w.r=7; w.s=['rn_spitter']; ch.inv.push(w); ch.eq.weapon=w.u;
+    const gl=makeInst('g_archer',{}); ch.inv.push(gl); ch.eq.hands=gl.u;
+    const p=makePlayer(CLS.swordsman); recalc(p); p.hp=p.maxHp; prepareRun({},p,ch,'survival');
+    const lo=newChar('เลเวลต่ำ','swordsman'); const w2=makeInst('w_sword_3',{sockets:0}); lo.inv.push(w2); lo.eq.weapon=w2.u;
+    return {bonus:p.bonus, want:buildRunBonus(ch), might:p.might, cd:p.cdMul, crit:p.crit, base:CLS.swordsman.crit, look:p.look, gb:gearBonus(ch), lo:gearBonus(lo)}; })()`);
+  ok('P.bonus = mergeBonus(adv, meta, passive, gear) · cd ของถุงมือนักยิง (×0.97) เข้า P.cdMul · คริจากรูนโครงกระดูกนักธนู +3%',
+    deq(g.bonus, g.want) && g.bonus.cd === 0.97 && Math.abs(g.cd - 0.97) < 1e-9 && Math.abs(g.crit - g.base - 0.03) < 1e-9 && Math.abs(g.might - 1 - g.bonus.might) < 1e-9, g);
+  ok('P.look ได้อาวุธที่สวม (ดาบเหล็กกล้า สี tier 3) และแสง +7 (glow 1)', g.look.weapon === 'sword' && g.look.wc === '#a9c1dc' && g.look.glow === 1, g.look);
+  ok('อาวุธที่เลเวลยังไม่ถึง (Lv1 สวม tier 3) ไม่ให้ค่าใน gearBonus', deq(g.lo, {}), g.lo);
+}
+
+console.log('M2 · รางวัลจบรอบ: ของจาก G.loot เข้าเซฟครั้งเดียวต่อ runId · ระดับนรก · ปลดล็อก · กระเป๋าเต็ม');
+{
+  const { X } = fresh();
+  const r = X(`(()=>{ loadSaveFor(null); const ch=createChar('ของรางวัล','mage'); SAVE.acct.survTier=2; const out={};
+    const staff=makeInst('w_staff_2',{sockets:1}); const loot=[staff,{id:'m_dust',n:3},{id:'m_crystal',n:1},{id:'m_shard_bat',n:1}], before=JSON.stringify(loot);
+    const G0={char:ch, modeId:'survival', tier:2, wave:12, kills:400, t:300, runId:'r_it1', loot, goldRun:0, player:{hp:0}};
+    const nc=onRunEnd(Object.assign({},G0,{runId:'r_it0'}),false,{commit:false}); out.nc={inv:ch.inv.length, items:nc.items.length};
+    const r1=onRunEnd(G0,false,{commit:true});
+    out.r1={base:r1.baseXp, want:Math.round(BAL.bxpNeed(12)*BAL.SURV.expMul(11,false))*2, gold:r1.gold, daily:r1.daily, unlocks:r1.unlocks, tier:r1.tier, lost:r1.lost.length, st:r1.stashed.length};
+    const inv=()=>ch.inv.map(x=>x.u?x.id+':'+x.u:x.id+'×'+x.n).join(' ');
+    out.inv1=inv(); out.copy=ch.inv.some(x=>x===staff); out.lootSame=JSON.stringify(loot)===before; out.staffIn=ch.inv.some(x=>x.u===staff.u);
+    out.again=grantRewards(ch,r1); out.again2=grantRewards(ch,Object.assign({},r1,{items:loot.slice()})); out.inv2=inv();
+    out.survTier=SAVE.acct.survTier; out.rec=SAVE.acct.records.survival[ch.id]; out.daily=SAVE.acct.daily.surv;
+    const r2=onRunEnd(Object.assign({},G0,{runId:'r_it2', loot:[], wave:10}),false,{commit:true}); out.r2={daily:r2.daily, unlocks:r2.unlocks, gold:r2.gold};
+    const r3=onRunEnd(Object.assign({},G0,{runId:'r_it3', loot:[], tier:1, wave:10}),false,{commit:true}); out.r3={daily:r3.daily, unlocks:r3.unlocks, gold:r3.gold};
+    const r4=onRunEnd(Object.assign({},G0,{runId:'r_it4', loot:[], tier:7, wave:15}),false,{commit:true}); out.r4={unlocks:r4.unlocks, gold:r4.gold, base:r4.baseXp};
+    const r5=onRunEnd(Object.assign({},G0,{runId:'r_it5', loot:[], tier:3, wave:9}),false,{commit:true}); out.r5={unlocks:r5.unlocks};
+    out.tierEnd=SAVE.acct.survTier;
+    const m=JSON.parse(localStorage.getItem('runeguard.save.guest')); out.stored=m.chars[0].inv.some(x=>x.u===staff.u)&&m.acct.runIds.includes('r_it1');
+    return out; })()`);
+  ok('commit:false: คำนวณของได้ แต่กระเป๋าไม่เปลี่ยน', r.nc.inv === 2 && r.nc.items === 4, r.nc);
+  ok('T2 แพ้ที่คลื่น 12 (ผ่าน 11): Base EXP = bxpNeed(12) × 0.44 × 2 (รายวัน) · ทอง = 25 × 11 × 2 = 550 · ปลด T3 (ระดับสูงสุดที่ปลดคือ T2)',
+    r.r1.base === r.r1.want && r.r1.gold === 550 && r.r1.daily && deq(r.r1.unlocks.filter(u => /^survTier/.test(u)), ['survTier:3']) && r.r1.tier === 2 && r.survTier === 3, r.r1);
+  ok('ของใน G.loot เข้ากระเป๋า: ไม้เท้า (uid เดิม · เป็นสำเนา ไม่ใช่ object ใน G.loot) · ผงรูน ×3 · ผลึก ×1 · เศษรูน ×1 · G.loot ไม่ถูกแก้',
+    r.staffIn && !r.copy && r.lootSame && /m_dust×3/.test(r.inv1) && /m_crystal×1/.test(r.inv1) && /m_shard_bat×1/.test(r.inv1) && r.r1.lost === 0 && r.r1.st === 0, r.inv1);
+  ok('grantRewards ซ้ำด้วย runId เดิม (object เดิม / สำเนาที่ items ใหม่) ไม่ให้ของซ้ำ', r.again === false && r.again2 === false && r.inv2 === r.inv1, [r.inv1, r.inv2]);
+  ok('บันทึกสถิติต่อระดับ (records.survival[ตัวละคร]["2"]) และโบนัสรายวันต่อระดับ', r.rec[2].wave === 12 && r.rec[2].kills === 400 && r.daily[2] === 1, r.rec);
+  ok('รอบที่สองของวันใน T2: ไม่มี ×2 · ไม่ปลดซ้ำ · T1 (ต่ำกว่า): ได้ ×2 ของ T1 ครั้งแรกของวัน แต่ไม่ปลดอะไร',
+    !r.r2.daily && !r.r2.unlocks.some(u => /^survTier/.test(u)) && r.r2.gold === 25 * 9 && r.r3.daily && !r.r3.unlocks.some(u => /^survTier/.test(u)) && r.r3.gold === 20 * 9 * 2, [r.r2, r.r3]);
+  ok('ระดับที่ยังไม่ปลด (T7 ตอนปลดถึง T3) ไม่ข้ามขั้น · ไม่ถึงคลื่น 10 ไม่ปลด · ทอง/EXP ใช้ตัวเลขของ T7',
+    !r.r4.unlocks.some(u => /^survTier/.test(u)) && !r.r5.unlocks.some(u => /^survTier/.test(u)) && r.tierEnd === 3 && r.r4.gold === 50 * 14 * 2, [r.r4, r.r5, r.tierEnd]);
+  ok('ของและ runId ลงเซฟจริงใน localStorage', r.stored === true);
+  const o = X(`(()=>{ const ch=createChar('กระเป๋าเต็ม','thief'); const A=SAVE.acct, out={};
+    while(itBagUsed(ch)<ch.bagMax) ch.inv.push(makeInst('h_straw',{}));
+    const run=(id,loot)=>onRunEnd({char:ch, modeId:'survival', tier:0, wave:3, kills:5, t:30, runId:id, loot, goldRun:0, player:{hp:0}},false,{commit:true});
+    const d2=makeInst('w_dagger_2',{sockets:1}); const r1=run('r_full1',[d2,{id:'m_dust',n:5}]);
+    out.r1={st:r1.stashed.map(x=>x.u?x.id:x.id+'×'+x.n), lost:r1.lost.length, inStash:A.stash.some(x=>x.u===d2.u), dust:A.stash.find(x=>x.id==='m_dust').n, bag:itBagUsed(ch)};
+    while(A.stash.length<A.stashMax) A.stash.push(makeInst('h_straw',{}));
+    const d3=makeInst('w_dagger_3',{sockets:1}), cr={id:'m_crystal',n:2}; const r2=run('r_full2',[d3,cr,{id:'m_dust',n:4}]);
+    out.r2={st:r2.stashed.map(x=>x.id+'×'+x.n), lost:r2.lost, lostRef:r2.lost[0]===d3&&r2.lost[1]===cr, dust:A.stash.find(x=>x.id==='m_dust').n, held:A.stash.some(x=>x.u===d3.u)||ch.inv.some(x=>x.u===d3.u)};
+    ch.inv.push({id:'m_seal', n:97}); for(let i=0;i<2;i++) ch.inv.splice(ch.inv.findIndex(x=>x.id==='h_straw'),1);
+    const r3=run('r_full3',[{id:'m_seal',n:5}]); out.r3={seal:invCount(ch,'m_seal'), stacks:ch.inv.filter(x=>x.id==='m_seal').map(x=>x.n), st:r3.stashed.length, lost:r3.lost.length};
+    return out; })()`);
+  ok('กระเป๋าเต็ม: ของที่ได้ไปอยู่คลัง (r.stashed) ไม่หาย · ผงรูน ×5 ซ้อนในคลัง', deq(o.r1.st, ['w_dagger_2', 'm_dust×5']) && o.r1.lost === 0 && o.r1.inStash && o.r1.dust === 5 && o.r1.bag === 80, o.r1);
+  ok('กระเป๋าและคลังเต็ม: ของที่ซ้อนเข้ากองในคลังได้ยังเข้า (ผงรูน 5 → 9) · ที่เหลืออยู่ใน r.lost (object เดิมจาก G.loot) ไม่เงียบ',
+    deq(o.r2.st, ['m_dust×4']) && o.r2.lostRef && o.r2.lost.length === 2 && o.r2.dust === 9 && !o.r2.held, o.r2);
+  ok('กองที่ใส่ได้บางส่วน: ยันต์ผนึก 97 + 5 → กองเดิมเต็ม 99 + กองใหม่ 3 ในช่องว่าง · ไม่มีอะไรหาย', o.r3.seal === 102 && deq(o.r3.stacks, [99, 3]) && o.r3.st === 0 && o.r3.lost === 0, o.r3);
+}
+{
+  const { X, notes } = fresh();
+  X(`(()=>{ loadSaveFor(null); const ch=createChar('แจ้งเตือน','cleric'); while(itBagUsed(ch)<ch.bagMax) ch.inv.push(makeInst('h_straw',{}));
+    while(SAVE.acct.stash.length<SAVE.acct.stashMax) SAVE.acct.stash.push(makeInst('h_straw',{}));
+    onRunEnd({char:ch, modeId:'survival', tier:0, wave:3, kills:5, t:30, runId:'r_toast', loot:[makeInst('w_rod_2',{sockets:1}),{id:'m_crystal',n:2}], goldRun:0, player:{hp:0}},false,{commit:true}); })()`);
+  ok('ของที่เก็บไม่ได้มี toast บอกผู้เล่น ("กระเป๋าและคลังเต็ม · ของ 3 ชิ้นเก็บไม่ได้")', notes.some(t => t[0] === 'กระเป๋าและคลังเต็ม · ของ 3 ชิ้นเก็บไม่ได้' && t[1] === 'bad'), notes);
+}
+
+console.log('M2 · ผ้าคลุมผู้บุกเบิก ครั้งเดียว');
+{
+  const { X, ls, notes } = fresh();
+  ls.setItem('runeguard.best', '{"archer":{"score":777,"wave":9,"kills":300,"won":false}}');
+  const p = X(`(()=>{ loadSaveFor(null); const a=createChar('รุ่นแรก','archer'), b=createChar('รุ่นสอง','mage'); const cl=a.inv.find(x=>x.id==='c_pioneer');
+    const all=()=>SAVE.chars.reduce((n,c)=>n+c.inv.filter(x=>x.id==='c_pioneer').length,0);
+    const out={worn:!!cl&&a.eq.cloak===cl.u, b:b.inv.some(x=>x.id==='c_pioneer'), flag:SAVE.acct.flags.pioneerCloak, n:all()};
+    loadSaveFor(null); out.n2=all(); createChar('รุ่นสาม','thief'); out.n3=all(); return out; })()`);
+  ok('ผู้เล่นเก่า: ตัวละครตัวแรกได้ผ้าคลุมผู้บุกเบิก (สวมอยู่) · ตัวที่สอง/สามไม่ได้ · โหลดใหม่ยังมีชิ้นเดียว · toast',
+    p.worn && !p.b && p.flag === true && p.n === 1 && p.n2 === 1 && p.n3 === 1 && notes.some(t => /ผ้าคลุมผู้บุกเบิก/.test(t[0])), p);
+}
+{
+  // M1 pioneer: made a character before items existed → the next load gives it once
+  const { X, ls, notes } = fresh();
+  const m1 = X(`(()=>{ const s=newSave(null); s.acct.flags.pioneer=true; s.acct.flags.migratedBest=true; const ch=newChar('ผู้บุกเบิก','swordsman'); ch.inv=[]; ch.eq=svEmptyEq(); ch.quick=[null,null]; delete ch.dye;
+    const c2=newChar('ตัวที่สอง','mage'); c2.inv=[]; c2.eq=svEmptyEq(); s.chars.push(ch,c2); s.active=ch.id; return JSON.stringify(s); })()`);
+  ls.setItem('runeguard.save.guest', m1);
+  const q = X(`(()=>{ const s=loadSaveFor(null), a=s.chars[0], c=a.inv.find(x=>x.id==='c_pioneer');
+    const stored=JSON.parse(localStorage.getItem('runeguard.save.guest')); const out={worn:!!c&&a.eq.cloak===c.u, other:s.chars[1].inv.length, flag:s.acct.flags.pioneerCloak,
+      stored:stored.chars[0].inv.filter(x=>x.id==='c_pioneer').length, flagStored:stored.acct.flags.pioneerCloak};
+    loadSaveFor(null); out.after=SAVE.chars[0].inv.filter(x=>x.id==='c_pioneer').length; return out; })()`);
+  ok('ผู้บุกเบิกที่สร้างตัวละครไว้แล้วใน M1: โหลดครั้งแรกตัวแรกได้ผ้าคลุม (สวม) + เขียนลงเครื่อง · โหลดซ้ำไม่ได้เพิ่ม · ตัวที่สองไม่ได้',
+    q.worn && q.other === 0 && q.flag && q.stored === 1 && q.flagStored === true && q.after === 1 && notes.some(t => /ผ้าคลุมผู้บุกเบิก/.test(t[0])), q);
+}
+{
+  const { X, ls } = fresh();
+  const full = X(`(()=>{ const s=newSave(null); s.acct.flags.pioneer=true; const ch=newChar('เต็มมือ','thief'); const old=makeInst('c_old',{}); ch.inv.push(old); ch.eq.cloak=old.u;
+    while(svBagUsed(ch)<ch.bagMax) ch.inv.push(makeInst('h_straw',{})); s.chars.push(ch); s.active=ch.id; return JSON.stringify(s); })()`);
+  ls.setItem('runeguard.save.guest', full);
+  const z = X(`(()=>{ const out={}; loadSaveFor(null); const ch=curChar(); out.a=ch.inv.some(x=>x.id==='c_pioneer'); out.fa=SAVE.acct.flags.pioneerCloak;
+    ch.inv.splice(ch.inv.findIndex(x=>x.id==='h_straw'),1); saveNow('room'); loadSaveFor(null); const c2=curChar(), cl=c2.inv.find(x=>x.id==='c_pioneer');
+    out.b=!!cl; out.wornOld=c2.eq.cloak!==(cl&&cl.u); out.fb=SAVE.acct.flags.pioneerCloak;
+    const s2=newSave(null); s2.acct.flags.pioneer=true; const k=newChar('มีแล้ว','mage'); s2.chars.push(k); s2.acct.stash.push(makeInst('c_pioneer',{})); out.own=svPioneerGift(s2,null); out.ownN=k.inv.filter(x=>x.id==='c_pioneer').length; out.ownF=s2.acct.flags.pioneerCloak;
+    const s3=newSave(null); const k3=newChar('ไม่ใช่','mage'); s3.chars.push(k3); out.no=svPioneerGift(s3,null); return out; })()`);
+  ok('ช่องผ้าคลุมไม่ว่าง + กระเป๋าเต็ม: ยังไม่ให้ (flag ยังไม่ตั้ง) · มีที่ว่างแล้วโหลดใหม่: ได้ในกระเป๋า (ไม่ถอดของเดิม)', !z.a && z.fa === false && z.b && z.wornOld && z.fb === true, z);
+  ok('มีผ้าคลุมผู้บุกเบิกอยู่แล้ว (ในคลัง): ตั้ง flag อย่างเดียว ไม่ให้ชิ้นที่สอง · ไม่ใช่ผู้เล่นเก่า: ไม่ได้', z.own === true && z.ownN === 0 && z.ownF === true && z.no === false, z);
+}
+
+console.log('M2 · validateSave กับข้อมูลไอเทมที่เป็นพิษ');
+{
+  const { X } = fresh();
+  const v = X(`(()=>{ const straw=[]; for(let i=0;i<70;i++) straw.push({u:'i_st'+i, id:'h_straw'});
+    const evil={v:1, acct:{stashMax:60, stash:[{u:'i_s1', id:'w_sword_2', r:'7', f:'2', s:['rn_spitter','rn_shambler']}, {u:'i_dupe1', id:'n_fang', r:9, f:4, s:['rn_bat']},
+        {id:'constructor', n:3}, {id:'__proto__'}, {u:'__proto__', id:'h_straw'}].concat(straw)},
+      chars:[{cls:'swordsman', bagMax:80, eq:{weapon:'i_w', cloak:'i_dupe1', head:'constructor', toString:'i_w', ring:'i_ring', body:'i_t2'},
+          quick:['constructor','toString'], zone:'constructor', visited:['constructor','z1'], dye:{body:'u_dye_red', trim:'constructor', cape:'w_sword_1', hatC:'u_dye_zzz', toString:'u_dye_red'},
+          sk:{constructor:5, slash:2}, bestiary:{constructor:1, valueOf:3, beetle:1},
+          inv:[{u:'i_w', id:'w_sword_4', r:1e9, f:-3, s:['rn_zzz','rn_shambler','rn_spitter'], lk:'1'},
+            {u:'i_ring', id:'r_traveler', r:5, f:2, s:['rn_bat','rn_bat']},
+            {u:'i_t2', id:'w_staff_2', r:NaN, f:99, s:['rn_bloater','rn_bloater','rn_bloater']},
+            {u:'i_t3', id:'w_sword_3', s:['constructor']},
+            {u:'i_dupe1', id:'c_old'},
+            {id:'hasOwnProperty', n:1}, {id:'valueOf'}, {id:'toString'}, {u:'i_x', id:'constructor'}, {id:'isPrototypeOf'}, {id:'__defineGetter__'},
+            {id:'m_dust', n:'50'}, {id:'m_dust', n:1e9}, {id:'m_seal', n:500}, {u:'i_bad', id:'m_dust', n:2}, {id:'w_sword_1', n:5}, {id:'m_crystal', n:-7}]},
+        {cls:'mage', inv:[{u:'i_w', id:'w_staff_1'}], eq:{weapon:'i_w'}}]};
+    const raw=JSON.parse(JSON.stringify(evil)); raw.chars[0].bestiary.__proto__=2;
+    const s=validateSave(raw), c=s.chars[0], c2=s.chars[1];
+    const all=[...s.chars.flatMap(x=>x.inv), ...s.acct.stash].filter(x=>x.u).map(x=>x.u);
+    return {inv:c.inv, eq:c.eq, quick:c.quick, zone:c.zone, vis:c.visited, dye:c.dye, sk:c.sk, be:Object.keys(c.bestiary), c2:{inv:c2.inv, eq:c2.eq.weapon},
+      stash:s.acct.stash.slice(0,4), stashN:s.acct.stash.length, uniq:new Set(all).size===all.length, polluted:({}).polluted!==undefined||Object.prototype.hasOwnProperty.call(Object.prototype,'n_fang'),
+      again:JSON.stringify(validateSave(JSON.parse(JSON.stringify(s))))===JSON.stringify(s)}; })()`);
+  const by = u => v.inv.find(x => x.u === u) || null;
+  ok('ref 1e9 → +10 · f −3 → 0 · ช่องรูนตาม template (tier 4 สูงสุด 2): รูนที่ไม่รู้จักเก็บไว้ · รูนผิดกลุ่ม (เกราะในอาวุธ) → ว่าง · lk → 1',
+    deq(by('i_w'), { u: 'i_w', id: 'w_sword_4', r: 10, f: 0, s: ['rn_zzz', null], lk: 1 }), by('i_w'));
+  ok('เครื่องประดับตีบวกไม่ได้: r/f → 0 · tier 1 ไม่มีช่องรูน → [] · tier 2 ช่องเดียว · f 99 → 5 · r NaN → 0 · รูนชื่อ constructor → ว่าง',
+    deq(by('i_ring'), { u: 'i_ring', id: 'r_traveler', r: 0, f: 0, s: [], lk: 0 }) && deq(by('i_t2'), { u: 'i_t2', id: 'w_staff_2', r: 0, f: 5, s: ['rn_bloater'], lk: 0 }) && deq(by('i_t3').s, [null]), [by('i_ring'), by('i_t2'), by('i_t3')]);
+  const ids = v.inv.map(x => x.id);
+  ok('id ชื่อเดียวกับสมาชิก Object.prototype (constructor · toString · valueOf · hasOwnProperty · isPrototypeOf · __proto__ · __defineGetter__) ถูกทิ้ง ไม่กลายเป็น unk',
+    !ids.some(i => ['constructor', 'toString', 'valueOf', 'hasOwnProperty', 'isPrototypeOf', '__proto__', '__defineGetter__'].includes(i)) && !v.inv.some(x => x.unk), ids);
+  ok('ของซ้อน: n "50" → 50 · 1e9 → 999 · ยันต์ผนึก 500 → 99 · n ติดลบ → 1 · ของซ้อนที่มี u → ไม่มี u · อาวุธในรูปของซ้อน → instance ใหม่ 1 ชิ้น',
+    deq(v.inv.filter(x => !x.u).map(x => x.id + '×' + x.n), ['m_dust×50', 'm_dust×999', 'm_seal×99', 'm_dust×2', 'm_crystal×1']) && v.inv.some(x => x.id === 'w_sword_1' && /^i_[a-z0-9]{8}$/.test(x.u) && x.r === 0), v.inv);
+  ok('eq: อาวุธ/ผ้าคลุม/แหวนที่ถูกช่องสวมอยู่ · "constructor" → null · ไม้เท้าในช่องเสื้อ (ผิดช่อง) → null · คีย์ toString ไม่เข้า eq',
+    v.eq.weapon === 'i_w' && v.eq.cloak === 'i_dupe1' && v.eq.ring === 'i_ring' && v.eq.head === null && v.eq.body === null && Object.keys(v.eq).length === 10, v.eq);
+  ok('quick / zone / visited / bestiary / sk ที่เป็นชื่อ prototype ถูกทิ้ง', deq(v.quick, [null, null]) && v.zone === 'z1' && deq(v.vis, ['z1']) && deq(v.be, ['beetle']) && deq(v.sk, { slash: 2 }), [v.quick, v.zone, v.vis, v.be, v.sk]);
+  ok('dye: เฉพาะ body/trim/cape/hatC ที่เป็น id u_dye_* (สีที่ไม่รู้จักเก็บไว้)', deq(v.dye, { body: 'u_dye_red', hatC: 'u_dye_zzz' }), v.dye);
+  ok('uid ซ้ำข้ามตัวละคร/คลัง → ตัวหลังได้ uid ใหม่ (ทั้งเซฟไม่มี uid ซ้ำ) · eq ของตัวที่สองที่ชี้ uid ซ้ำ → null แต่ของยังอยู่',
+    v.uniq && v.c2.eq === null && v.c2.inv.length === 1 && v.c2.inv[0].u !== 'i_w' && v.stash[1].id === 'n_fang' && v.stash[1].u !== 'i_dupe1', v.c2);
+  ok('คลัง: r "7" → 7 · f "2" → 2 · ช่องรูน tier 2 = 1 · เครื่องประดับ r/f → 0 · id prototype ถูกทิ้ง · uid "__proto__" → uid ใหม่ · ไม่เกิน stashMax 60',
+    deq(v.stash[0], { u: 'i_s1', id: 'w_sword_2', r: 7, f: 2, s: ['rn_spitter'], lk: 0 }) && v.stash[1].r === 0 && v.stash[1].f === 0 && deq(v.stash[1].s, []) && v.stash[2].id === 'h_straw' && /^i_[a-z0-9]{8}$/.test(v.stash[2].u) && v.stashN === 60, v.stash);
+  ok('ไม่มี prototype pollution · validateSave ซ้ำได้ผลเดิม', !v.polluted && v.again, v);
+  const w = X(`(()=>{ const ch=newChar('สวมห้า','swordsman'); ch.inv=[]; ch.eq=svEmptyEq();
+    for(const [slot,id] of [['weapon','w_sword_1'],['head','h_straw'],['body','b_cotton'],['cloak','c_old'],['feet','s_sandal']]){ const x=makeInst(id,{}); ch.inv.push(x); ch.eq[slot]=x.u; }
+    for(let i=0;i<80;i++) ch.inv.push(makeInst('h_leather',{})); const a=validateSave({v:1, chars:[ch]}).chars[0];
+    ch.inv.push(makeInst('h_leather',{})); const b=validateSave({v:1, chars:[ch]}).chars[0];
+    return {a:a.inv.length, aw:Object.values(a.eq).filter(Boolean).length, used:itBagUsed(a), b:b.inv.length, bw:Object.values(b.eq).filter(Boolean).length}; })()`);
+  ok('85 ชิ้น สวม 5 (lane E CR 1): โหลดใหม่ไม่หายสักชิ้น (กระเป๋า 80/80 + สวม 5) · 86 ชิ้น: ตัดเฉพาะชิ้นที่ไม่ได้สวม', w.a === 85 && w.aw === 5 && w.used === 80 && w.b === 85 && w.bw === 5, w);
+}
+
+// ================================================================================================
+// M1 carry-over (tester): each case below fails on the M1 code (checked against the pristine files)
+// ================================================================================================
+console.log('carry-over (a) · เซฟหลักอ่านไม่ได้และไม่มี .bak: ข้อความเดิมไปอยู่ .bak ก่อนเขียนเซฟใหม่');
+{
+  const K = 'runeguard.save.guest', raw = '{"v":1,"acct":{"gold":5000},"chars":[{"cls":"mage","lv":30,"name":"เกือบหาย"';
+  const { X, ls } = fresh();
+  ls.setItem(K, raw);
+  const a = X(`(()=>{ const s=loadSaveFor(null); return {from:svlState().from, n:s.chars.length}; })()`);
+  ok('โหลด: เริ่มเซฟใหม่ (lost) · .bak = ข้อความเดิมของเซฟหลักทุกไบต์ · เซฟหลักเป็นเซฟใหม่ที่อ่านได้', a.from === 'lost' && ls.getItem(K + '.bak') === raw && JSON.parse(ls.getItem(K)).v === 1, a);
+  X(`createChar('หลังพัง','mage'); saveNow('t1'); curChar().quick[1]='u_potion_s'; saveNow('t2');`);
+  ok('เขียนเซฟที่ยังไม่มีความคืบหน้าซ้ำ ๆ ไม่ทับ .bak ที่เก็บข้อความเสียไว้', ls.getItem(K + '.bak') === raw);
+  X(`curChar().kills=3; saveNow('p1'); curChar().kills=4; saveNow('p2');`);
+  ok('มีความคืบหน้าจริงแล้ว: write-ahead กลับมาทำงานปกติ (.bak = เซฟก่อนหน้าที่มี kills 3)', JSON.parse(ls.getItem(K + '.bak')).chars[0].kills === 3);
+}
+{
+  const K = 'runeguard.save.guest';
+  const { X, ls } = fresh();
+  ls.setItem(K, 'garbage-main'); ls.setItem(K + '.bak', 'garbage-bak');
+  X(`loadSaveFor(null)`);
+  ok('เสียทั้งคู่: .bak = ข้อความของเซฟหลัก (ใหม่กว่า) · เซฟหลักใหม่อ่านได้', ls.getItem(K + '.bak') === 'garbage-main' && JSON.parse(ls.getItem(K)).v === 1);
+  const base = memStorage(), lsx = { getItem: k => base.getItem(k), removeItem: k => base.removeItem(k), clear: () => base.clear(), key: i => base.key(i), get length() { return base.length; },
+    setItem: (k, v) => { if (String(k).endsWith('.bak')) throw new Error('QuotaExceededError'); base.setItem(k, v); } };
+  const F = fresh({ localStorage: lsx });
+  base.setItem(K, 'garbage-only');
+  const st = F.X(`(()=>{ loadSaveFor(null); createChar('ในหน่วยความจำ','thief'); return {stored:svlState().stored, n:SAVE.chars.length}; })()`);
+  ok('คัดลอกไป .bak ไม่ได้ (โควต้าเต็ม): ไม่เขียนทับเซฟหลักที่อ่านไม่ได้ · เล่นต่อในหน่วยความจำ', base.getItem(K) === 'garbage-only' && st.stored === false && st.n === 1, st);
+}
+
+console.log('carry-over (b) · อีกแท็บล้าง localStorage: เขียนเซฟในหน่วยความจำคืน ไม่โหลดเซฟว่าง');
+{
+  const shared = memStorage(), K = 'runeguard.save.guest';
+  const A = fresh({ localStorage: shared }), B = fresh({ localStorage: shared });
+  A.X(`loadSaveFor(null); createChar('ล้างข้อมูล','mage'); DEV.profile.gold(4321); DEV.profile.exp(20000);`);
+  const lv = A.X(`curChar().lv`), sid = A.X(`SAVE.sid`);
+  shared.clear(); A.X(`svlOnStorage({key:null})`);
+  const a = A.X(`({gold:SAVE.acct.gold, lv:curChar().lv, n:SAVE.chars.length})`), m = JSON.parse(shared.getItem(K));
+  ok('localStorage.clear() ในอีกแท็บ (event key null): เซฟในแท็บนี้ยังอยู่ และถูกเขียนคืนลงเครื่อง + toast',
+    a.gold === 4321 && a.lv === lv && lv > 1 && m.acct.gold === 4321 && m.sid === sid && A.notes.some(t => /ถูกล้าง/.test(t[0])), { a, gold: m.acct.gold });
+  shared.removeItem(K); A.X(`svlOnStorage({key:'${K}'})`);
+  ok('คีย์หลักถูกลบ (removeItem): เขียนคืนเหมือนกัน', JSON.parse(shared.getItem(K) || 'null')?.acct.gold === 4321);
+  shared.clear(); B.X(`loadSaveFor(null)`);                                   // a tab that started over writes an empty save first
+  const bSid = JSON.parse(shared.getItem(K)).sid; A.X(`svlOnStorage({key:'${K}'})`);
+  const m2 = JSON.parse(shared.getItem(K));
+  ok('อีกแท็บเริ่มเซฟว่างใหม่หลังล้าง (sid อื่น ไม่มีความคืบหน้า): แท็บนี้เขียนเซฟที่มีความคืบหน้าคืน', bSid !== sid && m2.sid === sid && m2.acct.gold === 4321 && A.X(`SAVE.acct.gold`) === 4321, m2.sid);
+  B.X(`loadSaveFor(null); DEV.profile.gold(9999)`); A.X(`svlOnStorage({key:'${K}'})`);
+  ok('อีกแท็บเขียนเซฟเดียวกันตามปกติ: ยังโหลดของอีกแท็บ (ไม่เขียนทับ)', A.X(`SAVE.acct.gold`) === 9999 && JSON.parse(shared.getItem(K)).acct.gold === 9999);
+  A.X(`G={char:curChar(), over:false}`); shared.clear(); A.X(`svlOnStorage({key:null})`);
+  const mid = JSON.parse(shared.getItem(K) || 'null');
+  const rr = A.X(`(()=>{ const r=onRunEnd({char:G.char, modeId:'survival', tier:0, wave:4, kills:9, t:40, runId:'r_clear1', loot:[], goldRun:0, player:{hp:0}},false,{commit:true}); return {c:r.committed, gold:r.gold}; })()`);
+  const m3 = JSON.parse(shared.getItem(K));
+  // fix-r3: was "waits until the run ends" (mid === null) — see the next block for the progress that waiting lost
+  ok('ล้างระหว่างรอบ: เขียนเซฟคืนทันที (ไม่รอจบรอบ) · จบรอบแล้วรางวัลลงเซฟ', !!mid && mid.sid === sid && mid.acct.gold === 9999 && rr.c && m3.acct.gold === 9999 + rr.gold && m3.acct.runIds.includes('r_clear1'), { mid: mid && mid.acct.gold, rr, gold: m3.acct.gold });
+  A.X(`G=null`);
+}
+console.log('fix-r3 · ล้าง localStorage ระหว่างรอบ แล้วอีกแท็บเล่นต่อก่อนรอบนี้จบ: เซฟของแท็บนี้ไม่หาย');
+{
+  const sh = memStorage(), K = 'runeguard.save.guest';
+  const A = fresh({ localStorage: sh }), B = fresh({ localStorage: sh });
+  A.X(`loadSaveFor(null); createChar('จอมเวทเอ','mage'); DEV.profile.gold(88888); DEV.profile.exp(200000);`);
+  const lvA = A.X('curChar().lv'), sidA = A.X('SAVE.sid'), idA = A.X('curChar().id');
+  A.X(`G={char:curChar(), over:false}`); sh.clear(); A.X(`svlOnStorage({key:null})`);          // tab A is mid-run
+  B.X(`loadSaveFor(null); createChar('แท็บบี','thief')`);                                      // tab B opens and plays
+  const rb = B.X(`onRunEnd({char:curChar(), modeId:'survival', tier:0, wave:6, kills:40, t:80, runId:'r_b3', loot:[], goldRun:0, player:{hp:0}},false,{commit:true}).committed`);
+  const ra = A.X(`(()=>{ const r=onRunEnd({char:G.char, modeId:'survival', tier:0, wave:5, kills:30, t:60, runId:'r_a3', loot:[], goldRun:0, player:{hp:0}},false,{commit:true}); G=null; return {c:r.committed, gold:r.gold}; })()`);
+  const m = JSON.parse(sh.getItem(K)), a = m.chars.find(c => c.id === idA);
+  ok('ล้างกลางรอบ → อีกแท็บสร้างตัวละครและจบรอบก่อน → จบรอบนี้: เซฟเดิม (Lv · 88,888 ทอง) + ตัวละครของอีกแท็บ + รางวัลทั้งสองรอบอยู่ครบ (เดิมเหลือแค่เซฟของอีกแท็บ)',
+    lvA > 1 && m.sid === sidA && !!a && a.lv === lvA && m.chars.some(c => c.name === 'แท็บบี') && rb === true && ra.c === true && m.acct.gold >= 88888 + ra.gold && m.acct.runIds.includes('r_a3') && m.acct.runIds.includes('r_b3'),
+    { sid: m.sid === sidA, a: a && a.lv, lvA, chars: m.chars.map(c => c.name), gold: m.acct.gold, runIds: m.acct.runIds, rb, ra });
+}
+console.log('m2-orch · ล้างข้อมูลตอนอีกแท็บอยู่กลางรอบ: สำเนาเก่าของแท็บกลางรอบไม่ทับของใหม่ของแท็บที่อยู่ในป้อม (3 ลำดับเหตุการณ์)');
+{
+  // A = in the fort (buys + refines) · B = mid-run, its copy is older · one clock for both tabs, every Date.now() +7 ms
+  const K = 'runeguard.save.guest';
+  const setup = () => {
+    let t = 1.9e12; const clk = () => (t += 7);
+    const sh = memStorage(), A = fresh({ localStorage: sh, __clk: clk }), B = fresh({ localStorage: sh, __clk: clk });
+    for (const T of [A, B]) T.X(`Date.now=()=>__clk()`);
+    A.X(`loadSaveFor(null); createChar('ป้อมเอ','swordsman'); DEV.profile.gold(50000); DEV.profile.give('w_sword_2',1,{r:7}); DEV.profile.give('m_crystal',30)`);
+    B.X(`loadSaveFor(null); G={char:curChar(), over:false}`);                    // B starts a run on the same save
+    const uid = A.X(`curChar().inv.find(x=>x.id==='w_sword_2').u`);
+    A.X(`buyItem(curChar(),'m_dust',10)`); B.X(`svlOnStorage({key:'${K}'})`);    // mid-run: B does not reload (by design)
+    const rf = A.X(`(()=>{ itRefineRng=()=>.99; try{ return refineTry(curChar(),'${uid}',{}); } finally{ itRefineRng=null; } })()`);   // a fail: +7→+8 drops to +6, pity 1
+    B.X(`svlOnStorage({key:'${K}'})`);
+    const want = A.X(`({gold:SAVE.acct.gold, dust:invCount(curChar(),'m_dust'), cr:invCount(curChar(),'m_crystal'), r:itFind(curChar(),'${uid}').r, f:itFind(curChar(),'${uid}').f})`);
+    const got = () => { const s = JSON.parse(sh.getItem(K)), c = s.chars[0], w = c.inv.find(x => x.u === uid), n = id => c.inv.filter(x => x.id === id).reduce((a, x) => a + (x.n | 0), 0);
+      return { gold: s.acct.gold, dust: n('m_dust'), cr: n('m_crystal'), r: w && w.r, f: w && w.f }; };
+    const endB = () => B.X(`(()=>{ const r=onRunEnd({char:G.char, modeId:'survival', tier:0, wave:6, kills:20, t:70, runId:'r_wipe_b', loot:[], goldRun:0, player:{hp:0}},false,{commit:true}); G=null; return {c:r.committed, gold:r.gold}; })()`);
+    return { sh, A, B, uid, rf, want, got, endB };
+  };
+  const same = (a, b) => a.gold === b.gold && a.dust === b.dust && a.cr === b.cr && a.r === b.r && a.f === b.f;
+  // 1 · tab A clears (A gets no event) → B (mid-run) writes its older copy back → A gets B's event and writes its newer copy over it
+  {
+    const S = setup();
+    ok('ตั้งต้น: ตีบวก +7→+8 ล้ม (ตกเหลือ +6 · ความเพียร 1) · ซื้อผง 10 · B ยังถือสำเนาก่อนซื้อ', S.rf.res === 'down' && S.want.r === 6 && S.want.f === 1 && S.want.dust === 10, { rf: S.rf, want: S.want });
+    S.sh.clear(); S.B.X(`svlOnStorage({key:null})`);
+    const mid = S.got();
+    S.A.X(`svlOnStorage({key:'${K}'})`);
+    const afterA = S.got();
+    S.B.X(`svlOnStorage({key:'${K}'})`);                                         // A's write reaches B mid-run: B waits
+    const rr = S.endB(), fin = S.got();
+    ok('ลำดับ 1 (แท็บ A ล้างเอง): B กลางรอบเคยเห็นของใหม่ของ A (svlSeen) → เขียนของใหม่นั้นคืน ไม่ใช่สำเนาเก่าของตัวเอง (ทอง ผง คริสตัล +6/ความเพียรครบตั้งแต่แรก)',
+      same(mid, S.want) && same(afterA, S.want), { mid, afterA, want: S.want });
+    ok('ลำดับ 1: จบรอบของ B โหลดของ A แล้วจ่ายรางวัลทับ · ผลตีบวกที่ล้มไม่หาย (ตีซ้ำไม่ได้)',
+      rr.c && fin.gold === S.want.gold + rr.gold && fin.dust === S.want.dust && fin.r === S.want.r && fin.f === S.want.f, { rr, fin, want: S.want });
+    ok('ลำดับ 1: แท็บ A ไม่โหลดสำเนาเก่า (หน่วยความจำยังเป็นของใหม่) · ไม่มีเตือนแดง', S.A.X(`SAVE.acct.gold`) === S.want.gold && S.A.X(`itFind(curChar(),'${S.uid}').f`) === 1 && !S.A.notes.some(t => t[1] === 'bad'), S.A.X(`SAVE.acct.gold`));
+  }
+  // 1b · same, but A only notices on its next action (no storage event reached it): that action writes the newer copy back
+  {
+    const S = setup();
+    S.sh.clear(); S.B.X(`svlOnStorage({key:null})`);
+    const r = S.A.X(`buyItem(curChar(),'u_potion_s',1)`);
+    const g = S.got();
+    ok('ลำดับ 1b (A ไม่ได้รับ event · กดซื้อครั้งถัดไป): ไม่โหลดสำเนาเก่า · ของใหม่ + ยา 1 ขวดลงเครื่อง',
+      r === '' && g.dust === S.want.dust && g.r === S.want.r && g.f === S.want.f && g.cr === S.want.cr && g.gold === S.want.gold - S.A.X(`itBuyPrice('u_potion_s')`), { r, g, want: S.want });
+  }
+  // 2 · external clear, B (mid-run) handles the event first, then A
+  {
+    const S = setup();
+    S.sh.clear(); S.B.X(`svlOnStorage({key:null})`); S.A.X(`svlOnStorage({key:null})`);
+    S.B.X(`svlOnStorage({key:'${K}'})`);
+    const g = S.got(), rr = S.endB(), fin = S.got();
+    ok('ลำดับ 2 (ล้างจากภายนอก · B ได้ event ก่อน): ของใหม่ของ A ชนะ · จบรอบ B รางวัลลงบนของใหม่', same(g, S.want) && rr.c && fin.gold === S.want.gold + rr.gold && fin.f === S.want.f, { g, fin, rr });
+  }
+  // 3 · external clear, A (idle) handles the event first, then B
+  {
+    const S = setup();
+    S.sh.clear(); S.A.X(`svlOnStorage({key:null})`); S.B.X(`svlOnStorage({key:null})`);
+    const g = S.got(), rr = S.endB(), fin = S.got();
+    ok('ลำดับ 3 (ล้างจากภายนอก · A ได้ event ก่อน): A เขียนคืน · B ไม่เขียนทับ · จบรอบ B รางวัลลงบนของใหม่', same(g, S.want) && rr.c && fin.gold === S.want.gold + rr.gold && fin.f === S.want.f, { g, fin, rr });
+  }
+  // import of an older export: mt is stamped, so the other tab (same sid, later copy) reloads it instead of writing its own back
+  {
+    const S = setup(); S.B.X(`G=null`);
+    const old = S.B.X(`exportSave()`);                                            // B's copy: before the purchase and the refine
+    S.B.X(`svlFresh()`);                                                          // B catches up (reload)
+    const imp = S.B.X(`importSave(${JSON.stringify(old)}).ok`);
+    S.A.X(`svlOnStorage({key:'${K}'})`);
+    const g = S.got();
+    ok('นำเข้าเซฟเก่า (sid เดียวกัน): แท็บอื่นโหลดเซฟที่นำเข้า ไม่เขียนสำเนาของตัวเองทับ', imp === true && g.dust === 0 && S.A.X(`invCount(curChar(),'m_dust')`) === 0, { imp, g });
+  }
+}
+
+console.log('m2-orch · นาฬิกาเครื่องถอยหลังตอนเปิดสองแท็บ: การกระทำไม่ถูกย้อน (ลำดับเซฟใช้ตัวนับ wc ไม่ใช้นาฬิกา)');
+{
+  const K = 'runeguard.save.guest';
+  let t = 1.9e12; const clk = () => (t += 7);
+  const sh = memStorage(), A = fresh({ localStorage: sh, __clk: clk }), B = fresh({ localStorage: sh, __clk: clk });
+  for (const T of [A, B]) T.X(`Date.now=()=>__clk()`);
+  A.X(`loadSaveFor(null); createChar('นาฬิกาถอย','mage'); DEV.profile.gold(50000)`);
+  B.X(`loadSaveFor(null)`);
+  const wc0 = JSON.parse(sh.getItem(K)).wc, pot0 = A.X(`invCount(curChar(),'u_potion_s')`);
+  t -= 3600e3;                                                                  // the clock steps back 1 h (NTP / date changed by hand)
+  const r1 = A.X(`buyItem(curChar(),'m_dust',10)`); B.X(`svlOnStorage({key:'${K}'})`);
+  const r2 = B.X(`buyItem(curChar(),'u_potion_s',1)`); A.X(`svlOnStorage({key:'${K}'})`);
+  const r3 = A.X(`buyItem(curChar(),'m_dust',5)`); B.X(`svlOnStorage({key:'${K}'})`);
+  const s = JSON.parse(sh.getItem(K)), c = s.chars[0], n = id => c.inv.filter(x => x.id === id).reduce((a, x) => a + (x.n | 0), 0);
+  const mem = T => T.X(`JSON.stringify(SAVE)`) === sh.getItem(K);
+  ok('นาฬิกาถอย 1 ชม.: ซื้อสลับกันสองแท็บ 3 ครั้ง ของอยู่ครบ (ผง 15 · ยา +1) · wc +3 · หน่วยความจำทั้งสองแท็บ = ที่เก็บ (ถ้าเรียงด้วยเวลา แท็บที่ถือเวลาสูงกว่าจะเขียนทับทุกครั้ง)',
+    r1 === '' && r2 === '' && r3 === '' && n('m_dust') === 15 && n('u_potion_s') === pot0 + 1 && s.wc === wc0 + 3 && mem(A) && mem(B), { r: [r1, r2, r3], dust: n('m_dust'), pot: n('u_potion_s'), pot0, wc: s.wc - wc0, a: mem(A), b: mem(B) });
+  t -= 3600e3;                                                                  // and back again, then an import in A
+  const json = A.X(`exportSave()`), wc1 = JSON.parse(sh.getItem(K)).wc;
+  const imp = A.X(`importSave(${JSON.stringify(json)}).ok`); B.X(`svlOnStorage({key:'${K}'})`);
+  const s2 = JSON.parse(sh.getItem(K));
+  ok('นาฬิกาถอยอีกครั้งแล้วนำเข้าเซฟ: wc ของเซฟที่นำเข้า > เดิม · อีกแท็บโหลดตาม ไม่เขียนสำเนาของตัวเองทับ', imp === true && s2.wc > wc1 && mem(B) && mem(A), { imp, d: s2.wc - wc1 });
+}
+console.log('m2-orch r2 · เขียนทับสำเนาเก่าใน svlWrite · แท็บใหม่กว่ากลางรอบ · นำเข้าหลังล้าง · เขียนไม่ผ่าน · เซฟหลักเสีย · บันทึกพร้อมกัน · รางวัล/สร้างตัวชนกัน');
+{
+  const K = 'runeguard.save.guest';
+  // two tabs on one storage · tab A can be made to fail its writes (quota) · one shared fake clock
+  const pair = () => {
+    let t = 1.9e12; const clk = () => (t += 7);
+    const base = memStorage(), failA = { on: false };
+    const lsA = { getItem: k => base.getItem(k), removeItem: k => base.removeItem(k), clear: () => base.clear(), key: i => base.key(i), get length() { return base.length; },
+      setItem: (k, v) => { if (failA.on) throw new Error('QuotaExceededError'); base.setItem(k, v); } };
+    const A = fresh({ localStorage: lsA, __clk: clk }), B = fresh({ localStorage: base, __clk: clk });
+    for (const T of [A, B]) T.X(`Date.now=()=>__clk()`);
+    A.X(`loadSaveFor(null); createChar('สองแท็บ','swordsman'); DEV.profile.gold(50000)`); B.X(`loadSaveFor(null)`);
+    const got = () => { const s = JSON.parse(base.getItem(K) || 'null'); if (!s) return null; const c = s.chars[0], n = id => c.inv.filter(x => x.id === id).reduce((a, x) => a + (x.n | 0), 0);
+      return { gold: s.acct.gold, dust: n('m_dust'), pot: n('u_potion_s'), wc: s.wc, chars: s.chars.length, runIds: s.acct.runIds.slice(), sid: s.sid }; };
+    return { base, A, B, got, failA, step: d => { t += d; } };
+  };
+  // H1 · after a wipe the stale tab wrote its copy back; the newer tab's next write sees it only inside svlWrite (no svlFresh first)
+  {
+    const P = pair();
+    P.A.X(`buyItem(curChar(),'m_dust',10)`);                                   // A newer (B has not seen it)
+    P.base.clear(); P.B.X(`svlOnStorage({key:null})`);                          // B writes its older copy back
+    const w = P.A.X(`DEV.profile.gold(SAVE.acct.gold+1)`);                      // a plain saveNow in A, no svlFresh before it
+    const g = P.got();
+    ok('H1: เขียนธรรมดา (saveNow) ทับสำเนาเก่าที่อีกแท็บเขียนคืน · ผง 10 ของแท็บใหม่ยังอยู่ (ถ้า svlWrite โหลดสำเนาเก่าแทน ผงหาย)', g.dust === 10 && g.gold === w, { g, w });
+    P.base.clear(); P.B.X(`svlFresh(); svlOnStorage({key:null})`);
+    const r = P.A.X(`(()=>{ const f=svlFresh; svlFresh=()=>false; try{ return buyItem(curChar(),'u_potion_s',1); } finally{ svlFresh=f; } })()`);
+    const g2 = P.got();
+    ok('H1b: คำสั่งซื้อที่ itLive ไม่เห็นสำเนาเก่า ก็ยังเขียนของใหม่ทับ (ไม่คืน "อีกแท็บ") · ของเดิมครบ', r === '' && g2.dust === 10 && g2.pot === 4, { r, g2 });
+  }
+  // H2 · the newer tab is mid-run, the stale tab writes its copy back and acts before the run ends
+  {
+    const P = pair();
+    P.A.X(`buyItem(curChar(),'m_dust',10); buyItem(curChar(),'m_dust',1); G={char:curChar(), over:false}`);   // A: 2 writes ahead, then a run
+    P.base.clear(); P.B.X(`svlFresh()`);                                         // B (idle, behind) restores its copy on its next action…
+    P.B.X(`buyItem(curChar(),'u_potion_s',1)`);                                 // …and buys on it (wc only 1 past its old copy)
+    P.A.X(`svlOnStorage({key:'${K}'})`);                                       // A mid-run sees an older copy of its save → writes its own back
+    const mid = P.got();
+    const rr = P.A.X(`(()=>{ const r=onRunEnd({char:G.char, modeId:'survival', tier:0, wave:4, kills:9, t:40, runId:'r_h2run', loot:[], goldRun:0, player:{hp:0}},false,{commit:true}); G=null; return r.committed; })()`);
+    const fin = P.got();
+    ok('H2: แท็บใหม่กว่าอยู่กลางรอบ เขียนของตัวเองทับสำเนาเก่าที่อีกแท็บใช้ซื้อต่อ · ผง 11 ของแท็บใหม่ไม่หาย · จบรอบรางวัลลง', mid.dust === 11 && rr === true && fin.dust === 11 && fin.runIds.includes('r_h2run'), { mid, fin, rr });
+    ok('H2: แท็บที่ช้ากว่าโหลดของใหม่ในคำสั่งถัดไป (ยาที่ซื้อบนสำเนาเก่าหาย = ข้อจำกัดที่ยอมรับ ไม่มีของซ้ำ)', P.B.X(`(svlFresh(), invCount(curChar(),'m_dust'))`) === 11, P.B.X(`invCount(curChar(),'m_dust')`));
+  }
+  // import right after a wipe: wc starts above this tab's own copy, so the other tab (same wc as this one) reloads the import
+  {
+    const P = pair();
+    const old = P.A.X(`exportSave()`);
+    P.A.X(`buyItem(curChar(),'m_dust',5)`); P.B.X(`svlOnStorage({key:'${K}'})`);            // both tabs in step, wc k
+    P.base.clear();                                                                // wiped; nobody restored yet
+    const imp = P.A.X(`importSave(${JSON.stringify(old)}).ok`); P.B.X(`svlOnStorage({key:'${K}'})`);
+    const g = P.got();
+    ok('นำเข้าเซฟเก่าทันทีหลังล้าง: wc ตั้งเหนือสำเนาของแท็บนี้ → อีกแท็บ (wc เท่ากัน) โหลดเซฟที่นำเข้า ไม่เขียนทับ', imp === true && g.dust === 0 && P.B.X(`invCount(curChar(),'m_dust')`) === 0, { imp, g });
+  }
+  // a failed write (quota) puts wc back: the other tab's later write still wins
+  {
+    const P = pair();
+    const wc0 = P.got().wc;
+    P.failA.on = true; const ra = P.A.X(`buyItem(curChar(),'m_dust',3)`); const wcA = P.A.X(`SAVE.wc`); P.failA.on = false;
+    P.step(-3600e3);
+    const rb = P.B.X(`buyItem(curChar(),'u_potion_s',2)`); P.A.X(`svlOnStorage({key:'${K}'})`);
+    const g = P.got();
+    ok('เขียนไม่ผ่าน (โควตาเต็ม) แล้ว wc ไม่ขยับ · อีกแท็บซื้อต่อ → แท็บนี้โหลดของอีกแท็บ (ยา +2 อยู่ · ผงที่ไม่เคยบันทึกไม่โผล่)', ra === '' && wcA === wc0 && rb === '' && g.pot === 5 && g.dust === 0 && P.A.X(`invCount(curChar(),'u_potion_s')`) === 5, { ra, wcA, wc0, rb, g });
+  }
+  // the main text no longer parses while a tab is open: that tab's copy goes back (not .bak, which is one write behind)
+  {
+    const P = pair();
+    const u = P.A.X(`(()=>{ const it=makeInst('w_sword_2',{}); it.r=7; invAdd(curChar(),it,1); invAdd(curChar(),'m_crystal',5); saveNow('t'); return it.u; })()`);
+    P.B.X(`svlOnStorage({key:'${K}'})`);
+    const rf = P.A.X(`(()=>{ itRefineRng=()=>.99; try{ return refineTry(curChar(),'${u}',{}).res; } finally{ itRefineRng=null; } })()`);
+    P.base.setItem(K, '{"v":1,"acct":{"gold":'); P.A.X(`svlOnStorage({key:'${K}'})`);
+    const s = JSON.parse(P.base.getItem(K)), w = s.chars[0].inv.find(x => x.u === u);
+    ok('เซฟหลักเสียระหว่างเปิดเกม: แท็บที่เปิดอยู่เขียนสำเนาของตัวเองคืน (ผลตีบวกที่ล้มยังอยู่ +6 ความเพียร 1) · ไม่ถอยไป .bak · toast "เซฟในเครื่องเสีย"',
+      rf === 'down' && w && w.r === 6 && (w.f | 0) === 1 && P.A.notes.some(n => /เซฟในเครื่องเสีย/.test(n[0])), { rf, r: w && w.r, f: w && w.f });
+  }
+  // two writes on the same base at once (a busy tab read a stale cache): the tab whose action was overwritten is told so
+  {
+    const P = pair();
+    const tk = P.base.getItem(K);
+    P.B.X(`buyItem(curChar(),'u_potion_s',1)`);                                // B: wc k+1
+    const tb = P.base.getItem(K); P.base.setItem(K, tk);                           // A still sees the old text (stale cache)…
+    P.A.X(`buyItem(curChar(),'m_dust',1)`);                                      // …and writes wc k+1 on it
+    P.B.X(`svlOnStorage({key:'${K}'})`);
+    ok('บันทึกพร้อมกันบนฐานเดียวกัน (wc เท่ากัน): แท็บที่ถูกทับโหลดใหม่และได้ toast เตือนว่าการกระทำล่าสุดอาจหาย', tb !== tk && P.B.notes.some(n => n[1] === 'bad' && /บันทึกทับพร้อมกัน/.test(n[0])), P.B.notes.slice(-2));
+  }
+  // onRunEnd whose write finds another tab's save: the reward is paid once onto the reloaded save, not lost and not twice
+  {
+    const P = pair();
+    P.A.X(`G={char:curChar(), over:false}`);
+    P.B.X(`buyItem(curChar(),'m_dust',4)`);
+    const r = P.A.X(`(()=>{ const f=svlFresh; svlFresh=()=>false; try{ const r=onRunEnd({char:G.char, modeId:'survival', tier:0, wave:5, kills:20, t:50, runId:'r_race1', loot:[], goldRun:0, player:{hp:0}},false,{commit:true}); return {c:r.committed, gold:r.gold}; } finally{ svlFresh=f; G=null; } })()`);
+    const g = P.got();
+    ok('จบรอบตอนอีกแท็บเพิ่งเขียน: รางวัลจ่ายลงเซฟที่โหลดใหม่ครั้งเดียว (committed · runId 1 ครั้ง · ผงของอีกแท็บอยู่)', r.c === true && g.runIds.filter(x => x === 'r_race1').length === 1 && g.dust === 4 && g.gold === 50000 + r.gold - P.A.X(`itBuyPrice('m_dust')`) * 4, { r, g });
+    const again = P.A.X(`grantRewards(curChar(),{runId:'r_race1', baseXp:10, jobXp:5, gold:999, items:[], st:{}})`);
+    ok('ส่งรางวัลรอบเดิมซ้ำ → ปฏิเสธ', again === false && P.got().gold === g.gold, again);
+  }
+  // createChar / deleteChar / setActiveChar whose write finds another tab's save: not reported as done
+  {
+    const P = pair();
+    P.B.X(`buyItem(curChar(),'m_dust',2)`);
+    const c = P.A.X(`(()=>{ const f=svlFresh; svlFresh=()=>false; try{ const r=createChar('ชนกันตอนสร้าง','mage'); return typeof r==='string'?r:'OK'; } finally{ svlFresh=f; } })()`);
+    const g = P.got();
+    ok('สร้างตัวละครตอนอีกแท็บเพิ่งเขียน: คืนข้อความ "อีกแท็บ" ไม่ใช่ตัวละคร · ในเครื่องยังมีตัวเดียว + ผงของอีกแท็บ', /อีกแท็บ/.test(c) && g.chars === 1 && g.dust === 2, { c, g });
+  }
+}
+console.log('m2-orch r3 · แอปคนละรุ่น (สายเซฟ wb) · ไม่มีเตือนแดงปลอม · .bak ใหม่กว่า · นำเข้า wc ตัน · toast รางวัลครั้งเดียว');
+{
+  const K = 'runeguard.save.guest';
+  const tabs = n => {
+    let t = 1.9e12; const clk = () => (t += 7); const sh = memStorage(), T = [];
+    for (let i = 0; i < n; i++) { const x = fresh({ localStorage: sh, __clk: clk }); x.X(`Date.now=()=>__clk()`); T.push(x); }
+    T[0].X(`loadSaveFor(null); createChar('หลายรุ่น','swordsman'); DEV.profile.gold(50000)`); for (const x of T.slice(1)) x.X(`loadSaveFor(null)`);
+    const got = () => { const s = JSON.parse(sh.getItem(K) || 'null'); if (!s) return null; const c = s.chars[0], q = id => c.inv.filter(x => x.id === id).reduce((a, x) => a + (x.n | 0), 0);
+      return { gold: s.acct.gold, dust: q('m_dust'), pot: q('u_potion_s'), wc: s.wc, wb: s.wb }; };
+    const red = x => x.notes.filter(n => n[1] === 'bad' && /บันทึกทับพร้อมกัน/.test(n[0])).length;
+    return { sh, T, got, red };
+  };
+  // an older build (no wc / wb) writes: its copy is a new lineage, never "older" than a tab that still holds a high wc
+  {
+    const { sh, T: [A, C], got } = tabs(2);
+    for (let i = 0; i < 4; i++) { A.X(`buyItem(curChar(),'u_potion_s',1)`); C.X(`svlOnStorage({key:'${K}'})`); }
+    C.X(`G={char:curChar(), over:false}`);                                        // C mid-run, wc high
+    const old = JSON.parse(sh.getItem(K)); delete old.wc; delete old.wb; old.app = '2.0.0-m1'; old.acct.gold += 777; sh.setItem(K, JSON.stringify(old));   // the M1 build's write
+    A.X(`svlOnStorage({key:'${K}'})`); A.X(`buyItem(curChar(),'m_dust',5)`);       // A reloads it (new lineage, wc 0) and buys
+    C.X(`svlOnStorage({key:'${K}'})`);
+    const g = got();
+    ok('แอปรุ่นเก่า (ไม่มี wc/wb) เขียน → แท็บรุ่นนี้โหลดเป็นสายใหม่แล้วซื้อ → แท็บกลางรอบที่ถือ wc สูงกว่าไม่เขียนทับ (ทอง +777 และผง 5 อยู่ครบ)', g.dust === 5 && g.gold === 50000 - 4 * 30 + 777 - A.X(`itBuyPrice('m_dust')`) * 5 && C.X(`SAVE.wb`) !== g.wb, { g, cwb: C.X(`SAVE.wb`) });
+    const rr = C.X(`(()=>{ const r=onRunEnd({char:G.char, modeId:'survival', tier:0, wave:3, kills:5, t:30, runId:'r_mix1', loot:[], goldRun:0, player:{hp:0}},false,{commit:true}); G=null; return r.committed; })()`);
+    ok('จบรอบของแท็บกลางรอบ: โหลดสายใหม่แล้วจ่ายรางวัลทับ (ผง 5 ยังอยู่)', rr === true && got().dust === 5, got());
+  }
+  // no false red toast: wipes / broken main in every event order with idle tabs, a pending debounced change, a restored copy whose text differs
+  {
+    const flows = {
+      'ล้างจากภายนอก ลำดับ AB': (A, B, sh) => { sh.clear(); A.X(`svlOnStorage({key:null})`); B.X(`svlOnStorage({key:null})`); A.X(`svlOnStorage({key:'${K}'})`); B.X(`svlOnStorage({key:'${K}'})`); },
+      'ล้างจากภายนอก ลำดับ BA': (A, B, sh) => { sh.clear(); B.X(`svlOnStorage({key:null})`); A.X(`svlOnStorage({key:null})`); B.X(`svlOnStorage({key:'${K}'})`); A.X(`svlOnStorage({key:'${K}'})`); },
+      'A ล้างเอง แล้ว B': (A, B, sh) => { sh.clear(); B.X(`svlOnStorage({key:null})`); A.X(`svlOnStorage({key:'${K}'})`); },
+      'เซฟหลักเสีย ลำดับ BA': (A, B, sh) => { sh.setItem(K, '{"v":1,"acct":'); B.X(`svlOnStorage({key:'${K}'})`); A.X(`svlOnStorage({key:'${K}'})`); B.X(`svlOnStorage({key:'${K}'})`); },
+      'A มีบันทึกค้าง (debounce) แล้วล้าง AB': (A, B, sh) => { A.X(`SAVE.acct.flags.tips.t1=1; saveLocal('tip')`); sh.clear(); A.X(`svlOnStorage({key:null})`); B.X(`svlOnStorage({key:null})`); B.X(`svlOnStorage({key:'${K}'})`); A.X(`saveNow('flush')`); B.X(`svlOnStorage({key:'${K}'})`); },   // the pending write goes out after the restore
+      'A มีบันทึกค้าง (debounce) แล้วล้าง BA': (A, B, sh) => { A.X(`SAVE.acct.flags.tips.t1=1; saveLocal('tip')`); sh.clear(); B.X(`svlOnStorage({key:null})`); A.X(`svlOnStorage({key:null})`); A.X(`svlOnStorage({key:'${K}'})`); B.X(`svlOnStorage({key:'${K}'})`); A.X(`saveNow('flush')`); B.X(`svlOnStorage({key:'${K}'})`); },
+    };
+    const res = {};
+    for (const k in flows) {
+      const { sh, T: [A, B], got, red } = tabs(2);
+      A.X(`buyItem(curChar(),'m_dust',2)`); B.X(`svlOnStorage({key:'${K}'})`);   // in step
+      flows[k](A, B, sh);
+      const g = got(), tip = /debounce/.test(k) ? JSON.parse(sh.getItem(K)).acct.flags.tips.t1 === 1 : true;
+      res[k] = { red: red(A) + red(B), dust: g && g.dust, tip, memA: A.X(`JSON.stringify(SAVE)`) === sh.getItem(K) || A.X(`svlFresh(), JSON.stringify(SAVE)`) === sh.getItem(K) };
+    }
+    ok('ล้าง / เซฟหลักเสีย ทุกลำดับ (แท็บว่าง · มีบันทึกค้าง): ไม่มีเตือนแดง "บันทึกทับพร้อมกัน" · ผง 2 อยู่ · บันทึกค้างไม่หาย', Object.values(res).every(r => r.red === 0 && r.dust === 2 && r.tip), res);
+  }
+  // a broken main with only an older tab open and a newer .bak: the older tab loads .bak, it does not write its older copy back
+  {
+    const { sh, T: [A, M], got } = tabs(2);
+    M.X(`G={char:curChar(), over:false}`);                                         // M mid-run, behind from here on
+    A.X(`buyItem(curChar(),'m_dust',3); buyItem(curChar(),'m_dust',2)`);         // .bak = dust 3 · main = dust 5 · A then closes
+    sh.setItem(K, '{"v":1,"acct":{"gold":'); M.X(`svlOnStorage({key:'${K}'})`);
+    const mid = sh.getItem(K);
+    const rr = M.X(`(()=>{ const r=onRunEnd({char:G.char, modeId:'survival', tier:0, wave:2, kills:3, t:20, runId:'r_bak1', loot:[], goldRun:0, player:{hp:0}},false,{commit:true}); G=null; return r.committed; })()`);
+    const g = got();
+    ok('เซฟหลักเสีย เหลือแท็บเก่ากลางรอบ + .bak ใหม่กว่า: ไม่เขียนสำเนาเก่าคืนกลางรอบ · จบรอบโหลด .bak (ผง 3) แล้วจ่ายรางวัลทับ', mid === '{"v":1,"acct":{"gold":' && rr === true && g.dust === 3, { g, rr, mid: mid.slice(0, 20) });
+  }
+  // an import never pins wc (a hand-edited 9e15): it gets this tab's wc + 1 and a new lineage
+  {
+    const { T: [A, B], got, red } = tabs(2);
+    const ex = JSON.parse(A.X(`exportSave()`)); ex.wc = 9e15; ex.wb = 'w_hand';
+    const wc0 = got().wc, imp = A.X(`importSave(${JSON.stringify(JSON.stringify(ex))}).ok`);
+    B.X(`svlOnStorage({key:'${K}'})`); B.X(`buyItem(curChar(),'m_dust',1)`); A.X(`svlOnStorage({key:'${K}'})`);
+    const g = got();
+    ok('นำเข้าไฟล์ที่ wc = 9e15: wc ใหม่ = ของแท็บนี้ + 1 (ไม่ตัน) · wb สายใหม่ · ซื้อต่อในอีกแท็บได้ ไม่มีเตือนแดง', imp === true && g.wc === wc0 + 2 && g.wb !== 'w_hand' && g.dust === 1 && red(A) + red(B) === 0, { imp, g, wc0 });
+  }
+  // a reward whose write raced: the bag/stash toasts come once (from the attempt that stuck)
+  {
+    const { T: [A, B] } = tabs(2);
+    A.X(`(()=>{ const ch=curChar(); while(itBagFree(ch)>0) invAdd(ch,makeInst('w_sword_1',{}),1); saveNow('full'); })()`); B.X(`svlOnStorage({key:'${K}'})`);   // a really full bag (validated bagMax 80)
+    A.X(`G={char:curChar(), over:false}`); B.X(`buyItem(curChar(),'u_potion_s',1)`);
+    const n0 = A.notes.length;
+    const r = A.X(`(()=>{ const f=svlFresh; svlFresh=()=>false; try{ const r=onRunEnd({char:G.char, modeId:'survival', tier:0, wave:3, kills:5, t:30, runId:'r_note1', loot:[{id:'m_dust', n:2}], goldRun:0, player:{hp:0}},false,{commit:true}); return r.committed; } finally{ svlFresh=f; G=null; } })()`);
+    const notes = A.notes.slice(n0).map(n => n[0]).filter(x => /เก็บเข้าคลัง|เก็บไม่ได้/.test(x));
+    ok('รางวัลที่ต้องจ่ายใหม่เพราะชนกับอีกแท็บ: toast ของที่เข้าคลังขึ้นครั้งเดียว', r === true && notes.length === 1, { r, notes });
+  }
+}
+console.log('m2-orch r4 · เขียนคืนล้มไม่วนทับกัน · แท็บกลางรอบเขียนเซฟล่าสุดที่เห็นคืน · นำเข้าไม่หายหลังล้าง · สถิติคลาสสิกไม่ทำให้เตือนแดง · แดงเฉพาะแท็บที่เขียน');
+{
+  const K = 'runeguard.save.guest';
+  const world = n => {
+    let t = 1.9e12; const clk = () => (t += 7); const base = memStorage(), fail = []; let writes = 0;
+    const T = [];
+    for (let i = 0; i < n; i++) {
+      fail.push({ on: false });
+      const f = fail[i], ls = { getItem: k => base.getItem(k), removeItem: k => base.removeItem(k), clear: () => base.clear(), key: j => base.key(j), get length() { return base.length; },
+        setItem: (k, v) => { if (f.on) throw new Error('QuotaExceededError'); if (k === K) writes++; base.setItem(k, v); } };
+      const x = fresh({ localStorage: ls, __clk: clk }); x.X(`Date.now=()=>__clk()`); T.push(x);
+    }
+    T[0].X(`loadSaveFor(null); createChar('รอบสี่','swordsman'); DEV.profile.gold(50000)`); for (const x of T.slice(1)) x.X(`loadSaveFor(null)`);
+    const got = () => { const s = JSON.parse(base.getItem(K) || 'null'); if (!s) return null; const c = s.chars[0], q = id => c.inv.filter(x => x.id === id).reduce((a, x) => a + (x.n | 0), 0);
+      return { gold: s.acct.gold, dust: q('m_dust'), pot: q('u_potion_s'), wc: s.wc, wb: s.wb }; };
+    const red = x => x.notes.filter(m => m[1] === 'bad' && /บันทึกทับพร้อมกัน/.test(m[0])).length;
+    const ev = (...xs) => { for (const x of xs) x.X(`svlOnStorage({key:'${K}'})`); };
+    return { base, T, fail, got, red, ev, writes: () => writes };
+  };
+  // 1c · the mid-run tab has NOT seen the newer writes: it writes its older copy back, the newer tab writes its own over it (stale)
+  {
+    const W = world(2), [A, B] = W.T;
+    B.X(`G={char:curChar(), over:false}`);
+    A.X(`buyItem(curChar(),'m_dust',4); buyItem(curChar(),'m_dust',3)`);        // B gets no events
+    W.base.clear(); B.X(`svlOnStorage({key:null})`); const mid = W.got(); W.ev(A);
+    ok('ลำดับ 1c (แท็บกลางรอบไม่เคยเห็นของใหม่): เขียนสำเนาเก่าคืน → แท็บใหม่กว่าเขียนของตัวเองทับ (ผง 7) · toast "เก่ากว่าทับ"', mid.dust === 0 && W.got().dust === 7 && A.notes.some(m => /เก่ากว่าทับ/.test(m[0])), { mid, now: W.got() });
+  }
+  // restore write refused (quota) must not leave svlLast on another tab's text: no ping-pong
+  {
+    const W = world(2), [A, B] = W.T;
+    A.X(`buyItem(curChar(),'m_dust',2); buyItem(curChar(),'m_dust',3)`);        // A ahead by 2 writes, B behind
+    W.base.clear(); B.X(`svlOnStorage({key:null})`);                           // B writes its older copy back
+    W.fail[0].on = true; W.ev(A); W.fail[0].on = false;                         // A's restore is refused
+    B.X(`buyItem(curChar(),'u_potion_s',1)`);                                   // B acts on its restored copy
+    const w0 = W.writes(); for (let i = 0; i < 20; i++) W.ev(A, B); const dw = W.writes() - w0;
+    const g = W.got();
+    ok('เขียนคืนถูกปฏิเสธ (โควตา) แล้วอีกแท็บเขียนต่อ: ไม่วนเขียนทับกัน (≤ 2 ครั้งใน 20 รอบ event) · ผง 5 ของแท็บใหม่กว่าอยู่', dw <= 2 && g.dust === 5, { dw, g });
+  }
+  // a mid-run tab of another lineage writes back the newest text it saw, not its own copy (an M1-build write broke the lineage)
+  {
+    const W = world(2), [A, C] = W.T;
+    const u = A.X(`(()=>{ const it=makeInst('w_sword_2',{}); it.r=7; invAdd(curChar(),it,1); invAdd(curChar(),'m_crystal',5); saveNow('t'); return it.u; })()`);
+    W.ev(C); C.X(`G={char:curChar(), over:false}`);                              // C mid-run in the old lineage
+    const old = JSON.parse(W.base.getItem(K)); delete old.wc; delete old.wb; delete old.wp; old.app = '2.0.0-m1'; old.acct.gold += 500; W.base.setItem(K, JSON.stringify(old));   // the M1 build writes
+    W.ev(A, C);                                                                 // A reloads it (new lineage) · C (mid-run) remembers it
+    const rf = A.X(`(()=>{ itRefineRng=()=>.99; try{ return refineTry(curChar(),'${u}',{}).res; } finally{ itRefineRng=null; } })()`);
+    A.X(`buyItem(curChar(),'m_dust',3)`); W.ev(C);
+    W.base.clear(); W.ev(C, A);                                                  // C handles the wipe first
+    const s = JSON.parse(W.base.getItem(K)), w = s.chars[0].inv.find(x => x.u === u), d = s.chars[0].inv.filter(x => x.id === 'm_dust').reduce((a, x) => a + x.n, 0);
+    ok('แท็บกลางรอบคนละสายเซฟ: ล้างแล้วเขียนเซฟล่าสุดที่เห็นคืน (ตีบวกที่ล้ม +6 ความเพียร 1 · ผง 3 · ทอง +500 อยู่) · ตีซ้ำจาก +7 ไม่ได้', rf === 'down' && w.r === 6 && (w.f | 0) === 1 && d === 3 && A.X(`itFind(curChar(),'${u}').r`) === 6, { rf, r: w.r, f: w.f, d });
+    const rr = C.X(`(()=>{ const r=onRunEnd({char:G.char, modeId:'survival', tier:0, wave:2, kills:4, t:20, runId:'r_seen1', loot:[], goldRun:0, player:{hp:0}},false,{commit:true}); G=null; return r.committed; })()`);
+    const s2 = JSON.parse(W.base.getItem(K));
+    ok('จบรอบของแท็บนั้น: โหลดเซฟล่าสุดแล้วจ่ายรางวัลทับ (ผลตีบวกยังเป็น +6)', rr === true && s2.chars[0].inv.find(x => x.u === u).r === 6 && s2.acct.runIds.includes('r_seen1'), { rr });
+  }
+  // an import is newer than the lineage it replaced (wp): a lagging tab that writes the pre-import copy back after a wipe does not win
+  {
+    const W = world(2), [A, B] = W.T;
+    const ex = A.X(`exportSave()`);
+    A.X(`buyItem(curChar(),'m_dust',1)`); W.ev(B); A.X(`buyItem(curChar(),'m_dust',1)`);        // B one write behind, then lags
+    const imp = A.X(`importSave(${JSON.stringify(ex)}).ok`); A.X(`buyItem(curChar(),'u_potion_s',2)`);
+    W.base.clear(); B.X(`svlOnStorage({key:null})`); W.ev(A);                    // B (pre-import lineage) first, then A
+    const g = W.got();
+    ok('นำเข้าแล้วซื้อต่อ → ล้าง → แท็บที่ยังไม่เห็นการนำเข้าเขียนสำเนาก่อนนำเข้าคืนก่อน: แท็บที่นำเข้าเขียนของตัวเองทับ (เซฟที่นำเข้า + ยา 2 อยู่)', imp === true && g.dust === 0 && g.pot === 5 && A.notes.some(m => /เก่ากว่าทับ/.test(m[0])), { imp, g });
+  }
+  // classic records merged at load (runeguard.best) do not make a restored copy look like a tie with other content
+  {
+    const W = world(2), [A, B] = W.T;
+    A.X(`buyItem(curChar(),'m_dust',1)`); W.ev(B);
+    W.base.setItem('runeguard.best', JSON.stringify({ swordsman: { score: 98765, wave: 14, kills: 900, won: false } }));
+    B.X(`loadSaveFor(null)`);                                                    // B merges the record in memory only
+    W.base.removeItem(K); B.X(`svlOnStorage({key:'${K}'})`); W.ev(A);
+    ok('สถิติคลาสสิกที่รวมตอนโหลด: เขียนคืนแล้วอีกแท็บไม่เตือนแดง · รับสถิตินั้นเข้าเซฟของตัวเอง', W.red(A) === 0 && W.red(B) === 0 && A.X(`(SAVE.acct.records.classic.swordsman||{}).score`) === 98765 && W.got().dust === 1, { a: A.notes.slice(-2), score: A.X(`(SAVE.acct.records.classic.swordsman||{}).score`) });
+  }
+  // a broken main while only an older mid-run tab is open, which HAS seen the newest write: that write goes back (newer than .bak)
+  {
+    const W = world(2), [A, M] = W.T;
+    M.X(`G={char:curChar(), over:false}`);
+    A.X(`buyItem(curChar(),'m_dust',3); buyItem(curChar(),'m_dust',2)`); W.ev(M);   // .bak = dust 3 · main = dust 5 · M saw it · A closes
+    W.base.setItem(K, '{"v":1,"acct":{"gold":'); W.ev(M);
+    const mid = W.got();
+    const rr = M.X(`(()=>{ const r=onRunEnd({char:G.char, modeId:'survival', tier:0, wave:2, kills:3, t:20, runId:'r_seen2', loot:[], goldRun:0, player:{hp:0}},false,{commit:true}); G=null; return r.committed; })()`);
+    ok('เซฟหลักเสีย เหลือแท็บกลางรอบที่เคยเห็นการเขียนล่าสุด: เขียนอันล่าสุดนั้นคืนทันที (ผง 5 ใหม่กว่า .bak) · จบรอบจ่ายรางวัลทับ', mid && mid.dust === 5 && rr === true && W.got().dust === 5, { mid, rr });
+  }
+  // the red toast goes to the tab whose own write was overwritten, not to a tab that only read that copy
+  {
+    const W = world(3), [A, B, C] = W.T;
+    const tk = W.base.getItem(K);
+    A.X(`buyItem(curChar(),'m_dust',1)`); W.ev(B);                             // A wrote k+1 · B read it · C still at k
+    const ta = W.base.getItem(K); W.base.setItem(K, tk);                          // C's stale cache…
+    C.X(`buyItem(curChar(),'u_potion_s',1)`);                                   // …C writes k+1 on base k
+    W.ev(A, B);
+    ok('บันทึกทับพร้อมกัน: เตือนแดงในแท็บที่เขียน wc นั้นเอง (A) · แท็บที่แค่อ่าน (B) ได้แค่แจ้งโหลดใหม่', ta !== tk && W.red(A) === 1 && W.red(B) === 0, { a: W.red(A), b: W.red(B) });
+  }
+}
+console.log('carry-over (c) · id ที่เป็นชื่อสมาชิก Object.prototype ถูกปฏิเสธ');
+{
+  const { X } = fresh();
+  const c = X(`[svStr('constructor',SV_ID,null), svStr('valueof',SV_ID,null), svStr('__proto__',/.*/,null), svStr('toString',/^[A-Za-z]+$/,null),
+    svStr('hasOwnProperty',/^[A-Za-z]+$/,null), svStr('isPrototypeOf',/^[A-Za-z]+$/,null), svStr('toLocaleString',/^[A-Za-z]+$/,null), svStr('w_sword_1',SV_ID,null)]`);
+  ok('svStr: constructor / __proto__ / toString / hasOwnProperty / isPrototypeOf / toLocaleString → ค่าเริ่มต้น · ชื่อปกติผ่าน', deq(c, [null, 'valueof', null, null, null, null, null, 'w_sword_1']), c);
+  const z = X(`(()=>{ const c=validateSave({v:1, acct:{records:{boss:{constructor:{0:{sec:5}}}}, fboss:{constructor:{next:1}}}, chars:[{cls:'thief', zone:'constructor', quick:['constructor',null], inv:[{id:'constructor', n:2}]}]}); return {zone:c.chars[0].zone, q:c.chars[0].quick, inv:c.chars[0].inv.length, rb:Object.keys(c.acct.records.boss), fb:Object.keys(c.acct.fboss)}; })()`);
+  ok('validateSave: zone / quick / item id "constructor" ไม่ถูกเก็บ', z.zone === 'z1' && deq(z.q, [null, null]) && z.inv === 0 && z.rb.length === 0 && z.fb.length === 0, z);
+}
+
+console.log('carry-over (d) · แท็บที่ค้าง: ทุกคำสั่งโหลดของอีกแท็บก่อนแก้ แล้วการกระทำไม่หาย');
+{
+  const shared = memStorage(), K = 'runeguard.save.guest';
+  const A = fresh({ localStorage: shared }), B = fresh({ localStorage: shared });
+  A.X(`(()=>{ loadSaveFor(null); const ch=createChar('แท็บค้าง','swordsman'); ch.lv=25; ch.pts=BAL.ptsAt(25); ch.jlv=20; ch.sp=19; ch.trial.t2=1; SAVE.acct.gold=1000; saveNow('setup'); globalThis.held=ch; })()`);
+  let g = 1000;
+  const step = code => { g += 1; B.X(`loadSaveFor(null); DEV.profile.gold(${g})`);    // the other tab saves → tab A is stale
+    const res = A.X(`(()=>{ const r=${code}; saveNow('flush'); return r; })()`); return { res, m: JSON.parse(shared.getItem(K)) }; };
+  const ch0 = m => m.chars[0];
+  const s1 = step(`commitStats(held,{STR:2})`);
+  ok('commitStats (ตัวละคร object เดิม): โหลดของอีกแท็บก่อน · ค่าที่แจกลงเซฟ · ทองของอีกแท็บไม่หาย', s1.res === true && ch0(s1.m).st.STR === 2 && s1.m.acct.gold === g, { res: s1.res, st: ch0(s1.m).st, gold: s1.m.acct.gold });
+  const s2 = step(`learnSkill(held,'slam')`);
+  ok('learnSkill (object ที่ค้างจากการโหลดก่อนหน้า → ตามด้วย id)', s2.res === true && ch0(s2.m).sk.slam === 1 && s2.m.acct.gold === g && ch0(s2.m).st.STR === 2, ch0(s2.m).sk);
+  const s3 = step(`learnPassive(held,'p_heavyarms')`);
+  ok('learnPassive', s3.res === true && ch0(s3.m).pas.p_heavyarms === 1 && s3.m.acct.gold === g, ch0(s3.m).pas);
+  const s4 = step(`setLoadout(held,['slam','slash'])`);
+  ok('setLoadout', s4.res === true && deq(ch0(s4.m).load, ['slam', 'slash']) && s4.m.acct.gold === g, ch0(s4.m).load);
+  const s5 = step(`resetStats(held,{})`);
+  ok('resetStats', s5.res === true && ch0(s5.m).st.STR === 0 && ch0(s5.m).resets.free === 0 && s5.m.acct.gold === g, ch0(s5.m).st);
+  const s6 = step(`resetSkills(held,{})`);
+  ok('resetSkills', s6.res === true && deq(ch0(s6.m).sk, { slash: 1 }) && deq(ch0(s6.m).pas, {}) && s6.m.acct.gold === g, ch0(s6.m).sk);
+  const s7 = step(`advanceJob(held,'knight')`);
+  ok('advanceJob: เลื่อนอาชีพลงเซฟ · หักค่าพิธีจากทองล่าสุดของอีกแท็บ', s7.res === true && ch0(s7.m).job === 'knight' && s7.m.acct.gold === g - 500, { job: ch0(s7.m).job, gold: s7.m.acct.gold, g });
+  const s8 = step(`grantRewards(held,{runId:'r_stale1', baseXp:10, jobXp:8, gold:7, mode:'survival', tier:0, items:[{id:'m_dust',n:2}], st:{t:1, kills:1, wave:1}})`);
+  ok('grantRewards: รางวัลและของลงบนข้อมูลล่าสุดของอีกแท็บ', s8.res === true && s8.m.acct.runIds.includes('r_stale1') && s8.m.acct.gold === g + 7 && ch0(s8.m).inv.some(x => x.id === 'm_dust' && x.n === 2), s8.m.acct);
+  B.X(`loadSaveFor(null); deleteChar(SAVE.chars[0].id)`);
+  const before = shared.getItem(K);
+  const del = A.X(`[commitStats(held,{VIT:1}), learnSkill(held,'slash'), setLoadout(held,['slash']), advanceJob(held,'berserker'), resetStats(held,{}), grantRewards(held,{runId:'r_gone', gold:5})]`);
+  ok('อีกแท็บลบตัวละครแล้ว: ทุกคำสั่งถูกปฏิเสธ (แม้ส่ง object เก่าที่ค้างอยู่) · ไม่เขียนเซฟ', deq(del, [false, false, false, false, false, false]) && shared.getItem(K) === before, del);
+}
+
+console.log('carry-over (e) · RG.profile.sandbox(true) เขียนเซฟที่รอ debounce ก่อน ไม่ทิ้ง');
+{
+  const { X, ls } = fresh();
+  X(`loadSaveFor(null); createChar('ก่อนแซนด์บ็อกซ์','cleric'); SAVE.acct.flags.tips.pending=1; saveLocal('pending'); DEV.profile.sandbox(true);`);
+  const now = JSON.parse(ls.getItem('runeguard.save.guest')).acct.flags.tips.pending;
+  await new Promise(res => setTimeout(res, 900));
+  const back = X(`(()=>{ DEV.profile.sandbox(false); return SAVE.acct.flags.tips.pending; })()`);
+  ok('sandbox(true): การแก้ที่รอ 800 ms ถูกเขียนลงเครื่องทันที · กลับจาก sandbox แล้วยังอยู่', now === 1 && back === 1, { now, back });
+}
+
+console.log('M2 fix · validateSave ตัดชิ้นที่ซ้ำทั้ง uid และ id (ไม่กลายเป็นของเพิ่ม) · pgCommitItems ไม่ข้ามของแบบเงียบ ๆ');
+{
+  const { X } = fresh();
+  const v = X(`(()=>{ const w={u:'i_twin1', id:'w_sword_2', r:3, f:0, s:[null], lk:0}, h={u:'i_twin2', id:'h_iron', r:0, f:0, s:[null], lk:0};
+    const s={v:1, acct:{stash:[Object.assign({},w,{r:5}), {u:'i_twin2', id:'b_leather', r:0, f:0, s:[], lk:0}]}, chars:[
+      {id:'c_aa', cls:'swordsman', name:'ซ้ำกัน', lv:20, inv:[w, Object.assign({},w), h], eq:{weapon:'i_twin1'}},
+      {id:'c_bb', cls:'mage', name:'อีกตัว', inv:[Object.assign({},w,{r:9}), Object.assign({},h,{id:'h_straw'})], eq:{}}]};
+    const o=validateSave(s), all=[...o.chars.flatMap(c=>c.inv), ...o.acct.stash].filter(x=>x.u);
+    return {n:all.length, ids:all.map(x=>x.id).sort().join(), uniq:new Set(all.map(x=>x.u)).size, sword:all.filter(x=>x.id==='w_sword_2').map(x=>x.r+':'+x.u),
+      worn:o.chars[0].eq.weapon, again:JSON.stringify(validateSave(o))===JSON.stringify(o)}; })()`);
+  ok('ดาบ uid เดียวกัน 4 ก้อน (กระเป๋า ×2 · อีกตัว · คลัง) → เหลือชิ้นแรกชิ้นเดียว (+3 ที่สวมอยู่) · uid ซ้ำแต่ id ต่างกัน (หมวกฟาง · เกราะหนัง) ได้ uid ใหม่และอยู่ครบ · validate ซ้ำได้ผลเดิม',
+    v.n === 4 && v.ids === 'b_leather,h_iron,h_straw,w_sword_2' && v.uniq === 4 && deq(v.sword, ['3:i_twin1']) && v.worn === 'i_twin1' && v.again, v);
+  const c = X(`(()=>{ loadSaveFor(null); const ch=createChar('รับของ','thief'), held=ch.inv[0];
+    const r={runId:'r_fixlost1', baseXp:0, jobXp:0, gold:0, mode:'survival', tier:0, st:{t:1, kills:0, wave:1},
+      items:[{u:held.u, id:held.id, r:0, f:0, s:[], lk:0}, {u:'i_stackish', id:'m_dust', n:3}, {u:'i_newgear1', id:'h_straw', r:0, f:0, s:[], lk:0}]};
+    const okk=grantRewards(ch,r), c2=SAVE.chars[0];
+    return {ok:okk, lost:r.lost.map(x=>x.u||x.id), dust:invCount(c2,'m_dust'), straw:invCount(c2,'h_straw'), same:c2.inv.filter(x=>x.u===held.u).length,
+      stack:c2.inv.filter(x=>x.id==='m_dust').every(x=>typeof x.u!=='string')}; })()`);
+  ok('ของรางวัลที่ uid มีอยู่แล้วในเซฟ → ลง r.lost (จอสรุป/toast บอก) ไม่ข้ามเงียบและไม่ซ้ำ · ของซ้อน (ผงรูน) ที่ติด u มาเข้ากระเป๋าเป็นของซ้อน ×3',
+    c.ok === true && c.lost.length === 1 && c.same === 1 && c.dust === 3 && c.stack && c.straw === 1, c);
 }
 
 console.log(`\nผล: ผ่าน ${pass} · ไม่ผ่าน ${fail}`);

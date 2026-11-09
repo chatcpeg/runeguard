@@ -1,7 +1,9 @@
 /* ================= 42-progression.js · lane C · pure per ch · levels, points, jobs, skills, prepareRun, onRunEnd ================= */
 // Rules: DESIGN §3 (levels, stat/skill points, job tree, ★ ranks, loadout, passives, derived stats) · §2.2 survival rewards.
 // Account-wide data (gold, marks, runIds, records, daily — Q7) lives in SAVE.acct. Mutators return false on a read-only save,
-// and save themselves when ch belongs to SAVE (saveLocal = debounced · saveNow for job change and rewards).
+// and save themselves when ch belongs to SAVE: player actions (stats, skills, passives, loadout, resets, job change, rewards) at once
+// (saveNow) — a debounced write that meets another tab's save is dropped by the reload · EXP / field death are debounced (saveLocal).
+// Every player action starts with pgFresh(ch): a stale tab reloads the other tab's save first and acts on that (never loses it).
 const PG_START={survival:'first', field:'all1', boss:'rank', trial:'rank'};   // skills at run start (§3.6) · other modes: 'first'
 const PG_TIP='ความชำนาญเริ่มที่ 1 ทุกครั้ง · สกิลอัปได้ถึง ★ ที่ฝึกไว้';
 const PG_RUNIDS=[];                                                            // fallback when there is no SAVE (never in the game)
@@ -23,6 +25,16 @@ function pgLive(G,ch){
   const f=SAVE.chars.find(c=>c&&c.id===ch.id)||null;
   if(f&&G){ if(G.char===ch) G.char=f; if(G.opts&&G.opts.char===ch) G.opts.char=f; }
   return f; }
+// entry of every player action (stale tab): another tab saved → reload BEFORE changing anything, then act on the reloaded character
+// (found by id; an object left over from an earlier reload is followed the same way). Deleted in the other tab → null = refused.
+// A character that has never been in SAVE (pure use: tests, previews) is returned as it is.
+function pgFresh(ch){
+  if(!ch||typeof ch!=='object') return null;
+  const inSave=()=>!!(SAVE&&Array.isArray(SAVE.chars));
+  const had=inSave()&&SAVE.chars.some(c=>c&&c.id===ch.id)||typeof svlWasSaved==='function'&&svlWasSaved(ch);
+  if(typeof svlFresh==='function') try{ svlFresh(); }catch(e){ console.error(e); }
+  if(!inSave()||SAVE.chars.indexOf(ch)>=0) return ch;
+  return SAVE.chars.find(c=>c&&c.id===ch.id)||(had?null:ch); }
 function pgR6(v){ return Math.round(v*1e6)/1e6; }
 // points bookkeeping (also used by validateSave)
 function pgSpSpent(ch){ const c=pgCls(ch); let n=0; if(!c) return 0;
@@ -55,13 +67,13 @@ function buildRunBonus(ch){
 
 /* ---- stat points (§3.3) ---- */
 function commitStats(ch,delta){
-  if(!ch||!svObj(delta)||pgRO()) return false; let cost=0, any=false; const nx={};
+  ch=pgFresh(ch); if(!ch||!svObj(delta)||pgRO()) return false; let cost=0, any=false; const nx={};
   for(const k in delta){ if(STAT_ORDER.indexOf(k)<0) return false; const n=delta[k];
     if(!Number.isInteger(n)||n<0) return false; if(!n) continue;
     const x=ch.st[k]|0; if(x+n>BAL.CAP.stat) return false;
     for(let i=x;i<x+n;i++) cost+=BAL.statCost(i); nx[k]=x+n; any=true; }
   if(!any||cost>ch.pts) return false;
-  Object.assign(ch.st,nx); ch.pts-=cost; pgSave(ch,'stats'); return true; }
+  Object.assign(ch.st,nx); ch.pts-=cost; pgSave(ch,'stats',true); return true; }
 // [แจกอัตโนมัติ]: spend up to `pts` (default all) by the class preset ratio → delta for commitStats (pure, no change)
 function pgAutoStats(ch,pts){
   const w=PRESETS[ch.cls]||{STR:1}, d={}; let left=pts==null?ch.pts|0:pts|0;
@@ -77,7 +89,7 @@ function pgPayReset(ch,kind,o){ const way=pgResetWay(ch,kind);
   if(way==='freeOnce'){ if(kind==='sk') ch.resets.skFree=0; else ch.resets.free=0; }
   return true; }
 function resetStats(ch,o){
-  if(!ch||pgRO()) return false; const spent=pgStSpent(ch); if(!spent) return false;
+  ch=pgFresh(ch); if(!ch||pgRO()) return false; const spent=pgStSpent(ch); if(!spent) return false;
   if(!pgPayReset(ch,'st',o)) return false;
   for(const k of STAT_ORDER) ch.st[k]=0; ch.pts+=spent; pgSave(ch,'resetStats',true); return true; }
 
@@ -125,26 +137,27 @@ function canLearn(ch,id){
   const cost=BAL.RANK_COST[r+1]; if(ch.sp<cost) return 'แต้มสกิลไม่พอ (ต้องใช้ '+cost+')';
   return ''; }
 function learnSkill(ch,id){
+  ch=pgFresh(ch); if(!ch) return false;
   if(svHas(PASSIVES,id)) return learnPassive(ch,id);
   if(canLearn(ch,id)!=='') return false;
   const r=ch.sk[id]|0; ch.sp-=BAL.RANK_COST[r+1]; ch.sk[id]=r+1;
   if(r===0&&ch.load.indexOf(id)<0&&ch.load.length<BAL.LOADOUT[pgTier(ch)]) ch.load.push(id);   // a newly learned skill takes a free slot
-  pgSave(ch,'skill'); return true; }
+  pgSave(ch,'skill',true); return true; }
 function learnPassive(ch,id){
-  if(!svHas(PASSIVES,id)||canLearn(ch,id)!=='') return false;
-  ch.sp-=BAL.PAS_COST; ch.pas[id]=(ch.pas[id]|0)+1; pgSave(ch,'passive'); return true; }
+  ch=pgFresh(ch); if(!ch||!svHas(PASSIVES,id)||canLearn(ch,id)!=='') return false;
+  ch.sp-=BAL.PAS_COST; ch.pas[id]=(ch.pas[id]|0)+1; pgSave(ch,'passive',true); return true; }
 function resetSkills(ch,o){
-  if(!ch||pgRO()) return false; const c=pgCls(ch); if(!c) return false;
+  ch=pgFresh(ch); if(!ch||pgRO()) return false; const c=pgCls(ch); if(!c) return false;
   const spent=pgSpSpent(ch); if(!spent) return false;
   if(!pgPayReset(ch,'sk',o)) return false;
   const first=c.skills[0]; ch.sk={[first]:1}; ch.pas={}; ch.sp+=spent;
   ch.load=ch.load.filter(id=>ch.sk[id]>0); if(!ch.load.length) ch.load=[first];
   pgSave(ch,'resetSkills',true); return true; }
 function setLoadout(ch,ids){
-  if(!ch||pgRO()||!Array.isArray(ids)) return false; const pool=pgSkillPool(ch), max=BAL.LOADOUT[pgTier(ch)];
+  ch=pgFresh(ch); if(!ch||pgRO()||!Array.isArray(ids)) return false; const pool=pgSkillPool(ch), max=BAL.LOADOUT[pgTier(ch)];
   if(!ids.length||ids.length>max) return false;
   for(let i=0;i<ids.length;i++){ const id=ids[i]; if(pool.indexOf(id)<0||!((ch.sk[id]|0)>0)||ids.indexOf(id)!==i) return false; }
-  ch.load=ids.slice(); pgSave(ch,'loadout'); return true; }
+  ch.load=ids.slice(); pgSave(ch,'loadout',true); return true; }
 
 /* ---- job advancement (§3.4) ---- */
 function jobReqs(ch,advId){
@@ -155,7 +168,7 @@ function jobReqs(ch,advId){
     {t:'ผ่านบททดสอบเลื่อนขั้น', ok:!!(ch.trial&&ch.trial.t2===1)},
     {t:'ค่าพิธี '+R.fee.toLocaleString('en-US')+' ทอง (มี '+gold.toLocaleString('en-US')+')', ok:gold>=R.fee}]; }
 function advanceJob(ch,advId){
-  if(!ch||pgRO()||ch.job) return false;                                 // once only, permanent
+  ch=pgFresh(ch); if(!ch||pgRO()||ch.job) return false;                 // once only, permanent
   const c=pgCls(ch), a=c&&c.adv.find(x=>x.id===advId); if(!a) return false;
   if(!jobReqs(ch,advId).every(q=>q.ok)) return false;
   const A=pgAcct(); if(!A||A.gold<BAL.ADV.fee) return false;
@@ -192,13 +205,15 @@ function onRunEnd(G,won,o){
   try{
     const A=pgAcct(), today=svDay();
     if(G.modeId==='survival'){
-      const S=BAL.SURV, T=Math.max(0,Math.min(S.maxT,G.tier|0)), waves=won?S.WAVES:Math.max(0,(G.wave|0)-1), rec=S.recLv(T), gpw=S.goldPerWave(T);
+      // §2.2 hell tier T: EXP from recLv(T) · gold goldPerWave(T) · items = G.loot (elite/boss drops, gear tier gearTier(T))
+      const S=BAL.SURV, T=S.tier(G.tier), waves=won?S.WAVES:Math.max(0,(G.wave|0)-1), rec=S.recLv(T), gpw=S.goldPerWave(T);
       r.tier=T; r.waves=waves;
       r.baseXp=Math.round(BAL.bxpNeed(rec)*S.expMul(waves,won)*S.overLv(ch.lv|0,rec));
       r.gold=gpw*waves+(won?gpw*S.winGoldWaves:0)+(G.goldRun|0);
       const used=A&&A.daily.day===today&&A.daily.surv[T];
-      if((G.wave|0)>=S.dailyWave&&!used){ r.daily=true; r.baseXp*=2; r.gold*=2; }
-      if((G.wave|0)>=S.unlockWave&&T<S.maxT&&A&&A.survTier<T+1) r.unlocks.push('survTier:'+(T+1));
+      if((G.wave|0)>=S.dailyWave&&!used){ r.daily=true; r.baseXp*=S.dailyMul; r.gold*=S.dailyMul; }
+      // next tier: reach wave 10 in the highest tier unlocked so far (never skips: a lower tier, or a locked one, unlocks nothing)
+      if((G.wave|0)>=S.unlockWave&&T<S.maxT&&A&&(A.survTier|0)===T) r.unlocks.push('survTier:'+(T+1));
       for(const [w,b] of [[5,'colossus'],[10,'lich'],[20,'king']]) if((G.wave|0)>=w&&A&&!A.bossUnlock[b]) r.unlocks.push('boss:'+b);
     } else if(G.modeId==='trial'){
       if(won&&!(ch.trial&&ch.trial.t2===1)) r.unlocks.push('trial:t2');
@@ -210,16 +225,17 @@ function onRunEnd(G,won,o){
   }catch(e){ console.error(e); }
   if(o&&o.commit) grantRewards(ch,r);
   return r; }
-// apply a Reward once: a runId already in acct.runIds (last 30) is refused
-function grantRewards(ch,r){
-  if(!ch||!r||typeof r.runId!=='string'||!r.runId||pgRO()) return false;
+// apply a Reward once: a runId already in acct.runIds (last 30) is refused · so is one validateSave would drop (SV_RUNID_RE): it would
+// be forgotten on the next load and the same reward could be paid again
+function grantRewards(ch,r,again){
+  ch=pgFresh(ch);
+  if(!ch||!r||typeof r.runId!=='string'||!SV_RUNID_RE.test(r.runId)||pgRO()) return false;
   const A=pgAcct(), ids=A?A.runIds:PG_RUNIDS; if(ids.indexOf(r.runId)>=0) return false;
   ids.push(r.runId); while(ids.length>SV_RUNIDS) ids.shift();
   const g=pgGrantExp(ch,r.baseXp,r.jobXp); r.lvUp=g.lvUp; r.jobUp=g.jobUp; r.overGold=g.gold;
   if(A){ A.gold=Math.min(BAL.CAP.gold,A.gold+Math.max(0,Math.floor(+r.gold||0))); A.marks=Math.min(BAL.CAP.marks,A.marks+Math.max(0,Math.floor(+r.marks||0))); }
-  r.lost=[];
-  for(const it of r.items||[]){ const res=typeof invAdd==='function'?invAdd(ch,it,it&&it.n||1):null; if(!res||!res.ok) r.lost.push(it); }
-  const st=r.st||{}, t=Number.isFinite(+st.t)?Math.max(0,+st.t):0, kills=Math.max(0,st.kills|0), wave=Math.max(0,st.wave|0);   // never lowers totals
+  try{ pgCommitItems(ch,r); }catch(e){ console.error(e); }               // its toasts wait until the write sticks (pgItemsNote)
+  const st=r.st||{}, t=Number.isFinite(+st.t)?Math.max(0,+st.t):0, kills=Math.max(0,st.kills|0), wave=Math.max(0,Math.min(BAL.SURV.WAVES,st.wave|0));   // never lowers totals · wave as validateSave keeps it
   ch.play=(+ch.play||0)+t; ch.kills=(ch.kills|0)+kills; if(st.died) ch.deaths=(ch.deaths|0)+1;
   if(SAVE) SAVE.play=(+SAVE.play||0)+t;
   if(A){
@@ -233,4 +249,45 @@ function grantRewards(ch,r){
     else if(!A) continue;
     else if(k==='survTier') A.survTier=Math.max(A.survTier,Math.min(BAL.SURV.maxT,v|0));
     else if(k==='boss'&&SV_ID.test(v||'')) A.bossUnlock[v]=1; }
-  r.committed=true; pgSave(ch,'reward',true); return true; }
+  r.committed=true; const S0=SAVE; pgSave(ch,'reward',true); if(SAVE===S0) pgItemsNote(r);
+  // the write found another tab's save and reloaded instead (svlWrite): the reward is in neither memory nor storage. Paid once more
+  // onto the reloaded save (its runIds do not hold this runId, so it is not a second payment) · a second race in a row → not paid
+  if(SAVE!==S0){ r.committed=false; const live=!again&&SAVE&&Array.isArray(SAVE.chars)?SAVE.chars.find(c=>c&&c.id===ch.id):null;
+    if(live) return grantRewards(live,r,true);
+    if(typeof svlNote==='function') svlNote('บันทึกรางวัลรอบนี้ไม่ได้ · ข้อมูลถูกแก้จากอีกแท็บ','bad'); return false; }
+  return true; }
+// Reward items (G.loot: kept even after a death · §2.1) → the save. Bag first (stacks fill up, then new entries); what does not fit
+// goes to the shared stash (r.stashed); what fits neither is r.lost — never silently: the end screen (55) and a toast say so.
+// Instances are copied (G.loot is left as it was) and a uid already held anywhere in the save is never added a second time.
+function pgCommitItems(ch,r){
+  const A=pgAcct(), st=r.stashed=[], lost=r.lost=[]; let full=0;   // full = how many of lost had no room (the rest: unknown / already held)
+  for(const it of Array.isArray(r.items)?r.items:[]){
+    if(!it||typeof it!=='object') continue;
+    const d=typeof itemDef==='function'?itemDef(it.id):null; if(!d){ lost.push(it); continue; }
+    if(typeof it.u==='string'&&d.slot){                                  // one gear instance (a stack id with a u falls through as a stack)
+      if(pgUidHeld(it.u)){ lost.push(it); continue; }                    // already held: never twice (no new uid = no copy) · never silently
+      const x=svItem(JSON.parse(JSON.stringify(it))); if(!x){ lost.push(it); continue; }   // clean shape (r, f, sockets clamped)
+      if(invAdd(ch,x,1).ok) continue;
+      if(A&&pgStashFree(A)>0){ A.stash.push(x); st.push(it); } else { lost.push(it); full++; }
+      continue; }
+    const n=Math.max(1,Math.min(1e6,Math.floor(+it.n||1)));             // a stack {id, n}
+    let left=d.slot?n:invAdd(ch,it.id,n).overflow|0;
+    if(d.slot) for(let k=0;k<n;k++){ const x=makeInst(it.id,{}); if(x&&invAdd(ch,x,1).ok) left--; else if(x&&A&&pgStashFree(A)>0){ A.stash.push(x); st.push(x); left--; } }
+    else if(left>0&&A){ const k=pgStashPut(A,it.id,left,d); if(k) st.push({id:it.id, n:k}); left-=k; }
+    if(left>0){ lost.push(left===n?it:{id:it.id, n:left}); full+=left; } }
+  r.lostFull=full; }
+// the toasts for r.stashed / r.lost · once, after the reward's write stuck (a retried grantRewards recomputes both)
+function pgItemsNote(r){ if(typeof svlNote!=='function'||!r) return; const st=r.stashed||[], lost=r.lost||[], full=r.lostFull|0;
+  const cnt=a=>a.reduce((s,x)=>s+(typeof x.u==='string'?1:Math.max(1,Math.min(1e6,x.n|0))),0);
+  if(st.length) svlNote('กระเป๋าเต็ม · ของ '+cnt(st)+' ชิ้นเก็บเข้าคลังแล้ว','info');
+  const other=cnt(lost)-full;
+  if(full) svlNote('กระเป๋าและคลังเต็ม · ของ '+full+' ชิ้นเก็บไม่ได้','bad');
+  if(other>0) svlNote('เก็บของไม่ได้ '+other+' ชิ้น','bad'); }
+function pgStashFree(A){ return A&&Array.isArray(A.stash)?Math.max(0,Math.min(BAL.CAP.stash,A.stashMax|0)-A.stash.length):0; }
+function pgStashPut(A,id,n,d){   // stack n of id into the stash (open stacks first, then new entries) → number put
+  const cap=Math.max(1,d.stack|0||1); let left=n;
+  for(const x of A.stash){ if(!left) break; if(x&&typeof x.u!=='string'&&!x.unk&&x.id===id&&(x.n|0)<cap){ const k=Math.min(cap-(x.n|0),left); x.n=(x.n|0)+k; left-=k; } }
+  while(left>0&&pgStashFree(A)>0){ const k=Math.min(cap,left); A.stash.push({id, n:k}); left-=k; }
+  return n-left; }
+function pgUidHeld(u){ if(!SAVE) return false; const has=l=>Array.isArray(l)&&l.some(x=>x&&x.u===u);
+  return has(SAVE.acct&&SAVE.acct.stash)||(Array.isArray(SAVE.chars)&&SAVE.chars.some(c=>c&&has(c.inv))); }

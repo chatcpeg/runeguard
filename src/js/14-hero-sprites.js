@@ -31,8 +31,8 @@ function drawHat(c,L,t){
 function drawWeapon(c,L,a,face){
   if(WEAPON_EXT[L.weapon]) return WEAPON_EXT[L.weapon](c,L,a,face);
   c.save(); c.translate(face*3,-2); c.rotate(a); const C=L.wc||'#dddddd',sk=L.skin||'#ffdcbc';
-  // refined gear: L.glow 1 = soft glow, 2 = aura (drawn on c — glow() itself only paints the main ctx)
-  if(L.glow){ const r=L.glow>1?30:19; c.save(); c.globalCompositeOperation='lighter'; c.globalAlpha*=L.glow>1?.8:.45; c.drawImage(glowTex(L.glowC||C),16-r,-r,r*2,r*2); c.restore(); }
+  // refined gear: L.glow 1 = soft glow, 2 = aura (drawn on c — glow() itself only paints the main ctx) · heroOutlined adds it itself
+  if(L.glow&&!HERO_GLOW.on) heroGlow(c,L,'lighter');
   switch(L.weapon){
     case 'sword': c.fillStyle='#6b4a2b'; c.fillRect(3,-1.6,7,3.2); c.fillStyle='#d4a940'; c.fillRect(9.5,-5,2.6,10); c.fillStyle=C; c.beginPath(); c.moveTo(12,-2.3); c.lineTo(29,-1.5); c.lineTo(32.5,0); c.lineTo(29,1.5); c.lineTo(12,2.3); c.closePath(); c.fill(); c.fillStyle='rgba(255,255,255,.6)'; c.fillRect(13,-1.2,15,.9); break;
     case 'lance': c.fillStyle='#7a5434'; c.fillRect(-8,-1.7,38,3.4); c.fillStyle=C; c.beginPath(); c.moveTo(29,-4.5); c.lineTo(44,0); c.lineTo(29,4.5); c.closePath(); c.fill(); c.fillStyle='#d9e2ef'; c.beginPath(); c.moveTo(4,-6); c.lineTo(12,-2); c.lineTo(12,2); c.lineTo(4,6); c.closePath(); c.fill(); break;
@@ -55,6 +55,7 @@ function drawHero(c,L,x,y,sc,t,face,moving,aim,o){
   c.translate(0,14); if(o.lean) c.rotate(o.lean); const sq=o.squash||0; c.scale(1+sq*.5,1-sq); c.translate(0,-14);
   c.translate(0,bob);
   const back=Math.sin(aim)<-.35, sk=L.skin||'#ffdcbc';
+  if(o.wAt){ o.wAt.m=c.getTransform(); o.wAt.back=back; }             // heroOutlined + refined glow only (never in classic)
   if(back) drawWeapon(c,L,aim,face);
   c.save(); c.scale(face,1);
   const cs=o.cape||0;
@@ -77,17 +78,30 @@ function drawHero(c,L,x,y,sc,t,face,moving,aim,o){
   c.fillStyle='#8a4a3a'; c.fillRect(5.4,-9.4,2,1);
   drawHat(c,L,t);
   c.restore();
-  if(!back) drawWeapon(c,L,aim,face);
+  if(!back&&!o.wAt) drawWeapon(c,L,aim,face);                         // wAt: heroOutlined draws the front weapon after its glow
   c.restore();
 }
 /* outlined hero: draw once to an offscreen canvas, stamp a dark silhouette around it, then the hero */
 const HERO_SZ=104, heroCv=mkCanvas(2,2), heroSil=mkCanvas(2,2);
+// refined-weapon glow (L.glow · never in classic): the outline is cut from the hero without the glow (else the glow disc gets a dark
+// rim) in ONE drawHero (it used to be drawn twice a frame). drawHero reports where the weapon goes (o.wAt) and leaves out its glow;
+// the layers stay as drawWeapon paints them: weapon behind the body → glow under everything (destination-over) · in front → body,
+// then the glow ('lighter'), then the weapon, which drawHero leaves to us for that (it is cut into the outline first)
+const HERO_GLOW={on:false};
+function heroGlow(c,L,op){ const r=L.glow>1?30:23; c.save(); c.globalCompositeOperation=op; c.globalAlpha*=L.glow>1?.8:.65;
+  c.drawImage(glowTex(L.glowC||L.wc||'#dddddd'),16-r,-r,r*2,r*2); c.restore(); }
 function heroOutlined(target,L,x,y,sc,t,face,moving,aim,o){
   o=o||{}; const k=2,S=HERO_SZ,WW=S*k;
   if(heroCv.width!==WW){ heroCv.width=heroCv.height=WW; heroSil.width=heroSil.height=WW; }
   const hc=heroCv.getContext('2d'); hc.setTransform(1,0,0,1,0,0); hc.clearRect(0,0,WW,WW); hc.setTransform(k,0,0,k,0,0);
-  drawHero(hc,L,S/2,S*.62,1,t,face,moving,aim,Object.assign({},o,{noShadow:true}));
-  const sg=heroSil.getContext('2d'); sg.globalCompositeOperation='copy'; sg.drawImage(heroCv,0,0); sg.globalCompositeOperation='source-in'; sg.fillStyle=o.outline||'#120d0a'; sg.fillRect(0,0,WW,WW); sg.globalCompositeOperation='source-over';
+  const W=L.glow&&!WEAPON_EXT[L.weapon]?{m:null, back:false}:null; HERO_GLOW.on=!!W;
+  drawHero(hc,L,S/2,S*.62,1,t,face,moving,aim,Object.assign({},o,{noShadow:true, wAt:W}));
+  const sg=heroSil.getContext('2d'); sg.globalCompositeOperation='copy'; sg.drawImage(heroCv,0,0);
+  if(W&&W.m&&!W.back){ sg.globalCompositeOperation='source-over'; sg.save(); sg.setTransform(W.m); drawWeapon(sg,L,aim,face); sg.restore(); }
+  sg.globalCompositeOperation='source-in'; sg.fillStyle=o.outline||'#120d0a'; sg.fillRect(0,0,WW,WW); sg.globalCompositeOperation='source-over';
+  if(W&&W.m){ hc.save(); hc.setTransform(W.m); hc.translate(face*3,-2); hc.rotate(aim); heroGlow(hc,L,W.back?'destination-over':'lighter'); hc.restore();
+    if(!W.back){ hc.save(); hc.setTransform(W.m); drawWeapon(hc,L,aim,face); hc.restore(); } }
+  HERO_GLOW.on=false;
   const dw=S*sc,dx=x-dw/2,dy=y-S*.62*sc,ow=1.25*sc;
   if(!o.noShadow){ target.fillStyle='rgba(0,0,0,.32)'; target.beginPath(); target.ellipse(x,y+15*sc,13*sc,4.5*sc,0,0,TAU); target.fill(); }
   for(const q of OFF8) target.drawImage(heroSil,dx+q[0]*ow,dy+q[1]*ow,dw,dw);

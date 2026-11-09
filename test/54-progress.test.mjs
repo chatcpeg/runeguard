@@ -67,9 +67,9 @@ console.log('§3.3 แท็บสถานะ (ค่ารอยืนยั�
   ok('ไม่เกินเพดาน 50: แม่นยำ 48 +5 ได้แค่ 2', s.cap === 2 && s.capD === 2, s);
   ok('[แจกอัตโนมัติ] แจกแต้มที่เหลือตามแบบแนะนำต่อจากค่าที่รอยืนยัน (จอมเวท INT/DEX)', s.auto === 4 && s.autoLeft === 0 && s.autoD.STR === 1 && (s.autoD.INT | 0) + (s.autoD.DEX | 0) === 4, s);
   ok('ค่ารอยืนยันเป็นของตัวละครตัวเดียว (เปลี่ยนตัว = เริ่มว่าง)', s.otherD === '{}', s);
-  const calc = X(`(()=>{ const out={}; for(const c of ${JSON.stringify(CLASSES)}){ const ch=newChar('ทดสอบ',c); const A=pstCalc(ch,ch.st), p=makePlayer(CLS[c]); recalc(p);
+  const calc = X(`(()=>{ const out={}; for(const c of ${JSON.stringify(CLASSES)}){ const ch=newChar('ทดสอบ',c); ch.inv=[]; ch.eq=svEmptyEq(); const A=pstCalc(ch,ch.st), p=makePlayer(CLS[c]); recalc(p);
       out[c]={a:A.find(r=>r[0]==='พลังโจมตี')[1], hp:A.find(r=>r[0]==='HP')[1], php:Math.round(p.maxHp), spd:A.find(r=>r[0]==='ความเร็ว')[1], pspd:Math.round(p.speed)}; }
-    const m=newChar('ทดสอบ','mage'); const B=pstCalc(m,{STR:10,VIT:5,AGI:0,DEX:40,INT:0,LUK:0}); out.p=B.find(r=>r[0]==='พลังโจมตี')[1]; out.hp=B.find(r=>r[0]==='HP')[1]; out.proj=B.find(r=>r[0]==='กระสุน')[1];
+    const m=newChar('ทดสอบ','mage'); m.inv=[]; m.eq=svEmptyEq(); const B=pstCalc(m,{STR:10,VIT:5,AGI:0,DEX:40,INT:0,LUK:0}); out.p=B.find(r=>r[0]==='พลังโจมตี')[1]; out.hp=B.find(r=>r[0]==='HP')[1]; out.proj=B.find(r=>r[0]==='กระสุน')[1];
     return out; })()`);
   ok('ตัวอย่างค่าที่คำนวณได้ = recalc จริงของคลาสสิก (ตัวใหม่ทั้ง 5 อาชีพ: พลังโจมตี 100 · HP · ความเร็ว)', CLASSES.every(c => calc[c].a === 100 && calc[c].hp === calc[c].php && calc[c].spd === calc[c].pspd), calc);
   ok('ผลถ้ายืนยัน: ATK 10 → พลังโจมตี 108 · อึด 5 → HP 90+20 · แม่นยำ 40 → กระสุน +1', calc.p === 108 && calc.hp === 110 && calc.proj === '+1', calc);
@@ -82,7 +82,7 @@ console.log('§3.3 แท็บสถานะ (ค่ารอยืนยั�
 console.log('§3.5 หน้าสกิล (ข้อมูลที่หน้าแสดง)');
 {
   const { X, log } = fresh();
-  const m = X(`(()=>{ SAVE=newSave(null); const ch=newChar('ทดสอบ','mage'); SAVE.chars.push(ch); SAVE.active=ch.id; const o={};
+  const m = X(`(()=>{ SAVE=newSave(null); const ch=newChar('ทดสอบ','mage'); ch.sp=0; SAVE.chars.push(ch); SAVE.active=ch.id; const o={};
     const t1=pksModel(ch,1), t2=pksModel(ch,2); o.t1=t1.map(g=>[g.a,g.sk.map(r=>r.id+':'+r.r+':'+r.cost+':'+(r.can?1:0)+':'+(r.lock?1:0)),g.pas.map(r=>r.id)]);
     o.t2=t2.map(g=>[g.a.id,g.sk.map(r=>r.id+':'+(r.lock?'L':'-')),g.pas.map(r=>r.id)]); o.lock2=t2[0].sk[0].lock;
     ch.sp=10; ch.sk.flame=2; ch.job='archmage'; const a=pksModel(ch,2); o.job=a.map(g=>g.a.id); o.req=a[0].sk[0].lock; o.reqCan=a[0].sk[0].can;

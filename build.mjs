@@ -353,7 +353,8 @@ export function buildDist(html, OUT) {
   const version = sha(html + readFileSync(fileURLToPath(import.meta.url), 'utf8')).slice(0, 10);
   // index.html — the artifact body split into <head> (title, fonts, styles) and <body>
   const cut = html.indexOf('</style>') + '</style>'.length;
-  const headPart = html.slice(0, cut).replace(/<meta name="claude:viewport-fit-sides"[^>]*>\n?/, '');
+  // the artifact carries its own <meta charset> (so a server that sends no charset still shows Thai) · index.html has it first already
+  const headPart = html.slice(0, cut).replace(/<meta name="claude:viewport-fit-sides"[^>]*>\n?/, '').replace(/<meta charset="utf-8">\n?/, '');
   const bodyPart = html.slice(cut);
   const reg = `
 /* PWA: cache the game so it opens instantly and works offline (build ${version}) */

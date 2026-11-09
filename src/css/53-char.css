@@ -1,1 +1,115 @@
-/* 53-char.css · lane E · M0 stub (empty) */
+/* 53-char.css · lane E · equipment / bag tabs, item sheet, smith (refine), rune scribe, shop, stash · phone first (360 px, 44 px targets) */
+.uc{display:flex;flex-direction:column;gap:10px;min-width:0}
+.uc p{margin:0}
+.uc-hint{font-size:12.5px;line-height:1.55;color:var(--ash);text-align:center;overflow-wrap:anywhere}
+.uc-left{text-align:left}
+.uc-warn{padding:8px 12px;border-radius:10px;border:1px dashed var(--rune-deep);color:var(--rune);font-size:13px;text-align:center}
+.uc-bad,.uc-dl .uc-bad dd{color:#ff9aa0}
+.uc-span{grid-column:1/-1}
+.uc-ic{flex:none;width:30px;font-size:22px;line-height:1;text-align:center}
+.uc-big{width:44px;font-size:34px}
+.uc-nm{font-weight:700;overflow-wrap:anywhere}
+.uc-empty{color:var(--ash);font-weight:400}
+.uc-rt{display:flex;flex-direction:column;gap:1px;min-width:0;flex:1}
+.uc-rt small{font-size:12px;line-height:1.45;color:var(--ash);overflow-wrap:anywhere}
+.uc-rt small.uc-bad{color:#ff9aa0}
+.uc-rt small.uc-cmp{color:var(--spirit)}
+.uc-wal{display:flex;flex-wrap:wrap;gap:4px 14px;font-size:13.5px;font-variant-numeric:tabular-nums}
+
+/* buttons: every target ≥ 44 px */
+.uc-b{min-height:44px;min-width:44px;padding:0 14px;border-radius:12px;border:1px solid var(--line-hi);background:var(--card);color:var(--bone);font-weight:600;font-size:14px;line-height:1.25;cursor:pointer}
+.uc-b.pri{background:var(--rune);border-color:var(--rune);color:#24170a}
+.uc-b:disabled{opacity:.42;cursor:not-allowed}
+.uc-b.sh-wide{width:100%}
+.uc-sq{flex:none;width:44px;padding:0;font-size:17px}
+.uc-pr{flex:none;padding:0 10px;font-variant-numeric:tabular-nums;white-space:nowrap}
+.uc-seg{display:flex;gap:4px;padding:4px;border-radius:12px;background:var(--well);flex-wrap:wrap}
+.uc-seg button{flex:1 1 auto;min-width:44px;min-height:44px;padding:0 6px;white-space:nowrap;border:0;border-radius:9px;background:none;color:var(--ash);font-size:13.5px;font-weight:600;cursor:pointer}
+.uc-seg [aria-pressed="true"]{background:var(--rune);color:#24170a}
+
+/* equipment tab */
+.uc-top{display:grid;grid-template-columns:96px minmax(0,1fr);gap:12px;align-items:center}
+.uc-pt{border-radius:14px;background:var(--well)}
+.uc-sum{display:flex;flex-direction:column;gap:4px;font-size:12.5px;line-height:1.55;color:var(--ash);overflow-wrap:anywhere}
+.uc-sum b{font-size:13px;color:var(--spirit)}
+.uc-slots{display:flex;flex-direction:column;gap:6px}
+.uc-slot{display:grid;grid-template-columns:30px 64px minmax(0,1fr) 14px;gap:8px;align-items:center;min-height:52px;padding:6px 12px;border-radius:12px;border:1px solid var(--line);background:var(--card);color:var(--bone);font-size:14px;text-align:left;cursor:pointer}
+.uc-st2{display:flex;flex-direction:column;min-width:0}
+.uc-st2 small{font-size:11.5px}
+.uc-sl{color:var(--ash);font-size:12.5px}
+.uc-go{color:var(--rune);font-size:18px}
+
+/* bag tab: 5 columns at any width */
+.uc-grid{display:grid;grid-template-columns:repeat(5,minmax(0,1fr));gap:6px}
+.uc-cell{position:relative;box-sizing:border-box;aspect-ratio:1;min-height:48px;padding:0;border-radius:11px;border:1.5px solid var(--line);background:var(--card);color:var(--bone);display:grid;place-items:center;cursor:pointer;overflow:hidden}
+.uc-cell:disabled{opacity:.5;cursor:default}
+.uc-ci{font-size:24px;line-height:1}
+.uc-bd{position:absolute;right:3px;bottom:2px;font-size:11px;font-weight:700;font-variant-numeric:tabular-nums;text-shadow:0 1px 2px #000,0 0 3px #000}
+.uc-fl{position:absolute;left:3px;top:1px;font-size:9.5px;letter-spacing:-.04em;color:var(--violet);text-shadow:0 1px 2px #000}
+.uc-free{border-style:dashed;background:none;opacity:.45;cursor:default}
+.uc-foot{display:flex;flex-wrap:wrap;gap:8px;align-items:center}
+.uc-foot .uc-b{flex:1 1 auto}
+.uc-cnt{flex:1 0 100%;font-size:13.5px;font-variant-numeric:tabular-nums}
+
+/* list rows (pickers, shop, scribe) */
+.uc-row{display:flex;align-items:center;gap:6px;min-height:52px;padding:4px 6px 4px 8px;border-radius:12px;border:1px solid var(--line);background:var(--card)}
+.uc-row .uc-row{border:0;padding:0;flex:1;min-width:0;background:none}
+.uc-rm{flex:1;min-width:0;min-height:44px;display:flex;align-items:center;gap:8px;padding:4px 2px;border:0;background:none;color:var(--bone);font-size:14px;text-align:left}
+button.uc-rm{cursor:pointer}
+.uc-off{opacity:.55}
+.uc-wrap{flex-wrap:wrap;padding-bottom:8px}
+.uc-wrap>.uc-rm{flex:1 1 100%}
+.uc-wrap>.uc-b{flex:1 1 0}
+
+/* item sheet */
+.uc-ih{display:flex;align-items:center;gap:12px}
+.uc-rar{font-size:13px}
+.uc-stl{list-style:none;margin:0;padding:0;display:flex;flex-direction:column}
+.uc-stl li{display:grid;grid-template-columns:minmax(0,1fr) auto auto;gap:10px;align-items:baseline;padding:6px 2px;border-bottom:1px dashed var(--line);font-size:14px}
+.uc-stl li.uc-hint{display:block}
+.uc-stl b{font-variant-numeric:tabular-nums}
+.uc-stl i{font-style:normal;font-size:12.5px;font-variant-numeric:tabular-nums;min-width:52px;text-align:right}
+.uc-up{color:var(--spirit)}
+.uc-dn{color:#ff9aa0}
+.uc-socks{display:flex;flex-wrap:wrap;gap:6px;align-items:center;font-size:13px;color:var(--ash)}
+.uc-sock{padding:4px 10px;border-radius:999px;border:1px dashed var(--line-hi);color:var(--ash)}
+.uc-sock.on{border-style:solid;border-color:var(--violet);color:var(--violet)}
+.uc-acts{display:grid;grid-template-columns:repeat(auto-fill,minmax(96px,1fr));gap:8px}
+.uc-acts .uc-b{padding:0 8px}
+
+/* smith */
+.uc-to{display:flex;align-items:baseline;justify-content:center;gap:14px;font:400 30px/1.2 var(--f-display);color:var(--ash)}
+.uc-to b{font-weight:400;color:var(--rune)}
+.uc-to i{font-style:normal;font-size:20px}
+.uc-dl{margin:0;display:flex;flex-direction:column;gap:2px;font-size:13.5px}
+.uc-dl div{display:grid;grid-template-columns:76px minmax(0,1fr);gap:10px;padding:4px 0}
+.uc-dl dt{color:var(--ash)}
+.uc-dl dd{margin:0;overflow-wrap:anywhere}
+.uc-chk{display:flex;align-items:center;gap:12px;min-height:48px;padding:0 12px;border-radius:12px;border:1px solid var(--line);background:var(--card);font-size:14px;cursor:pointer}
+.uc-chk input{flex:none;width:22px;height:22px;margin:0;accent-color:var(--rune)}
+.uc-go2{min-height:56px;font-size:17px}
+.uc-hold{position:relative;overflow:hidden;touch-action:none;-webkit-touch-callout:none}
+.uc-hold::before{content:'';position:absolute;inset:0;background:rgba(255,255,255,.42);transform:scaleX(0);transform-origin:left;transition:transform .15s;pointer-events:none}
+.uc-hold.on::before{transform:none;transition:transform var(--hold,1s) linear}
+.uc-rbar{height:12px;border-radius:6px;background:var(--well);overflow:hidden;border:1px solid var(--line)}
+.uc-rbar i{display:block;height:100%;width:0;background:linear-gradient(90deg,var(--rune-deep),var(--rune),#fff3c4);animation:uc-fill .6s linear forwards}
+.uc-res{padding:10px 12px;border-radius:12px;text-align:center;font-weight:700;font-size:15px}
+.uc-res.ok{color:var(--rune);background:rgba(240,181,69,.12);border:1px solid var(--rune)}
+.uc-res.fail{color:#ff9aa0;background:rgba(216,68,76,.1);border:1px solid var(--blood)}
+.uc-res.ok.pop{animation:uc-pop .5s ease-out;box-shadow:0 0 22px rgba(240,181,69,.45)}
+.uc-res.fail.pop{animation:uc-crack .42s ease-out}
+@keyframes uc-fill{to{width:100%}}
+@keyframes uc-pop{0%{transform:scale(.8);opacity:0}60%{transform:scale(1.06);opacity:1}100%{transform:none}}
+@keyframes uc-crack{0%,100%{transform:none}20%{transform:translateX(-7px) rotate(-1deg)}45%{transform:translateX(6px) rotate(1deg)}70%{transform:translateX(-3px)}}
+
+/* stash: two columns bag ⇄ stash */
+.uc-two{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:8px;align-items:start}
+.uc-col{display:flex;flex-direction:column;gap:6px;min-width:0}
+.uc-col h3{margin:0;font:600 12.5px var(--f-body);letter-spacing:.06em;color:var(--spirit);text-align:center}
+.uc-mv{display:flex;align-items:center;gap:6px;min-height:48px;padding:4px 8px;border-radius:11px;border:1px solid var(--line);background:var(--card);color:var(--bone);font-size:12.5px;text-align:left;cursor:pointer}
+.uc-mv .uc-ic{width:24px;font-size:19px}
+.uc-mv b{font-size:12.5px}
+.uc-ar{flex:none;color:var(--rune)}
+.uc-mv:disabled{opacity:.45;cursor:default}
+
+@media (prefers-reduced-motion: reduce){ .uc-res.pop,.uc-rbar i{animation-duration:.01ms} .uc-hold.on::before{transition-duration:var(--hold,1s)} }

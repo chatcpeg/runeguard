@@ -97,6 +97,8 @@ function pksRender(){
     h+=d?`<button type="button" class="pks-sl${i===pksSel?' sel':''}" data-a="slot" data-i="${i}" aria-pressed="${i===pksSel}" aria-label="ช่อง ${i+1} ${esc(d.n)}"><span aria-hidden="true">${d.i}</span>${i?'':'<em>เริ่ม</em>'}<b>★${(ch.sk||{})[id]|0}</b></button>`
        :'<span class="pks-sl empty" aria-hidden="true">+</span>'; }
   h+=`</div>${pksSel>=0?'<p class="pks-tip">เลือกช่อง '+(pksSel+1)+' แล้ว · แตะช่องอื่นเพื่อสลับ หรือกด [ใส่] ที่สกิลเพื่อแทนช่องนี้</p>':''}</div>`;
+  const f1=c.skills[0], f1r=(ch.sk||{})[f1]|0;   // balance (§9.4 gate): a new character evolves its first skill in its first run only at ★5
+  if(tier===1&&SK[f1]&&f1r<BAL.CAP.rank) h+=`<p class="pks-tip pks-rec">แนะนำ: ฝึก ${esc(SK[f1].n)} ถึง ★${BAL.CAP.rank} ก่อน · ★${BAL.CAP.rank} + การ์ดสถานะในรอบ = วิวัฒนาการ</p>`;
   h+=`<div class="seg prg-seg" role="group" aria-label="ขั้นอาชีพ"><button type="button" data-a="tab" data-t="1" aria-pressed="${pksTab===1}">ขั้นต้น · ${esc(c.n)}</button>`
     +`<button type="button" data-a="tab" data-t="2" aria-pressed="${pksTab===2}">ขั้นสูง · ${a?esc(a.n):'ยังไม่เลื่อน'}</button></div>`;
   for(const g of pksModel(ch,pksTab)){

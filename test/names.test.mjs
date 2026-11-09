@@ -61,14 +61,26 @@ if (rows.length) {
   console.log('  · ' + rows.length + ' ชื่อ: ' + Object.entries(count).map(([k, v]) => k + ' ' + v).join(' · '));
   const bad = rows.filter(r => typeof r.n !== 'string' || !norm(r.n));
   ok('ทุกตัวมีชื่อ n เป็นข้อความไม่ว่าง', bad.length === 0, bad.map(r => r.src + '.' + r.id).join(', '));
-  ok('มีครบทุกหมวดที่ส่งแล้ว (SK, SK.evo, PASSIVES, EN, CLASSES, CLASSES.adv)', ['SK', 'SK.evo', 'PASSIVES', 'EN', 'CLASSES', 'CLASSES.adv'].every(k => count[k] > 0), JSON.stringify(count));
+  ok('มีครบทุกหมวดที่ส่งแล้ว (SK, SK.evo, PASSIVES, ITEMS, RUNES, EN, CLASSES, CLASSES.adv)', ['SK', 'SK.evo', 'PASSIVES', 'ITEMS', 'RUNES', 'EN', 'CLASSES', 'CLASSES.adv'].every(k => count[k] > 0), JSON.stringify(count));
   ok('อาชีพ 5 + อาชีพขั้นสูง 10', count.CLASSES === 5 && count['CLASSES.adv'] === 10, JSON.stringify(count));
+  // M2 (§9.4): 73+ gear pieces + materials · 10 survival runes, each sold as one rune item that carries the same name
+  const it = loadSrc(FILES).__eval(`(() => { const gear = Object.keys(ITEMS).filter(k => ITEMS[k].slot).length, bad = [];
+    for (const id of Object.keys(RUNES)) { const m = Object.keys(ITEMS).filter(k => ITEMS[k].rune === id);
+      if (m.length !== 1 || ITEMS[m[0]].n !== RUNES[id].n) bad.push(id + ':' + m.join('/')); }
+    const shard = Object.keys(RUNES).filter(id => !RUNES[id].shard || !Object.prototype.hasOwnProperty.call(ITEMS, RUNES[id].shard));
+    return { gear, runes: Object.keys(RUNES).length, bad, shard }; })()`);
+  ok('ไอเทม M2: อุปกรณ์ ≥ 73 ชิ้น · รูน 10 แบบ · รูนแต่ละแบบมีไอเทมรูน 1 ชิ้นชื่อตรงกัน และมีเศษรูนใน ITEMS', it.gear >= 73 && it.runes === 10 && !it.bad.length && !it.shard.length, JSON.stringify(it));
   const d = dupes(rows.filter(r => typeof r.n === 'string' && norm(r.n)));
   ok('ไม่มีชื่อที่แสดงซ้ำกัน', d.length === 0, d.map(x => '"' + x.n + '": ' + x.rows.map(r => r.src + '.' + r.id).join(' · ')).join(' | '));
   // end to end: copy a real name onto another registry in a fresh context → must be caught with both places named
   const ctx2 = loadSrc(FILES); ctx2.__eval("SK.slash.n = ' ' + CLASSES[1].adv[0].n.toUpperCase() + ' '");
   const d2 = dupes(collect(ctx2));
   ok('จับได้จริงเมื่อทำให้ชื่อในข้อมูลจริงซ้ำ (SK.slash = ชื่ออาชีพขั้นสูง)', d2.length === 1 && d2[0].rows.map(r => r.src + '.' + r.id).sort().join() === ['CLASSES.adv.' + ctx2.__eval('CLASSES[1].adv[0].id'), 'SK.slash'].sort().join(), JSON.stringify(d2));
+  // same for the item registries: a gear piece renamed to a rune's name, and a material renamed to an enemy's name
+  const ctx3 = loadSrc(FILES), ids3 = ctx3.__eval(`(() => { const g = Object.keys(ITEMS).find(k => ITEMS[k].slot), m = Object.keys(ITEMS).find(k => ITEMS[k].kind === 'mat'), r = Object.keys(RUNES)[0];
+    ITEMS[g].n = RUNES[r].n; ITEMS[m].n = EN.shambler.n; return [g, m, r]; })()`);
+  const d3 = dupes(collect(ctx3)), got3 = d3.map(x => x.rows.map(r => r.src + '.' + r.id).sort().join()).sort();
+  ok('จับได้จริงในไอเทม (อุปกรณ์ = ชื่อรูน · วัสดุ = ชื่อศัตรู)', d3.length === 2 && got3.some(s => s.includes('ITEMS.' + ids3[0]) && s.includes('RUNES.' + ids3[2])) && got3.some(s => s.includes('ITEMS.' + ids3[1]) && s.includes('EN.shambler')), JSON.stringify(got3));
 }
 
 console.log(`\nสรุป: ผ่าน ${pass} · ไม่ผ่าน ${fail}`);

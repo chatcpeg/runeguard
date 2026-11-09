@@ -26,7 +26,7 @@ function pstCalc(ch,st){
   const c=pgCls(ch); if(!c) return []; const p=makePlayer(c); p.adv=pgAdvOf(ch); p.bonus=buildRunBonus(Object.assign({},ch,{st})); recalc(p);
   const K=22+.8*(ch.lv|0), pc=v=>Math.round(v*100);
   return [['พลังโจมตี',Math.round(100*p.might)],['HP',Math.round(p.maxHp)],['ป้องกัน',(+p.armor.toFixed(1))+' (−'+pc(p.armor/(p.armor+K))+'%)'],
-    ['ฟื้นฟู/วิ',+p.regen.toFixed(2)],['คริ',pc(p.crit)+'%'],['แรงคริ','×'+(+p.critMult.toFixed(2))],['คูลดาวน์','−'+pc(1-p.cdMul)+'%'],
+    ['ฟื้นฟู/วิ',+p.regen.toFixed(2)],['คริ',pc(p.crit)+'%'],['แรงคริ','×'+(+p.critMult.toFixed(2))],['คูลดาวน์',pc(1-p.cdMul)>0?'−'+pc(1-p.cdMul)+'%':'0%'],
     ['ความเร็ว',Math.round(p.speed)],['พื้นที่สกิล','+'+pc(p.area-1)+'%'],['ระยะเวลาสกิล','+'+pc(p.durMul-1)+'%'],['กระสุน','+'+p.extraProj],
     ['ดรอป','+'+pc(p.drop)+'%'],['EXP','+'+pc(p.xpMul-1)+'%']]; }
 function pstDraw(root,ch){

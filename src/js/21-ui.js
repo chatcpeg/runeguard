@@ -138,12 +138,12 @@ function selectClass(id){
   selected=id; const c=CLS[id];
   for(const b of document.querySelectorAll('.cls')) b.setAttribute('aria-pressed',b.dataset.id===id?'true':'false');
   const pips=n=>Array.from({length:5},(_,i)=>`<span class="pip${i<n?' on':''}"></span>`).join('');
-  const best=loadBest()[id];
+  const all=loadBest(), best=all&&typeof all==='object'&&Object.prototype.hasOwnProperty.call(all,id)&&all[id]&&typeof all[id]==='object'?all[id]:null;
   $('#clsDetail').innerHTML=`<div class="cd-main"><h2 class="cd-name">${c.n}<span>${c.e}</span></h2><p>${c.d}</p>
     <dl class="cd-stats"><dt>พลังชีวิต</dt><dd>${pips(c.rating.hp)}</dd><dt>พลังโจมตี</dt><dd>${pips(c.rating.atk)}</dd><dt>ความเร็ว</dt><dd>${pips(c.rating.spd)}</dd><dt>ระยะโจมตี</dt><dd>${pips(c.rating.rng)}</dd></dl></div>
     <div class="cd-side"><h3>สกิลประจำอาชีพ</h3><ul class="cd-skills">${c.skills.map(k=>`<li><i>${SK[k].i}</i><span><b>${SK[k].n}</b> · ${SK[k].d}</span></li>`).join('')}</ul>
     <h3>อาชีพขั้นสอง (Lv 15)</h3><p class="cd-adv"><b>${c.adv[0].n}</b> ${c.adv[0].d}<br><b>${c.adv[1].n}</b> ${c.adv[1].d}</p>
-    <p class="cd-best">${best?`สถิติดีที่สุด: ${fmtNum(best.score)} คะแนน · คลื่น ${best.wave} · สังหาร ${fmtNum(best.kills)}${best.won?' · ชนะ':''}`:'ยังไม่มีสถิติของอาชีพนี้'}</p></div>`;
+    <p class="cd-best">${best?`สถิติดีที่สุด: ${fmtNum(Math.max(0,+best.score||0))} คะแนน · คลื่น ${Math.max(0,best.wave|0)} · สังหาร ${fmtNum(Math.max(0,+best.kills||0))}${best.won===true?' · ชนะ':''}`:'ยังไม่มีสถิติของอาชีพนี้'}</p></div>`;
 }
 let wakeLock=null;
 function keepAwake(){ try{ if(!('wakeLock' in navigator)||wakeLock||document.visibilityState!=='visible') return; navigator.wakeLock.request('screen').then(l=>{ wakeLock=l; l.addEventListener('release',()=>{ wakeLock=null; }); }).catch(()=>{ wakeLock=null; }); }catch(e){ wakeLock=null; } }

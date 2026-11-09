@@ -4,7 +4,7 @@
 // mirror the stack (+1 per sheet / confirm / run); Chrome skips entries added without a gesture, so shSync adds ≤ 1 per tap / key.
 // At the stack bottom the first back only warns. User text → textContent / esc() only.
 const SH={stack:[], booted:false, hd:0, ign:0, ignK:0, tok:0, noHist:true, sheet:null, onClose:null, conf:null, menuAt:0,
-  lastMode:null, tab:null, txt:{}, cwCh:null};
+  lastMode:null, tab:null, txt:{}, cwCh:null, nt:0};
 const SH_META=['scrChar','scrSkills','scrJob','scrAccount'];       // pages with the shared tab bar (§8.0)
 const SH_RET={classic:'scrTitle', trial:'scrJob'};                  // after toTitle: hub + this screen
 regScreen('scrChar');
@@ -47,7 +47,7 @@ function shBack(){
 function shHome(){
   if(G){ SH.lastMode=null; toTitle(); return; }                     // toTitle → UIX.home → here again with G = null
   if(SH.conf) shConfDone(false); shSheetOff(); SH.menuAt=0; SH.stack=['scrHub']; shShow('scrHub'); }
-function shAfterRun(){ const r=SH_RET[SH.lastMode]; SH.lastMode=null; shHome(); if(r&&shEl(r)) shGo(r); }
+function shAfterRun(){ const r=SH_RET[SH.lastMode]; SH.lastMode=null; if(typeof hdHide==='function') hdHide(); shHome(); if(r&&shEl(r)) shGo(r); }
 function shChrome(id){
   const nav=shEl('shNav'), fab=shEl('shFab'); if(!nav||!fab) return;
   const hub=id==='scrHub', meta=hub||SH_META.includes(id);
@@ -101,17 +101,21 @@ function closeSheet(){ if(!SH.sheet) return; shSheetOff(); shSync(); }
 
 /* ---------- toast (top, 2.5 s) · sysLog (bottom left, 4 lines) ---------- */
 function toast(text,kind){
-  const box=shEl('shToasts'); if(!box) return; const s=String(text==null?'':text), tap=/แตะเพื่ออัปเดต/.test(s);
+  const box=shEl('shToasts'); if(!box) return; const s=String(text==null?'':text), tap=/แตะเพื่ออัปเดต/.test(s); SH.nt++;
   for(const o of Array.from(box.children)) if(o.textContent===s) o.remove();
   const t=shMk('div','sh-toast '+(kind==='good'||kind==='bad'?kind:'info'),s); t.setAttribute('role',kind==='bad'?'alert':'status');
   if(tap){ t.classList.add('tap'); t.addEventListener('click',shUpdateApp); }
   box.append(t); while(box.children.length>3) box.firstElementChild.remove();
   setTimeout(()=>{ t.classList.add('out'); setTimeout(()=>t.remove(),320); },tap?6000:2500); }
-function sysLog(text,kind){
-  if(G&&G.auto) return; const box=shEl('shLog'); if(!box) return;
-  const l=shMk('div','sh-ll'+(kind==='good'||kind==='bad'?' '+kind:''),text==null?'':text); box.append(l);
-  while(box.children.length>4) box.firstElementChild.remove();
-  setTimeout(()=>{ l.classList.add('out'); setTimeout(()=>l.remove(),420); },4000); }
+function sysLog(text,kind){ shLogLine(text,kind); }
+// o.key: a line with the same key that is still showing is rewritten in place (×n grows, no new line) · o.color: text colour
+function shLogLine(text,kind,o){
+  if(G&&G.auto) return null; const box=shEl('shLog'); if(!box) return null; o=o||{};
+  let l=box.lastElementChild;
+  if(!(o.key&&l&&l.dataset.k===o.key&&!l.classList.contains('out'))){ l=shMk('div',''); if(o.key) l.dataset.k=o.key; box.append(l);
+    while(box.children.length>4) box.firstElementChild.remove(); }
+  l.className='sh-ll'+(kind==='good'||kind==='bad'?' '+kind:''); l.textContent=text==null?'':String(text); l.style.color=o.color||'';
+  clearTimeout(l.shT); l.shT=setTimeout(()=>{ l.classList.add('out'); setTimeout(()=>l.remove(),420); },4000); return l; }
 function shUpdateApp(){   // §6.3: newer save → new worker, skipWaiting, reload
   const sw=navigator.serviceWorker, go=()=>setTimeout(()=>location.reload(),600);
   if(!sw||!sw.getRegistration){ go(); return; }
@@ -152,9 +156,10 @@ function shCharHead(ch){
   const n=shMk('div','cw-n'); n.append(shMk('b','',ch.name),shMk('small','',shJobName(ch)+(ch.pts>0?' · แต้มสถานะเหลือ '+ch.pts:'')+(ch.sp>0?' · แต้มสกิล '+ch.sp:'')));
   const der=shMk('div','cw-der'), p=shDerived(ch);
   if(p){ const red=Math.round(100*p.armor/(p.armor+22+.8*ch.lv));
-    for(const [k,v] of [['พลังโจมตี',Math.round(100*p.might)],['ป้องกัน',Math.round(p.armor*10)/10+' (−'+red+'%)'],['HP',Math.round(p.maxHp)],['คริ',Math.round(p.crit*100)+'%'],['คูลดาวน์','−'+Math.round((1-p.cdMul)*100)+'%']]){
+    for(const [k,v] of [['พลังโจมตี',Math.round(100*p.might)],['ป้องกัน',Math.round(p.armor*10)/10+' (−'+red+'%)'],['HP',Math.round(p.maxHp)],['คริ',Math.round(p.crit*100)+'%'],['คูลดาวน์',shCdPct(p.cdMul)]]){
       const s=shMk('span','',k+' '); s.append(shMk('b','',v)); der.append(s); } }
   h.append(shPortrait(ch,64),n,shBars(ch),der); }
+function shCdPct(m){ const v=Math.round((1-m)*100); return v>0?'−'+v+'%':v<0?'+'+(-v)+'%':'0%'; }   // cooldown −n% (none: 0%, never −0%)
 function shDerived(ch){   // §3.7 display numbers from a throw-away player (no run state touched)
   const c=CLS[ch.cls]; if(!c) return null;
   try{ const p=makePlayer(c); p.adv=c.adv.find(a=>a.id===ch.job)||null; p.bonus=buildRunBonus(ch); recalc(p); return p; }catch(e){ return null; } }
