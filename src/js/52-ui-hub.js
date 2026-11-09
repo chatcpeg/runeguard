@@ -256,10 +256,11 @@ function hbUpFill(box){
   box.textContent=''; const A=SAVE&&SAVE.acct, U=BAL.UP, fmt=n=>Math.floor(+n||0).toLocaleString('en-US');
   box.append(shMk('p','hb-up-gold','ทองของบัญชี: '+fmt(A?A.gold:0)+' · ใช้ได้ทุกโหมดยกเว้นคลาสสิก'));
   for(const k of U.order){ const d=U.def[k], lv=pgUpLv(k), cost=upCost(k), row=shMk('div','hb-up-row');
-    const pct=v=>(Math.round(v*1000)/10)+'%', now=lv*d.per, nx=(lv+1)*d.per;
+    const pct=v=>(Math.round(v*1000)/10)+'%', now=(d.base||0)+lv*d.per, nx=(d.base||0)+(lv+1)*d.per;   // base: a rate that starts above 0 (stat power 0.5%)
     row.append(shMk('span','hb-up-i',d.i));
     const mid=shMk('div','hb-up-m'); mid.append(shMk('b',null,d.n+' · ขั้น '+lv+'/'+U.max));
-    mid.append(shMk('span','hb-up-v',lv>=U.max?'+'+pct(now)+' (เต็มแล้ว)':'+'+pct(now)+' → +'+pct(nx)));
+    const pre=d.base?'ต่อแต้ม ':'+', fm=d.m?(v=>(Math.round(v/d.per*d.m*10)/10)+' ม.'):pct;   // d.m: shown in metres (pickup range)
+    mid.append(shMk('span','hb-up-v',lv>=U.max?pre+fm(now)+' (เต็มแล้ว)':pre+fm(now)+' → '+(d.base?'':'+')+fm(nx)));
     const bar=shMk('i','hb-up-bar'); bar.style.setProperty('--p',String(lv/U.max)); mid.append(bar); row.append(mid);
     const b=shBtn(cost?fmt(cost)+' ทอง':'เต็ม','uc-b pri',()=>{ const r=buyUpgrade(k);
       if(r) toast(r,'bad'); else { toast(d.n+' ขั้น '+pgUpLv(k)+' แล้ว','good'); try{ initAudio(); tone(880,.12,'triangle',.08); tone(1320,.2,'sine',.06,0,.08); }catch(e){} }

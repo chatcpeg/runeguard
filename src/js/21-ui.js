@@ -39,7 +39,7 @@ function buildChoices(){
   }
   const avail=P.loadout||P.cls.skills.concat(P.adv?P.adv.skills:[]);
   for(const id of avail) if(!owned.has(id)&&cap(id)>0) pool.push({k:'new',id,w:P.adv&&P.adv.skills.indexOf(id)>=0?3:1.4});
-  for(const k in STATS) if(P.stats[k]<5) pool.push({k:'stat',stat:k,w:.85});
+  for(const k in STATS) if(P.sx||P.stats[k]<5) pool.push({k:'stat',stat:k,w:.85});   // character runs: stat cards never run out (26)
   const out=[];
   while(out.length<3&&pool.length){ let tot=0; for(const o of pool) tot+=o.w; let r=Math.random()*tot,idx=0; for(;idx<pool.length-1;idx++){ r-=pool[idx].w; if(r<=0) break; } out.push(pool[idx]); pool.splice(idx,1); }
   const fill=[{k:'potion'},{k:'gold'},{k:'gold'}]; let fi=0; while(out.length<3) out.push(fill[fi++]);

@@ -5,8 +5,8 @@
 // Forward compatibility inside v1: an item / rune id this app does not know survives validation (item → unk:1, rune id kept in
 // its socket), so a newer client's loot is never destroyed. A new class, job, skill or passive does NOT survive (they are matched
 // against CLS / SK / PASSIVES): adding one needs a SCHEMA_V bump, so older apps open such a save read-only instead.
-const SCHEMA_V=2;                                    // 2: acct.up (gold upgrades) · a v1 app opens a v2 save read-only, so it never drops them
-const SV_APP='2.1.0';                                 // app version stamped into every local write (saveSummary.appVer)
+const SCHEMA_V=3;                                    // 2: acct.up (gold upgrades) · 3: up.stat · an older app opens a newer save read-only, so it never drops what was paid for
+const SV_APP='2.2.0';                                 // app version stamped into every local write (saveSummary.appVer)
 const SV_NAME_RE=/^[\p{L}\p{M}\p{N} ]{2,16}$/u;
 const SV_SLOTS=['weapon','off','head','face','body','cloak','hands','feet','neck','ring'];
 const SV_WEAPON={swordsman:'w_sword_1', mage:'w_staff_1', archer:'w_bow_1', cleric:'w_rod_1', thief:'w_dagger_1'};   // §3.8 starter (M2)
@@ -91,7 +91,8 @@ function svMig0(o,best){   // v0 = the old single-file game: nothing but runegua
   if(imp){ s.acct.records.classic=imp; s.acct.flags.pioneer=true; s.acct.flags.migratedBest=true; }
   return s; }
 function svMig1(o){ const s=Object.assign({},o); s.v=2; return s; }   // v1 → v2: only adds acct.up (validateSave fills it empty)
-const SV_MIG={0:svMig0, 1:svMig1};      // SV_MIG[v](o) → save of version v+1
+function svMig2(o){ const s=Object.assign({},o); s.v=3; return s; }   // v2 → v3: only adds acct.up.stat
+const SV_MIG={0:svMig0, 1:svMig1, 2:svMig2};      // SV_MIG[v](o) → save of version v+1
 function migrateSave(o,legacyBest){
   if(!svObj(o)) o=null;
   const v=o?o.v:undefined;
@@ -158,7 +159,9 @@ function svAcct(a){
   const d=svObj(a.daily)?a.daily:{};
   o.daily={day:svStr(d.day,/^\d{4}-\d{2}-\d{2}$/,''), surv:svFlagMap(d.surv,/^(10|[0-9])$/,16), boss:svFlagMap(d.boss,/^[a-z0-9_:-]{1,40}$/,64),
     rushWeek:svStr(d.rushWeek,/^\d{4}-W\d{2}$/,'')};
-  const u=svObj(a.up)?a.up:{}; for(const k of BAL.UP.order){ const n=svInt(u[k],0,BAL.UP.max,0); if(n) o.up[k]=n; }
+  // known lines and any future line name (a newer app's upgrade survives this app's write) · 0–max each, ≤ 24 lines
+  const u=svObj(a.up)?a.up:{}, keys=BAL.UP.order.filter(k=>svHas(u,k)).concat(svKeys(u,64).filter(k=>BAL.UP.order.indexOf(k)<0&&/^[a-z]{1,12}$/.test(k)).slice(0,24));
+  for(const k of keys){ const n=svInt(u[k],0,BAL.UP.max,0); if(n) o.up[k]=n; }   // known lines first: junk keys never push them out
   const f=svObj(a.flags)?a.flags:{};
   o.flags={pioneer:f.pioneer===true, migratedBest:f.migratedBest===true, pioneerCloak:f.pioneerCloak===true, tips:svFlagMap(f.tips,/^[A-Za-z0-9_:-]{1,40}$/,64)};
   const ids=[]; for(const x of Array.isArray(a.runIds)?a.runIds:[]) if(svStr(x,SV_RUNID_RE,'')&&ids.indexOf(x)<0) ids.push(x);

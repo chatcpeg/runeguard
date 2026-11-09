@@ -4,7 +4,7 @@
 // the screens themselves are checked in the browser. No dependencies.
 import { loadSrc } from './_vm.mjs';
 
-const FILES = ['04', '05', '06', '07', '08', '15', '16', '17', '18', '24', '25', '30', '31', '33', '34', '40', '41', '42', '54', '56', '57', '58'];
+const FILES = ['04', '05', '06', '07', '08', '15', '16', '17', '18', '24', '25', '26', '30', '31', '33', '34', '40', '41', '42', '54', '56', '57', '58'];
 let pass = 0, fail = 0;
 const ok = (name, cond, info) => { if (cond) { pass++; console.log('  ✓ ' + name); } else { fail++; console.log('  ✗ ' + name + (info !== undefined ? '\n      ' + (typeof info === 'string' ? info : JSON.stringify(info)) : '')); } };
 const canon = v => JSON.stringify(v, (k, x) => (x && typeof x === 'object' && !Array.isArray(x) ? Object.keys(x).sort().reduce((o, q) => (o[q] = x[q], o), {}) : x));

@@ -22,7 +22,7 @@ MODES.survival=Object.assign({},MODES.classic,{
     if(t) for(const it of rollDrops(t,1+(P.drop||0))) G.loot.push(it);
     if(e.elite&&!e.boss&&rngUnit()<BAL.BOX.elite&&Array.isArray(G.gems)&&G.gems.filter(g=>!g.dead&&g.kind==='lootbox'&&g.small).length<BAL.BOX.maxSmall) svBoxDrop(e.x,e.y,true); },
   update(dt){ updateWave(dt); if(!G.over) svBoxTick(dt); },
-  hud(){ const h=MODES.classic.hud(); h.lv='ชำนาญ Lv '+P.lv+' · '+(P.adv?P.adv.n:P.cls.n); return h; },
+  hud(){ const h=MODES.classic.hud(); h.lv='ชำนาญ Lv '+P.lv+' · '+(P.adv?P.adv.n:P.cls.n); h.wave+=' · มอน Lv '+svWaveLv(); return h; },
   end(won){ const r=MODES.classic.end(won), T='ระดับนรก T'+(G.tier||0);   // G.retreat = pause → ถอยทัพ (55-ui-hud.js)
     if(G.retreat){ r.eyebrow=T+' · ถอยทัพกลับป้อมพร้อมรางวัล'; r.title='ถอยทัพ'; } else r.eyebrow=T+' · '+r.eyebrow; return r; }
 });
@@ -60,3 +60,28 @@ function svPaintBox(c){ const k=1.15;
 ITEMKIND.lootbox={
   collect(g){ try{ svBoxOpen(g); }catch(e){ console.error(e); } },
   draw(c,g){ const s=g.spr||(g.spr=ltSpr('lootbox',svPaintBox)), b=Math.sin(G.t*4+g.x*.05)*2; if(g.small){ c.save(); c.translate(g.x,g.y+b); c.scale(.75,.75); ltBlit(c,s,0,0); c.restore(); } else ltBlit(c,s,g.x,g.y+b); }};
+
+/* ---- monster level tags (survival · display only: the wave/tier scaling of HP and damage already is "the level") ----
+   Lv = recLv(T) + wave/2 · elite +2 · boss +5, stored on the enemy the first time it is drawn · one cached canvas per tag,
+   blitted (cheap even with 300 enemies) · white = normal · gold = elite · red = boss */
+const SV_LVT=new Map();
+function svLvTag(lv,rank){ const key=lv+'|'+rank; let c=SV_LVT.get(key); if(c) return c;
+  const t='Lv '+lv, S=2, w=Math.max(32,9+t.length*6.8), h=14; c=mkCanvas(w*S,h*S); const g=c.getContext('2d'); g.scale(S,S);
+  const col=rank==='boss'?['#5a1018','#ff6a6a']:rank==='elite'?['#4a3408','#f0c75a']:['rgba(10,12,18,.72)','#e8e2cf'];
+  g.fillStyle=col[0]; rrect(g,.5,.5,w-1,h-1,6); g.fill(); g.strokeStyle=rank==='normal'?'rgba(255,255,255,.18)':col[1]; g.lineWidth=1; g.stroke();
+  g.fillStyle=col[1]; g.font='bold 10px sans-serif'; g.textAlign='center'; g.textBaseline='middle'; g.fillText(t,w/2,h/2+.5);
+  c.__w=w; c.__h=h; if(SV_LVT.size<200) SV_LVT.set(key,c); return c; }
+function svLvOf(e){ if(e.lv==null){ e.lv=svWaveLv()+(e.boss?5:e.elite?2:0); } return e.lv; }
+const SV_LV_NEAR=10, SV_LV_R2=280*280, SV_LV_PICK=[];
+function svWaveLv(){ return BAL.SURV.recLv(G.tier|0)+Math.floor(Math.max(0,(G.wave|0)-1)/2); }
+// elites and bosses always · normal ones only the SV_LV_NEAR nearest (a swarm of 200 tags is noise; the HUD wave chip says the wave's level)
+MODES.survival.drawOver=function(L,T,R,B){
+  const near=SV_LV_PICK; near.length=0;
+  for(const e of G.enemies){ if(e.dead||e.x<L||e.x>R||e.y<T||e.y>B) continue;
+    if(e.boss||e.elite){ svLvDraw(e); continue; }
+    const dx=e.x-P.x, dy=e.y-P.y, d=dx*dx+dy*dy; if(d>SV_LV_R2) continue;
+    if(near.length<SV_LV_NEAR){ near.push([d,e]); continue; }
+    let w=0; for(let i=1;i<near.length;i++) if(near[i][0]>near[w][0]) w=i; if(d<near[w][0]) near[w]=[d,e]; }
+  if(near.length){ const a=ctx.globalAlpha; ctx.globalAlpha=.8; for(const [,e] of near) svLvDraw(e); ctx.globalAlpha=a; } };
+function svLvDraw(e){ const c=svLvTag(svLvOf(e),e.boss?'boss':e.elite?'elite':'normal'), k=e.boss?1.4:e.elite?1.15:1, w=c.__w*k, h=c.__h*k;
+  ctx.drawImage(c,e.x-w/2,e.y-(e.r||12)*(e.boss?1.25:1.15)-h-8,w,h); }

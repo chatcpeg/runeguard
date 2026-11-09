@@ -7,7 +7,7 @@ import { join, dirname } from 'node:path';
 import { fileURLToPath } from 'node:url';
 
 const ROOT = join(dirname(fileURLToPath(import.meta.url)), '..');
-const FILES = ['04', '05', '06', '07', '08', '15', '24', '25', '30', '31', '33', '34', '35', '40', '41', '42', '50', '52', '55'];
+const FILES = ['04', '05', '06', '07', '08', '15', '24', '25', '26', '30', '31', '33', '34', '35', '40', '41', '42', '50', '52', '55'];
 let pass = 0, fail = 0;
 const ok = (name, cond, info) => { if (cond) { pass++; console.log('  ✓ ' + name); } else { fail++; console.log('  ✗ ' + name + (info !== undefined ? '\n      ' + JSON.stringify(info) : '')); } };
 const tick = ms => new Promise(r => setTimeout(r, ms));

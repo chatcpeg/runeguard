@@ -366,6 +366,13 @@ button.hb-st{padding:0;border:0;background:none;text-decoration:underline dotted
 .hb-up-bar{display:block;height:5px;border-radius:3px;background:linear-gradient(90deg,#f0c75a calc(var(--p)*100%),rgba(255,255,255,.1) 0)}
 .hb-up-row .uc-b{white-space:nowrap;font-size:13px;padding:0 10px}
 .hb-up-note{margin:0;font-size:12px;color:var(--muted,#b9b3a0)}
+/* stat cards: milestone reached by this card · coming soon · notes */
+.card .hd-ci .hd-ci-ms{flex-basis:100%;color:#ffd36a;font-weight:700;text-shadow:0 0 8px rgba(255,211,106,.35)}
+.card .hd-ci .hd-ci-soon{flex-basis:100%;color:#c9a7ff}
+.card .hd-ci .hd-ci-note{flex-basis:100%;color:var(--muted,#b9b3a0);font-size:11.5px}
+.hd-sk-m{font-size:12px;color:#f3ead2}
+.hd-sk-ms{font-size:12px;color:#ffd36a;line-height:1.5}
+.hd-sk-soon{font-size:12px;color:#c9a7ff;line-height:1.5}
 /* 51-auth.css · lane N · M0 stub (empty) */
 /* 53-char.css · lane E · equipment / bag tabs, item sheet, smith (refine), rune scribe, shop, stash · phone first (360 px, 44 px targets) */
 .uc{display:flex;flex-direction:column;gap:10px;min-width:0}
@@ -1314,7 +1321,11 @@ const joy={on:false,id:null,ox:0,oy:0,dx:0,dy:0};
 const BEH={};
 
 function makeSkill(id){ return {id,def:SK[id],lv:1,evolved:false,cdT:.35,dealt:0,st:{}}; }
-function pv(s,k){ if(s.evolved){ const st=s.def.evo.set; if(k in st) return st[k]; } const v=s.def.p[k]; return Array.isArray(v)?v[s.lv-1]:v; }
+function pv(s,k){ let v; if(s.evolved&&k in s.def.evo.set) v=s.def.evo.set[k]; else { v=s.def.p[k]; if(Array.isArray(v)) v=v[s.lv-1]; }
+  const m=s.mod; if(!m) return v;                                     // s.mod: stat milestones / main-stat power (26-stat-scaling · character runs only)
+  if(k in m.set) v=m.set[k]; if(k in m.add) v=(v||0)+m.add[k]; if(k in m.mul&&v!=null) v*=m.mul[k];
+  if(k==='slow'&&v>.8) v=.8; else if(k==='dodge'&&v>.5) v=.5;          // milestone caps (slow ≥ 1 would stop / reverse enemies)
+  return v; }
 function cdOf(s){ return Math.max(.08,pv(s,'cd')*P.cdMul); }
 function countOf(s){ let n=pv(s,'count')||1; const t=s.def.type; if(t==='proj') n+=pv(s,'radial')?P.extraProj*2:P.extraProj; else if(t==='orbit') n+=P.extraProj; return n; }
 function makePlayer(cls){
@@ -1325,6 +1336,7 @@ function makePlayer(cls){
 }
 function recalc(p){
   const c=p.cls,b=p.bonus||(p.adv&&p.adv.bonus)||{},s=p.stats,oldMax=p.maxHp;   // p.bonus: run bonus from a character (prepareRun)
+  if(p.sx&&typeof sxMods==='function') sxMods(p);                                                  // character runs: uncapped stat cards (26-stat-scaling)
   p.maxHp=c.hp+(b.hp||0)+20*s.VIT;
   p.speed=c.speed*(1+(b.speed||0))*(1+.07*s.AGI);
   p.armor=c.armor+(b.armor||0);
@@ -1335,6 +1347,7 @@ function recalc(p){
   p.cdMul=(b.cd||1)*Math.pow(.96,s.AGI)*Math.pow(.94,s.DEX);
   p.magnet=125*(b.magnet||1)*(1+.2*s.LUK); p.xpMul=1+(b.xp||0)+.06*s.LUK;
   p.extraProj=(b.proj||0)+(s.DEX>=3?1:0)+(s.DEX>=5?1:0);
+  if(p.sx&&typeof sxStats==='function') sxStats(p,b);
   p.dodge=0; p.rage=0; p.steal=0;
   for(const k of p.skills){ if(k.def.type!=='passive') continue; const d=pv(k,'dodge'); if(d) p.dodge=Math.max(p.dodge,d); const r=pv(k,'rage'); if(r) p.rage=r; const st=pv(k,'steal'); if(st) p.steal=st; }
   if(b.dodge) p.dodge=Math.min(.6,p.dodge+b.dodge); if(b.rage) p.rage+=b.rage; if(b.steal) p.steal+=b.steal;
@@ -1962,7 +1975,7 @@ function buildChoices(){
   }
   const avail=P.loadout||P.cls.skills.concat(P.adv?P.adv.skills:[]);
   for(const id of avail) if(!owned.has(id)&&cap(id)>0) pool.push({k:'new',id,w:P.adv&&P.adv.skills.indexOf(id)>=0?3:1.4});
-  for(const k in STATS) if(P.stats[k]<5) pool.push({k:'stat',stat:k,w:.85});
+  for(const k in STATS) if(P.sx||P.stats[k]<5) pool.push({k:'stat',stat:k,w:.85});   // character runs: stat cards never run out (26)
   const out=[];
   while(out.length<3&&pool.length){ let tot=0; for(const o of pool) tot+=o.w; let r=Math.random()*tot,idx=0; for(;idx<pool.length-1;idx++){ r-=pool[idx].w; if(r<=0) break; } out.push(pool[idx]); pool.splice(idx,1); }
   const fill=[{k:'potion'},{k:'gold'},{k:'gold'}]; let fi=0; while(out.length<3) out.push(fill[fi++]);
@@ -2435,7 +2448,7 @@ MODES.survival=Object.assign({},MODES.classic,{
     if(t) for(const it of rollDrops(t,1+(P.drop||0))) G.loot.push(it);
     if(e.elite&&!e.boss&&rngUnit()<BAL.BOX.elite&&Array.isArray(G.gems)&&G.gems.filter(g=>!g.dead&&g.kind==='lootbox'&&g.small).length<BAL.BOX.maxSmall) svBoxDrop(e.x,e.y,true); },
   update(dt){ updateWave(dt); if(!G.over) svBoxTick(dt); },
-  hud(){ const h=MODES.classic.hud(); h.lv='ชำนาญ Lv '+P.lv+' · '+(P.adv?P.adv.n:P.cls.n); return h; },
+  hud(){ const h=MODES.classic.hud(); h.lv='ชำนาญ Lv '+P.lv+' · '+(P.adv?P.adv.n:P.cls.n); h.wave+=' · มอน Lv '+svWaveLv(); return h; },
   end(won){ const r=MODES.classic.end(won), T='ระดับนรก T'+(G.tier||0);   // G.retreat = pause → ถอยทัพ (55-ui-hud.js)
     if(G.retreat){ r.eyebrow=T+' · ถอยทัพกลับป้อมพร้อมรางวัล'; r.title='ถอยทัพ'; } else r.eyebrow=T+' · '+r.eyebrow; return r; }
 });
@@ -2473,6 +2486,135 @@ function svPaintBox(c){ const k=1.15;
 ITEMKIND.lootbox={
   collect(g){ try{ svBoxOpen(g); }catch(e){ console.error(e); } },
   draw(c,g){ const s=g.spr||(g.spr=ltSpr('lootbox',svPaintBox)), b=Math.sin(G.t*4+g.x*.05)*2; if(g.small){ c.save(); c.translate(g.x,g.y+b); c.scale(.75,.75); ltBlit(c,s,0,0); c.restore(); } else ltBlit(c,s,g.x,g.y+b); }};
+
+/* ---- monster level tags (survival · display only: the wave/tier scaling of HP and damage already is "the level") ----
+   Lv = recLv(T) + wave/2 · elite +2 · boss +5, stored on the enemy the first time it is drawn · one cached canvas per tag,
+   blitted (cheap even with 300 enemies) · white = normal · gold = elite · red = boss */
+const SV_LVT=new Map();
+function svLvTag(lv,rank){ const key=lv+'|'+rank; let c=SV_LVT.get(key); if(c) return c;
+  const t='Lv '+lv, S=2, w=Math.max(32,9+t.length*6.8), h=14; c=mkCanvas(w*S,h*S); const g=c.getContext('2d'); g.scale(S,S);
+  const col=rank==='boss'?['#5a1018','#ff6a6a']:rank==='elite'?['#4a3408','#f0c75a']:['rgba(10,12,18,.72)','#e8e2cf'];
+  g.fillStyle=col[0]; rrect(g,.5,.5,w-1,h-1,6); g.fill(); g.strokeStyle=rank==='normal'?'rgba(255,255,255,.18)':col[1]; g.lineWidth=1; g.stroke();
+  g.fillStyle=col[1]; g.font='bold 10px sans-serif'; g.textAlign='center'; g.textBaseline='middle'; g.fillText(t,w/2,h/2+.5);
+  c.__w=w; c.__h=h; if(SV_LVT.size<200) SV_LVT.set(key,c); return c; }
+function svLvOf(e){ if(e.lv==null){ e.lv=svWaveLv()+(e.boss?5:e.elite?2:0); } return e.lv; }
+const SV_LV_NEAR=10, SV_LV_R2=280*280, SV_LV_PICK=[];
+function svWaveLv(){ return BAL.SURV.recLv(G.tier|0)+Math.floor(Math.max(0,(G.wave|0)-1)/2); }
+// elites and bosses always · normal ones only the SV_LV_NEAR nearest (a swarm of 200 tags is noise; the HUD wave chip says the wave's level)
+MODES.survival.drawOver=function(L,T,R,B){
+  const near=SV_LV_PICK; near.length=0;
+  for(const e of G.enemies){ if(e.dead||e.x<L||e.x>R||e.y<T||e.y>B) continue;
+    if(e.boss||e.elite){ svLvDraw(e); continue; }
+    const dx=e.x-P.x, dy=e.y-P.y, d=dx*dx+dy*dy; if(d>SV_LV_R2) continue;
+    if(near.length<SV_LV_NEAR){ near.push([d,e]); continue; }
+    let w=0; for(let i=1;i<near.length;i++) if(near[i][0]>near[w][0]) w=i; if(d<near[w][0]) near[w]=[d,e]; }
+  if(near.length){ const a=ctx.globalAlpha; ctx.globalAlpha=.8; for(const [,e] of near) svLvDraw(e); ctx.globalAlpha=a; } };
+function svLvDraw(e){ const c=svLvTag(svLvOf(e),e.boss?'boss':e.elite?'elite':'normal'), k=e.boss?1.4:e.elite?1.15:1, w=c.__w*k, h=c.__h*k;
+  ctx.drawImage(c,e.x-w/2,e.y-(e.r||12)*(e.boss?1.25:1.15)-h-8,w,h); }
+/* ================= 26-stat-scaling.js · lane B · in-run stat cards without a cap (character modes only) ================= */
+// docs/PROPOSAL-stat-scaling.md. Classic never sets P.sx, so nothing here runs there (golden unchanged).
+// - Cards 1–5 of a stat keep the old numbers; card 6+ gives SX.over (half) of them, with caps (SX.cap).
+// - Every skill has a main stat: its damage × (1 + rate · points) · rate = SX.base + account upgrade 'stat' (BAL.UP)
+//   · points = cards of that stat in this run + floor(permanent stat / 5).
+// - Milestones: every `e` (default 5) cards of a stat change a skill parameter (SX.ms). They act through pv() (core 15 reads
+//   s.mod), so the cards, the pause sheet and the skill code all see the same numbers.
+const SX={ base:.005, over:.5, cap:{speed:.6, area:2, dur:2, crit:.75, cdMin:.45, proj:6, slow:.8, dodge:.5},
+  // the param the main-stat power multiplies (default 'dmg') · frenzy (passive) has no damage → no power line
+  pk:{bulwark:'nova', aegis:'nova', shadow:'nova', trap:'trap'},
+  // card 6+ text (core STATS.d describes cards 1–5)
+  half:{STR:'ใบที่ 6+: ดาเมจทุกสกิล +6% · แรงกระแทก +5%', AGI:'ใบที่ 6+: เดิน +3% · คูลดาวน์ ×0.98 · กระสุนเร็ว +4%',
+    VIT:'ใบที่ 6+: HP +10 · ฟื้น +0.2/วิ · โล่ดูดซับ +4%', INT:'ใบที่ 6+: พื้นที่ +5% · ระยะเวลา +5%',
+    DEX:'ใบที่ 6+: คูลดาวน์ ×0.97 · +1 ลูกทุก 5 ใบ', LUK:'ใบที่ 6+: คริ +2.5% · แรงคริ +5% · ดูดของ +10% · EXP +3%'},
+  // skill → main stat (ATK = STR)
+  main:{ slash:'STR', slam:'VIT', blades:'AGI', bulwark:'VIT', lance:'DEX', valor:'VIT', cyclone:'STR', frenzy:'STR',
+    mbolt:'INT', flame:'INT', frost:'INT', thunder:'INT', meteor:'INT', blizzard:'INT', vortex:'INT', spikes:'INT',
+    arrow:'DEX', spread:'AGI', rain:'LUK', trap:'INT', hawk:'AGI', arrownova:'DEX', deadeye:'LUK', blast:'DEX',
+    holy:'INT', heal:'VIT', sacred:'VIT', cross:'DEX', judgment:'INT', aegis:'VIT', fists:'STR', spheres:'INT',
+    dagger:'LUK', fan:'AGI', venom:'INT', shadow:'AGI', phantom:'LUK', whirl:'AGI', clones:'DEX', smoke:'AGI' },
+  // milestones: [stat, param, op ('+' add per step · '*' multiply per step · '=' set once reached), value, Thai text, every]
+  ms:{
+    slash:[['STR','arc','+',.26,'มุมฟันกว้าง +15°'], ['AGI','count','+',1,'ฟันเพิ่ม 1 ครั้ง',10]],
+    slam:[['VIT','stun','+',.1,'สตัน +0.1 วิ'], ['INT','knock','*',1.25,'แรงกระแทก +25%',10]],
+    blades:[['AGI','spin','*',1.15,'หมุนเร็ว +15%'], ['DEX','count','+',1,'+1 ดาบ']],
+    bulwark:[['VIT','absorb','*',1.1,'ดูดซับ +10%'], ['INT','nova','*',1.15,'ระเบิดโล่ +15%']],
+    lance:[['DEX','knock','*',1.2,'แรงกระแทก +20%'], ['STR','size','*',1.1,'หอกใหญ่ +10%']],
+    valor:[['VIT','slow','+',.03,'ชะลอ +3%']],
+    cyclone:[['STR','knock','*',1.2,'แรงกระแทก +20%'], ['AGI','count','+',1,'หมุนเพิ่ม 1 รอบ',10]],
+    frenzy:[['STR','rage','+',.05,'ดาเมจตอน HP ต่ำ +5%'], ['VIT','steal','+',1,'ฟื้นต่อการสังหาร +1']],
+    mbolt:[['INT','pierce','+',1,'ทะลุ +1']],
+    flame:[['INT','explode','*',1.1,'วงระเบิด +10%'], ['INT','burn','=',1,'ทิ้งไฟบนพื้น',10]],
+    frost:[['INT','freeze','+',.15,'แช่แข็ง +0.15 วิ'], ['AGI','slow','+',.05,'ชะลอ +5%']],
+    thunder:[['INT','bounces','+',1,'กระโดดต่อสาย +1'], ['DEX','count','+',1,'+1 สาย']],
+    meteor:[['DEX','count','+',1,'+1 ลูก'], ['STR','knock','*',1.2,'แรงกระแทก +20%']],
+    blizzard:[['INT','slow','+',.05,'ชะลอ +5%'], ['DEX','count','+',1,'+1 พายุ']],
+    vortex:[['INT','pull','*',1.15,'แรงดูด +15%'], ['DEX','count','+',1,'+1 วังวน']],
+    spikes:[['DEX','count','+',2,'+2 หนาม'], ['STR','knock','*',1.2,'แรงกระแทก +20%']],
+    arrow:[['DEX','volley','+',1,'+1 ดอกต่อชุด'], ['AGI','speed','*',1.1,'ลูกเร็ว +10%']],
+    spread:[['DEX','count','+',2,'+2 ดอก'], ['INT','spread','*',1.12,'มุมกว้าง +12%']],
+    rain:[['DEX','hits','+',1,'ตกเพิ่ม 1 ระลอก'], ['LUK','dmg','*',1.05,'ดาเมจ +5%']],
+    trap:[['DEX','count','+',1,'+1 กับดัก']],
+    hawk:[['DEX','count','+',1,'+1 เหยี่ยว'], ['AGI','cd','*',.92,'โฉบถี่ขึ้น 8%']],
+    arrownova:[['DEX','count','+',4,'+4 ดอกรอบตัว']],
+    deadeye:[['LUK','crit','+',.05,'คริ +5%'], ['DEX','size','*',1.15,'ลำศรกว้าง +15%']],
+    blast:[['INT','explode','*',1.1,'วงระเบิด +10%'], ['DEX','count','+',1,'+1 ลูก',10]],
+    holy:[['INT','homing','*',1.2,'ติดตามแรงขึ้น +20%']],
+    heal:[['VIT','heal','*',1.1,'ฮีล +10%']],
+    sacred:[['VIT','slow','+',.04,'ชะลอ +4%']],
+    cross:[['DEX','count','+',1,'+1 กางเขน']],
+    judgment:[['LUK','count','+',1,'ลำแสงเพิ่ม 1 ลำ',10], ['INT','knock','*',1.2,'แรงกระแทก +20%']],
+    aegis:[['VIT','absorb','*',1.1,'ดูดซับ +10%'], ['INT','nova','*',1.15,'ระเบิดโล่ +15%']],
+    fists:[['AGI','count','+',1,'ต่อยเพิ่ม 1 หมัด',10], ['STR','knock','*',1.2,'แรงกระแทก +20%']],
+    spheres:[['INT','spin','*',1.1,'หมุนเร็ว +10%']],
+    dagger:[['LUK','crit','+',.05,'คริ +5%']],
+    fan:[['DEX','count','+',2,'+2 ใบมีด'], ['AGI','speed','*',1.1,'ลูกเร็ว +10%']],
+    venom:[['INT','slow','+',.04,'ชะลอ +4%'], ['DEX','count','+',1,'+1 หมอก']],
+    shadow:[['AGI','dodge','+',.01,'หลบ +1%']],
+    phantom:[['DEX','targets','+',1,'+1 เป้า'], ['LUK','crit','+',.05,'คริ +5%']],
+    whirl:[['AGI','count','+',1,'หมุนเพิ่ม 1 รอบ',10], ['STR','knock','*',1.2,'แรงกระแทก +20%']],
+    clones:[['DEX','count','+',1,'+1 ร่าง']],
+    smoke:[['AGI','stun','+',.1,'สตัน +0.1 วิ']] } };
+
+function sxOver(p,k){ return Math.max(0,(p.stats[k]|0)-5); }
+function sxLow(p,k){ return Math.min(5,p.stats[k]|0); }
+function sxRate(p){ return SX.base+((p.bonus&&p.bonus.statPow)||0); }
+function sxPoints(p,k){ return (p.stats[k]|0)+Math.floor(((p.permSt&&p.permSt[k])|0)/5); }
+// the steps of one milestone this run: floor(cards / every)
+function sxSteps(p,m){ return Math.floor((p.stats[m[0]]|0)/(m[5]||5)); }
+// s.mod for every owned skill (called first in recalc, before anything reads pv)
+function sxMods(p){
+  for(const s of p.skills){ const add={}, mul={}, set={}, id=s.id, main=SX.main[id];
+    const pk=SX.pk[id]||'dmg', ev=s.evolved&&s.def.evo&&s.def.evo.set;
+    if(main&&(s.def.p[pk]!=null||ev&&ev[pk]!=null)){ const f=1+sxRate(p)*sxPoints(p,main); if(f!==1) mul[pk]=f; }
+    for(const m of SX.ms[id]||[]){ const n=sxSteps(p,m); if(!n) continue; const [ ,k,op,v]=m;
+      if(op==='+') add[k]=(add[k]||0)+v*n; else if(op==='*') mul[k]=(mul[k]||1)*(1+(v-1)*n); else set[k]=v; }   // '*' grows linearly (×1.1 per step = +10% each), never compounds
+    const t=s.def.type, ag=sxOver(p,'AGI'), vi=sxOver(p,'VIT'), st=sxOver(p,'STR');
+    if(ag&&t==='proj') mul.speed=(mul.speed||1)*(1+.04*ag);              // AGI card 6+: projectiles +4% faster each
+    if(vi&&t==='shield') mul.absorb=(mul.absorb||1)*(1+.04*vi);          // VIT card 6+: shields +4% each
+    if(st&&s.def.p.knock!=null) mul.knock=(mul.knock||1)*(1+.05*st);     // STR card 6+: knockback +5% each
+    if(Object.keys(add).length||Object.keys(mul).length||Object.keys(set).length) s.mod={add, mul, set}; else delete s.mod; } }   // nothing yet → plain pv (a fresh character = classic numbers)
+// the stat part of recalc again, with card 6+ at SX.over and the caps (identical to core for stats ≤ 5)
+function sxStats(p,b){
+  const c=p.cls, L=k=>sxLow(p,k), O=k=>sxOver(p,k), C=SX.cap;
+  p.maxHp=c.hp+(b.hp||0)+20*L('VIT')+10*O('VIT');
+  p.regen=c.regen+(b.regen||0)+.4*L('VIT')+.2*O('VIT');
+  p.speed=c.speed*(1+(b.speed||0))*(1+Math.min(C.speed,.07*L('AGI')+.03*O('AGI')));
+  const cr=c.crit+(b.crit||0)+.05*L('LUK'); p.crit=cr+Math.min(.025*O('LUK'),Math.max(0,C.crit-cr));   // cards 1–5 + gear as before · only card 6+ stops at 75%
+  p.critMult=1.75+(b.critMult||0)+.05*O('LUK');
+  p.might=1+(b.might||0)+.12*L('STR')+.06*O('STR');
+  p.area=1+(b.area||0)+Math.min(C.area,.1*L('INT')+.05*O('INT')); p.durMul=1+(b.dur||0)+Math.min(C.dur,.1*L('INT')+.05*O('INT'));
+  p.cdMul=(b.cd||1)*Math.max(C.cdMin,Math.pow(.96,L('AGI'))*Math.pow(.98,O('AGI'))*Math.pow(.94,L('DEX'))*Math.pow(.97,O('DEX')));
+  p.magnet=125*(b.magnet||1)*(1+.2*L('LUK')+.1*O('LUK')); p.xpMul=1+(b.xp||0)+.06*L('LUK')+.03*O('LUK');
+  const d=p.stats.DEX|0; p.extraProj=(b.proj||0)+Math.min(C.proj,(d>=3?1:0)+(d>=5?1:0)+Math.floor(O('DEX')/5)); }
+// cards / pause sheet: the milestone that the next card(s) of stat k reach → [{n: cards left, s: skill, t: text}] nearest first
+function sxNext(p,k){ const out=[];
+  for(const s of p.skills) for(const m of SX.ms[s.id]||[]){ if(m[0]!==k) continue; const e=m[5]||5, have=p.stats[k]|0;
+    if(m[2]==='='&&have>=e) continue; out.push({n:e-have%e, s, t:m[4]}); }
+  return out.sort((a,b)=>a.n-b.n); }
+// pause sheet: what a skill already has from its main stat and milestones
+function sxHave(p,s){ const id=s.id, pk=SX.pk[id]||'dmg', has=s.def.p[pk]!=null||!!(s.evolved&&s.def.evo&&s.def.evo.set[pk]!=null), main=has?SX.main[id]:null;
+  const out={main, pk, pct:main?sxRate(p)*sxPoints(p,main):0, ms:[]};
+  for(const m of SX.ms[s.id]||[]){ const n=sxSteps(p,m); if(n) out.ms.push(m[4]+(m[2]==='='||n===1?'':' ×'+n)); }
+  return out; }
 /* ================= 30-balance.js · lane C · pure · every number of §2–§5 (single source) ================= */
 // Tune here, then measure with RG.sim. Formulas are DESIGN §2.2 · §2.4 · §3.2–3.5 · §4.6–4.12 · §5.3–5.6.
 // Rule for every multiplier at its neutral input (T0, Lv1, +0): it returns exactly 1 / 22 / 0, so classic-equal paths stay bit-equal.
@@ -2550,9 +2692,10 @@ const BAL={ CAP:{base:60, job1:20, job2:25, stat:50, chars:3, bag:120, stash:120
   RESET:{gold:2000, marks:40, freeBelow:20},
   // account upgrades bought with gold (every character, every mode except classic) · acct.up[k] = 0–max
   // per: what one level adds · cost(lv) = gold to go from lv to lv+1 (500 · 750 · 1,125 … 19,222 · total ≈ 56k per line)
-  UP:{ max:10, order:['xp','mag','gold','hp','dmg','drop'],
-    def:{ xp:{n:'EXP ที่ได้', i:'📘', per:.03}, mag:{n:'ระยะดูดของ', i:'🧲', per:.08}, gold:{n:'ทองที่ได้จากรอบ', i:'💰', per:.04},
-      hp:{n:'HP สูงสุด', i:'❤️', per:.02}, dmg:{n:'ดาเมจ', i:'⚔️', per:.015}, drop:{n:'โอกาสดรอปของ', i:'🎁', per:.03} },
+  UP:{ max:10, order:['xp','mag','gold','hp','dmg','drop','stat'],
+    def:{ xp:{n:'EXP ที่ได้', i:'📘', per:.03}, mag:{n:'ระยะดูดของ', i:'🧲', per:.04, m:.5}, gold:{n:'ทองที่ได้จากรอบ', i:'💰', per:.01},   // mag: +5 units (0.5 m · 10 units = 1 m on the edge arrows) = ×0.04 of the base 125
+      hp:{n:'HP สูงสุด', i:'❤️', per:.02}, dmg:{n:'ดาเมจ', i:'⚔️', per:.015}, drop:{n:'โอกาสดรอปของ', i:'🎁', per:.01},
+      stat:{n:'พลังผูกค่าสถานะ (ต่อแต้ม)', i:'🧬', per:.001, base:.005} },   // + to SX.base: each point of a skill's main stat
     cost(lv){ return Math.round(500*Math.pow(1.5,lv)/5)*5; } },
   // survival loot boxes (25-mode-survival.js): one appears every every[0]–every[1] s near the player · elites leave a small one
   BOX:{ every:[45,60], dist:[380,600], max:3, maxSmall:4, life:120, elite:.15,
@@ -3299,8 +3442,8 @@ DEV.loot={
 // Forward compatibility inside v1: an item / rune id this app does not know survives validation (item → unk:1, rune id kept in
 // its socket), so a newer client's loot is never destroyed. A new class, job, skill or passive does NOT survive (they are matched
 // against CLS / SK / PASSIVES): adding one needs a SCHEMA_V bump, so older apps open such a save read-only instead.
-const SCHEMA_V=2;                                    // 2: acct.up (gold upgrades) · a v1 app opens a v2 save read-only, so it never drops them
-const SV_APP='2.1.0';                                 // app version stamped into every local write (saveSummary.appVer)
+const SCHEMA_V=3;                                    // 2: acct.up (gold upgrades) · 3: up.stat · an older app opens a newer save read-only, so it never drops what was paid for
+const SV_APP='2.2.0';                                 // app version stamped into every local write (saveSummary.appVer)
 const SV_NAME_RE=/^[\p{L}\p{M}\p{N} ]{2,16}$/u;
 const SV_SLOTS=['weapon','off','head','face','body','cloak','hands','feet','neck','ring'];
 const SV_WEAPON={swordsman:'w_sword_1', mage:'w_staff_1', archer:'w_bow_1', cleric:'w_rod_1', thief:'w_dagger_1'};   // §3.8 starter (M2)
@@ -3385,7 +3528,8 @@ function svMig0(o,best){   // v0 = the old single-file game: nothing but runegua
   if(imp){ s.acct.records.classic=imp; s.acct.flags.pioneer=true; s.acct.flags.migratedBest=true; }
   return s; }
 function svMig1(o){ const s=Object.assign({},o); s.v=2; return s; }   // v1 → v2: only adds acct.up (validateSave fills it empty)
-const SV_MIG={0:svMig0, 1:svMig1};      // SV_MIG[v](o) → save of version v+1
+function svMig2(o){ const s=Object.assign({},o); s.v=3; return s; }   // v2 → v3: only adds acct.up.stat
+const SV_MIG={0:svMig0, 1:svMig1, 2:svMig2};      // SV_MIG[v](o) → save of version v+1
 function migrateSave(o,legacyBest){
   if(!svObj(o)) o=null;
   const v=o?o.v:undefined;
@@ -3452,7 +3596,9 @@ function svAcct(a){
   const d=svObj(a.daily)?a.daily:{};
   o.daily={day:svStr(d.day,/^\d{4}-\d{2}-\d{2}$/,''), surv:svFlagMap(d.surv,/^(10|[0-9])$/,16), boss:svFlagMap(d.boss,/^[a-z0-9_:-]{1,40}$/,64),
     rushWeek:svStr(d.rushWeek,/^\d{4}-W\d{2}$/,'')};
-  const u=svObj(a.up)?a.up:{}; for(const k of BAL.UP.order){ const n=svInt(u[k],0,BAL.UP.max,0); if(n) o.up[k]=n; }
+  // known lines and any future line name (a newer app's upgrade survives this app's write) · 0–max each, ≤ 24 lines
+  const u=svObj(a.up)?a.up:{}, keys=BAL.UP.order.filter(k=>svHas(u,k)).concat(svKeys(u,64).filter(k=>BAL.UP.order.indexOf(k)<0&&/^[a-z]{1,12}$/.test(k)).slice(0,24));
+  for(const k of keys){ const n=svInt(u[k],0,BAL.UP.max,0); if(n) o.up[k]=n; }   // known lines first: junk keys never push them out
   const f=svObj(a.flags)?a.flags:{};
   o.flags={pioneer:f.pioneer===true, migratedBest:f.migratedBest===true, pioneerCloak:f.pioneerCloak===true, tips:svFlagMap(f.tips,/^[A-Za-z0-9_:-]{1,40}$/,64)};
   const ids=[]; for(const x of Array.isArray(a.runIds)?a.runIds:[]) if(svStr(x,SV_RUNID_RE,'')&&ids.indexOf(x)<0) ids.push(x);
@@ -3911,7 +4057,7 @@ function buildRunBonus(ch){
 function pgUpLv(k){ const A=pgAcct(), u=A&&A.up; return u&&svHas(u,k)?Math.max(0,Math.min(BAL.UP.max,u[k]|0)):0; }
 // the run bonus part of the upgrades (hp is added by buildRunBonus as a % of the rest · gold is paid in onRunEnd)
 function upBonus(){ const U=BAL.UP.def, b={}, v=k=>pgUpLv(k)*U[k].per;
-  if(v('xp')) b.xp=pgR6(v('xp')); if(v('mag')) b.magnet=pgR6(1+v('mag')); if(v('dmg')) b.might=pgR6(v('dmg')); if(v('drop')) b.drop=pgR6(v('drop'));
+  if(v('xp')) b.xp=pgR6(v('xp')); if(v('stat')) b.statPow=pgR6(v('stat')); if(v('mag')) b.magnet=pgR6(1+v('mag')); if(v('dmg')) b.might=pgR6(v('dmg')); if(v('drop')) b.drop=pgR6(v('drop'));
   return b; }
 function upCost(k){ const lv=pgUpLv(k); return svHas(BAL.UP.def,k)&&lv<BAL.UP.max?BAL.UP.cost(lv):0; }
 // buy one level of upgrade k → '' = done (saved) · otherwise the reason, nothing changed
@@ -4045,6 +4191,7 @@ function prepareRun(G,P,ch,modeId){
   P.adv=a; P.advOffered=true;                                           // never the Lv15 job pick (G.ui never 'adv')
   P.look=Object.assign({},P.cls.look,a?a.look:null,typeof gearLook==='function'?gearLook(ch):null);
   P.bonus=buildRunBonus(ch);
+  P.sx=true; P.permSt=Object.assign({},ch.st||{});                     // uncapped stat cards + main-stat power (26-stat-scaling)
   P.rank={}; for(const id of pgSkillPool(ch)){ const r=(ch.sk||{})[id]|0; if(r>0) P.rank[id]=Math.min(BAL.CAP.rank,r); }
   P.loadout=(ch.load||[]).filter(id=>P.rank[id]>0&&svHas(SK,id));
   if(!P.loadout.length){ const f=P.cls.skills[0]; P.loadout=[f]; P.rank[f]=Math.max(1,P.rank[f]|0); }
@@ -4083,7 +4230,7 @@ function onRunEnd(G,won,o){
       r.gold=G.goldRun|0;                                               // field EXP is granted per kill; boss/field fill the rest
       if(G.mode&&typeof G.mode.rewards==='function') G.mode.rewards(r,won);
     }
-    const gu=pgUpLv('gold'); if(gu&&r.gold>0) r.gold=Math.round(r.gold*(1+BAL.UP.def.gold.per*gu));   // upgrade: gold +4%/level (every mode)
+    const gu=pgUpLv('gold'); if(gu&&r.gold>0) r.gold=Math.round(r.gold*(1+BAL.UP.def.gold.per*gu));   // upgrade: gold +1%/level (every mode)
     r.jobXp=Math.round(r.baseXp*BAL.JOB_EXP);
   }catch(e){ console.error(e); }
   if(o&&o.commit) grantRewards(ch,r);
@@ -4656,10 +4803,11 @@ function hbUpFill(box){
   box.textContent=''; const A=SAVE&&SAVE.acct, U=BAL.UP, fmt=n=>Math.floor(+n||0).toLocaleString('en-US');
   box.append(shMk('p','hb-up-gold','ทองของบัญชี: '+fmt(A?A.gold:0)+' · ใช้ได้ทุกโหมดยกเว้นคลาสสิก'));
   for(const k of U.order){ const d=U.def[k], lv=pgUpLv(k), cost=upCost(k), row=shMk('div','hb-up-row');
-    const pct=v=>(Math.round(v*1000)/10)+'%', now=lv*d.per, nx=(lv+1)*d.per;
+    const pct=v=>(Math.round(v*1000)/10)+'%', now=(d.base||0)+lv*d.per, nx=(d.base||0)+(lv+1)*d.per;   // base: a rate that starts above 0 (stat power 0.5%)
     row.append(shMk('span','hb-up-i',d.i));
     const mid=shMk('div','hb-up-m'); mid.append(shMk('b',null,d.n+' · ขั้น '+lv+'/'+U.max));
-    mid.append(shMk('span','hb-up-v',lv>=U.max?'+'+pct(now)+' (เต็มแล้ว)':'+'+pct(now)+' → +'+pct(nx)));
+    const pre=d.base?'ต่อแต้ม ':'+', fm=d.m?(v=>(Math.round(v/d.per*d.m*10)/10)+' ม.'):pct;   // d.m: shown in metres (pickup range)
+    mid.append(shMk('span','hb-up-v',lv>=U.max?pre+fm(now)+' (เต็มแล้ว)':pre+fm(now)+' → '+(d.base?'':'+')+fm(nx)));
     const bar=shMk('i','hb-up-bar'); bar.style.setProperty('--p',String(lv/U.max)); mid.append(bar); row.append(mid);
     const b=shBtn(cost?fmt(cost)+' ทอง':'เต็ม','uc-b pri',()=>{ const r=buyUpgrade(k);
       if(r) toast(r,'bad'); else { toast(d.n+' ขั้น '+pgUpLv(k)+' แล้ว','good'); try{ initAudio(); tone(880,.12,'triangle',.08); tone(1320,.2,'sine',.06,0,.08); }catch(e){} }
@@ -5236,20 +5384,31 @@ function hdCdBar(){
     if(n.__cdq!==q){ n.__cdq=q; n.style.setProperty('--cd',String(q)); n.classList.toggle('cd',q>0); }
     const left=f>0?s.cdT:0, lt=left>=1?String(Math.ceil(left)):left>0&&cd>=1?(Math.ceil(left*10)/10).toFixed(1):'';   // seconds left on long cooldowns
     if(n.__cdt!==lt){ n.__cdt=lt; if(lt) n.dataset.cd=lt; else delete n.dataset.cd; } }); }
-// stat card: what +1 of this stat does to THIS character's numbers right now
+// stat card: what +1 of this stat does to THIS character right now. It really adds the card (recalc), reads every number,
+// and puts everything back (HP too) — so card 6+ (half), the caps, main-stat power and milestones are always exactly the game's
+function hdSnap(){ return {mi:P.might, ar:P.area, du:P.durMul, cd:P.cdMul, ep:P.extraProj, hp:P.maxHp, rg:P.regen, sp:P.speed, cr:P.crit, cm:P.critMult, mg:P.magnet, xp:P.xpMul, sk:P.skills.map(s=>new Map(hdSkillLines(s)))}; }
+function hdTry(k,f){ const hp=P.hp; P.stats[k]=(P.stats[k]|0)+1; try{ recalc(P); return f(); } finally{ P.stats[k]--; recalc(P); P.hp=hp; } }
 function hdStatEffect(k){
-  const L=[], sk=P.skills, eff=(s,key,mul)=>pv(s,key)!=null&&pv(s,key)?HD_N(pv(s,key)*mul):null;
-  if(k==='STR'){ const a=P.might, b=a+.12; for(const s of sk){ const d=pv(s,'dmg'); if(d) L.push(s.def.n+' ดาเมจ '+HD_N(d*a)+' → '+HD_N(d*b)); } }
-  if(k==='AGI'){ { const g=1+.07*P.stats.AGI; L.push('ความเร็วเดิน '+Math.round(P.speed)+' → '+Math.round(P.speed*(g+.07)/g)); } for(const s of sk){ if(HD_NOCD[s.def.type]||pv(s,'cd')==null) continue; const c=cdOf(s); L.push(s.def.n+' คูลดาวน์ '+HD_N(c)+' → '+HD_N(Math.max(.08,c*.96))+' วิ'); } }
-  if(k==='VIT') L.push('HP สูงสุด '+Math.ceil(P.maxHp)+' → '+Math.ceil(P.maxHp+20)+' · ฟื้น '+HD_N(P.regen)+' → '+HD_N(P.regen+.4)+'/วิ');
-  if(k==='INT'){ const a=P.area, b=a+.1, da=P.durMul, db=da+.1;
-    for(const s of sk){ const parts=[]; for(const [key,nm] of [['r','รัศมี'],['range','ระยะ'],['explode','วงระเบิด'],['jump','ระยะกระโดด']]){ const x=eff(s,key,a), y=eff(s,key,b); if(x) parts.push(nm+' '+x+' → '+y); }
-      if(pv(s,'dur')) parts.push('นาน '+HD_N(pv(s,'dur')*da)+' → '+HD_N(pv(s,'dur')*db)+' วิ');
-      if(s.def.type==='proj'){ const z=pv(s,'size')||6; parts.push('ขนาดลูก '+HD_N(z*(1+(a-1)*.5))+' → '+HD_N(z*(1+(b-1)*.5))); }   // = fireProj
-      if(parts.length) L.push(s.def.n+': '+parts.join(' · ')); }
-    L.unshift('พื้นที่ ×'+HD_N(a)+' → ×'+HD_N(b)+' · ระยะเวลา ×'+HD_N(da)+' → ×'+HD_N(db)+' (ทุกสกิล)'); }
-  if(k==='DEX') for(const s of sk){ if(HD_NOCD[s.def.type]||pv(s,'cd')==null) continue; const c=cdOf(s); L.push(s.def.n+' คูลดาวน์ '+HD_N(c)+' → '+HD_N(Math.max(.08,c*.94))+' วิ'); }
-  if(k==='LUK') L.push('คริติคอล '+Math.round(P.crit*100)+'% → '+Math.round((P.crit+.05)*100)+'% · ดูดของ '+Math.round(P.magnet)+' → '+Math.round(P.magnet*(1+.2*(P.stats.LUK+1))/(1+.2*P.stats.LUK))+' · EXP ×'+HD_N(P.xpMul)+' → ×'+HD_N(P.xpMul+.06));
+  const a=hdSnap(), b=hdTry(k,hdSnap), L=[], cut=v=>String(v).split(' (')[0], pc=v=>Math.round(v*1000)/10+'%';
+  // milestones (character runs): reached by this very card, else the nearest ones
+  if(P.sx&&typeof SX!=='undefined'){ const have=P.stats[k]|0, now=[];
+    for(const s of P.skills) for(const m of SX.ms[s.id]||[]){ const e=m[5]||5; if(m[0]===k&&(have+1)%e===0&&(m[2]!=='='||have+1===e)) now.push(s.def.n+' '+m[4]); }
+    for(const t of now) L.push({t:'★ ใบนี้: '+t, c:'ms'});
+    if(!now.length) for(const x of sxNext(P,k).slice(0,2)) L.push({t:'อีก '+x.n+' ใบ: '+x.s.def.n+' '+x.t, c:'soon'});
+    if(have>=5) L.push({t:'ใบที่ 6 ขึ้นไป: ผลทั่วไปครึ่งหนึ่ง (มีเพดาน)', c:'note'}); }
+  const g=[];
+  if(b.mi!==a.mi) g.push('ดาเมจรวม ×'+HD_N(a.mi)+' → ×'+HD_N(b.mi)); if(b.ar!==a.ar) g.push('พื้นที่ ×'+HD_N(a.ar)+' → ×'+HD_N(b.ar));
+  if(b.du!==a.du) g.push('ระยะเวลา ×'+HD_N(a.du)+' → ×'+HD_N(b.du)); if(b.cd!==a.cd) g.push('คูลดาวน์ ×'+HD_N(a.cd)+' → ×'+HD_N(b.cd));
+  if(b.ep!==a.ep) g.push('กระสุนเพิ่ม +'+a.ep+' → +'+b.ep);
+  if(b.hp!==a.hp) g.push('HP '+Math.ceil(a.hp)+' → '+Math.ceil(b.hp)); if(b.rg!==a.rg) g.push('ฟื้น '+HD_N(a.rg)+' → '+HD_N(b.rg)+'/วิ');
+  if(b.sp!==a.sp) g.push('เดิน '+Math.round(a.sp)+' → '+Math.round(b.sp)); if(b.cr!==a.cr) g.push('คริ '+pc(a.cr)+' → '+pc(b.cr));
+  if(b.cm!==a.cm) g.push('แรงคริ ×'+HD_N(a.cm)+' → ×'+HD_N(b.cm)); if(b.mg!==a.mg) g.push('ดูดของ '+Math.round(a.mg)+' → '+Math.round(b.mg));
+  if(b.xp!==a.xp) g.push('EXP ×'+HD_N(a.xp)+' → ×'+HD_N(b.xp));
+  if(g.length) L.push(g.join(' · '));
+  P.skills.forEach((s,i)=>{ const x=a.sk[i], y=b.sk[i], ch=[];
+    for(const [key,v] of y){ const o=x.get(key); if(o!=null&&cut(o)!==cut(v)) ch.push(key+' '+cut(o)+' → '+cut(v)); else if(o==null) ch.push(key+' '+cut(v)); }
+    if(ch.length) L.push(s.def.n+': '+ch.slice(0,3).join(' · ')); });
+  if(!L.length) L.push({t:'ถึงเพดานของค่านี้แล้ว · ไม่มีผลเพิ่ม', c:'note'});
   return L; }
 function hdCardInfo(){
   const box=$('#lvCards'); if(!box||!G.choices) return; HD.info=G.choices;
@@ -5258,12 +5417,13 @@ function hdCardInfo(){
     else if(o.k==='up'||o.k==='evo'){ const t=hdNextText(o.s), cd=hdSkillLines(o.s).find(x=>x[0]==='คูลดาวน์');
       if(t) lines.push(...t.replace(/^[^:]*: /,'').split(' · '));
       if(cd&&!(t&&t.indexOf('คูลดาวน์')>=0)) lines.push('คูลดาวน์ '+String(cd[1]).split(' (')[0]+' (ไม่เปลี่ยน)'); }
-    else if(o.k==='stat') lines=hdStatEffect(o.stat);
+    else if(o.k==='stat'){ lines=hdStatEffect(o.stat); const ds=c.querySelector('.ds');
+      if(P.sx&&(P.stats[o.stat]|0)>=5&&ds&&typeof SX!=='undefined'&&SX.half[o.stat]) ds.textContent=SX.half[o.stat]; }   // card 6+: the half numbers, not cards 1–5's
     if(o.k==='up'){ const df=c.querySelector('.df'), have=df?df.textContent:'', mod=P.might!==1||P.area!==1||P.durMul!==1||P.cdMul!==1||P.extraProj>0;
       lines=lines.filter(t=>have.indexOf(t)<0&&(mod||/^คูลดาวน์/.test(t)&&have.indexOf('คูลดาวน์')<0)); }   // core diffText already says it (no stat bonus yet) → don't repeat
     if(!lines.length) return; const d=document.createElement('span'); d.className='hd-ci';
     if(o.k==='up'&&!/^คูลดาวน์.*ไม่เปลี่ยน/.test(lines[0]||'')) d.append(Object.assign(document.createElement('em'),{textContent:'ค่าจริงรวมสถานะ'}));
-    for(const t of lines.slice(0,6)){ const r=document.createElement('span'); r.textContent=t; d.append(r); }
+    for(const t of lines.slice(0,7)){ const r=document.createElement('span'); if(typeof t==='object'){ r.textContent=t.t; r.className='hd-ci-'+t.c; } else r.textContent=t; d.append(r); }
     const kb=c.querySelector('kbd'); if(kb) c.insertBefore(d,kb); else c.append(d); }); }
 // special drops outside the view → an arrow on the screen edge pointing at them (every mode · DOM only, no RNG, no sim state)
 const HD_EDGE_I={chest:'🎁', bosschest:'🎁', lootbox:'🎲', heart:'❤️', magnet:'🧲', bomb:'💣'}, HD_EDGE_MAX=8;
@@ -5488,7 +5648,7 @@ function hdStatSheet(box){
   if(!P||!box) return; const el=(tag,cls,txt)=>{ const n=document.createElement(tag); if(cls) n.className=cls; if(txt!=null) n.textContent=txt; return n; };
   const wrap=el('div','hd-sheet'), st=P.stats||{};
   wrap.append(el('div','dmg-title','ค่าสถานะตอนนี้'));
-  const lv=['STR','AGI','VIT','INT','DEX','LUK'].map(k=>(STATS[k].ab||k)+' '+(st[k]|0)+'/5').join(' · ');
+  const lv=['STR','AGI','VIT','INT','DEX','LUK'].map(k=>(STATS[k].ab||k)+' '+(st[k]|0)+(P.sx?'':'/5')).join(' · ');
   wrap.append(el('div','hd-sheet-lv','การ์ดค่าสถานะในรอบนี้: '+lv));
   const rows=[
     ['HP',Math.ceil(P.hp)+' / '+Math.ceil(P.maxHp)+' · ฟื้น '+HD_N(P.regen)+'/วิ'],
@@ -5513,6 +5673,11 @@ function hdStatSheet(box){
     card.append(el('div','hd-sk-n',nm));
     const ev=s.def.evo; if(ev&&!s.evolved) card.append(el('div','hd-sk-e','วิวัฒนาการ: ★5 + '+(STATS[ev.s].ab||ev.s)+' อย่างน้อย 1 ('+(s.lv>=5?'สกิลครบ ★5 แล้ว':'ยังขาด '+(5-s.lv)+' ขั้น')+' · '+(STATS[ev.s].ab||ev.s)+' ตอนนี้ '+(st[ev.s]|0)+')'));
     const g=el('div','hd-sheet-grid'); for(const [k,v] of hdSkillLines(s)) g.append(el('span','hd-k',k),el('span','hd-v',v)); card.append(g);
+    if(P.sx&&typeof sxHave==='function'){ const h=sxHave(P,s);
+      if(h.main) card.append(el('div','hd-sk-m','ค่าหลัก '+(STATS[h.main].ab||h.main)+' · '+({nova:'ระเบิดโล่',trap:'ดาเมจกับดัก'}[h.pk]||'ความแรง')+' +'+(Math.round(h.pct*1000)/10)+'% ('+(Math.round(sxRate(P)*1000)/10)+'% ต่อแต้ม)'));
+      if(h.ms.length) card.append(el('div','hd-sk-ms','จุดเปลี่ยนที่ได้แล้ว: '+h.ms.join(' · ')));
+      const soon=(SX.ms[s.id]||[]).map(m=>{ const e=m[5]||5, have=P.stats[m[0]]|0; return m[2]==='='&&have>=e?null:{n:e-have%e, t:(STATS[m[0]].ab||m[0])+' อีก '+(e-have%e)+' ใบ: '+m[4]}; }).filter(Boolean).sort((a,b)=>a.n-b.n);
+      if(soon.length) card.append(el('div','hd-sk-soon','ถัดไป: '+soon.map(x=>x.t).join(' · '))); }
     const nx=hdNextText(s); if(nx) card.append(el('div','hd-sk-x',nx));
     if(s.dealt) card.append(el('div','hd-sk-e','ดาเมจที่ทำไปแล้วรอบนี้: '+fmtNum(s.dealt)));
     wrap.append(card); }

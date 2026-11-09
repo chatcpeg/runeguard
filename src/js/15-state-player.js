@@ -6,7 +6,11 @@ const joy={on:false,id:null,ox:0,oy:0,dx:0,dy:0};
 const BEH={};
 
 function makeSkill(id){ return {id,def:SK[id],lv:1,evolved:false,cdT:.35,dealt:0,st:{}}; }
-function pv(s,k){ if(s.evolved){ const st=s.def.evo.set; if(k in st) return st[k]; } const v=s.def.p[k]; return Array.isArray(v)?v[s.lv-1]:v; }
+function pv(s,k){ let v; if(s.evolved&&k in s.def.evo.set) v=s.def.evo.set[k]; else { v=s.def.p[k]; if(Array.isArray(v)) v=v[s.lv-1]; }
+  const m=s.mod; if(!m) return v;                                     // s.mod: stat milestones / main-stat power (26-stat-scaling · character runs only)
+  if(k in m.set) v=m.set[k]; if(k in m.add) v=(v||0)+m.add[k]; if(k in m.mul&&v!=null) v*=m.mul[k];
+  if(k==='slow'&&v>.8) v=.8; else if(k==='dodge'&&v>.5) v=.5;          // milestone caps (slow ≥ 1 would stop / reverse enemies)
+  return v; }
 function cdOf(s){ return Math.max(.08,pv(s,'cd')*P.cdMul); }
 function countOf(s){ let n=pv(s,'count')||1; const t=s.def.type; if(t==='proj') n+=pv(s,'radial')?P.extraProj*2:P.extraProj; else if(t==='orbit') n+=P.extraProj; return n; }
 function makePlayer(cls){
@@ -17,6 +21,7 @@ function makePlayer(cls){
 }
 function recalc(p){
   const c=p.cls,b=p.bonus||(p.adv&&p.adv.bonus)||{},s=p.stats,oldMax=p.maxHp;   // p.bonus: run bonus from a character (prepareRun)
+  if(p.sx&&typeof sxMods==='function') sxMods(p);                                                  // character runs: uncapped stat cards (26-stat-scaling)
   p.maxHp=c.hp+(b.hp||0)+20*s.VIT;
   p.speed=c.speed*(1+(b.speed||0))*(1+.07*s.AGI);
   p.armor=c.armor+(b.armor||0);
@@ -27,6 +32,7 @@ function recalc(p){
   p.cdMul=(b.cd||1)*Math.pow(.96,s.AGI)*Math.pow(.94,s.DEX);
   p.magnet=125*(b.magnet||1)*(1+.2*s.LUK); p.xpMul=1+(b.xp||0)+.06*s.LUK;
   p.extraProj=(b.proj||0)+(s.DEX>=3?1:0)+(s.DEX>=5?1:0);
+  if(p.sx&&typeof sxStats==='function') sxStats(p,b);
   p.dodge=0; p.rage=0; p.steal=0;
   for(const k of p.skills){ if(k.def.type!=='passive') continue; const d=pv(k,'dodge'); if(d) p.dodge=Math.max(p.dodge,d); const r=pv(k,'rage'); if(r) p.rage=r; const st=pv(k,'steal'); if(st) p.steal=st; }
   if(b.dodge) p.dodge=Math.min(.6,p.dodge+b.dodge); if(b.rage) p.rage+=b.rage; if(b.steal) p.steal+=b.steal;

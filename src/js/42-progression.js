@@ -69,7 +69,7 @@ function buildRunBonus(ch){
 function pgUpLv(k){ const A=pgAcct(), u=A&&A.up; return u&&svHas(u,k)?Math.max(0,Math.min(BAL.UP.max,u[k]|0)):0; }
 // the run bonus part of the upgrades (hp is added by buildRunBonus as a % of the rest · gold is paid in onRunEnd)
 function upBonus(){ const U=BAL.UP.def, b={}, v=k=>pgUpLv(k)*U[k].per;
-  if(v('xp')) b.xp=pgR6(v('xp')); if(v('mag')) b.magnet=pgR6(1+v('mag')); if(v('dmg')) b.might=pgR6(v('dmg')); if(v('drop')) b.drop=pgR6(v('drop'));
+  if(v('xp')) b.xp=pgR6(v('xp')); if(v('stat')) b.statPow=pgR6(v('stat')); if(v('mag')) b.magnet=pgR6(1+v('mag')); if(v('dmg')) b.might=pgR6(v('dmg')); if(v('drop')) b.drop=pgR6(v('drop'));
   return b; }
 function upCost(k){ const lv=pgUpLv(k); return svHas(BAL.UP.def,k)&&lv<BAL.UP.max?BAL.UP.cost(lv):0; }
 // buy one level of upgrade k → '' = done (saved) · otherwise the reason, nothing changed
@@ -203,6 +203,7 @@ function prepareRun(G,P,ch,modeId){
   P.adv=a; P.advOffered=true;                                           // never the Lv15 job pick (G.ui never 'adv')
   P.look=Object.assign({},P.cls.look,a?a.look:null,typeof gearLook==='function'?gearLook(ch):null);
   P.bonus=buildRunBonus(ch);
+  P.sx=true; P.permSt=Object.assign({},ch.st||{});                     // uncapped stat cards + main-stat power (26-stat-scaling)
   P.rank={}; for(const id of pgSkillPool(ch)){ const r=(ch.sk||{})[id]|0; if(r>0) P.rank[id]=Math.min(BAL.CAP.rank,r); }
   P.loadout=(ch.load||[]).filter(id=>P.rank[id]>0&&svHas(SK,id));
   if(!P.loadout.length){ const f=P.cls.skills[0]; P.loadout=[f]; P.rank[f]=Math.max(1,P.rank[f]|0); }
@@ -241,7 +242,7 @@ function onRunEnd(G,won,o){
       r.gold=G.goldRun|0;                                               // field EXP is granted per kill; boss/field fill the rest
       if(G.mode&&typeof G.mode.rewards==='function') G.mode.rewards(r,won);
     }
-    const gu=pgUpLv('gold'); if(gu&&r.gold>0) r.gold=Math.round(r.gold*(1+BAL.UP.def.gold.per*gu));   // upgrade: gold +4%/level (every mode)
+    const gu=pgUpLv('gold'); if(gu&&r.gold>0) r.gold=Math.round(r.gold*(1+BAL.UP.def.gold.per*gu));   // upgrade: gold +1%/level (every mode)
     r.jobXp=Math.round(r.baseXp*BAL.JOB_EXP);
   }catch(e){ console.error(e); }
   if(o&&o.commit) grantRewards(ch,r);
