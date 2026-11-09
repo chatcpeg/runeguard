@@ -20,7 +20,8 @@ const BAL={ CAP:{base:60, job1:20, job2:25, stat:50, chars:3, bag:120, stash:120
   ptsAt(L){ let n=BAL.START_PTS; for(let l=2;l<=L;l++) n+=BAL.statPtsFor(l); return n; },   // stat points earned by Lv L (incl. start)
   statSpent(x){ let n=0; for(let i=0;i<x;i++) n+=BAL.statCost(i); return n; },             // points to raise one stat 0 → x
   // §3.5 skill ranks (index r = cost of ★(r−1) → ★r) · passives cost 1 per ★ · loadout slots per job tier
-  RANK_COST:[0,1,1,1,2,2], PAS_COST:1, ADV:{base:20, job:20, fee:500}, LOADOUT:{1:4, 2:5},
+  RANK_COST:[0,1,1,1,2,2,2,2,3],   // ★6–8 = tier 2 of a first-job skill after the advance (27 rankCap)
+  PAS_COST:1, ADV:{base:20, job:20, fee:500}, LOADOUT:{1:4, 2:5},
   rankSpent(r){ let n=0; for(let i=1;i<=r;i++) n+=BAL.RANK_COST[i]; return n; },            // skill points for ★0 → ★r
   // START_SP: a new character (Job Lv1) starts with 6 skill points = exactly the first skill's free ★1 → ★5 (1+1+2+2).
   // Why (M2 gate §9.4, measured with RG.sim): in-run cards stop at the trained ★ and a skill only evolves at Lv5, so a character

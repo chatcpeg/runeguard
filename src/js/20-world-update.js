@@ -134,7 +134,7 @@ function updateProjs(dt){
 }
 function projHit(p,e){
   const sp=Math.hypot(p.vx,p.vy)||1;
-  damageEnemy(e,p.dmg,p.src,{knock:p.knock,nx:p.vx/sp,ny:p.vy/sp,crit:p.crit});
+  damageEnemy(e,p.dmg,p.src,{knock:p.knock,nx:p.vx/sp,ny:p.vy/sp,crit:p.crit,fxd:p.fxd});
   (p.hit||(p.hit=[])).push(e.id);
   if(p.explode){ p.dead=true; explode(p.x,p.y,p.explode,p.dmg*.7,p.src,{c:p.c}); if(p.burn) addZone({x:p.x,y:p.y,r:p.explode*.8,dur:2*P.durMul,tick:.3,dmg:p.dmg*.12,kind:'fire',src:p.src}); return; }
   p.pierce--; if(p.pierce<=0) p.dead=true;
@@ -160,7 +160,7 @@ function updateZones(dt){
       else if(z.kind==='ice') part({x:px,y:py-20,vx:rand(-8,8),vy:rand(15,35),life:.8,s:2.2,c:'#e6f8ff',g:0,drag:0,k:'sq',add:true});
       else if(z.kind==='poison') part({x:px,y:py,vx:0,vy:rand(-25,-10),life:.7,s:rand(2,4),grow:4,c:'#a8ff7a',g:0,drag:1,k:'puff',add:true,a:.6});
       else if(z.kind==='wind'){ const ta=a+PI/2; part({x:px,y:py,vx:Math.cos(ta)*170+z.vx,vy:Math.sin(ta)*170+z.vy,life:.4,s:2,c:'#dcffe8',g:0,drag:1,k:'streak',add:true}); } }
-    z.tt-=dt; if(z.tt<=0){ z.tt=z.tick; for(const e of query(z.x,z.y,z.r+60)){ if(e.dead) continue; const rr=z.r+e.r*.5; if((e.x-z.x)**2+(e.y-z.y)**2>rr*rr) continue; damageEnemy(e,z.dmg,z.src,{slow:z.slow,slowDur:.5,quiet:true}); } }
+    z.tt-=dt; if(z.tt<=0){ z.tt=z.tick; for(const e of query(z.x,z.y,z.r+60)){ if(e.dead) continue; const rr=z.r+e.r*.5; if((e.x-z.x)**2+(e.y-z.y)**2>rr*rr) continue; damageEnemy(e,z.dmg,z.src,{slow:z.slow,slowDur:.5,quiet:true,fxd:z.fxd}); } }
   }
   compact(G.zones);
 }
@@ -222,7 +222,7 @@ function update(dt){
   separate();
   playerCollide(); if(G.over) return;
   findNearest();
-  for(const s of P.skills) BEH[s.def.type](s,dt);
+  if(P.tf) tfRun(dt); else for(const s of P.skills) BEH[s.def.type](s,dt);   // tfRun: same loop + skill-tree casts / burns (27)
   updateProjs(dt);
   updateZones(dt);
   updateStrikes(dt); if(G.over) return;

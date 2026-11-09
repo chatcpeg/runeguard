@@ -5,8 +5,8 @@
 // Forward compatibility inside v1: an item / rune id this app does not know survives validation (item → unk:1, rune id kept in
 // its socket), so a newer client's loot is never destroyed. A new class, job, skill or passive does NOT survive (they are matched
 // against CLS / SK / PASSIVES): adding one needs a SCHEMA_V bump, so older apps open such a save read-only instead.
-const SCHEMA_V=3;                                    // 2: acct.up (gold upgrades) · 3: up.stat · an older app opens a newer save read-only, so it never drops what was paid for
-const SV_APP='2.2.0';                                 // app version stamped into every local write (saveSummary.appVer)
+const SCHEMA_V=4;                                    // 2: acct.up (gold upgrades) · 3: up.stat · 4: ch.tr (skill trees) + ★6–8 + resets.trFree · an older app opens a newer save read-only, so it never drops what was paid for
+const SV_APP='2.3.0';                                 // app version stamped into every local write (saveSummary.appVer)
 const SV_NAME_RE=/^[\p{L}\p{M}\p{N} ]{2,16}$/u;
 const SV_SLOTS=['weapon','off','head','face','body','cloak','hands','feet','neck','ring'];
 const SV_WEAPON={swordsman:'w_sword_1', mage:'w_staff_1', archer:'w_bow_1', cleric:'w_rod_1', thief:'w_dagger_1'};   // §3.8 starter (M2)
@@ -56,7 +56,7 @@ function newChar(name,clsId){
   const ch={id:uid('c_'), name:svCleanName(name)||c.n, cls:c.id, job:null, created:t, play:0, kills:0, deaths:0,
     lv:1, xp:0, pts:BAL.START_PTS, st:{STR:0,VIT:0,AGI:0,DEX:0,INT:0,LUK:0}, jlv:1, jxp:0, sp:BAL.START_SP,
     sk:{[first]:1}, pas:{}, load:[first], eq:svEmptyEq(), inv:[], bagMax:BAL.PRICE.bagStart, quick:[null,null],
-    trial:{t2:0}, zone:'z1', visited:['z1'], bestiary:{}, resets:{free:1, skFree:1}, dye:{}};
+    trial:{t2:0}, zone:'z1', visited:['z1'], bestiary:{}, resets:{free:1, skFree:1, trFree:1}, tr:{}, dye:{}};
   // §3.8 starter kit: the class's training weapon, worn · small potion ×3 on the first quick slot (tier 1 has no sockets: no RNG)
   // the weapon is bound (b:1 = never sells: no gold from create → sell → delete) · createChar (41) limits the potions (BAL.KIT_POTS)
   const wid=SV_WEAPON[c.id];
@@ -92,7 +92,8 @@ function svMig0(o,best){   // v0 = the old single-file game: nothing but runegua
   return s; }
 function svMig1(o){ const s=Object.assign({},o); s.v=2; return s; }   // v1 → v2: only adds acct.up (validateSave fills it empty)
 function svMig2(o){ const s=Object.assign({},o); s.v=3; return s; }   // v2 → v3: only adds acct.up.stat
-const SV_MIG={0:svMig0, 1:svMig1, 2:svMig2};      // SV_MIG[v](o) → save of version v+1
+function svMig3(o){ const s=Object.assign({},o); s.v=4; return s; }   // v3 → v4: only adds ch.tr / ★6–8 / resets.trFree
+const SV_MIG={0:svMig0, 1:svMig1, 2:svMig2, 3:svMig3};      // SV_MIG[v](o) → save of version v+1
 function migrateSave(o,legacyBest){
   if(!svObj(o)) o=null;
   const v=o?o.v:undefined;
@@ -182,7 +183,10 @@ function svChar(c,seen){
   const tier=adv?2:1, jcap=adv?cap.job2:cap.job1;
   o.jlv=svInt(c.jlv,1,jcap,1); o.jxp=o.jlv>=jcap?0:svInt(c.jxp,0,BAL.jxpNeed(o.jlv,tier)-1,0);
   const sk=svObj(c.sk)?c.sk:{}; o.sk={};
-  for(const id of cls.skills.concat(adv?adv.skills:[])){ const r=svInt(sk[id],0,cap.rank,0); if(r) o.sk[id]=r; }
+  for(const id of cls.skills.concat(adv?adv.skills:[])){ const r=svInt(sk[id],0,tfRankCap(cls.id,o.job,id),0); if(r) o.sk[id]=r; }
+  const tr=svObj(c.tr)?c.tr:{}; o.tr={};                                // skill trees (27): known nodes only, each 0…max
+  for(const id of cls.skills.concat(adv?adv.skills:[])){ const t=svObj(tr[id])?tr[id]:null; if(!t) continue; const q={};
+    for(const nd of tfNodes(id)){ const l=svInt(t[nd.id],0,nd.max,0); if(l) q[nd.id]=l; } if(Object.keys(q).length) o.tr[id]=q; }
   if(!o.sk[first]) o.sk[first]=1;                                   // the free ★1 of the first skill never goes away
   const pas=svObj(c.pas)?c.pas:{}; o.pas={};
   for(const id in PASSIVES){ const w=PASSIVES[id].own; if(w!==cls.id&&w!==o.job) continue; const r=svInt(pas[id],0,cap.rank,0); if(r) o.pas[id]=r; }
@@ -207,7 +211,7 @@ function svChar(c,seen){
   const vis=[]; for(const z of Array.isArray(c.visited)?c.visited.slice(0,64):[]) if(svStr(z,SV_ID,'')&&vis.indexOf(z)<0&&vis.length<32) vis.push(z);
   o.visited=vis.length?vis:['z1'];
   o.bestiary={}; for(const m of svKeys(c.bestiary,200)) if(SV_ID.test(m)) o.bestiary[m]=svInt(c.bestiary[m],0,1e9,0);
-  const rs=svObj(c.resets)?c.resets:{}; o.resets={free:rs.free===0?0:1, skFree:rs.skFree===0?0:1};
+  const rs=svObj(c.resets)?c.resets:{}; o.resets={free:rs.free===0?0:1, skFree:rs.skFree===0?0:1, trFree:rs.trFree===0?0:1};
   return o; }
 function validateSave(s){
   if(!svObj(s)) s={};

@@ -4,7 +4,7 @@
 // the screens themselves are checked in the browser. No dependencies.
 import { loadSrc } from './_vm.mjs';
 
-const FILES = ['04', '05', '06', '07', '08', '15', '16', '17', '18', '24', '25', '26', '30', '31', '33', '34', '40', '41', '42', '54', '56', '57', '58'];
+const FILES = ['04', '05', '06', '07', '08', '15', '16', '17', '18', '24', '25', '26', '27', '30', '31', '33', '34', '40', '41', '42', '54', '56', '57', '58'];
 let pass = 0, fail = 0;
 const ok = (name, cond, info) => { if (cond) { pass++; console.log('  ✓ ' + name); } else { fail++; console.log('  ✗ ' + name + (info !== undefined ? '\n      ' + (typeof info === 'string' ? info : JSON.stringify(info)) : '')); } };
 const canon = v => JSON.stringify(v, (k, x) => (x && typeof x === 'object' && !Array.isArray(x) ? Object.keys(x).sort().reduce((o, q) => (o[q] = x[q], o), {}) : x));
@@ -87,7 +87,7 @@ console.log('§3.5 หน้าสกิล (ข้อมูลที่หน�
     o.t2=t2.map(g=>[g.a.id,g.sk.map(r=>r.id+':'+(r.lock?'L':'-')),g.pas.map(r=>r.id)]); o.lock2=t2[0].sk[0].lock;
     ch.sp=10; ch.sk.flame=2; ch.job='archmage'; const a=pksModel(ch,2); o.job=a.map(g=>g.a.id); o.req=a[0].sk[0].lock; o.reqCan=a[0].sk[0].can;
     ch.sk.flame=3; const b=pksModel(ch,2)[0]; o.met=[b.sk[0].lock,b.sk[0].can,b.sk[0].cost]; o.blz=b.sk[1].lock;
-    ch.sk.mbolt=3; o.r3=pksRow(ch,'mbolt',false).cost; ch.sk.mbolt=5; const mx=pksRow(ch,'mbolt',false); o.max=[mx.max,mx.can,mx.cost];
+    ch.sk.mbolt=3; o.r3=pksRow(ch,'mbolt',false).cost; ch.sk.mbolt=8; const mx=pksRow(ch,'mbolt',false); o.max=[mx.max,mx.can,mx.cost]; ch.sk.mbolt=5; const m5=pksRow(ch,'mbolt',false); o.tier2=[m5.max,m5.rc,m5.cost];
     o.poor=(ch.sp=1,pksRow(ch,'flame',false)); o.next=pksNext(SK.flame,3); o.lv=pksLv(SK.mbolt,1); o.stars=prgStars(3);
     return o; })()`);
   ok('ขั้นต้น (จอมเวท): 4 สกิลของอาชีพ (ศรเวท ★1 ฟรี) + passive สมาธิแห่งรูน · แต้ม 0 = ฝึกไม่ได้แต่ไม่ล็อก',
@@ -96,7 +96,7 @@ console.log('§3.5 หน้าสกิล (ข้อมูลที่หน�
     deq(m.t2, [['archmage', ['meteor:L', 'blizzard:L'], ['p_manasea', 'p_starcalm']], ['elementalist', ['vortex:L', 'spikes:L'], ['p_elemweave', 'p_earthpull']]]) && /^ต้องเลื่อนเป็น/.test(m.lock2), m);
   ok('เลื่อนแล้วเหลือสายเดียว · SKILL_REQ: อุกกาบาตต้องหอกเพลิง ★3 (★2 = ล็อก) · ครบแล้วฝึกได้ราคา 1 · พายุหิมะยังล็อก (อุกกาบาต ★2)',
     deq(m.job, ['archmage']) && /ต้องฝึก/.test(m.req) && m.reqCan === false && m.met[0] === '' && m.met[1] === true && m.met[2] === 1 && /ต้องฝึก/.test(m.blz), m);
-  ok('ราคา ★: ★3 → ★4 = 2 แต้ม · ★5 = ตัน ฝึกต่อไม่ได้ · แต้มไม่พอ = ฝึกไม่ได้แต่ไม่ล็อก', m.r3 === 2 && m.max[0] === true && m.max[1] === false && m.max[2] === 0 && m.poor.can === false && m.poor.lock === '', m);
+  ok('ราคา ★: ★3 → ★4 = 2 แต้ม · เลื่อนอาชีพแล้ว ★5 → ★6 = 2 แต้ม (ขั้นสอง) · ★8 = ตัน ฝึกต่อไม่ได้ · แต้มไม่พอ = ฝึกไม่ได้แต่ไม่ล็อก', m.r3 === 2 && m.max[0] === true && m.max[1] === false && m.max[2] === 0 && deq(m.tier2, [false, 8, 2]) && m.poor.can === false && m.poor.lock === '', m);
   ok('ข้อความ ★ ถัดไปเทียบค่าจาก SK (หอกเพลิง ★3 → ★4) และดาว ★★★☆☆', /→/.test(m.next) && /ดาเมจ/.test(m.lv) && m.stars === '★★★☆☆', m);
   const L = X(`(()=>{ SAVE=newSave(null); const ch=newChar('ทดสอบ','thief'); SAVE.chars.push(ch); SAVE.active=ch.id; const ids=CLS.thief.skills, o={ids}; ch.sk={}; for(const id of ids) ch.sk[id]=1; ch.load=[ids[0]];
     o.a1=pksLoadAdd(ch,ids[1],-1); o.a2=pksLoadAdd(ch,ids[2],-1); o.a3=pksLoadAdd(ch,ids[3],-1); o.full=ch.load.slice();

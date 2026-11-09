@@ -69,6 +69,7 @@ function sxPoints(p,k){ return (p.stats[k]|0)+Math.floor(((p.permSt&&p.permSt[k]
 function sxSteps(p,m){ return Math.floor((p.stats[m[0]]|0)/(m[5]||5)); }
 // s.mod for every owned skill (called first in recalc, before anything reads pv)
 function sxMods(p){
+  delete p.tfg;
   for(const s of p.skills){ const add={}, mul={}, set={}, id=s.id, main=SX.main[id];
     const pk=SX.pk[id]||'dmg', ev=s.evolved&&s.def.evo&&s.def.evo.set;
     if(main&&(s.def.p[pk]!=null||ev&&ev[pk]!=null)){ const f=1+sxRate(p)*sxPoints(p,main); if(f!==1) mul[pk]=f; }
@@ -78,7 +79,9 @@ function sxMods(p){
     if(ag&&t==='proj') mul.speed=(mul.speed||1)*(1+.04*ag);              // AGI card 6+: projectiles +4% faster each
     if(vi&&t==='shield') mul.absorb=(mul.absorb||1)*(1+.04*vi);          // VIT card 6+: shields +4% each
     if(st&&s.def.p.knock!=null) mul.knock=(mul.knock||1)*(1+.05*st);     // STR card 6+: knockback +5% each
-    if(Object.keys(add).length||Object.keys(mul).length||Object.keys(set).length) s.mod={add, mul, set}; else delete s.mod; } }   // nothing yet → plain pv (a fresh character = classic numbers)
+    s.cx=true; if(typeof tfApply==='function') tfApply(p,s,add,mul);        // skill tree numbers + effects (27)
+    if(Object.keys(add).length||Object.keys(mul).length||Object.keys(set).length) s.mod={add, mul, set}; else delete s.mod; }
+  if(typeof tfFinish==='function') tfFinish(p); }   // nothing yet → plain pv (a fresh character = classic numbers)
 // the stat part of recalc again, with card 6+ at SX.over and the caps (identical to core for stats ≤ 5)
 function sxStats(p,b){
   const c=p.cls, L=k=>sxLow(p,k), O=k=>sxOver(p,k), C=SX.cap;

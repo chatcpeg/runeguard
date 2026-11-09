@@ -7,7 +7,8 @@
 /* ---- helpers of lane P ---- */
 const PRG={hold:1000, rep:450, repEvery:280};
 function prgCh(){ try{ return curChar(); }catch(e){ console.error(e); return null; } }
-function prgStars(r){ r=Math.max(0,Math.min(BAL.CAP.rank,r|0)); return '★'.repeat(r)+'☆'.repeat(BAL.CAP.rank-r); }
+function prgStars(r,cap){ cap=cap||BAL.CAP.rank; r=Math.max(0,Math.min(cap,r|0)); const a=Math.min(r,5), b=Math.max(0,r-5);
+  return '★'.repeat(a)+'☆'.repeat(Math.max(0,Math.min(cap,5)-a))+(cap>5?' '+'✦'.repeat(b)+'✧'.repeat(cap-5-b):''); }   // ✦ = ★6–8 (tier 2)
 function prgVis(id){ const n=$('#'+id); return !!n&&!n.hidden; }
 function prgTop(t,sub){ return `<header class="prg-top"><button class="prg-back" type="button" data-a="back" aria-label="ย้อนกลับ">←</button><h2 class="prg-h">${esc(t)}</h2><span class="prg-sub">${sub||''}</span></header>`; }
 function prgRO(){ return '<p class="prg-ro">ข้อมูลเป็นเวอร์ชันใหม่กว่าแอป แก้ไขไม่ได้ · อัปเดตเกมก่อน</p>'; }
@@ -49,10 +50,10 @@ function prgRepeat(btn,step){
 let pksTab=0, pksSel=-1;                             // tab 1 = first job · 2 = advanced · pksSel = picked loadout slot (−1 none)
 // one row per skill / passive: {id, pas, r, max, cost, lock (requirement or job missing → reason), can, inLoad}
 function pksRow(ch,id,pas){
-  const r=((pas?ch.pas:ch.sk)||{})[id]|0, max=r>=BAL.CAP.rank, cost=max?0:pas?BAL.PAS_COST:BAL.RANK_COST[r+1];
+  const rc=pas?BAL.CAP.rank:rankCap(ch,id), r=((pas?ch.pas:ch.sk)||{})[id]|0, max=r>=rc, cost=max?0:pas?BAL.PAS_COST:BAL.RANK_COST[r+1];
   const own=pas&&PASSIVES[id].own, avail=pas?(own===ch.cls||own===ch.job):pgSkillPool(ch).indexOf(id)>=0, q=!pas&&SKILL_REQ[id];
   const why=max?'':canLearn(ch,id), lock=!max&&(!avail||(q&&((ch.sk||{})[q.need]|0)<q.r))?why:'';
-  return {id, pas, r, max, cost, lock, can:!max&&why==='', inLoad:!pas&&(ch.load||[]).indexOf(id)>=0}; }
+  return {id, pas, r, rc, max, cost, lock, can:!max&&why==='', inLoad:!pas&&(ch.load||[]).indexOf(id)>=0, tr:!pas&&TFD[id]?tfSpentOne(ch,id):-1}; }
 // tab 1: class skills + class passive · tab 2: the chosen advanced path, or both paths (locked) before advancing
 function pksModel(ch,tab){
   const c=pgCls(ch); if(!c) return [];
@@ -66,22 +67,25 @@ function pksLoadDel(ch,id){ const L=ch.load.filter(x=>x!==id); return L.length>0
 function pksLoadSwap(ch,i,j){ const L=ch.load.slice(); if(i===j||!(i>=0&&j>=0&&i<L.length&&j<L.length)) return false;
   const t=L[i]; L[i]=L[j]; L[j]=t; return setLoadout(ch,L); }
 // skill numbers at ★lv and the change to the next ★ (labels and units from the level-up cards: PL / fmtP in 21-ui.js)
-function pksLv(d,lv){ const o=[]; for(const k in d.p){ const v=d.p[k]; if(Array.isArray(v)) o.push((PL[k]||k)+' '+fmtP(k,v[lv-1])); } return o.slice(0,4).join(' · '); }
+function pksLv(d,lv){ const o=[], s={def:d,lv,cx:true}; for(const k in d.p) if(Array.isArray(d.p[k])) o.push((PL[k]||k)+' '+fmtP(k,pv(s,k))); return o.slice(0,4).join(' · '); }
 function pksNext(d,r){ if(r<1) return pksLv(d,1); const o=[];
-  for(const k in d.p){ const v=d.p[k]; if(Array.isArray(v)&&v[r-1]!==v[r]) o.push((PL[k]||k)+' '+fmtP(k,v[r-1])+' → '+fmtP(k,v[r])); }
+  const a={def:d,lv:r,cx:true}, b={def:d,lv:r+1,cx:true};
+  for(const k in d.p){ const x=pv(a,k), y=pv(b,k); if(typeof x==='number'&&typeof y==='number'&&Math.abs(x-y)>1e-9) o.push((PL[k]||k)+' '+fmtP(k,x)+' → '+fmtP(k,y)); }
   return o.join(' · ')||'แรงขึ้น'; }
 function pksRowHtml(r){
   const d=r.pas?PASSIVES[r.id]:SK[r.id];
   let h=`<li class="pks-row${r.r?' got':''}${r.lock?' lock':''}"><span class="pks-ic" aria-hidden="true">${d.i}</span><div class="pks-m">`
-    +`<div class="pks-n">${esc(d.n)} <span class="pks-st" aria-label="ระดับ ${r.r} จาก ${BAL.CAP.rank}">${prgStars(r.r)}</span>${r.inLoad?'<em class="pks-in">ติดตัว</em>':''}</div>`;
+    +`<div class="pks-n">${esc(d.n)} <span class="pks-st" aria-label="ระดับ ${r.r} จาก ${r.rc}">${prgStars(r.r,r.rc)}</span>${r.inLoad?'<em class="pks-in">ติดตัว</em>':''}</div>`;
   if(r.pas){ if(r.r) h+=`<div class="pks-i">ตอนนี้: ${jdBonusText(jdPassiveAt(r.id,r.r))}</div>`;
     if(!r.max) h+=`<div class="pks-x">→ ★${r.r+1}: ${jdBonusText(jdPassiveAt(r.id,r.r+1))}</div>`; }
   else { if(r.r) h+=`<div class="pks-i">★${r.r}: ${pksLv(d,r.r)}</div>`;
     if(!r.max) h+=`<div class="pks-x">→ ★${r.r+1}: ${pksNext(d,r.r)}</div>`;
+    if(r.r>=5&&r.rc===5&&pgCls(prgCh())&&pgCls(prgCh()).skills.indexOf(r.id)>=0) h+='<div class="pks-e">เลื่อนอาชีพแล้วฝึกต่อได้ถึง ★8 (ขั้นสอง ✦)</div>';
     if(d.evo) h+=`<div class="pks-e">วิวัฒนาการ: ★5 + การ์ด${STATS[d.evo.s].n}ในรอบ → ${esc(d.evo.n)}</div>`; }
   if(r.lock) h+=`<div class="pks-lock">🔒 ${esc(r.lock)}</div>`;
   h+='</div><div class="pks-side">'+(r.max?'<span class="pks-max">ตัน</span>'
     :`<button type="button" class="pks-up" data-a="learn" data-id="${r.id}"${r.can?'':' disabled'} aria-label="ฝึก ${esc(d.n)} ใช้ ${r.cost} แต้ม">+<small>${r.cost} แต้ม</small></button>`);
+  if(r.tr>=0) h+=`<button type="button" class="pks-tr" data-a="tree" data-id="${r.id}" aria-label="เปิดต้นไม้สกิล ${esc(d.n)}">🌳<small>${r.tr?r.tr+' รูน':'ต้นไม้'}</small></button>`;
   if(!r.pas&&r.r>0) h+=`<button type="button" class="pks-lo${r.inLoad?' on':''}" data-a="load" data-id="${r.id}" aria-pressed="${r.inLoad}">${r.inLoad?'ถอด':'ใส่'}</button>`;
   return h+'</div></li>'; }
 function pksOpen(){ pksSel=-1; pksTab=0; pksRender(); prgGo('scrSkills'); }
@@ -91,7 +95,7 @@ function pksRender(){
   if(!c){ root.innerHTML=prgTop('สกิล','')+'<p class="prg-empty">ยังไม่มีตัวละคร · สร้างตัวละครที่เมนูหลักก่อน</p>'; return; }
   const tier=pgTier(ch), n=BAL.LOADOUT[tier], a=pgAdvOf(ch), load=ch.load||[];
   if(pksTab!==1&&pksTab!==2) pksTab=tier; if(pksSel>=load.length) pksSel=-1;
-  let h=prgTop('สกิล','แต้มสกิล <b>'+(ch.sp|0)+'</b><br>Job '+(ch.jlv|0)+'/'+pgJobCap(ch))+(saveReadOnly()?prgRO():'');
+  let h=prgTop('สกิล','แต้มสกิล <b>'+(ch.sp|0)+'</b> · รูน <b>'+tfFree(ch)+'</b><br>Job '+(ch.jlv|0)+'/'+pgJobCap(ch)+' <button type="button" class="tf-q" data-a="help" aria-label="อธิบายหน้าสกิล">?</button>')+(saveReadOnly()?prgRO():'');
   h+=`<div class="box pks-load"><div class="pks-lh"><b>ช่องติดตัว (${load.length}/${n})</b><small>แตะสองช่องเพื่อสลับ · ช่องแรกคือสกิลเริ่มรอบเอาชีวิตรอด</small></div><div class="pks-slots">`;
   for(let i=0;i<n;i++){ const id=load[i], d=id&&SK[id];
     h+=d?`<button type="button" class="pks-sl${i===pksSel?' sel':''}" data-a="slot" data-i="${i}" aria-pressed="${i===pksSel}" aria-label="ช่อง ${i+1} ${esc(d.n)}"><span aria-hidden="true">${d.i}</span>${i?'':'<em>เริ่ม</em>'}<b>★${(ch.sk||{})[id]|0}</b></button>`
@@ -120,6 +124,8 @@ function pksClick(e){
     else if(pksLoadAdd(ch,id,pksSel)) pksSel=-1;
     else toast(saveReadOnly()?'แก้ไขไม่ได้':'ช่องเต็ม · แตะช่องที่จะแทนก่อน','info'); }
   else if(a==='reset'){ prgReset(ch,'sk',pksRender); return; }
+  else if(a==='tree'){ tfOpen(id); return; }
+  else if(a==='help'){ tfHelp('skills'); return; }
   else return;
   pksRender(); }
 

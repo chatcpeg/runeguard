@@ -1,0 +1,60 @@
+/* ---------- 59 skill trees + ? help ---------- */
+.tf-q{flex:none;width:32px;height:32px;min-height:32px;padding:0;border-radius:50%;border:1px solid var(--spirit);background:transparent;color:var(--spirit);font:700 15px var(--f-body);cursor:pointer;display:inline-grid;place-items:center;vertical-align:middle}
+.tf-q:hover{background:rgba(95,211,195,.12)}
+.tf-lvq{margin:6px auto 0;display:grid}
+.tf-cq{position:absolute;right:10px;bottom:10px;width:28px;height:28px;border-radius:50%;border:1px solid var(--spirit);color:var(--spirit);background:var(--card);display:grid;place-items:center;font-weight:700;font-size:14px;cursor:pointer;z-index:2}
+.card{padding-bottom:20px}
+.tf-help{position:fixed;inset:0;z-index:90;background:var(--veil);display:grid;place-items:center;padding:16px max(16px,env(safe-area-inset-right,0px)) 16px max(16px,env(safe-area-inset-left,0px))}
+.tf-hcard{width:min(440px,100%);max-height:min(82vh,720px);overflow-y:auto;background:var(--loam);border:1px solid var(--spirit-deep);border-radius:16px;padding:16px 18px;display:flex;flex-direction:column;gap:8px;box-shadow:0 10px 30px rgba(0,0,0,.5);-webkit-user-select:text;user-select:text}
+.tf-hcard h3{margin:0;font-family:var(--f-display);font-weight:400;font-size:18px;color:var(--spirit)}
+.tf-hbody{display:flex;flex-direction:column;gap:6px;font-size:14px;line-height:1.55}
+.tf-hbody p{margin:0}
+.tf-hbody h4{margin:6px 0 0;font-size:14px;color:var(--rune)}
+.tf-hbody table{border-collapse:collapse;width:100%;font-size:13px}
+.tf-hbody td{border-top:1px solid var(--line);padding:4px 6px;vertical-align:top}
+.tf-hbody td:first-child{white-space:nowrap;color:var(--rune);width:1%}
+.tf-hbody .tf-note{color:var(--ash);font-size:12px}
+.tf-hcard>.btn{align-self:flex-end;min-width:120px}
+/* skills page */
+.pks-tr{min-height:44px;border-radius:10px;border:1px solid var(--spirit-deep);background:none;color:var(--spirit);cursor:pointer;font-weight:700;line-height:1.1;font-size:15px;display:flex;flex-direction:column;align-items:center;justify-content:center;padding:2px 8px}
+.pks-tr small{font-size:11px;color:var(--ash)}
+/* tree window */
+.tf-win{display:flex;flex-direction:column;gap:12px}
+.tf-head{display:flex;align-items:center;gap:10px}
+.tf-ic{width:44px;height:44px;border-radius:12px;display:grid;place-items:center;font-size:24px;background:var(--well);border:1px solid var(--line-hi);flex:none}
+.tf-hn{min-width:0;display:flex;flex-direction:column}
+.tf-hn small{color:var(--ash);font-size:12px}
+.tf-pts{margin-left:auto;text-align:right;font-variant-numeric:tabular-nums}
+.tf-pts b{font-size:20px;color:var(--rune)}
+.tf-pts small{display:block;color:var(--ash);font-size:11px}
+.tf-grid{position:relative;display:grid;grid-template-columns:repeat(3,minmax(0,1fr));row-gap:26px;column-gap:8px;padding:4px 0}
+.tf-links{position:absolute;left:0;top:0;pointer-events:none;overflow:visible}
+.tf-ln{fill:none;stroke:var(--line);stroke-width:2}
+.tf-ln.on{stroke:var(--rune);stroke-width:3}
+.tf-ln.x{stroke-dasharray:5 4;stroke:var(--line-hi)}
+.tf-ln.x.on{stroke:var(--spirit)}
+.tf-colh{text-align:center;font-size:13px;font-weight:700;color:var(--spirit)}
+.tf-node{position:relative;z-index:1;justify-self:center;width:min(92px,100%);min-height:84px;border-radius:14px;border:2px solid var(--line);background:var(--night);color:var(--ash);display:flex;flex-direction:column;align-items:center;justify-content:center;gap:2px;padding:6px 4px;cursor:pointer;font:600 12px var(--f-body);line-height:1.2;text-align:center}
+.tf-node .tf-ni{font-size:19px}
+.tf-node .tf-nn{overflow-wrap:anywhere}
+.tf-node .tf-nl{font-size:11px;font-variant-numeric:tabular-nums}
+.tf-node.sp{border-radius:50%;aspect-ratio:1;min-height:0;max-width:100%}
+.tf-node.crown{width:140px;border-style:dashed;border-radius:18px}
+.tf-node.ready{border-color:var(--spirit);color:var(--bone)}
+.tf-node.got{border-color:var(--rune-deep);color:var(--bone);background:var(--well)}
+.tf-node.full{border-color:var(--rune);color:var(--bone);background:linear-gradient(160deg,#3a2f14,var(--well))}
+.tf-node.full .tf-nl{color:var(--rune)}
+.tf-node.sp.full{box-shadow:0 0 16px rgba(240,181,69,.4)}
+.tf-node.crown.full{border-style:solid;box-shadow:0 0 20px rgba(240,181,69,.5)}
+.tf-node.on{outline:2px solid var(--bone);outline-offset:3px}
+.tf-det{border-top:1px solid var(--line);padding-top:10px;display:flex;flex-direction:column;gap:6px;font-size:14px}
+.tf-det p{margin:0}
+.tf-dh{display:flex;align-items:baseline;gap:8px;flex-wrap:wrap}
+.tf-dh small{color:var(--ash);font-size:12px}
+.tf-nx{color:var(--spirit)}
+.tf-req{list-style:none;margin:0;padding:0;display:flex;flex-direction:column;gap:2px;font-size:13px}
+.tf-req li::before{content:'✗ ';color:var(--blood)}
+.tf-req li.ok::before{content:'✓ ';color:var(--spirit)}
+.tf-act{display:flex;gap:8px;align-items:center;flex-wrap:wrap}
+.tf-why{color:var(--ash);font-size:12px}
+@media (prefers-reduced-motion:no-preference){.tf-node{transition:border-color .15s,box-shadow .2s,background .2s}}

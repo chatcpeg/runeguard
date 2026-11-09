@@ -1,6 +1,7 @@
 /* ================= combat core ================= */
 function damageEnemy(e,base,s,o){
   if(e.dead) return 0; o=o||{};
+  const tf=s!==undefined&&P.tf&&!o.fxd; if(tf) base*=tfPre(e,s);          // skill-tree effects (27) · character runs only
   const crit=Math.random()<P.crit+(o.crit||0);
   let dmg=base*P.might*(crit?P.critMult:1);
   if(P.rage) dmg*=1+P.rage*(1-P.hp/P.maxHp);
@@ -17,6 +18,7 @@ function damageEnemy(e,base,s,o){
   if(o.stun&&!e.boss) e.stunT=Math.max(e.stunT,o.stun);
   if(e.hp<=0) killEnemy(e,nx);
   else if(G.hitSfxT<=0){ G.hitSfxT=.045; sfx('hit'); }
+  if(tf) tfHit(e,s,base,dmg);
   return dmg;
 }
 function aoe(x,y,r,dmg,s,o){ o=o||{}; for(const e of query(x,y,r+60)){ if(e.dead) continue; const dx=e.x-x,dy=e.y-y,d=Math.hypot(dx,dy); if(d-e.r>r) continue; const l=d||1;

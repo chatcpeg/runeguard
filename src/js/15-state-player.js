@@ -6,7 +6,8 @@ const joy={on:false,id:null,ox:0,oy:0,dx:0,dy:0};
 const BEH={};
 
 function makeSkill(id){ return {id,def:SK[id],lv:1,evolved:false,cdT:.35,dealt:0,st:{}}; }
-function pv(s,k){ let v; if(s.evolved&&k in s.def.evo.set) v=s.def.evo.set[k]; else { v=s.def.p[k]; if(Array.isArray(v)) v=v[s.lv-1]; }
+function pv(s,k){ let v; if(s.evolved&&k in s.def.evo.set) v=s.def.evo.set[k]; else { const T=s.cx&&s.def.pc&&k in s.def.pc?s.def.pc:s.def.p; v=T[k]; if(Array.isArray(v)) v=v[Math.min(s.lv,v.length)-1]; }
+  if(s.lv>5&&typeof tfTierUp==='function') v=tfTierUp(k,v,s.lv-5,s);   // ★6–8 (27-skill-trees) · s.cx / def.pc: character-run numbers of a first skill
   const m=s.mod; if(!m) return v;                                     // s.mod: stat milestones / main-stat power (26-stat-scaling · character runs only)
   if(k in m.set) v=m.set[k]; if(k in m.add) v=(v||0)+m.add[k]; if(k in m.mul&&v!=null) v*=m.mul[k];
   if(k==='slow'&&v>.8) v=.8; else if(k==='dodge'&&v>.5) v=.5;          // milestone caps (slow ≥ 1 would stop / reverse enemies)

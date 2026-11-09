@@ -152,7 +152,7 @@ function canLearn(ch,id){
     return ''; }
   if(!svHas(SK,id)) return 'ไม่พบสกิลนี้';
   if(pgSkillPool(ch).indexOf(id)<0){ const a=c.adv.find(x=>x.skills.indexOf(id)>=0); return a&&!ch.job?'ต้องเลื่อนเป็น'+a.n+'ก่อน':'สกิลนี้ไม่ใช่ของอาชีพนี้'; }
-  const r=(ch.sk||{})[id]|0; if(r>=BAL.CAP.rank) return 'ฝึกถึง ★'+BAL.CAP.rank+' แล้ว';
+  const r=(ch.sk||{})[id]|0, rc=rankCap(ch,id); if(r>=rc) return rc<8&&c.skills.indexOf(id)>=0?'ฝึกถึง ★'+rc+' แล้ว · เลื่อนอาชีพเพื่อเปิด ★6–8':'ฝึกถึง ★'+rc+' แล้ว';
   const q=SKILL_REQ[id]; if(q&&((ch.sk||{})[q.need]|0)<q.r) return 'ต้องฝึก '+SK[q.need].n+' ถึง ★'+q.r+' ก่อน';
   const cost=BAL.RANK_COST[r+1]; if(ch.sp<cost) return 'แต้มสกิลไม่พอ (ต้องใช้ '+cost+')';
   return ''; }
@@ -204,7 +204,8 @@ function prepareRun(G,P,ch,modeId){
   P.look=Object.assign({},P.cls.look,a?a.look:null,typeof gearLook==='function'?gearLook(ch):null);
   P.bonus=buildRunBonus(ch);
   P.sx=true; P.permSt=Object.assign({},ch.st||{});                     // uncapped stat cards + main-stat power (26-stat-scaling)
-  P.rank={}; for(const id of pgSkillPool(ch)){ const r=(ch.sk||{})[id]|0; if(r>0) P.rank[id]=Math.min(BAL.CAP.rank,r); }
+  P.rank={}; for(const id of pgSkillPool(ch)){ const r=(ch.sk||{})[id]|0; if(r>0) P.rank[id]=Math.min(rankCap(ch,id),r); }
+  P.tree=tfRunTree(ch);                                                  // skill trees (27): numbers + effects through sxMods
   P.loadout=(ch.load||[]).filter(id=>P.rank[id]>0&&svHas(SK,id));
   if(!P.loadout.length){ const f=P.cls.skills[0]; P.loadout=[f]; P.rank[f]=Math.max(1,P.rank[f]|0); }
   P.lv=1; P.xp=0; P.need=xpNeed(1);                                     // proficiency restarts every run

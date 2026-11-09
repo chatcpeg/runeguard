@@ -24,7 +24,9 @@ function refreshSkillBar(){
 const PL={cd:'คูลดาวน์',dmg:'ดาเมจ',count:'จำนวน',range:'ระยะ',r:'รัศมี',pierce:'ทะลุ',spin:'ความเร็วหมุน',absorb:'โล่',nova:'ดาเมจระเบิด',explode:'รัศมีระเบิด',slow:'ชะลอ',freeze:'แช่แข็ง',stun:'สตัน',bounces:'กระโดด',hits:'ระลอก',heal:'ฟื้นฟู',targets:'เป้าหมาย',trap:'ดาเมจกับดัก',rage:'โบนัสคลั่งสูงสุด',steal:'ฟื้น HP ต่อศพ',dodge:'หลบหลีก'};
 const PCT={slow:1,rage:1,dodge:1},SEC={cd:1,freeze:1,stun:1};
 function fmtP(k,v){ if(PCT[k]) return Math.round(v*100)+'%'; if(SEC[k]) return (+v.toFixed(2))+' วิ'; return String(+(+v).toFixed(2)); }
-function diffText(s){ const out=[]; for(const k in s.def.p){ const v=s.def.p[k]; if(!Array.isArray(v)) continue; const a=v[s.lv-1],b=v[s.lv]; if(b===undefined||a===b) continue; out.push(`${PL[k]||k} ${fmtP(k,a)} → ${fmtP(k,b)}`); } return out.join(' · '); }
+// base numbers (no stat / tree mods) of skill s at Lv lv · Lv 6–8 come from tfTierUp
+function pvAt(s,k,lv){ return pv({def:s.def,lv,evolved:s.evolved,cx:s.cx},k); }
+function diffText(s){ const out=[]; for(const k in s.def.p){ const a=pvAt(s,k,s.lv),b=pvAt(s,k,s.lv+1); if(typeof a!=='number'||typeof b!=='number'||Math.abs(a-b)<1e-9) continue; out.push(`${PL[k]||k} ${fmtP(k,a)} → ${fmtP(k,b)}`); } return out.join(' · '); }
 const SNAME=k=>STATS[k].ab||k;
 function dexText(){ const nx=P.stats.DEX+1, names=P.skills.filter(s=>s.def.type==='proj'||s.def.type==='orbit').map(s=>s.def.n);
   const now=(nx===3||nx===5)?' (ได้ทันทีที่เลือก)':'';

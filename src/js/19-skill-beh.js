@@ -117,6 +117,7 @@ BEH.chain=(s,dt)=>{
   for(let c=0;c<n;c++){ const go=()=>{ let cur=c===0?G.near:randomNear(P.x,P.y,420); if(!cur||cur.dead) cur=nearestTo(P.x,P.y,420); if(!cur) return;
       const pts=[[P.x,P.y-10]],hit=[],jump=pv(s,'jump')*P.area,B=pv(s,'bounces'),dmg=pv(s,'dmg');
       for(let b=0;b<B&&cur;b++){ hit.push(cur.id); pts.push([cur.x,cur.y-cur.r*.4]); damageEnemy(cur,dmg,s,{knock:60,stun:.08});
+        if(s.fx&&s.fx.fork&&b===s.fx.fork.at-1) tfFork(s,cur,hit,dmg,jump);
         let nx=null,bd=jump*jump; for(const e of query(cur.x,cur.y,jump+60)){ if(e.dead||hit.indexOf(e.id)>=0) continue; const d=(e.x-cur.x)**2+(e.y-cur.y)**2; if(d<bd){ bd=d; nx=e; } } cur=nx; }
       G.fx.push({k:'chain',pts,t:0,dur:.24,c:s.def.c,paths:null,jt:-1,dead:false}); sfx('zap'); };
     if(c===0) go(); else later(c*.09,go); }
