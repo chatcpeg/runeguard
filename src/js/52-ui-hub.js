@@ -117,7 +117,7 @@ function hbHold(el,tap,hold){ let t=0, held=false;
   el.addEventListener('contextmenu',e=>e.preventDefault());
   el.addEventListener('click',()=>{ if(held){ held=false; return; } tap(); }); }
 async function hbDel(ch){
-  if(!await confirmBox('ลบตัวละคร "'+ch.name+'" ('+shJobName(ch)+' Lv '+ch.lv+')? ลบแล้วกู้คืนไม่ได้',{hold:1000, okText:'กดค้างเพื่อลบ'})) return;
+  if(!await confirmBox('ลบตัวละคร "'+ch.name+'" ('+shJobName(ch)+' Lv '+ch.lv+')? ลบแล้วกู้คืนไม่ได้'+((ch.rb|0)>0?' · รูนที่ซื้อและย้ายเข้าตัวนี้ '+(ch.rb|0)+' รูนจะหายไปด้วย':''),{hold:1000, okText:'กดค้างเพื่อลบ'})) return;
   if(deleteChar(ch.id)){ toast('ลบ '+ch.name+' แล้ว','good'); hbChars(); } else toast('ลบไม่ได้ในตอนนี้','bad'); }
 
 /* ---------- scrNew: name + class + starting points ---------- */

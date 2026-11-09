@@ -13,8 +13,10 @@ const RSHOP={
   slCost:[0,0,10,15,20,25,30,35,40]};       // rune cost to raise a skill's starting Lv to n (from n−1)
 let ENT={sup:0, runes:0, src:'none'}, entOk=false;   // sup = supporter until (ms) · runes = bought in total · read lazily (nothing at load)
 function entGet(){ if(!entOk){ entOk=true; try{ entLoad(); }catch(e){} } return ENT; }
+// test entitlements only on a local dev server (never on the live site, even with #dev typed in: tester r2 F2)
+function shopDevHost(){ return typeof location!=='undefined'&&location.hash==='#dev'&&/^(localhost|127\.0\.0\.1|\[::1\])$/.test(location.hostname); }
 function entLoad(){ ENT={sup:0, runes:0, src:'none'};
-  if(typeof location==='undefined'||location.hash!=='#dev'||typeof localStorage==='undefined') return ENT;
+  if(!shopDevHost()||typeof localStorage==='undefined') return ENT;
   try{ const o=JSON.parse(localStorage.getItem('runeguard.devEnt')||'null'); if(o&&typeof o==='object'){
     ENT={sup:Math.max(0,+o.sup||0), runes:Math.max(0,Math.min(1e7,o.runes|0)), src:'dev'}; } }catch(e){}
   return ENT; }

@@ -72,8 +72,9 @@ function openLevel(kind){
   renderCards(); show('scrLevel'); G.uiReadyAt=performance.now()+260; sfx('level');
 }
 function choose(i){ if(!G||G.ui!=='level'||performance.now()<G.uiReadyAt) return; const o=G.choices[i]; if(!o) return;
+  if(typeof SH!=='undefined'&&(SH.sheet||SH.conf)) return;              // never pick a card from under the shop sheet
   if(typeof cardLocked==='function'&&cardLocked(i)){ if(typeof shopOpen==='function') shopOpen('cards'); return; } applyChoice(o); if(G.choiceKind==='chest') G.pendingChest--; else G.pendingLv--; if(G.pendingLv<=0&&G.pendingChest<=0) G.cardReq=false; show(null); G.ui=null; refreshSkillBar(); keepAwake(); }
-function reroll(){ if(!G||G.ui!=='level') return; if(G.rerolls<=0){ if(G.char&&typeof shopOpen==='function') shopOpen('reroll'); return; } G.rerolls--; G.choices=buildChoices(); renderCards(); }
+function reroll(){ if(!G||G.ui!=='level'||typeof SH!=='undefined'&&(SH.sheet||SH.conf)) return; if(G.rerolls<=0){ if(G.char&&typeof shopOpen==='function') shopOpen('reroll'); return; } G.rerolls--; G.choices=buildChoices(); renderCards(); }
 function applyChoice(o){
   switch(o.k){
     case 'new':{ const s=makeSkill(o.id); if(P.sl&&P.sl[o.id]>1) s.lv=P.sl[o.id]; P.skills.push(s); break; }   // starting Lv (28) · character runs

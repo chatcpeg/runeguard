@@ -20,7 +20,8 @@ addEventListener('keydown',e=>{
   if(e.code==='KeyM'){ toggleMute(); return; }
   if(!G){ if(e.code==='Enter'){ if(!$('#scrTitle').hidden){ if(!(document.activeElement&&document.activeElement.tagName==='BUTTON')) startRun(selected); } else if(UIX.enter) UIX.enter(); } return; }
   const n={Digit1:0,Digit2:1,Digit3:2,Digit4:3,Digit5:4,Numpad1:0,Numpad2:1,Numpad3:2,Numpad4:3,Numpad5:4}[e.code];
-  if(G.ui==='level'){ if(n!==undefined) choose(n); else if(e.code==='KeyR') reroll(); }
+  if(G.ui==='level'){ if(typeof SH!=='undefined'&&(SH.sheet||SH.conf)) return;   // a sheet (shop) over the cards owns the keys
+    if(n!==undefined) choose(n); else if(e.code==='KeyR') reroll(); }
   else if(G.ui==='adv'){ if(n!==undefined&&n<2) pickAdv(n); }
   else if(G.ui==='pause'){ if(e.code==='KeyP'||e.code==='Escape') resumeGame(); }
   else if(!G.ui){ if(e.code==='KeyP'||e.code==='Escape') pauseGame(); }

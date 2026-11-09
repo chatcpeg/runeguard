@@ -125,7 +125,7 @@ function hdCards(){
   if(eb&&eb.textContent==='เลเวลอัพ'){ eb.textContent='ความชำนาญเพิ่มขึ้น'; if(lt&&/^Lv /.test(lt.textContent)) lt.textContent='ชำนาญ '+lt.textContent; }
   G.choices.forEach((o,i)=>{ const c=box.children[i]; if(!c) return; let t='';
     if(o.k==='up'){ const cap=P.rank[o.s.id]||0; t=o.s.lv+1>=cap?'ถึงเพดาน ★'+cap+' หลังเลือก · ฝึกเพิ่มที่หน้าสกิล':'เพดาน ★'+cap; }
-    else if(o.k==='new') t='ฝึกไว้ ★'+(P.rank[o.id]||0)+' · อัปในรอบนี้ได้ถึง Lv '+(P.rank[o.id]||0);
+    else if(o.k==='new') t='ฝึกไว้ ★'+(P.rank[o.id]||0)+' · อัปในรอบนี้ได้ถึง Lv '+(P.rank[o.id]||0)+(P.sl&&P.sl[o.id]>1?' · เริ่มที่ Lv '+P.sl[o.id]:'');
     else if(o.k==='stat') t='เร่งชั่วคราวในรอบนี้ · ไม่ใช่สถานะถาวร';
     else if(o.k==='gold') t='ได้ทองจริง +'+5*P.lv;
     if(t) c.append(shMk('span','hd-cap',t)); });

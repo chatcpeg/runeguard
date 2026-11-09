@@ -9,7 +9,7 @@ function shopBaht(n){ return n.toLocaleString('en-US')+' บาท'; }
 function shopOpen(reason){ SHW.reason=reason||''; const box=shMk('div','sp-win'); SHW.box=box;
   box.addEventListener('click',shopClick); sheet(box,{title:'💎 ร้านรูน', onClose:()=>{ if(SHW.box===box) SHW.box=null; }}); shopRender(); }
 function shopRender(){
-  const box=SHW.box; if(!box) return; const sup=isSupporter(), w=shopWallet(), dev=entGet().src==='dev'||location.hash==='#dev';
+  const box=SHW.box; if(!box) return; const sup=isSupporter(), w=shopWallet(), dev=shopDevHost();
   let h=SHW.reason&&SHOP_WHY[SHW.reason]?`<p class="sp-why">${tfE(SHOP_WHY[SHW.reason])}</p>`:'';
   h+=`<div class="sp-stat"><div><b>${sup?'💎 ผู้สนับสนุน':'ยังไม่เป็นผู้สนับสนุน'}</b><small>${sup?'เหลือ '+supDaysLeft()+' วัน':'การ์ด 3 จาก 5 ใบ · สุ่มใหม่ 2 ครั้งต่อรอบ'}</small></div>`
     +`<div><b>🔷 ${w.toLocaleString('en-US')}</b><small>รูนในกระเป๋าบัญชี</small></div><button type="button" class="tf-q" data-help="shop" aria-label="อธิบายร้านรูน">?</button></div>`;
@@ -17,15 +17,15 @@ function shopRender(){
     +`<button type="button" class="btn${p.days?'':' ghost'}" data-buy="${p.id}">${shopBaht(p.thb)}</button></li>`).join('')+'</ul>';
   h+=`<p class="sp-note">${SHOP_PAY_ON?'จ่ายผ่าน Stripe (บัตร / พร้อมเพย์) · ต้องล็อกอินก่อนเพื่อให้สิทธิ์ติดบัญชี':'ระบบชำระเงินกำลังเปิดเร็ว ๆ นี้ (ต้องล็อกอินเพื่อให้สิทธิ์ติดบัญชี)'}</p>`;
   if(dev) h+='<p class="sp-dev">#dev: ปุ่มซื้อ = มอบสิทธิ์ทดสอบในเครื่องนี้ · <button type="button" class="btn ghost" data-a="devclear">ล้างสิทธิ์ทดสอบ</button></p>';
-  box.innerHTML=h; }
+  box.innerHTML=h; const f=box.querySelector('[data-buy]'); if(f) try{ f.focus({preventScroll:true}); }catch(_){} }   // focus into the sheet (tester r2 F8)
 function shopClick(e){
   const q=e.target.closest('[data-help]'); if(q){ tfHelp(q.dataset.help); return; }
   const b=e.target.closest('[data-buy],[data-a]'); if(!b) return;
   if(b.dataset.a==='devclear'){ DEV.shop.clear(); toast('ล้างสิทธิ์ทดสอบแล้ว','info'); shopAfter(); return; }
   const p=RSHOP.products.find(x=>x.id===b.dataset.buy); if(!p) return;
-  if(location.hash==='#dev'){ DEV.shop.grant(p.id); toast('ทดสอบ: ได้ '+p.n,'good'); shopAfter(); return; }
-  if(!SHOP_PAY_ON){ toast('ระบบชำระเงินยังไม่เปิด · เร็ว ๆ นี้','info'); return; }
-  if(typeof shopCheckout==='function') shopCheckout(p.id); }
+  if(SHOP_PAY_ON&&typeof shopCheckout==='function'){ shopCheckout(p.id); return; }   // real payment first, always
+  if(shopDevHost()){ DEV.shop.grant(p.id); toast('ทดสอบ: ได้ '+p.n,'good'); shopAfter(); return; }
+  toast('ระบบชำระเงินยังไม่เปิด · เร็ว ๆ นี้','info'); }
 // after a purchase: the sheet, the level-up cards (locks / reroll button) and the open tree all redraw
 function shopAfter(){ shopRender(); try{ if(G&&G.ui==='level'){ if(G.char&&G.rerolls<=RSHOP.freeRerolls&&isSupporter()) G.rerolls=1e9; renderCards(); HD.info=null; } }catch(e){ console.error(e); }
   if(typeof tfRender==='function'&&TFW.box) tfRender(); if(typeof pksRender==='function'&&prgVis('scrSkills')) pksRender(); }
@@ -60,7 +60,7 @@ TF_HELP.startlv=['ระดับเริ่มต้นของสกิล',
 
 SERVICES.push({id:'shop', npc:'แม่ค้ารูน', n:'แม่ค้ารูน · ร้านรูน', i:'💎', order:16, open(){ shopOpen(''); }});
 // dev (§7.9): RG.shop.grant('sup30'|'rune200'…) adds a test entitlement on this browser · RG.shop.clear() · RG.shop.info()
-DEV.shop={ grant(id){ const p=RSHOP.products.find(x=>x.id===id); if(!p) return 'no product'; const e=entGet(), now=Date.now();
+DEV.shop={ grant(id){ if(!shopDevHost()) return 'local dev only'; const p=RSHOP.products.find(x=>x.id===id); if(!p) return 'no product'; const e=entGet(), now=Date.now();
     const o={sup:p.days?Math.max(e.sup,now)+p.days*864e5:e.sup, runes:(e.runes|0)+(p.runes|0)};
     try{ localStorage.setItem('runeguard.devEnt',JSON.stringify(o)); }catch(_){} entOk=false; return entGet(); },
   clear(){ try{ localStorage.removeItem('runeguard.devEnt'); }catch(_){} entOk=false; return entGet(); },

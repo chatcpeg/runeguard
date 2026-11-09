@@ -2094,8 +2094,9 @@ function openLevel(kind){
   renderCards(); show('scrLevel'); G.uiReadyAt=performance.now()+260; sfx('level');
 }
 function choose(i){ if(!G||G.ui!=='level'||performance.now()<G.uiReadyAt) return; const o=G.choices[i]; if(!o) return;
+  if(typeof SH!=='undefined'&&(SH.sheet||SH.conf)) return;              // never pick a card from under the shop sheet
   if(typeof cardLocked==='function'&&cardLocked(i)){ if(typeof shopOpen==='function') shopOpen('cards'); return; } applyChoice(o); if(G.choiceKind==='chest') G.pendingChest--; else G.pendingLv--; if(G.pendingLv<=0&&G.pendingChest<=0) G.cardReq=false; show(null); G.ui=null; refreshSkillBar(); keepAwake(); }
-function reroll(){ if(!G||G.ui!=='level') return; if(G.rerolls<=0){ if(G.char&&typeof shopOpen==='function') shopOpen('reroll'); return; } G.rerolls--; G.choices=buildChoices(); renderCards(); }
+function reroll(){ if(!G||G.ui!=='level'||typeof SH!=='undefined'&&(SH.sheet||SH.conf)) return; if(G.rerolls<=0){ if(G.char&&typeof shopOpen==='function') shopOpen('reroll'); return; } G.rerolls--; G.choices=buildChoices(); renderCards(); }
 function applyChoice(o){
   switch(o.k){
     case 'new':{ const s=makeSkill(o.id); if(P.sl&&P.sl[o.id]>1) s.lv=P.sl[o.id]; P.skills.push(s); break; }   // starting Lv (28) · character runs
@@ -2465,7 +2466,8 @@ addEventListener('keydown',e=>{
   if(e.code==='KeyM'){ toggleMute(); return; }
   if(!G){ if(e.code==='Enter'){ if(!$('#scrTitle').hidden){ if(!(document.activeElement&&document.activeElement.tagName==='BUTTON')) startRun(selected); } else if(UIX.enter) UIX.enter(); } return; }
   const n={Digit1:0,Digit2:1,Digit3:2,Digit4:3,Digit5:4,Numpad1:0,Numpad2:1,Numpad3:2,Numpad4:3,Numpad5:4}[e.code];
-  if(G.ui==='level'){ if(n!==undefined) choose(n); else if(e.code==='KeyR') reroll(); }
+  if(G.ui==='level'){ if(typeof SH!=='undefined'&&(SH.sheet||SH.conf)) return;   // a sheet (shop) over the cards owns the keys
+    if(n!==undefined) choose(n); else if(e.code==='KeyR') reroll(); }
   else if(G.ui==='adv'){ if(n!==undefined&&n<2) pickAdv(n); }
   else if(G.ui==='pause'){ if(e.code==='KeyP'||e.code==='Escape') resumeGame(); }
   else if(!G.ui){ if(e.code==='KeyP'||e.code==='Escape') pauseGame(); }
@@ -3112,8 +3114,10 @@ const RSHOP={
   slCost:[0,0,10,15,20,25,30,35,40]};       // rune cost to raise a skill's starting Lv to n (from n−1)
 let ENT={sup:0, runes:0, src:'none'}, entOk=false;   // sup = supporter until (ms) · runes = bought in total · read lazily (nothing at load)
 function entGet(){ if(!entOk){ entOk=true; try{ entLoad(); }catch(e){} } return ENT; }
+// test entitlements only on a local dev server (never on the live site, even with #dev typed in: tester r2 F2)
+function shopDevHost(){ return typeof location!=='undefined'&&location.hash==='#dev'&&/^(localhost|127\.0\.0\.1|\[::1\])$/.test(location.hostname); }
 function entLoad(){ ENT={sup:0, runes:0, src:'none'};
-  if(typeof location==='undefined'||location.hash!=='#dev'||typeof localStorage==='undefined') return ENT;
+  if(!shopDevHost()||typeof localStorage==='undefined') return ENT;
   try{ const o=JSON.parse(localStorage.getItem('runeguard.devEnt')||'null'); if(o&&typeof o==='object'){
     ENT={sup:Math.max(0,+o.sup||0), runes:Math.max(0,Math.min(1e7,o.runes|0)), src:'dev'}; } }catch(e){}
   return ENT; }
@@ -4736,7 +4740,7 @@ function prepareRun(G,P,ch,modeId){
   P.sl={}; for(const id of P.loadout){ const v=Math.min(slOf(ch,id),P.rank[id]||1); if(v>1) P.sl[id]=v; }   // starting Lv (28)
   G.rerolls=runRerolls();                                               // 2 · supporter: unlimited (28)
   if(how==='first'){ const s=makeSkill(P.loadout[0]); if(P.sl[s.id]) s.lv=P.sl[s.id]; P.skills=[s]; }
-  else P.skills=P.loadout.map(id=>{ const s=makeSkill(id);
+  else P.skills=P.loadout.map(id=>{ const s=makeSkill(id); if(P.sl[id]) s.lv=P.sl[id];   // 'all1' (field) also starts at the starting Lv
     if(how==='rank'){ s.lv=P.rank[id]; const e=s.def.evo; if(s.lv>=5&&e&&((ch.st||{})[e.s]|0)>=25) s.evolved=true; }
     return s; });
   recalc(P); P.hp=P.maxHp;
@@ -5202,7 +5206,7 @@ function hbHold(el,tap,hold){ let t=0, held=false;
   el.addEventListener('contextmenu',e=>e.preventDefault());
   el.addEventListener('click',()=>{ if(held){ held=false; return; } tap(); }); }
 async function hbDel(ch){
-  if(!await confirmBox('ลบตัวละคร "'+ch.name+'" ('+shJobName(ch)+' Lv '+ch.lv+')? ลบแล้วกู้คืนไม่ได้',{hold:1000, okText:'กดค้างเพื่อลบ'})) return;
+  if(!await confirmBox('ลบตัวละคร "'+ch.name+'" ('+shJobName(ch)+' Lv '+ch.lv+')? ลบแล้วกู้คืนไม่ได้'+((ch.rb|0)>0?' · รูนที่ซื้อและย้ายเข้าตัวนี้ '+(ch.rb|0)+' รูนจะหายไปด้วย':''),{hold:1000, okText:'กดค้างเพื่อลบ'})) return;
   if(deleteChar(ch.id)){ toast('ลบ '+ch.name+' แล้ว','good'); hbChars(); } else toast('ลบไม่ได้ในตอนนี้','bad'); }
 
 /* ---------- scrNew: name + class + starting points ---------- */
@@ -6041,7 +6045,7 @@ function hdCards(){
   if(eb&&eb.textContent==='เลเวลอัพ'){ eb.textContent='ความชำนาญเพิ่มขึ้น'; if(lt&&/^Lv /.test(lt.textContent)) lt.textContent='ชำนาญ '+lt.textContent; }
   G.choices.forEach((o,i)=>{ const c=box.children[i]; if(!c) return; let t='';
     if(o.k==='up'){ const cap=P.rank[o.s.id]||0; t=o.s.lv+1>=cap?'ถึงเพดาน ★'+cap+' หลังเลือก · ฝึกเพิ่มที่หน้าสกิล':'เพดาน ★'+cap; }
-    else if(o.k==='new') t='ฝึกไว้ ★'+(P.rank[o.id]||0)+' · อัปในรอบนี้ได้ถึง Lv '+(P.rank[o.id]||0);
+    else if(o.k==='new') t='ฝึกไว้ ★'+(P.rank[o.id]||0)+' · อัปในรอบนี้ได้ถึง Lv '+(P.rank[o.id]||0)+(P.sl&&P.sl[o.id]>1?' · เริ่มที่ Lv '+P.sl[o.id]:'');
     else if(o.k==='stat') t='เร่งชั่วคราวในรอบนี้ · ไม่ใช่สถานะถาวร';
     else if(o.k==='gold') t='ได้ทองจริง +'+5*P.lv;
     if(t) c.append(shMk('span','hd-cap',t)); });
@@ -6564,7 +6568,7 @@ function shopBaht(n){ return n.toLocaleString('en-US')+' บาท'; }
 function shopOpen(reason){ SHW.reason=reason||''; const box=shMk('div','sp-win'); SHW.box=box;
   box.addEventListener('click',shopClick); sheet(box,{title:'💎 ร้านรูน', onClose:()=>{ if(SHW.box===box) SHW.box=null; }}); shopRender(); }
 function shopRender(){
-  const box=SHW.box; if(!box) return; const sup=isSupporter(), w=shopWallet(), dev=entGet().src==='dev'||location.hash==='#dev';
+  const box=SHW.box; if(!box) return; const sup=isSupporter(), w=shopWallet(), dev=shopDevHost();
   let h=SHW.reason&&SHOP_WHY[SHW.reason]?`<p class="sp-why">${tfE(SHOP_WHY[SHW.reason])}</p>`:'';
   h+=`<div class="sp-stat"><div><b>${sup?'💎 ผู้สนับสนุน':'ยังไม่เป็นผู้สนับสนุน'}</b><small>${sup?'เหลือ '+supDaysLeft()+' วัน':'การ์ด 3 จาก 5 ใบ · สุ่มใหม่ 2 ครั้งต่อรอบ'}</small></div>`
     +`<div><b>🔷 ${w.toLocaleString('en-US')}</b><small>รูนในกระเป๋าบัญชี</small></div><button type="button" class="tf-q" data-help="shop" aria-label="อธิบายร้านรูน">?</button></div>`;
@@ -6572,15 +6576,15 @@ function shopRender(){
     +`<button type="button" class="btn${p.days?'':' ghost'}" data-buy="${p.id}">${shopBaht(p.thb)}</button></li>`).join('')+'</ul>';
   h+=`<p class="sp-note">${SHOP_PAY_ON?'จ่ายผ่าน Stripe (บัตร / พร้อมเพย์) · ต้องล็อกอินก่อนเพื่อให้สิทธิ์ติดบัญชี':'ระบบชำระเงินกำลังเปิดเร็ว ๆ นี้ (ต้องล็อกอินเพื่อให้สิทธิ์ติดบัญชี)'}</p>`;
   if(dev) h+='<p class="sp-dev">#dev: ปุ่มซื้อ = มอบสิทธิ์ทดสอบในเครื่องนี้ · <button type="button" class="btn ghost" data-a="devclear">ล้างสิทธิ์ทดสอบ</button></p>';
-  box.innerHTML=h; }
+  box.innerHTML=h; const f=box.querySelector('[data-buy]'); if(f) try{ f.focus({preventScroll:true}); }catch(_){} }   // focus into the sheet (tester r2 F8)
 function shopClick(e){
   const q=e.target.closest('[data-help]'); if(q){ tfHelp(q.dataset.help); return; }
   const b=e.target.closest('[data-buy],[data-a]'); if(!b) return;
   if(b.dataset.a==='devclear'){ DEV.shop.clear(); toast('ล้างสิทธิ์ทดสอบแล้ว','info'); shopAfter(); return; }
   const p=RSHOP.products.find(x=>x.id===b.dataset.buy); if(!p) return;
-  if(location.hash==='#dev'){ DEV.shop.grant(p.id); toast('ทดสอบ: ได้ '+p.n,'good'); shopAfter(); return; }
-  if(!SHOP_PAY_ON){ toast('ระบบชำระเงินยังไม่เปิด · เร็ว ๆ นี้','info'); return; }
-  if(typeof shopCheckout==='function') shopCheckout(p.id); }
+  if(SHOP_PAY_ON&&typeof shopCheckout==='function'){ shopCheckout(p.id); return; }   // real payment first, always
+  if(shopDevHost()){ DEV.shop.grant(p.id); toast('ทดสอบ: ได้ '+p.n,'good'); shopAfter(); return; }
+  toast('ระบบชำระเงินยังไม่เปิด · เร็ว ๆ นี้','info'); }
 // after a purchase: the sheet, the level-up cards (locks / reroll button) and the open tree all redraw
 function shopAfter(){ shopRender(); try{ if(G&&G.ui==='level'){ if(G.char&&G.rerolls<=RSHOP.freeRerolls&&isSupporter()) G.rerolls=1e9; renderCards(); HD.info=null; } }catch(e){ console.error(e); }
   if(typeof tfRender==='function'&&TFW.box) tfRender(); if(typeof pksRender==='function'&&prgVis('scrSkills')) pksRender(); }
@@ -6615,7 +6619,7 @@ TF_HELP.startlv=['ระดับเริ่มต้นของสกิล',
 
 SERVICES.push({id:'shop', npc:'แม่ค้ารูน', n:'แม่ค้ารูน · ร้านรูน', i:'💎', order:16, open(){ shopOpen(''); }});
 // dev (§7.9): RG.shop.grant('sup30'|'rune200'…) adds a test entitlement on this browser · RG.shop.clear() · RG.shop.info()
-DEV.shop={ grant(id){ const p=RSHOP.products.find(x=>x.id===id); if(!p) return 'no product'; const e=entGet(), now=Date.now();
+DEV.shop={ grant(id){ if(!shopDevHost()) return 'local dev only'; const p=RSHOP.products.find(x=>x.id===id); if(!p) return 'no product'; const e=entGet(), now=Date.now();
     const o={sup:p.days?Math.max(e.sup,now)+p.days*864e5:e.sup, runes:(e.runes|0)+(p.runes|0)};
     try{ localStorage.setItem('runeguard.devEnt',JSON.stringify(o)); }catch(_){} entOk=false; return entGet(); },
   clear(){ try{ localStorage.removeItem('runeguard.devEnt'); }catch(_){} entOk=false; return entGet(); },

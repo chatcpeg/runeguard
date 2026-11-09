@@ -41,6 +41,10 @@ webhook ของ BAZI รับ `checkout.session.completed` ทุกราย
 BAZI จะตอบ 400 (ไม่มี `credits`) → Stripe ส่งซ้ำหลายวัน และถ้าล้มเหลวต่อเนื่องอาจปิด endpoint ของ BAZI
 ทางเลือก: (1) **สร้างบัญชี Stripe แยกสำหรับ Runeguard** (ล็อกอินเดียวกันได้ · แนะนำ) หรือ (2) แก้ webhook ของ BAZI ให้ตอบ 200 กับรายการที่ `metadata.app==='runeguard'` (แตะแอปอื่น ต้องได้ OK)
 
+**สิ่งที่ขั้น ค. ต้องปิด (tester รอบ 2)**
+- รูนที่ซื้อตอนนี้นับจากเซฟ (`ch.rb` / `acct.ru`) ซึ่งแก้เองได้ → ขั้น ค. ต้องให้ยอดรูนที่ซื้อจริง (rg_purchases) เป็นเพดาน: ตอนโหลด clamp Σ`ch.rb` ≤ `acct.ru` ≤ รูนที่ซื้อจริง
+- สิทธิ์ทดสอบ (`#dev`) ใช้ได้เฉพาะ localhost แล้ว (เว็บจริงพิมพ์ `#dev` ก็ไม่ได้ของฟรี) · ปุ่มซื้อจะไป Stripe ก่อนทางทดสอบเสมอเมื่อเปิดรับเงิน
+
 **เจ้าของต้องทำเอง** (ผมใส่คีย์หรือสมัครแทนไม่ได้)
 1. อนุมัติ SQL `rg_001_init.sql` (cloud save, ค้างอยู่) และ `rg_002_purchases.sql` (ข้างล่าง)
 2. ใน Stripe: สร้าง webhook endpoint `https://runeguard-lac.vercel.app/api/stripe-webhook` (event `checkout.session.completed`)

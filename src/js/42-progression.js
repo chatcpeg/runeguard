@@ -213,7 +213,7 @@ function prepareRun(G,P,ch,modeId){
   P.sl={}; for(const id of P.loadout){ const v=Math.min(slOf(ch,id),P.rank[id]||1); if(v>1) P.sl[id]=v; }   // starting Lv (28)
   G.rerolls=runRerolls();                                               // 2 · supporter: unlimited (28)
   if(how==='first'){ const s=makeSkill(P.loadout[0]); if(P.sl[s.id]) s.lv=P.sl[s.id]; P.skills=[s]; }
-  else P.skills=P.loadout.map(id=>{ const s=makeSkill(id);
+  else P.skills=P.loadout.map(id=>{ const s=makeSkill(id); if(P.sl[id]) s.lv=P.sl[id];   // 'all1' (field) also starts at the starting Lv
     if(how==='rank'){ s.lv=P.rank[id]; const e=s.def.evo; if(s.lv>=5&&e&&((ch.st||{})[e.s]|0)>=25) s.evolved=true; }
     return s; });
   recalc(P); P.hp=P.maxHp;
