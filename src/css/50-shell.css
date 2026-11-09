@@ -155,3 +155,16 @@ button.hb-st{padding:0;border:0;background:none;text-decoration:underline dotted
 .hd-it{padding:2px 9px;border-radius:999px;background:var(--well);border:1px solid var(--line);font-size:12.5px;line-height:1.5;overflow-wrap:anywhere}
 .hd-its.lost .hd-it{text-decoration:line-through;opacity:.75}
 .hd-note{margin:0;color:var(--ash);font-size:12px}
+/* pause: full stat sheet (55-ui-hud.js hdStatSheet) */
+#pauseBox{max-height:min(62vh,560px);overflow-y:auto;overscroll-behavior:contain}
+.hd-sheet{display:grid;gap:8px;margin-top:10px;text-align:left}
+.hd-sheet-lv{font-size:12px;color:var(--muted,#b9b3a0)}
+.hd-sheet-grid{display:grid;grid-template-columns:auto minmax(0,1fr);gap:3px 12px;font-size:13px}
+.hd-k{color:var(--muted,#b9b3a0);white-space:nowrap}
+.hd-v{color:#f3ead2;font-variant-numeric:tabular-nums;overflow-wrap:anywhere}
+.hd-sk{border:1px solid rgba(255,255,255,.08);border-radius:10px;padding:8px 10px;display:grid;gap:5px}
+.hd-sk-n{font-weight:700;color:#f0c75a;font-size:14px}
+.hd-sk-e{font-size:12px;color:#9fd6c4}
+.hd-sheet-grid{line-height:1.55}
+.hd-sk-e,.hd-sk-x,.hd-sheet-lv{line-height:1.5}
+.hd-sk-x{font-size:12px;color:#f0c75a}

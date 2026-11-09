@@ -164,6 +164,77 @@ function hdItemName(it){ let s=''; try{ s=it&&it.u?itemName(it):((itemDef(it&&it
 function hdMenuText(g){ const c=!!(g&&g.char), sv=!!(g&&g.modeId==='survival');
   for(const [id,t] of [['btnMenuP',sv?'กลับป้อม (ไม่รับรางวัล)':'กลับป้อม'],['btnRestartP',sv?'เริ่มใหม่ (ไม่รับรางวัล)':null],['btnMenuE','กลับป้อม']]){ const b=$('#'+id); if(!b) continue;
     if(!(id in SH.txt)) SH.txt[id]=b.textContent; const want=c&&t?t:SH.txt[id]; if(b.textContent!==want) b.textContent=want; } }
+/* ---------- pause: full stat sheet + per-skill numbers (what every card picked so far added up to) ---------- */
+const HD_PCT=v=>(v>=0?'+':'')+Math.round(v*100)+'%';
+const HD_N=v=>Math.abs(v-Math.round(v))<.005?String(Math.round(v)):(Math.round(v*100)/100).toFixed(Math.abs(v)<10?2:1).replace(/\.?0+$/,'');
+// one skill → [[label, value text], …] · effective values: dmg × ATK/bonus, cd × AGI/DEX/gear, count + DEX, radius × INT, duration × INT
+function hdSkillLines(s){
+  const v=k=>pv(s,k), has=k=>v(k)!=null, out=[], might=P.might||1, rage=P.rage?1+P.rage*(1-P.hp/Math.max(1,P.maxHp)):1;
+  if(has('dmg')&&v('dmg')){ const base=v('dmg'), eff=base*might*rage; out.push(['ดาเมจ',HD_N(eff)+(Math.abs(eff-base)>.05?' (ฐาน '+HD_N(base)+' · '+HD_PCT(eff/base-1)+')':'')]); }
+  if(has('cd')&&s.def.type!=='passive'){ const b=v('cd'), e=cdOf(s); out.push(['คูลดาวน์',HD_N(e)+' วิ'+(Math.abs(e-b)>.005?' (ฐาน '+HD_N(b)+' · '+HD_PCT(e/b-1)+')':'')]); }
+  const t=s.def.type, cnt=countOf(s), cb=v('count')||1;
+  if(['proj','orbit','swing','chain','strike'].indexOf(t)>=0||has('count')) out.push([t==='orbit'?'จำนวนรอบตัว':t==='chain'?'จำนวนสาย':'จำนวน',cnt+(cnt!==cb?' (ฐาน '+cb+' · +'+(cnt-cb)+' จาก DEX)':'')]);
+  if(has('bounces')) out.push(['กระโดดต่อสาย',v('bounces')+' ครั้ง']);
+  if(has('jump')) out.push(['ระยะกระโดด',HD_N(v('jump')*P.area)]);
+  for(const [k,n] of [['r','รัศมี'],['range','ระยะฟัน'],['explode','วงระเบิด']]) if(has(k)&&v(k)) out.push([n,HD_N(v(k)*P.area)+(P.area!==1?' (ฐาน '+HD_N(v(k))+' · '+HD_PCT(P.area-1)+')':'')]);
+  if(has('dur')) out.push(['ระยะเวลา',HD_N(v('dur')*P.durMul)+' วิ']);
+  if(has('pierce')&&v('pierce')>1) out.push(['ทะลุ',v('pierce')>=99?'ทุกตัว':v('pierce')+' ตัว']);
+  if(has('slow')&&v('slow')) out.push(['ชะลอ',HD_PCT(v('slow')).replace('+','')]);
+  if(has('stun')&&v('stun')) out.push(['สตัน',HD_N(v('stun'))+' วิ']);
+  if(has('freeze')&&v('freeze')) out.push(['แช่แข็ง',HD_N(v('freeze'))+' วิ']);
+  if(has('crit')&&v('crit')) out.push(['คริติคอลเพิ่ม',HD_PCT(v('crit'))]);
+  if(has('absorb')) out.push(['โล่ดูดซับ',HD_N(v('absorb'))]);
+  if(has('nova')) out.push(['ระเบิดโล่',HD_N(v('nova')*might)]);
+  if(has('heal')) out.push(['ฟื้น HP',HD_N(v('heal'))+(v('healPct')?' + '+HD_PCT(v('healPct')).replace('+','')+' ของ HP สูงสุด':'')]);
+  if(has('dodge')&&v('dodge')) out.push(['หลบ',HD_PCT(v('dodge')).replace('+','')]);
+  if(has('rage')&&v('rage')) out.push(['ดาเมจเมื่อ HP ต่ำ','สูงสุด '+HD_PCT(v('rage'))]);
+  if(has('steal')&&v('steal')) out.push(['ฟื้นต่อการสังหาร',HD_N(v('steal'))+' HP']);
+  if(has('targets')) out.push(['เป้าต่อครั้ง',String(v('targets'))]);
+  if(has('hits')) out.push(['จำนวนครั้งที่โดน',String(v('hits'))]);
+  if(v('burn')) out.push(['ทิ้งทะเลเพลิง','มี']);
+  return out; }
+// what the next card of this skill would change (★+1, or the evolution) · same effective numbers as hdSkillLines
+function hdNextText(s){
+  if(s.evolved||s.def.type==='passive'&&s.lv>=5) return ''; const now=new Map(hdSkillLines(s)); let label;
+  if(s.lv<5){ s.lv++; try{ label='การ์ดถัดไป ★'+s.lv; var nxt=hdSkillLines(s); } finally{ s.lv--; } }
+  else if(s.def.evo){ s.evolved=true; try{ label='เมื่อวิวัฒนาการเป็น '+s.def.evo.n; var nxt=hdSkillLines(s); } finally{ s.evolved=false; } }
+  else return '';
+  const ch=nxt.filter(([k,v])=>now.get(k)!==v).map(([k,v])=>k+' '+(now.has(k)?String(now.get(k)).split(' (')[0]+' → ':'')+String(v).split(' (')[0]);
+  return ch.length?label+': '+ch.join(' · '):''; }
+function hdStatSheet(box){
+  if(!P||!box) return; const el=(tag,cls,txt)=>{ const n=document.createElement(tag); if(cls) n.className=cls; if(txt!=null) n.textContent=txt; return n; };
+  const wrap=el('div','hd-sheet'), st=P.stats||{};
+  wrap.append(el('div','dmg-title','ค่าสถานะตอนนี้'));
+  const lv=['STR','AGI','VIT','INT','DEX','LUK'].map(k=>(STATS[k].ab||k)+' '+(st[k]|0)+'/5').join(' · ');
+  wrap.append(el('div','hd-sheet-lv','การ์ดค่าสถานะในรอบนี้: '+lv));
+  const rows=[
+    ['HP',Math.ceil(P.hp)+' / '+Math.ceil(P.maxHp)+' · ฟื้น '+HD_N(P.regen)+'/วิ'],
+    ['ดาเมจรวม','×'+HD_N(P.might)+' ('+HD_PCT(P.might-1)+')'+(P.rage?' · HP ต่ำตีแรงขึ้นอีกถึง '+HD_PCT(P.rage):'')],
+    ['คริติคอล',Math.round(P.crit*100)+'% · แรง ×'+HD_N(P.critMult)],
+    ['คูลดาวน์','×'+HD_N(P.cdMul)+' ('+HD_PCT(P.cdMul-1)+')'],
+    ['พื้นที่สกิล','×'+HD_N(P.area)+' ('+HD_PCT(P.area-1)+')'],
+    ['ระยะเวลาสกิล','×'+HD_N(P.durMul)+' ('+HD_PCT(P.durMul-1)+')'],
+    ['กระสุนเพิ่ม','+'+(P.extraProj|0)+' ลูก'],
+    ['ความเร็วเดิน',Math.round(P.speed)],
+    ['เกราะ',HD_N(P.armor)+(P.dodge?' · หลบ '+Math.round(P.dodge*100)+'%':'')],
+    ['EXP','×'+HD_N(P.xpMul)+' ('+HD_PCT(P.xpMul-1)+')'],
+    ['ระยะดูดของ',Math.round(P.magnet)],
+  ];
+  if(P.steal) rows.push(['ฟื้นต่อการสังหาร',HD_N(P.steal)+' HP']);
+  if(P.drop) rows.push(['โอกาสดรอป',HD_PCT(P.drop)]);
+  if(P.bossDmg) rows.push(['ดาเมจใส่บอส',HD_PCT(P.bossDmg)]);
+  const grid=el('div','hd-sheet-grid'); for(const [k,v] of rows){ grid.append(el('span','hd-k',k),el('span','hd-v',String(v))); } wrap.append(grid);
+  wrap.append(el('div','dmg-title','สกิลที่มี'));
+  for(const s of P.skills){
+    const card=el('div','hd-sk'); const nm=(s.def.i||'')+' '+(s.evolved?s.def.evo.n+' (วิวัฒนาการแล้ว)':s.def.n+' ★'+s.lv+'/5');
+    card.append(el('div','hd-sk-n',nm));
+    const ev=s.def.evo; if(ev&&!s.evolved) card.append(el('div','hd-sk-e','วิวัฒนาการ: ★5 + '+(STATS[ev.s].ab||ev.s)+' อย่างน้อย 1 ('+(s.lv>=5?'สกิลครบ ★5 แล้ว':'ยังขาด '+(5-s.lv)+' ขั้น')+' · '+(STATS[ev.s].ab||ev.s)+' ตอนนี้ '+(st[ev.s]|0)+')'));
+    const g=el('div','hd-sheet-grid'); for(const [k,v] of hdSkillLines(s)) g.append(el('span','hd-k',k),el('span','hd-v',v)); card.append(g);
+    const nx=hdNextText(s); if(nx) card.append(el('div','hd-sk-x',nx));
+    if(s.dealt) card.append(el('div','hd-sk-e','ดาเมจที่ทำไปแล้วรอบนี้: '+fmtNum(s.dealt)));
+    wrap.append(card); }
+  box.append(wrap); }
 function hdPause(box){
-  hdMenuText(G); if(!G||!G.char||G.modeId!=='survival'||!box) return;
+  hdMenuText(G); try{ hdStatSheet(box); }catch(e){ console.error(e); }
+  if(!G||!G.char||G.modeId!=='survival'||!box) return;
   box.append(shBtn('🏳\uFE0F ถอยทัพ · รับรางวัล','btn ghost sh-wide',()=>{ if(!G||G.over||G.ui!=='pause') return; G.retreat=true; G.ui=null; show(null); endRun(false); })); }
