@@ -5,8 +5,8 @@
 // Forward compatibility inside v1: an item / rune id this app does not know survives validation (item → unk:1, rune id kept in
 // its socket), so a newer client's loot is never destroyed. A new class, job, skill or passive does NOT survive (they are matched
 // against CLS / SK / PASSIVES): adding one needs a SCHEMA_V bump, so older apps open such a save read-only instead.
-const SCHEMA_V=4;                                    // 2: acct.up (gold upgrades) · 3: up.stat · 4: ch.tr (skill trees) + ★6–8 + resets.trFree · an older app opens a newer save read-only, so it never drops what was paid for
-const SV_APP='2.3.0';                                 // app version stamped into every local write (saveSummary.appVer)
+const SCHEMA_V=5;                                    // 2: acct.up (gold upgrades) · 3: up.stat · 4: ch.tr (skill trees) + ★6–8 + resets.trFree · 5: ch.rb / ch.sl / acct.ru (bought runes, starting Lv) · an older app opens a newer save read-only, so it never drops what was paid for
+const SV_APP='2.4.0';                                 // app version stamped into every local write (saveSummary.appVer)
 const SV_NAME_RE=/^[\p{L}\p{M}\p{N} ]{2,16}$/u;
 const SV_SLOTS=['weapon','off','head','face','body','cloak','hands','feet','neck','ring'];
 const SV_WEAPON={swordsman:'w_sword_1', mage:'w_staff_1', archer:'w_bow_1', cleric:'w_rod_1', thief:'w_dagger_1'};   // §3.8 starter (M2)
@@ -47,7 +47,7 @@ function svOwner(o){ return typeof o==='string'&&/^[A-Za-z0-9_-]{1,64}$/.test(o)
 function svEmptyEq(){ const o={}; for(const k of SV_SLOTS) o[k]=null; return o; }
 function svNewAcct(){ return {gold:0, marks:0, stash:[], stashMax:BAL.PRICE.stash.start, survTier:0, kits:0,
   records:{classic:{}, survival:{}, boss:{}}, fboss:{}, bossUnlock:{colossus:0, lich:0, king:0},
-  daily:{day:'', surv:{}, boss:{}, rushWeek:''}, up:{}, flags:{pioneer:false, migratedBest:false, pioneerCloak:false, tips:{}}, runIds:[]}; }
+  daily:{day:'', surv:{}, boss:{}, rushWeek:''}, up:{}, ru:0, flags:{pioneer:false, migratedBest:false, pioneerCloak:false, tips:{}}, runIds:[]}; }
 
 function newSave(owner){ const t=Date.now();
   return {v:SCHEMA_V, sid:uid('s_'), owner:svOwner(owner), created:t, mt:t, wc:0, wb:uid('w_'), play:0, app:SV_APP, acct:svNewAcct(), chars:[], active:null}; }
@@ -56,7 +56,7 @@ function newChar(name,clsId){
   const ch={id:uid('c_'), name:svCleanName(name)||c.n, cls:c.id, job:null, created:t, play:0, kills:0, deaths:0,
     lv:1, xp:0, pts:BAL.START_PTS, st:{STR:0,VIT:0,AGI:0,DEX:0,INT:0,LUK:0}, jlv:1, jxp:0, sp:BAL.START_SP,
     sk:{[first]:1}, pas:{}, load:[first], eq:svEmptyEq(), inv:[], bagMax:BAL.PRICE.bagStart, quick:[null,null],
-    trial:{t2:0}, zone:'z1', visited:['z1'], bestiary:{}, resets:{free:1, skFree:1, trFree:1}, tr:{}, dye:{}};
+    trial:{t2:0}, zone:'z1', visited:['z1'], bestiary:{}, resets:{free:1, skFree:1, trFree:1}, tr:{}, rb:0, sl:{}, dye:{}};
   // §3.8 starter kit: the class's training weapon, worn · small potion ×3 on the first quick slot (tier 1 has no sockets: no RNG)
   // the weapon is bound (b:1 = never sells: no gold from create → sell → delete) · createChar (41) limits the potions (BAL.KIT_POTS)
   const wid=SV_WEAPON[c.id];
@@ -93,7 +93,8 @@ function svMig0(o,best){   // v0 = the old single-file game: nothing but runegua
 function svMig1(o){ const s=Object.assign({},o); s.v=2; return s; }   // v1 → v2: only adds acct.up (validateSave fills it empty)
 function svMig2(o){ const s=Object.assign({},o); s.v=3; return s; }   // v2 → v3: only adds acct.up.stat
 function svMig3(o){ const s=Object.assign({},o); s.v=4; return s; }   // v3 → v4: only adds ch.tr / ★6–8 / resets.trFree
-const SV_MIG={0:svMig0, 1:svMig1, 2:svMig2, 3:svMig3};      // SV_MIG[v](o) → save of version v+1
+function svMig4(o){ const s=Object.assign({},o); s.v=5; return s; }   // v4 → v5: only adds ch.rb / ch.sl / acct.ru
+const SV_MIG={0:svMig0, 1:svMig1, 2:svMig2, 3:svMig3, 4:svMig4};      // SV_MIG[v](o) → save of version v+1
 function migrateSave(o,legacyBest){
   if(!svObj(o)) o=null;
   const v=o?o.v:undefined;
@@ -146,7 +147,8 @@ function svAcct(a){
   o.stashMax=svInt(a.stashMax,BAL.PRICE.stash.start,cap.stash,BAL.PRICE.stash.start);
   o.stash=svTrim(svItemList(a.stash,new Map()),o.stashMax,null);         // uids re-checked against the bags in validateSave
   o.survTier=svInt(a.survTier,0,BAL.SURV.maxT,0);
-  o.kits=svInt(a.kits,0,999,0);                                          // characters ever created (starter potions: BAL.KIT_POTS)
+  o.kits=svInt(a.kits,0,999,0); o.ru=svInt(a.ru,0,1e9,0);              // ru: bought runes moved to characters (28)
+                                          // characters ever created (starter potions: BAL.KIT_POTS)
   const r=svObj(a.records)?a.records:{};
   for(const k of svKeys(r.classic)) if(svHas(CLS,k)){ const x=svRecClassic(r.classic[k]); if(x) o.records.classic[k]=x; }
   for(const cid of svKeys(r.survival)){ if(!/^c_[a-z0-9]{1,24}$/.test(cid)) continue; const m={}, src=r.survival[cid];
@@ -187,6 +189,8 @@ function svChar(c,seen){
   const tr=svObj(c.tr)?c.tr:{}; o.tr={};                                // skill trees (27): known nodes only, each 0…max
   for(const id of cls.skills.concat(adv?adv.skills:[])){ const t=svObj(tr[id])?tr[id]:null; if(!t) continue; const q={};
     for(const nd of tfNodes(id)){ const l=svInt(t[nd.id],0,nd.max,0); if(l) q[nd.id]=l; } if(Object.keys(q).length) o.tr[id]=q; }
+  o.rb=svInt(c.rb,0,1e9,0);                                              // bought runes moved onto this character (28)
+  const sl=svObj(c.sl)?c.sl:{}; o.sl={}; for(const id of cls.skills.concat(adv?adv.skills:[])){ const v=svInt(sl[id],0,8,0); if(v>=2) o.sl[id]=v; }
   tfSanitize(o);                                                         // requirements + rune points (lv) hold, like sp / pts
   if(!o.sk[first]) o.sk[first]=1;                                   // the free ★1 of the first skill never goes away
   const pas=svObj(c.pas)?c.pas:{}; o.pas={};

@@ -46,6 +46,9 @@ function tfRender(){
   let h=`<div class="tf-head"><span class="tf-ic" aria-hidden="true">${d.i}</span><div class="tf-hn"><b>${tfE(d.n)}</b><small>${main?'ค่าหลัก '+main+' · ':''}ลำต้น ${prgStars(r,rc)}</small></div>`
     +`<div class="tf-pts"><b>${tfFree(ch)}</b><small>แต้มรูนเหลือ (${tfSpentOne(ch,id)} ในต้นนี้)</small></div><button type="button" class="tf-q" data-help="tree" aria-label="อธิบายต้นไม้สกิล">?</button></div>`;
   if(saveReadOnly()) h+=prgRO();
+  { const sl=slOf(ch,id), sw=slWhy(ch,id), sc=RSHOP.slCost[sl+1]|0;                 // starting Lv of this skill (28)
+    h+=`<div class="tf-sl"><span>🚀 เริ่มรอบที่ <b>Lv ${sl}</b></span>`+(sl>=r?'':`<button type="button" class="btn ghost" data-a="sl"${sw?' disabled':''} title="${tfE(sw)}">Lv ${sl+1} · ${sc} รูน</button>`)
+      +`<button type="button" class="tf-q" data-help="startlv" aria-label="อธิบายระดับเริ่มต้น">?</button></div>`; }
   h+='<div class="tf-grid"><svg class="tf-links" aria-hidden="true"></svg>';
   for(let b=0;b<3;b++){ const n=N.find(x=>x.b===b); h+=`<div class="tf-colh" style="grid-column:${b+1};grid-row:1"><span aria-hidden="true">${n.bi}</span> ${tfE(n.bn)}</div>`; }
   for(const nd of N){ const st=tfState(ch,id,nd), l=tfLv(ch,id,nd.id);
@@ -57,10 +60,10 @@ function tfRender(){
   h+=`<div class="tf-det" aria-live="polite"><div class="tf-dh"><b>${nd.i} ${tfE(nd.n)}</b><small>${nd.crown?'มงกุฎ':nd.kind==='fx'?'ความพิเศษ · สาย'+tfE(nd.bn):'สาย'+tfE(nd.bn)+' · ชั้น '+nd.t}</small></div>`
     +`<p>${l?'ตอนนี้: '+tfE(tfText(nd,l)):'ยังไม่ได้ฝึก'}</p>`+(l<nd.max?`<p class="tf-nx">${l?'ขั้นถัดไป':'เมื่อฝึก'}: ${tfE(tfText(nd,l+1))}</p>`:'')
     +'<ul class="tf-req">'+tfReqs(ch,id,nd).map(q=>`<li class="${q.ok?'ok':''}">${tfE(q.t)}</li>`).join('')+'</ul>'
-    +`<div class="tf-act"><button type="button" class="btn${why?' ghost':''}" data-a="buy"${why?' disabled':''}>${l>=nd.max?'เต็มแล้ว':'ฝึก · '+nd.cost+' แต้มรูน'}</button>`
+    +`<div class="tf-act"><button type="button" class="btn${why?' ghost':''}" data-a="buy"${why?' disabled':''}>${l>=nd.max?'เต็มแล้ว':'ฝึก · '+nd.cost+' แต้มรูน'+(tfFree(ch)<nd.cost?' (ใช้รูนที่ซื้อ '+(nd.cost-tfFree(ch))+')':'')}</button>`
     +`<button type="button" class="tf-q" data-help="node" aria-label="อธิบาย ${tfE(nd.n)} ละเอียด">?</button>`
-    +`<button type="button" class="btn ghost" data-a="reset"${tfSpentOne(ch,id)&&!saveReadOnly()?'':' disabled'}>รีเซ็ตต้นนี้</button></div>`
-    +(why&&l<nd.max?`<p class="tf-why">${tfE(why)}</p>`:'')+'</div>';
+    +`<button type="button" class="btn ghost" data-a="reset"${tfResetGain(ch,id)&&!saveReadOnly()?'':' disabled'}>รีเซ็ตต้นนี้</button></div>`
+    +(why&&l<nd.max?`<p class="tf-why">${tfE(why)}</p>`:'')+(/รูนไม่พอ/.test(why)?'<button type="button" class="btn ghost" data-a="shop">💎 เติมรูน</button>':'')+'</div>';
   box.innerHTML=h; requestAnimationFrame(tfLinks); }
 // connector lines: solid = same branch (and specials → crown) · dashed = cross-branch requirements (A1 → B2 · A2 → B3)
 function tfLinks(){
@@ -84,12 +87,14 @@ function tfClick(e){
   const q=e.target.closest('[data-help]'); if(q){ if(q.dataset.help==='node') tfNodeHelp(); else tfHelp(q.dataset.help); return; }
   const n=e.target.closest('[data-n]'); if(n){ TFW.sel=n.dataset.n; tfRender(); const d=TFW.box&&TFW.box.querySelector('.tf-det'); if(d&&d.scrollIntoView) try{ d.scrollIntoView({block:'nearest'}); }catch(_){} return; }
   const b=e.target.closest('[data-a]'); if(!b||b.disabled) return; const ch=tfCh(), id=TFW.id; if(!ch) return;
-  if(b.dataset.a==='buy'){ const nd=tfNode(id,TFW.sel);
+  if(b.dataset.a==='shop'){ shopOpen('rune'); return; }
+  if(b.dataset.a==='sl'){ if(slBuy(ch,id)) toast(SK[id].n+' เริ่มที่ Lv '+slOf(tfCh(),id),'good'); else toast(slWhy(ch,id)||'ซื้อไม่ได้','bad'); }
+  else if(b.dataset.a==='buy'){ const nd=tfNode(id,TFW.sel);
     if(tfBuy(ch,id,TFW.sel)){ toast(nd.n+' ขั้น '+tfLv(tfCh(),id,TFW.sel),'good'); try{ initAudio(); tone(660,.1,'triangle',.07); tone(990,.16,'sine',.05,0,.07); }catch(_){} }
     else toast(tfWhy(ch,id,TFW.sel)||'ฝึกไม่ได้','bad'); }
   else if(b.dataset.a==='reset'){ const way=tfResetWay(ch), have=typeof invCount==='function'?invCount(ch,'u_forget')|0:0;
     const label=way==='free'?'ฟรี (ก่อน Lv '+BAL.RESET.freeBelow+')':way==='freeOnce'?'ฟรี (เหลือ 1 ครั้ง)':'ใช้ม้วนลืมเลือน 1 ม้วน (มี '+have+')';
-    Promise.resolve(confirmBox('รีเซ็ตต้นไม้ '+SK[id].n+'? ได้แต้มรูนคืน '+tfSpentOne(ch,id)+' แต้ม · '+label,{okText:'รีเซ็ต'})).then(ok=>{
+    Promise.resolve(confirmBox('รีเซ็ตต้นไม้ '+SK[id].n+'? ได้แต้มรูนคืน '+tfResetGain(ch,id)+' แต้ม (รวมระดับเริ่มต้น) · '+label,{okText:'รีเซ็ต'})).then(ok=>{
       if(!ok) return; const done=tfReset(tfCh(),id,{scroll:way==='scroll'}); toast(done?'รีเซ็ตต้นไม้แล้ว':'รีเซ็ตไม่ได้',done?'good':'bad'); tfRender(); if(prgVis('scrSkills')) pksRender(); }).catch(er=>console.error(er));
     return; }
   tfRender(); if(prgVis('scrSkills')) pksRender(); }

@@ -42,9 +42,9 @@ function buildChoices(){
   const avail=P.loadout||P.cls.skills.concat(P.adv?P.adv.skills:[]);
   for(const id of avail) if(!owned.has(id)&&cap(id)>0) pool.push({k:'new',id,w:P.adv&&P.adv.skills.indexOf(id)>=0?3:1.4});
   for(const k in STATS) if(P.sx||P.stats[k]<5) pool.push({k:'stat',stat:k,w:.85});   // character runs: stat cards never run out (26)
-  const out=[];
-  while(out.length<3&&pool.length){ let tot=0; for(const o of pool) tot+=o.w; let r=Math.random()*tot,idx=0; for(;idx<pool.length-1;idx++){ r-=pool[idx].w; if(r<=0) break; } out.push(pool[idx]); pool.splice(idx,1); }
-  const fill=[{k:'potion'},{k:'gold'},{k:'gold'}]; let fi=0; while(out.length<3) out.push(fill[fi++]);
+  const out=[], N=typeof cardCount==='function'?cardCount():3;          // character runs: 5 cards (28 · free players pick from 3)
+  while(out.length<N&&pool.length){ let tot=0; for(const o of pool) tot+=o.w; let r=Math.random()*tot,idx=0; for(;idx<pool.length-1;idx++){ r-=pool[idx].w; if(r<=0) break; } out.push(pool[idx]); pool.splice(idx,1); }
+  const fill=[{k:'potion'},{k:'gold'},{k:'gold'},{k:'potion'},{k:'gold'}]; let fi=0; while(out.length<N) out.push(fill[fi++]);
   return out;
 }
 function cardHTML(o,i){
@@ -59,19 +59,24 @@ function cardHTML(o,i){
   }
   return `<span class="ic" aria-hidden="true">${ic}</span><span class="tag">${tag}</span><span class="nm">${nm}</span><span class="ds">${ds}</span>${df?`<span class="df">${df}</span>`:''}<kbd>${i+1}</kbd>`;
 }
-function renderCards(){ const box=$('#lvCards'); box.innerHTML=''; G.choices.forEach((o,i)=>{ const b=document.createElement('button'); b.type='button'; b.className='card '+o.k; b.innerHTML=cardHTML(o,i); b.addEventListener('click',()=>choose(i)); box.appendChild(b); });
-  const rr=$('#btnReroll'); rr.textContent=`สุ่มใหม่ (${G.rerolls})`; rr.disabled=G.rerolls<=0; }
+function renderCards(){ const box=$('#lvCards'); box.innerHTML=''; G.choices.forEach((o,i)=>{ const b=document.createElement('button'); b.type='button'; b.className='card '+o.k; b.innerHTML=cardHTML(o,i);
+    if(typeof cardLocked==='function'&&cardLocked(i)){ b.classList.add('locked'); b.setAttribute('aria-label','ล็อก · เฉพาะผู้สนับสนุน'); }
+    b.addEventListener('click',()=>choose(i)); box.appendChild(b); });
+  box.classList.toggle('five',G.choices.length>3);
+  const rr=$('#btnReroll'), sh=!!G.char&&typeof shopOpen==='function';   // character runs: out of rerolls → 🔒 opens the shop
+  rr.textContent=G.rerolls>99?'สุ่มใหม่ (ไม่จำกัด)':G.rerolls<=0&&sh?'🔒 สุ่มใหม่ · ผู้สนับสนุน':`สุ่มใหม่ (${G.rerolls})`; rr.disabled=G.rerolls<=0&&!sh; }
 function openLevel(kind){
   G.ui='level'; G.choiceKind=kind; G.choices=buildChoices();
   $('#lvEyebrow').textContent=kind==='chest'?'หีบสมบัติจากศัตรูชั้นยอด':'เลเวลอัพ';
   $('#lvTitle').textContent=kind==='chest'?'เลือกของรางวัล':'Lv '+(P.lv-G.pendingLv+1);
   renderCards(); show('scrLevel'); G.uiReadyAt=performance.now()+260; sfx('level');
 }
-function choose(i){ if(!G||G.ui!=='level'||performance.now()<G.uiReadyAt) return; const o=G.choices[i]; if(!o) return; applyChoice(o); if(G.choiceKind==='chest') G.pendingChest--; else G.pendingLv--; if(G.pendingLv<=0&&G.pendingChest<=0) G.cardReq=false; show(null); G.ui=null; refreshSkillBar(); keepAwake(); }
-function reroll(){ if(!G||G.ui!=='level'||G.rerolls<=0) return; G.rerolls--; G.choices=buildChoices(); renderCards(); }
+function choose(i){ if(!G||G.ui!=='level'||performance.now()<G.uiReadyAt) return; const o=G.choices[i]; if(!o) return;
+  if(typeof cardLocked==='function'&&cardLocked(i)){ if(typeof shopOpen==='function') shopOpen('cards'); return; } applyChoice(o); if(G.choiceKind==='chest') G.pendingChest--; else G.pendingLv--; if(G.pendingLv<=0&&G.pendingChest<=0) G.cardReq=false; show(null); G.ui=null; refreshSkillBar(); keepAwake(); }
+function reroll(){ if(!G||G.ui!=='level') return; if(G.rerolls<=0){ if(G.char&&typeof shopOpen==='function') shopOpen('reroll'); return; } G.rerolls--; G.choices=buildChoices(); renderCards(); }
 function applyChoice(o){
   switch(o.k){
-    case 'new': P.skills.push(makeSkill(o.id)); break;
+    case 'new':{ const s=makeSkill(o.id); if(P.sl&&P.sl[o.id]>1) s.lv=P.sl[o.id]; P.skills.push(s); break; }   // starting Lv (28) · character runs
     case 'up': o.s.lv++; break;
     case 'evo': o.s.evolved=true; banner('วิวัฒนาการ!',o.s.def.evo.n); G.fx.push({k:'ring',x:P.x,y:P.y,r0:10,r1:160,t:0,dur:.6,c:'#f0b545',w:12,follow:true,dead:false}); G.fx.push({k:'lvup',x:P.x,y:P.y,t:0,dur:1,follow:true,dead:false}); break;
     case 'stat': P.stats[o.stat]++; break;
@@ -99,7 +104,7 @@ function checkUI(){ if(G.ui||G.over) return; if(G.mode.cards===false) return; if
   if(!G.char&&P.lv-G.pendingLv+1>=ADV_LV&&!P.adv&&!P.advOffered){ openAdv(); return; } if(G.pendingChest>0){ openLevel('chest'); return; } if(G.pendingLv>0) openLevel('lv'); }
 function autoUI(){ if(G.over) return; if(!G.char&&P.lv>=ADV_LV&&!P.adv&&!P.advOffered){ P.advOffered=true; applyAdv(pick(P.cls.adv)); }
   if(G.mode.cards===false) return;   // 'manual' modes still let the bot pick
-  let guard=0; while((G.pendingChest>0||G.pendingLv>0)&&guard++<60){ const ch=buildChoices(); const o=ch.find(c=>c.k==='evo')||ch.find(c=>c.k==='new')||ch.find(c=>c.k==='up')||ch[(Math.random()*ch.length)|0]; applyChoice(o); if(G.pendingChest>0) G.pendingChest--; else G.pendingLv--; } }
+  let guard=0; while((G.pendingChest>0||G.pendingLv>0)&&guard++<60){ const ch=buildChoices().filter((c,i)=>!(typeof cardLocked==='function'&&cardLocked(i))); const o=ch.find(c=>c.k==='evo')||ch.find(c=>c.k==='new')||ch.find(c=>c.k==='up')||ch[(Math.random()*ch.length)|0]; applyChoice(o); if(G.pendingChest>0) G.pendingChest--; else G.pendingLv--; } }
 function pauseGame(){ if(!G||G.ui) return; G.ui='pause'; for(const k in keys) keys[k]=false; joy.on=false; releaseWake();
   const rows=P.skills.map(s=>`<div class="dmg-row"><span class="dmg-n">${s.def.i} ${s.evolved?s.def.evo.n:s.def.n} <em>${s.evolved?'★':'Lv'+s.lv}</em></span><span class="dmg-bar"><span style="width:${Math.min(100,s.dealt/Math.max(1,G.totalDmg)*100)}%"></span></span><span class="dmg-v">${fmtNum(s.dealt)}</span></div>`).join('');
   $('#pauseBox').innerHTML=`<div class="dmg-title">${G.mode.pauseTitle()}</div>${rows}`;

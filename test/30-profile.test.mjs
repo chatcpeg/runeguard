@@ -3,7 +3,7 @@
 // Runs the real src/js files in node:vm (test/_vm.mjs) with an in-memory localStorage. No dependencies.
 import { loadSrc, memStorage } from './_vm.mjs';
 
-const FILES = ['04', '05', '06', '07', '08', '15', '16', '24', '25', '26', '27', '30', '31', '33', '34', '40', '41', '42'];
+const FILES = ['04', '05', '06', '07', '08', '15', '16', '24', '25', '26', '27', '28', '30', '31', '33', '34', '40', '41', '42'];
 let pass = 0, fail = 0;
 const ok = (name, cond, info) => { if (cond) { pass++; console.log('  ✓ ' + name); } else { fail++; console.log('  ✗ ' + name + (info !== undefined ? '\n      ' + (typeof info === 'string' ? info : JSON.stringify(info)) : '')); } };
 const note = t => console.log('  · ' + t);
@@ -87,7 +87,7 @@ console.log('§3.7 ตัวใหม่ = คลาสสิกทุก field'
       const m=metaBonus(ch), b=buildRunBonus(ch);
       const A=makePlayer(CLS['${c}']); recalc(A); A.hp=A.maxHp;                          // classic newRun
       const B=makePlayer(CLS['${c}']); recalc(B); B.hp=B.maxHp; const g={}; prepareRun(g,B,ch,'survival');
-      const skip=new Set(['bonus','rank','loadout','advOffered','sx','permSt','tree']), diff=[];   // sx/permSt/tree: character-run flags of 26/27 · skill.cx = character numbers flag
+      const skip=new Set(['bonus','rank','loadout','advOffered','sx','permSt','tree','sl']), diff=[];   // sx/permSt/tree: character-run flags of 26/27 · skill.cx = character numbers flag
       const J=(k,v)=>k==='skills'?JSON.stringify(v.map(s=>Object.assign({},s,{cx:undefined}))):JSON.stringify(v);
       for(const k of new Set(Object.keys(A).concat(Object.keys(B)))) if(!skip.has(k)&&J(k,A[k])!==J(k,B[k])) diff.push(k);
       return {m:JSON.stringify(m), b:JSON.stringify(b), diff, n:Object.keys(A).length, bonus:B.bonus, adv:B.adv, offered:B.advOffered}; })()`);
@@ -239,10 +239,10 @@ console.log('§6.3 migrateSave');
   ok('migrateSave(v0 + best): นำเข้าสถิติไป acct.records.classic · pioneer = true · migratedBest = true · คลาสที่ไม่รู้จักถูกตัด',
     deq(m.a.records.classic, { swordsman: { score: 12345, wave: 14, kills: 900, won: false }, mage: { score: 99999, wave: 20, kills: 4000, won: true } }) && m.a.flags.pioneer === true && m.a.flags.migratedBest === true, m.a);
   ok('migrateSave: {} (ไม่มี v) + best แบบ string ก็นำเข้า · ไม่มี best → pioneer = false · ไม่ใช่ object → เซฟใหม่ v3',
-    m.bv === 4 && m.bc.mage.score === 99999 && m.bp === true && m.c.pioneer === false && m.c.migratedBest === false && m.d === true && m.e === 4 && deq(m.ev, []), m);
-  const ro = X(`(()=>{ const o={v:5, sid:'s_abc', chars:[{id:'c_x', name:'ใหม่กว่า', cls:'mage', lv:70, future:1}], acct:{gold:5}, extra:{a:1}};
+    m.bv === 5 && m.bc.mage.score === 99999 && m.bp === true && m.c.pioneer === false && m.c.migratedBest === false && m.d === true && m.e === 5 && deq(m.ev, []), m);
+  const ro = X(`(()=>{ const o={v:6, sid:'s_abc', chars:[{id:'c_x', name:'ใหม่กว่า', cls:'mage', lv:70, future:1}], acct:{gold:5}, extra:{a:1}};
     const s=migrateSave(o,null); return {v:s.v, ro:s.ro, enumerable:Object.keys(s).includes('ro'), json:JSON.stringify(s).includes('"ro"'), lv:s.chars[0].lv, src:o.chars[0].lv}; })()`);
-  ok('migrateSave(v > SCHEMA_V) → อ่านอย่างเดียว (s.ro, ไม่ติดไปกับ JSON) · ข้อมูลต้นฉบับไม่ถูกแก้', ro.v === 5 && ro.ro === true && !ro.enumerable && !ro.json && ro.lv === 60 && ro.src === 70, ro);
+  ok('migrateSave(v > SCHEMA_V) → อ่านอย่างเดียว (s.ro, ไม่ติดไปกับ JSON) · ข้อมูลต้นฉบับไม่ถูกแก้', ro.v === 6 && ro.ro === true && !ro.enumerable && !ro.json && ro.lv === 60 && ro.src === 70, ro);
 }
 
 // ------------------------------------------------------------------------------------------------
@@ -269,7 +269,7 @@ console.log('§6.3 validateSave clamp');
     const s=validateSave(evil), c=s.chars[0];
     return {s, c, ids:s.chars.map(x=>x.id), names:s.chars.map(x=>x.name), polluted:({}).polluted, again:JSON.stringify(validateSave(JSON.parse(JSON.stringify(s))))===JSON.stringify(s)}; })()`);
   const s = v.s, c = v.c;
-  ok('เซฟ: sid/owner/เวลา/app ผิดรูป → ค่าที่ปลอดภัย · owner ที่เป็นอีเมล → null', /^s_[a-z0-9]+$/.test(s.sid) && s.owner === null && s.created === 0 && s.play === 0 && s.app === '2.3.0', s);
+  ok('เซฟ: sid/owner/เวลา/app ผิดรูป → ค่าที่ปลอดภัย · owner ที่เป็นอีเมล → null', /^s_[a-z0-9]+$/.test(s.sid) && s.owner === null && s.created === 0 && s.play === 0 && s.app === '2.4.0', s);
   ok('acct: gold ≥ 0 · marks ≤ เพดาน · stashMax ≤ 120 · survTier ≤ 10 · ของซ้อน n ≥ 1 · runIds เฉพาะรูปแบบถูก ไม่ซ้ำ เก็บ 30 ล่าสุด',
     s.acct.gold === 0 && s.acct.marks === 999999 && s.acct.stashMax === 120 && s.acct.survTier === 10 && s.acct.stash[0].n === 1 && s.acct.runIds.length === 30 && s.acct.runIds[29] === 'r_39' && !s.acct.runIds.includes('bad id'), s.acct);
   ok('records/daily/flags: ค่าถูก clamp · key แปลกถูกตัด · ไม่มี prototype pollution',
@@ -321,7 +321,7 @@ console.log('§6.2 เซฟในเครื่อง: คีย์ · write-a
   ls.setItem('runeguard.save.guest', '{"v":1,"chars":[');
   const fb = X(`(()=>{ const s=loadSaveFor(null); return {n:s.chars.length, kills:s.chars[0]&&s.chars[0].kills, st:svlState().from}; })()`);
   ok('คีย์หลักเสีย → ใช้ .bak + toast "เซฟในเครื่องเสีย ใช้สำรองแทน" · คีย์หลักถูกเขียนใหม่ · .bak เดิมยังอยู่',
-    fb.n === 1 && fb.st === 'bak' && notes.some(n => n[0] === 'เซฟในเครื่องเสีย ใช้สำรองแทน') && ls.getItem('runeguard.save.guest.bak') === goodBak && JSON.parse(ls.getItem('runeguard.save.guest')).v === 4, fb);
+    fb.n === 1 && fb.st === 'bak' && notes.some(n => n[0] === 'เซฟในเครื่องเสีย ใช้สำรองแทน') && ls.getItem('runeguard.save.guest.bak') === goodBak && JSON.parse(ls.getItem('runeguard.save.guest')).v === 5, fb);
   ls.setItem('runeguard.save.guest', 'garbage'); ls.setItem('runeguard.save.guest.bak', '[1,2]');
   const nw = X(`(()=>{ const s=loadSaveFor(null); return {n:s.chars.length, st:svlState().from, rec:s.acct.records.classic.swordsman.score}; })()`);
   ok('เสียทั้งคู่ → เซฟใหม่ (ยังนำเข้าสถิติคลาสสิก) + toast', nw.n === 0 && nw.st === 'lost' && nw.rec === 9000 && notes.some(n => /เซฟในเครื่องเสีย/.test(n[0])), nw);
@@ -331,7 +331,7 @@ console.log('§6.2 เซฟในเครื่อง: คีย์ · write-a
 }
 {
   const { X, ls, dump, notes } = fresh();
-  const future = JSON.stringify({ v: 5, sid: 's_future', owner: null, acct: { gold: 77 }, chars: [{ id: 'c_f1', name: 'อนาคต', cls: 'mage', lv: 5 }], active: 'c_f1', newField: { x: 1 } });
+  const future = JSON.stringify({ v: 6, sid: 's_future', owner: null, acct: { gold: 77 }, chars: [{ id: 'c_f1', name: 'อนาคต', cls: 'mage', lv: 5 }], active: 'c_f1', newField: { x: 1 } });
   ls.setItem('runeguard.save.guest', future);
   const before = JSON.stringify(dump());
   const ro = X(`(()=>{ const s=loadSaveFor(null); const out={ro:saveReadOnly(), lv:curChar().lv, gold:s.acct.gold};
@@ -376,7 +376,7 @@ console.log('§3.8 / §6.3 ตัวละคร: สร้าง · เลื�
   ok('ตัวใหม่ (§3.8): Lv1 · แต้มสถานะ 5 · แต้มสกิล 6 · สกิลแรก ★1 · load = [skills[0]] · trial.t2 = 0 · ตัวที่สร้างล่าสุดเป็นตัวที่เลือก',
     c.new.lv === 1 && c.new.pts === 5 && deq(c.new.sk, { mbolt: 1 }) && deq(c.new.load, ['mbolt']) && c.new.trial.t2 === 0 && c.new.jlv === 1 && c.new.sp === 6 && c.new.job === null && c.active, c.new);
   ok('setActiveChar / curChar / deleteChar (ลบตัวที่เลือก → เลือกตัวแรกแทน · ลบซ้ำไม่ได้)', c.set && c.cur && c.setBad === false && c.del && c.after && c.del2 === false, c);
-  ok('saveSummary · isTrivialSave', c.sum.chars.length === 2 && c.sum.chars[0].lv === 1 && c.sum.appVer === '2.3.0' && c.trivial === true && c.trivial2 === false, c.sum);
+  ok('saveSummary · isTrivialSave', c.sum.chars.length === 2 && c.sum.chars[0].lv === 1 && c.sum.appVer === '2.4.0' && c.trivial === true && c.trivial2 === false, c.sum);
   const st = X(`(()=>{ const a=loadSettings(); const b=saveSettings({autoPot:5, mute:1, cardAuto:true, haptics:false}); const c=saveSettings({autoPot:0}); return [a,b,c]; })()`);
   ok('ตั้งค่า: ค่าเริ่มต้น {mute:false, autoPot:0.35, cardAuto:false, haptics:true} · clamp ค่าแปลก · autoPot 0 = ปิด',
     deq(st[0], { mute: false, autoPot: 0.35, cardAuto: false, haptics: true }) && deq(st[1], { mute: false, autoPot: 0.9, cardAuto: true, haptics: false }) && st[2].autoPot === 0, st);
@@ -508,10 +508,10 @@ console.log('fix-r1 · สองแท็บ · เซฟหลักพัง�
 }
 {
   const { X, ls } = fresh();
-  const future = JSON.stringify({ v: 5, sid: 's_future', acct: { gold: 77, gems: 5 }, chars: [{ id: 'c_f1', name: 'อนาคต', cls: 'mage', lv: 5, pet: 'cat', st: { WIS: 3 } }], active: 'c_f1' });
+  const future = JSON.stringify({ v: 6, sid: 's_future', acct: { gold: 77, gems: 5 }, chars: [{ id: 'c_f1', name: 'อนาคต', cls: 'mage', lv: 5, pet: 'cat', st: { WIS: 3 } }], active: 'c_f1' });
   ls.setItem('runeguard.save.guest', future);
   ok('export ของเซฟอ่านอย่างเดียว = ข้อความที่เก็บไว้เดิม (ไม่ตัด field ของเวอร์ชันใหม่)', X(`(loadSaveFor(null), exportSave())`) === future);
-  ok('migrateSave: v ไม่ใช่จำนวนเต็ม (1.5) = ขยะ ไม่ใช่เวอร์ชันใหม่', X(`(()=>{ const s=migrateSave({v:1.5, acct:{gold:5}, chars:[]}); return !s.ro&&s.v===4; })()`));
+  ok('migrateSave: v ไม่ใช่จำนวนเต็ม (1.5) = ขยะ ไม่ใช่เวอร์ชันใหม่', X(`(()=>{ const s=migrateSave({v:1.5, acct:{gold:5}, chars:[]}); return !s.ro&&s.v===5; })()`));
 }
 {
   const { X } = fresh();
@@ -796,7 +796,7 @@ console.log('carry-over (a) · เซฟหลักอ่านไม่ได�
   const { X, ls } = fresh();
   ls.setItem(K, raw);
   const a = X(`(()=>{ const s=loadSaveFor(null); return {from:svlState().from, n:s.chars.length}; })()`);
-  ok('โหลด: เริ่มเซฟใหม่ (lost) · .bak = ข้อความเดิมของเซฟหลักทุกไบต์ · เซฟหลักเป็นเซฟใหม่ที่อ่านได้', a.from === 'lost' && ls.getItem(K + '.bak') === raw && JSON.parse(ls.getItem(K)).v === 4, a);
+  ok('โหลด: เริ่มเซฟใหม่ (lost) · .bak = ข้อความเดิมของเซฟหลักทุกไบต์ · เซฟหลักเป็นเซฟใหม่ที่อ่านได้', a.from === 'lost' && ls.getItem(K + '.bak') === raw && JSON.parse(ls.getItem(K)).v === 5, a);
   X(`createChar('หลังพัง','mage'); saveNow('t1'); curChar().quick[1]='u_potion_s'; saveNow('t2');`);
   ok('เขียนเซฟที่ยังไม่มีความคืบหน้าซ้ำ ๆ ไม่ทับ .bak ที่เก็บข้อความเสียไว้', ls.getItem(K + '.bak') === raw);
   X(`curChar().kills=3; saveNow('p1'); curChar().kills=4; saveNow('p2');`);
@@ -807,7 +807,7 @@ console.log('carry-over (a) · เซฟหลักอ่านไม่ได�
   const { X, ls } = fresh();
   ls.setItem(K, 'garbage-main'); ls.setItem(K + '.bak', 'garbage-bak');
   X(`loadSaveFor(null)`);
-  ok('เสียทั้งคู่: .bak = ข้อความของเซฟหลัก (ใหม่กว่า) · เซฟหลักใหม่อ่านได้', ls.getItem(K + '.bak') === 'garbage-main' && JSON.parse(ls.getItem(K)).v === 4);
+  ok('เสียทั้งคู่: .bak = ข้อความของเซฟหลัก (ใหม่กว่า) · เซฟหลักใหม่อ่านได้', ls.getItem(K + '.bak') === 'garbage-main' && JSON.parse(ls.getItem(K)).v === 5);
   const base = memStorage(), lsx = { getItem: k => base.getItem(k), removeItem: k => base.removeItem(k), clear: () => base.clear(), key: i => base.key(i), get length() { return base.length; },
     setItem: (k, v) => { if (String(k).endsWith('.bak')) throw new Error('QuotaExceededError'); base.setItem(k, v); } };
   const F = fresh({ localStorage: lsx });
@@ -1462,7 +1462,7 @@ console.log('อัปเกรดถาวร (acct.up) · เซฟ v2');
     const m=migrateSave({v:1, acct:{gold:50}, chars:[]}); const n=newSave(null), one=validateSave({v:2,acct:{up:{dmg:3}},chars:[]});
     return {a, mv:m.v, mup:m.acct.up, mg:m.acct.gold, nv:n.v, nup:n.acct.up, again:JSON.stringify(validateSave(one))===JSON.stringify(one)}; })()`);
   ok('validateSave: ขั้นถูกบีบ 0–10 · ทศนิยมปัดลง · ชื่อหัวข้ออนาคต (a–z) เก็บไว้ · __proto__ ทิ้ง · idempotent', deq(v.a, { xp: 10, gold: 4, hp: 2, nope: 5 }) && v.again, v);
-  ok('เซฟ v1 → ย้ายเป็น v3 (ทองไม่หาย · up ว่าง) · เซฟใหม่ = v3 + up ว่าง', v.mv === 4 && v.mg === 50 && deq(v.mup, {}) && v.nv === 4 && deq(v.nup, {}), v);
+  ok('เซฟ v1 → ย้ายเป็น v3 (ทองไม่หาย · up ว่าง) · เซฟใหม่ = v3 + up ว่าง', v.mv === 5 && v.mg === 50 && deq(v.mup, {}) && v.nv === 5 && deq(v.nup, {}), v);
 }
 {
   const { X, ls } = fresh();
@@ -1549,7 +1549,7 @@ console.log('ค่าสถานะ: ข้อที่ tester รอบ 2 เ
   ok('ชะลอไม่เกิน 80% แม้การ์ด 100 ใบ (ศัตรูไม่หยุด/ไม่ถอยหลัง)', r.slow.length === 2 && r.slow.every(v => v <= .8 + 1e-9), r.slow);
   ok('หลบจากเงาพริ้วไม่เกิน 50%', r.dodge <= .5 + 1e-9, r.dodge);
   ok('คริจากอุปกรณ์สูง + LUK ≤ 5 = เท่าเดิม (ไม่ถูกตัด 75%) · ใบที่ 6+ ไม่ดันเกินเดิม', Math.abs(r.crit[0] - r.crit[1]) < 1e-9 && r.crit[1] > .75 && Math.abs(r.critOver - r.crit[1]) < 1e-9, r);
-  ok('เซฟ v3: v2 → v3 ไม่เสีย up.stat · คีย์ขยะ 30 ตัวไม่ดัน xp/stat ออก', r.ver[0] === 4 && r.ver[1].stat === 4 && r.ver[1].xp === 2 && r.keys.xp === 3 && r.keys.stat === 2, r);
+  ok('เซฟ v3: v2 → v3 ไม่เสีย up.stat · คีย์ขยะ 30 ตัวไม่ดัน xp/stat ออก', r.ver[0] === 5 && r.ver[1].stat === 4 && r.ver[1].xp === 2 && r.keys.xp === 3 && r.keys.stat === 2, r);
 }
 
 console.log('ต้นไม้สกิล (27) · ★6–8 · เซฟ v4');
@@ -1581,7 +1581,7 @@ console.log('ต้นไม้สกิล (27) · ★6–8 · เซฟ v4');
   ok('แต้มไม่พอ = ฝึกไม่ได้ (บอกจำนวน)', /แต้มรูนไม่พอ/.test(r.poor), r.poor);
   ok('รีเซ็ตต้นไม้ (Lv 30 ใช้สิทธิ์ฟรี 1 ครั้ง) → แต้มคืนครบ · trFree = 0', r.reset === true && r.after === 0 && r.freeFlag === 0, r);
   ok('เซฟ: โหนดแปลก/ขั้นเกินถูกตัด · ขั้นเกิน max = max · สกิลต่างอาชีพถูกทิ้ง · A3 ที่ A2 ยังไม่เต็มถูกตัด', JSON.stringify(r.tr) === JSON.stringify({thunder:{A1:3, B1:2}}), r.tr);
-  ok('เซฟ v3 → v4 ไม่เสียต้นไม้ · SCHEMA_V = 4', r.v === 4 && JSON.stringify(r.mig) === JSON.stringify({flame:{A1:2}}), r);
+  ok('เซฟ v3 → v4 ไม่เสียต้นไม้ · SCHEMA_V = 4', r.v === 5 && JSON.stringify(r.mig) === JSON.stringify({flame:{A1:2}}), r);
   ok('เพดาน ★: ก่อนเลื่อน 5 · หลังเลื่อนสกิลขั้นต้น 8 · สกิลขั้นสูง 5 · เซฟเก็บ ★8 เฉพาะตอนเลื่อนแล้ว', JSON.stringify(r.cap) === '[5,8,5]' && r.sv8 === 8 && r.sv5 === 5, r);
 }
 {
@@ -1620,6 +1620,35 @@ console.log('ต้นไม้สกิล: ข้อที่ tester รอบ
   ok('เซฟ: ต้นไม้ที่เงื่อนไขไม่ครบ/แต้มรูนเกิน Base Lv ถูกตัด (Lv1 ★1 = ไม่มีโหนด)', r.f1[0] === 0 && r.f1[1] === '{}', r.f1);
   ok('เซฟ: ต้นไม้ที่ถูกกติกายังอยู่ครบ', r.keep === 3 + 4 + 4 + 2 + 4 + 3, r.keep);
   ok('รีเซ็ตสกิล (★ เหลือ 1): โหนดที่ต้อง ★2/★4 ถูกล้าง แต้มรูนกลับมา', r.f2 === '{}', r.f2);
+}
+
+console.log('ร้านรูน (28): กระเป๋ารูน · ระดับเริ่มต้น · การ์ด 5 ใบ · เซฟ v5');
+{
+  const { X } = fresh();
+  const r = X(`(()=>{ const o={}; SAVE=newSave(null); const ch=newChar('ร้าน','mage'); SAVE.chars.push(ch); SAVE.active=ch.id; ch.lv=10;
+    o.noSup=isSupporter()===false && shopWallet()===0;
+    ch.sk.mbolt=5; o.w0=slWhy(ch,'mbolt'); o.b1=slBuy(ch,'mbolt'); o.sl=slOf(ch,'mbolt'); o.free=tfFree(ch);
+    o.w1=slWhy(ch,'mbolt');                              // 0 left, Lv3 costs 15
+    ENT={sup:0, runes:100, src:'test'}; entOk=true;      // bought 100 runes
+    o.w2=slWhy(ch,'mbolt'); o.b2=slBuy(ch,'mbolt'); o.after=[slOf(ch,'mbolt'), ch.rb, SAVE.acct.ru, shopWallet(), tfFree(ch)];
+    ch.sk.flame=2; o.tb=tfBuy(ch,'flame','A1'); o.after2=[ch.rb, SAVE.acct.ru];
+    o.reset=tfReset(ch,'mbolt'); o.after3=[slOf(ch,'mbolt'), tfFree(ch), ch.rb];
+    ch.sl={mbolt:9, flame:2, zz:3}; ch.sk.mbolt=3; ch.lv=40; const v=svChar(JSON.parse(JSON.stringify(ch))); o.sv=[JSON.stringify(v.sl), v.rb];
+    o.acct=validateSave(JSON.parse(JSON.stringify(SAVE))).acct.ru;
+    const g={rerolls:3}, P1=makePlayer(CLS.mage); ch.sl={mbolt:3}; ch.load=['mbolt']; recalc(P1); prepareRun(g,P1,ch,'survival'); o.run=[P1.skills[0].lv, P1.sl.mbolt, g.rerolls];
+    ENT={sup:Date.now()+864e5, runes:100, src:'test'}; const g2={rerolls:3}, P2=makePlayer(CLS.mage); recalc(P2); prepareRun(g2,P2,ch,'survival'); o.supRr=g2.rerolls;
+    G={char:ch, mode:{cards:true}}; o.cards=[cardCount(), cardLocked(2), cardLocked(3)]; ENT.sup=0; o.lock=[cardLocked(2), cardLocked(3), cardLocked(4)];
+    G={char:null, mode:{}}; o.classic=[cardCount(), cardLocked(3)];
+    o.v=SCHEMA_V; return o; })()`);
+  ok('เริ่มต้น: ไม่ใช่ผู้สนับสนุน · กระเป๋ารูน 0', r.noSup, r);
+  ok('ระดับเริ่มต้น: Lv2 ราคา 10 รูน (Lv10 มี 10) → ซื้อได้ · รูนเหลือ 0', r.w0 === '' && r.b1 === true && r.sl === 2 && r.free === 0, r);
+  ok('รูนตัวละครหมด: Lv3 (15) ซื้อไม่ได้ · มีรูนที่ซื้อ 100 → ซื้อได้ ดึงจากกระเป๋า 15', /รูนไม่พอ/.test(r.w1) && r.w2 === '' && r.b2 === true && JSON.stringify(r.after) === '[3,15,15,85,0]', r);
+  ok('ฝึกโหนดต้นไม้เมื่อรูนไม่พอ ดึงจากกระเป๋าเช่นกัน', r.tb === true && JSON.stringify(r.after2) === '[16,16]', r);
+  ok('รีเซ็ตต้นไม้ = ล้างระดับเริ่มต้นของสกิลนั้น · รูนคืนเข้าตัวละคร (ไม่คืนกระเป๋า)', r.reset === true && r.after3[0] === 1 && r.after3[1] === 25 && r.after3[2] === 16, r);
+  ok('เซฟ: ระดับเริ่มต้นเกิน ★ ถูกตัดลง · สกิลไม่รู้จัก/★ ต่ำกว่า 2 ถูกทิ้ง · rb/ru อยู่ครบ', r.sv[0] === '{"mbolt":3,"flame":2}' && r.sv[1] === 16 && r.acct === 16, r);
+  ok('ในรอบ: สกิลแรกเริ่มที่ Lv3 · สุ่มใหม่ 2 ครั้ง · ผู้สนับสนุน = ไม่จำกัด', JSON.stringify(r.run) === '[3,3,2]' && r.supRr > 99, r);
+  ok('การ์ด: โหมดตัวละคร 5 ใบ · ผู้สนับสนุนไม่ล็อก · คนทั่วไปล็อกใบ 4–5 · คลาสสิก 3 ใบไม่ล็อก', JSON.stringify(r.cards) === '[5,false,false]' && JSON.stringify(r.lock) === '[false,true,true]' && JSON.stringify(r.classic) === '[3,false]', r);
+  ok('SCHEMA_V = 5', r.v === 5, r.v);
 }
 
 console.log(`\nผล: ผ่าน ${pass} · ไม่ผ่าน ${fail}`);

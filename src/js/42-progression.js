@@ -210,7 +210,9 @@ function prepareRun(G,P,ch,modeId){
   if(!P.loadout.length){ const f=P.cls.skills[0]; P.loadout=[f]; P.rank[f]=Math.max(1,P.rank[f]|0); }
   P.lv=1; P.xp=0; P.need=xpNeed(1);                                     // proficiency restarts every run
   const how=PG_START[modeId]||'first';
-  if(how==='first') P.skills=[makeSkill(P.loadout[0])];
+  P.sl={}; for(const id of P.loadout){ const v=Math.min(slOf(ch,id),P.rank[id]||1); if(v>1) P.sl[id]=v; }   // starting Lv (28)
+  G.rerolls=runRerolls();                                               // 2 · supporter: unlimited (28)
+  if(how==='first'){ const s=makeSkill(P.loadout[0]); if(P.sl[s.id]) s.lv=P.sl[s.id]; P.skills=[s]; }
   else P.skills=P.loadout.map(id=>{ const s=makeSkill(id);
     if(how==='rank'){ s.lv=P.rank[id]; const e=s.def.evo; if(s.lv>=5&&e&&((ch.st||{})[e.s]|0)>=25) s.evolved=true; }
     return s; });

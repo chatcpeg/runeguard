@@ -647,6 +647,28 @@ button.pjb-card{cursor:pointer}
 .tf-act{display:flex;gap:8px;align-items:center;flex-wrap:wrap}
 .tf-why{color:var(--ash);font-size:12px}
 @media (prefers-reduced-motion:no-preference){.tf-node{transition:border-color .15s,box-shadow .2s,background .2s}}
+/* ---------- 59a shop + starting Lv + 5 cards ---------- */
+.tf-sl{display:flex;align-items:center;gap:8px;flex-wrap:wrap;font-size:14px;padding:6px 10px;border:1px solid var(--line);border-radius:12px;background:var(--well)}
+.tf-sl>span{margin-right:auto}
+.pks-shop{display:flex;gap:8px;flex-wrap:wrap;margin:8px 0}
+.sp-win,.sl-win{display:flex;flex-direction:column;gap:12px}
+.sp-why{margin:0;padding:8px 12px;border-radius:10px;background:rgba(240,181,69,.12);color:var(--rune);font-size:14px}
+.sp-stat{display:flex;gap:16px;align-items:center;flex-wrap:wrap}
+.sp-stat>div{display:flex;flex-direction:column}
+.sp-stat small{color:var(--ash);font-size:12px}
+.sp-stat .tf-q{margin-left:auto}
+.sp-list{list-style:none;margin:0;padding:0;display:flex;flex-direction:column;gap:8px}
+.sp-item{display:flex;align-items:center;gap:10px;padding:10px;border:1px solid var(--line);border-radius:12px;background:var(--card)}
+.sp-item.sup{border-color:var(--rune-deep);background:linear-gradient(160deg,#2f2612,var(--card))}
+.sp-ic{font-size:24px;flex:none;width:36px;text-align:center}
+.sp-m{min-width:0;flex:1;display:flex;flex-direction:column;gap:2px}
+.sp-m small{color:var(--ash);font-size:12px}
+.sp-item .btn{flex:none;white-space:nowrap}
+.sp-note,.sp-dev{margin:0;color:var(--ash);font-size:12px}
+.card.locked{opacity:.55;filter:saturate(.35)}
+.card.locked::after{content:'🔒 ผู้สนับสนุน';position:absolute;right:12px;top:10px;font-size:11px;font-weight:700;color:var(--rune)}
+.card.locked kbd{display:none}
+.cards.five{max-height:calc(100vh - 210px);overflow-y:auto}
 /* 60-field.css · lane F · M0 stub (empty) */
 /* 66-boss.css · lane H · M0 stub (empty) */
 </style>
@@ -2042,9 +2064,9 @@ function buildChoices(){
   const avail=P.loadout||P.cls.skills.concat(P.adv?P.adv.skills:[]);
   for(const id of avail) if(!owned.has(id)&&cap(id)>0) pool.push({k:'new',id,w:P.adv&&P.adv.skills.indexOf(id)>=0?3:1.4});
   for(const k in STATS) if(P.sx||P.stats[k]<5) pool.push({k:'stat',stat:k,w:.85});   // character runs: stat cards never run out (26)
-  const out=[];
-  while(out.length<3&&pool.length){ let tot=0; for(const o of pool) tot+=o.w; let r=Math.random()*tot,idx=0; for(;idx<pool.length-1;idx++){ r-=pool[idx].w; if(r<=0) break; } out.push(pool[idx]); pool.splice(idx,1); }
-  const fill=[{k:'potion'},{k:'gold'},{k:'gold'}]; let fi=0; while(out.length<3) out.push(fill[fi++]);
+  const out=[], N=typeof cardCount==='function'?cardCount():3;          // character runs: 5 cards (28 · free players pick from 3)
+  while(out.length<N&&pool.length){ let tot=0; for(const o of pool) tot+=o.w; let r=Math.random()*tot,idx=0; for(;idx<pool.length-1;idx++){ r-=pool[idx].w; if(r<=0) break; } out.push(pool[idx]); pool.splice(idx,1); }
+  const fill=[{k:'potion'},{k:'gold'},{k:'gold'},{k:'potion'},{k:'gold'}]; let fi=0; while(out.length<N) out.push(fill[fi++]);
   return out;
 }
 function cardHTML(o,i){
@@ -2059,19 +2081,24 @@ function cardHTML(o,i){
   }
   return `<span class="ic" aria-hidden="true">${ic}</span><span class="tag">${tag}</span><span class="nm">${nm}</span><span class="ds">${ds}</span>${df?`<span class="df">${df}</span>`:''}<kbd>${i+1}</kbd>`;
 }
-function renderCards(){ const box=$('#lvCards'); box.innerHTML=''; G.choices.forEach((o,i)=>{ const b=document.createElement('button'); b.type='button'; b.className='card '+o.k; b.innerHTML=cardHTML(o,i); b.addEventListener('click',()=>choose(i)); box.appendChild(b); });
-  const rr=$('#btnReroll'); rr.textContent=`สุ่มใหม่ (${G.rerolls})`; rr.disabled=G.rerolls<=0; }
+function renderCards(){ const box=$('#lvCards'); box.innerHTML=''; G.choices.forEach((o,i)=>{ const b=document.createElement('button'); b.type='button'; b.className='card '+o.k; b.innerHTML=cardHTML(o,i);
+    if(typeof cardLocked==='function'&&cardLocked(i)){ b.classList.add('locked'); b.setAttribute('aria-label','ล็อก · เฉพาะผู้สนับสนุน'); }
+    b.addEventListener('click',()=>choose(i)); box.appendChild(b); });
+  box.classList.toggle('five',G.choices.length>3);
+  const rr=$('#btnReroll'), sh=!!G.char&&typeof shopOpen==='function';   // character runs: out of rerolls → 🔒 opens the shop
+  rr.textContent=G.rerolls>99?'สุ่มใหม่ (ไม่จำกัด)':G.rerolls<=0&&sh?'🔒 สุ่มใหม่ · ผู้สนับสนุน':`สุ่มใหม่ (${G.rerolls})`; rr.disabled=G.rerolls<=0&&!sh; }
 function openLevel(kind){
   G.ui='level'; G.choiceKind=kind; G.choices=buildChoices();
   $('#lvEyebrow').textContent=kind==='chest'?'หีบสมบัติจากศัตรูชั้นยอด':'เลเวลอัพ';
   $('#lvTitle').textContent=kind==='chest'?'เลือกของรางวัล':'Lv '+(P.lv-G.pendingLv+1);
   renderCards(); show('scrLevel'); G.uiReadyAt=performance.now()+260; sfx('level');
 }
-function choose(i){ if(!G||G.ui!=='level'||performance.now()<G.uiReadyAt) return; const o=G.choices[i]; if(!o) return; applyChoice(o); if(G.choiceKind==='chest') G.pendingChest--; else G.pendingLv--; if(G.pendingLv<=0&&G.pendingChest<=0) G.cardReq=false; show(null); G.ui=null; refreshSkillBar(); keepAwake(); }
-function reroll(){ if(!G||G.ui!=='level'||G.rerolls<=0) return; G.rerolls--; G.choices=buildChoices(); renderCards(); }
+function choose(i){ if(!G||G.ui!=='level'||performance.now()<G.uiReadyAt) return; const o=G.choices[i]; if(!o) return;
+  if(typeof cardLocked==='function'&&cardLocked(i)){ if(typeof shopOpen==='function') shopOpen('cards'); return; } applyChoice(o); if(G.choiceKind==='chest') G.pendingChest--; else G.pendingLv--; if(G.pendingLv<=0&&G.pendingChest<=0) G.cardReq=false; show(null); G.ui=null; refreshSkillBar(); keepAwake(); }
+function reroll(){ if(!G||G.ui!=='level') return; if(G.rerolls<=0){ if(G.char&&typeof shopOpen==='function') shopOpen('reroll'); return; } G.rerolls--; G.choices=buildChoices(); renderCards(); }
 function applyChoice(o){
   switch(o.k){
-    case 'new': P.skills.push(makeSkill(o.id)); break;
+    case 'new':{ const s=makeSkill(o.id); if(P.sl&&P.sl[o.id]>1) s.lv=P.sl[o.id]; P.skills.push(s); break; }   // starting Lv (28) · character runs
     case 'up': o.s.lv++; break;
     case 'evo': o.s.evolved=true; banner('วิวัฒนาการ!',o.s.def.evo.n); G.fx.push({k:'ring',x:P.x,y:P.y,r0:10,r1:160,t:0,dur:.6,c:'#f0b545',w:12,follow:true,dead:false}); G.fx.push({k:'lvup',x:P.x,y:P.y,t:0,dur:1,follow:true,dead:false}); break;
     case 'stat': P.stats[o.stat]++; break;
@@ -2099,7 +2126,7 @@ function checkUI(){ if(G.ui||G.over) return; if(G.mode.cards===false) return; if
   if(!G.char&&P.lv-G.pendingLv+1>=ADV_LV&&!P.adv&&!P.advOffered){ openAdv(); return; } if(G.pendingChest>0){ openLevel('chest'); return; } if(G.pendingLv>0) openLevel('lv'); }
 function autoUI(){ if(G.over) return; if(!G.char&&P.lv>=ADV_LV&&!P.adv&&!P.advOffered){ P.advOffered=true; applyAdv(pick(P.cls.adv)); }
   if(G.mode.cards===false) return;   // 'manual' modes still let the bot pick
-  let guard=0; while((G.pendingChest>0||G.pendingLv>0)&&guard++<60){ const ch=buildChoices(); const o=ch.find(c=>c.k==='evo')||ch.find(c=>c.k==='new')||ch.find(c=>c.k==='up')||ch[(Math.random()*ch.length)|0]; applyChoice(o); if(G.pendingChest>0) G.pendingChest--; else G.pendingLv--; } }
+  let guard=0; while((G.pendingChest>0||G.pendingLv>0)&&guard++<60){ const ch=buildChoices().filter((c,i)=>!(typeof cardLocked==='function'&&cardLocked(i))); const o=ch.find(c=>c.k==='evo')||ch.find(c=>c.k==='new')||ch.find(c=>c.k==='up')||ch[(Math.random()*ch.length)|0]; applyChoice(o); if(G.pendingChest>0) G.pendingChest--; else G.pendingLv--; } }
 function pauseGame(){ if(!G||G.ui) return; G.ui='pause'; for(const k in keys) keys[k]=false; joy.on=false; releaseWake();
   const rows=P.skills.map(s=>`<div class="dmg-row"><span class="dmg-n">${s.def.i} ${s.evolved?s.def.evo.n:s.def.n} <em>${s.evolved?'★':'Lv'+s.lv}</em></span><span class="dmg-bar"><span style="width:${Math.min(100,s.dealt/Math.max(1,G.totalDmg)*100)}%"></span></span><span class="dmg-v">${fmtNum(s.dealt)}</span></div>`).join('');
   $('#pauseBox').innerHTML=`<div class="dmg-title">${G.mode.pauseTitle()}</div>${rows}`;
@@ -2437,7 +2464,7 @@ addEventListener('keydown',e=>{
   if(G&&!G.ui&&['ArrowUp','ArrowDown','ArrowLeft','ArrowRight','Space'].includes(e.code)) e.preventDefault();
   if(e.code==='KeyM'){ toggleMute(); return; }
   if(!G){ if(e.code==='Enter'){ if(!$('#scrTitle').hidden){ if(!(document.activeElement&&document.activeElement.tagName==='BUTTON')) startRun(selected); } else if(UIX.enter) UIX.enter(); } return; }
-  const n={Digit1:0,Digit2:1,Digit3:2,Numpad1:0,Numpad2:1,Numpad3:2}[e.code];
+  const n={Digit1:0,Digit2:1,Digit3:2,Digit4:3,Digit5:4,Numpad1:0,Numpad2:1,Numpad3:2,Numpad4:3,Numpad5:4}[e.code];
   if(G.ui==='level'){ if(n!==undefined) choose(n); else if(e.code==='KeyR') reroll(); }
   else if(G.ui==='adv'){ if(n!==undefined&&n<2) pickAdv(n); }
   else if(G.ui==='pause'){ if(e.code==='KeyP'||e.code==='Escape') resumeGame(); }
@@ -2935,8 +2962,9 @@ function tfText(nd,l){
 function tfOf(ch,id){ return ch&&ch.tr&&svHas(ch.tr,id)&&ch.tr[id]||{}; }
 function tfLv(ch,id,nid){ return tfOf(ch,id)[nid]|0; }
 function tfSpentOne(ch,id){ let n=0; const t=tfOf(ch,id); for(const nd of tfNodes(id)) n+=(t[nd.id]|0)*nd.cost; return n; }
-function tfSpent(ch){ let n=0; for(const id in (ch&&ch.tr)||{}) n+=tfSpentOne(ch,id); return n; }
-function tfTotal(ch){ return ch?Math.max(0,ch.lv|0):0; }                // 1 rune point per Base Lv
+function tfResetGain(ch,id){ return tfSpentOne(ch,id)+(typeof slSpentTo==='function'&&ch&&ch.sl&&svHas(ch.sl,id)?slSpentTo(ch.sl[id]|0):0); }
+function tfSpent(ch){ let n=0; for(const id in (ch&&ch.tr)||{}) n+=tfSpentOne(ch,id); return n+(typeof slSpent==='function'?slSpent(ch):0); }   // + starting Lv (28)
+function tfTotal(ch){ return ch?Math.max(0,ch.lv|0)+Math.max(0,ch.rb|0):0; }   // 1 rune point per Base Lv + bought runes moved here (28)
 function tfFree(ch){ return Math.max(0,tfTotal(ch)-tfSpent(ch)); }
 function tfSpecials(ch,id){ return ['A3','B3','C3'].filter(n=>tfLv(ch,id,n)>0).length; }
 // requirements of node nd of skill id → [{t, ok}]
@@ -2957,30 +2985,36 @@ function tfWhy(ch,id,nid){
   if(typeof pgSkillPool==='function'&&pgSkillPool(ch).indexOf(id)<0) return 'สกิลนี้ยังใช้ไม่ได้';
   if(tfLv(ch,id,nid)>=nd.max) return 'เต็มแล้ว';
   const miss=tfReqs(ch,id,nd).find(q=>!q.ok); if(miss) return 'ต้อง: '+miss.t;
-  if(tfFree(ch)<nd.cost) return 'แต้มรูนไม่พอ (ต้องใช้ '+nd.cost+' มี '+tfFree(ch)+')';
+  const w=typeof shopWallet==='function'?shopWallet():0;
+  if(tfFree(ch)+w<nd.cost) return 'แต้มรูนไม่พอ (ต้องใช้ '+nd.cost+' มี '+tfFree(ch)+(w?' + กระเป๋า '+w:'')+')';
   return ''; }
 function tfBuy(ch,id,nid){
   ch=typeof pgFresh==='function'?pgFresh(ch):ch; if(!ch||tfWhy(ch,id,nid)!=='') return false;
+  const nd=tfNode(id,nid); if(tfFree(ch)<nd.cost&&!(typeof shopFund==='function'&&shopFund(ch,nd.cost-tfFree(ch)))) return false;   // bought runes from the wallet
   if(!ch.tr) ch.tr={}; const t=ch.tr[id]||(ch.tr[id]={}); t[nid]=(t[nid]|0)+1;
   if(typeof pgSave==='function') pgSave(ch,'tree',true); return true; }
 // reset one tree: same rules as the skill reset (free below Lv 20 · one free reset per character · then a ม้วนลืมเลือน)
 function tfResetWay(ch){ if((ch.lv|0)<BAL.RESET.freeBelow) return 'free'; return ch.resets&&ch.resets.trFree?'freeOnce':'scroll'; }
 function tfReset(ch,id,o){
-  ch=typeof pgFresh==='function'?pgFresh(ch):ch; if(!ch||(typeof pgRO==='function'&&pgRO())||!tfSpentOne(ch,id)) return false;
+  ch=typeof pgFresh==='function'?pgFresh(ch):ch; if(!ch||(typeof pgRO==='function'&&pgRO())||!tfResetGain(ch,id)) return false;
   const way=tfResetWay(ch);
   if(way==='scroll'){ if(!(o&&o.scroll)||!(typeof invRemove==='function'&&invRemove(ch,'u_forget',1))) return false; }
   if(way==='freeOnce') ch.resets.trFree=0;
-  delete ch.tr[id]; if(typeof pgSave==='function') pgSave(ch,'resetTree',true); return true; }
+  if(ch.tr) delete ch.tr[id]; if(ch.sl) delete ch.sl[id]; if(typeof pgSave==='function') pgSave(ch,'resetTree',true); return true; }   // the tree and its starting Lv
 // keep only what the rules allow (save load · after resetSkills · prepareRun): nodes in tree order whose requirements hold with
 // the nodes kept so far · then whole trees dropped from the last until the spend fits the rune points (tester r1 F1/F2)
-function tfSanitize(ch){ if(!ch||!ch.tr) return ch; const tmp={sk:ch.sk||{}, job:ch.job, lv:ch.lv, tr:{}}, out={};
+function tfSanitize(ch){ if(!ch) return ch;
+  if(ch.sl){ const sl={}; for(const id of Object.keys(ch.sl)){ const v=ch.sl[id]|0, r=(ch.sk||{})[id]|0; if(svHas(SK,id)&&v>=2&&r>=2) sl[id]=Math.min(v,r); } ch.sl=sl; }
+  if(!ch.tr) ch.tr={}; const tmp={sk:ch.sk||{}, job:ch.job, lv:ch.lv, tr:{}}, out={};
   for(const id of Object.keys(ch.tr)){ const t=ch.tr[id]; if(!t||!TFD[id]||!svHas(TFD,id)) continue; tmp.tr[id]={};
     for(const nd of tfNodes(id)){ const want=Math.min(nd.max,t[nd.id]|0); for(let l=0;l<want;l++){ if(!tfReqs(tmp,id,nd).every(q=>q.ok)) break; tmp.tr[id][nd.id]=l+1; } }
     if(Object.keys(tmp.tr[id]).length) out[id]=tmp.tr[id]; else delete tmp.tr[id]; }
-  const ids=Object.keys(out); while(ids.length&&tfSpent({tr:out})>tfTotal(ch)) delete out[ids.pop()];
+  const ids=Object.keys(out), sls=Object.keys(ch.sl||{}), over=()=>tfSpent({tr:out, sl:ch.sl})>tfTotal(ch);
+  while(sls.length&&over()) delete ch.sl[sls.pop()];                   // starting Lv first (the dearer, simpler loss) · then whole trees
+  while(ids.length&&over()) delete out[ids.pop()];
   ch.tr=out; return ch; }
 // run copy (prepareRun): only skills of the character's pool
-function tfRunTree(ch){ const o={}; ch=tfSanitize(JSON.parse(JSON.stringify({sk:ch.sk, job:ch.job, lv:ch.lv, tr:ch.tr||{}, cls:ch.cls}))); const pool=typeof pgSkillPool==='function'?pgSkillPool(ch):Object.keys(ch.tr||{});
+function tfRunTree(ch){ const o={}; ch=tfSanitize(JSON.parse(JSON.stringify({sk:ch.sk, job:ch.job, lv:ch.lv, rb:ch.rb|0, sl:ch.sl||{}, tr:ch.tr||{}, cls:ch.cls}))); const pool=typeof pgSkillPool==='function'?pgSkillPool(ch):Object.keys(ch.tr||{});
   for(const id of pool){ const t=tfOf(ch,id); if(Object.keys(t).length) o[id]=Object.assign({},t); } return o; }
 
 /* ---- in-run: numbers + effects of one skill (called from sxMods) ---- */
@@ -3063,6 +3097,49 @@ function tfFork(s,from,hit,dmg,jump){ const F=s.fx.fork;
       for(const e of query(cur.x,cur.y,jump+60)){ if(e.dead||hit.indexOf(e.id)>=0) continue; const d=(e.x-cur.x)**2+(e.y-cur.y)**2; if(d<bd){ bd=d; nx=e; } }
       if(!nx) break; hit.push(nx.id); pts.push([nx.x,nx.y-nx.r*.4]); damageEnemy(nx,dmg*.7,s,{knock:40,stun:.05}); cur=nx; }
     if(pts.length>1) G.fx.push({k:'chain',pts,t:0,dur:.22,c:s.def.c,paths:null,jt:-1,dead:false}); } }
+/* ================= 28-shop.js · lane B · shop rules (docs/PROPOSAL-shop.md) · pure: no DOM ================= */
+// Supporter pack (30 days) + rune packs. What the player owns (ENT) comes from the server later (rg_purchases, step ค.);
+// until then only the #dev test switch (RG.shop.grant) fills it · never stored in the save, so a save can't grant it.
+// Bought runes sit in the account wallet: ENT.runes bought − acct.ru moved to characters (ch.rb, part of tfTotal in 27).
+const RSHOP={
+  products:[
+    {id:'sup30', n:'แพคสนับสนุน 30 วัน', i:'💎', thb:35, days:30, d:'สุ่มการ์ดใหม่ไม่จำกัด · เลือกการ์ดเลเวลอัปได้ทั้ง 5 ใบ · ซื้อซ้ำ = ต่อเวลาอีก 30 วัน (ไม่ต่ออัตโนมัติ)'},
+    {id:'rune60', n:'รูน 60', i:'🔷', thb:35, runes:60, d:'ใช้ในต้นไม้สกิลและระดับเริ่มต้นของสกิล'},
+    {id:'rune200', n:'รูน 200', i:'🔷', thb:99, runes:200, d:'คุ้มขึ้นราว 18%'},
+    {id:'rune700', n:'รูน 700', i:'💠', thb:299, runes:700, d:'คุ้มขึ้นราว 37%'},
+    {id:'rune2500', n:'รูน 2500', i:'💠', thb:899, runes:2500, d:'คุ้มขึ้นราว 49%'}],
+  cards:5, freeCards:3, freeRerolls:2,
+  slCost:[0,0,10,15,20,25,30,35,40]};       // rune cost to raise a skill's starting Lv to n (from n−1)
+let ENT={sup:0, runes:0, src:'none'}, entOk=false;   // sup = supporter until (ms) · runes = bought in total · read lazily (nothing at load)
+function entGet(){ if(!entOk){ entOk=true; try{ entLoad(); }catch(e){} } return ENT; }
+function entLoad(){ ENT={sup:0, runes:0, src:'none'};
+  if(typeof location==='undefined'||location.hash!=='#dev'||typeof localStorage==='undefined') return ENT;
+  try{ const o=JSON.parse(localStorage.getItem('runeguard.devEnt')||'null'); if(o&&typeof o==='object'){
+    ENT={sup:Math.max(0,+o.sup||0), runes:Math.max(0,Math.min(1e7,o.runes|0)), src:'dev'}; } }catch(e){}
+  return ENT; }
+function isSupporter(){ return entGet().sup>Date.now(); }
+function supDaysLeft(){ return isSupporter()?Math.ceil((entGet().sup-Date.now())/864e5):0; }
+function shopWallet(){ const A=SAVE&&SAVE.acct; return Math.max(0,(entGet().runes|0)-((A&&A.ru)|0)); }
+// move `need` bought runes from the account wallet onto character ch (only when the wallet has them all)
+function shopFund(ch,need){ need=Math.ceil(need); if(!(need>0)) return true; const A=SAVE&&SAVE.acct; if(!A||shopWallet()<need) return false;
+  A.ru=(A.ru|0)+need; ch.rb=(ch.rb|0)+need; return true; }
+// level-up cards of a character run: 5 shown · free players pick from the first 3 (classic keeps its 3 cards)
+function cardCount(){ return G&&G.char&&G.mode&&G.mode.cards!==false?RSHOP.cards:3; }
+function cardLocked(i){ return !!(G&&G.char)&&i>=RSHOP.freeCards&&!isSupporter(); }
+function runRerolls(){ return isSupporter()?1e9:RSHOP.freeRerolls; }
+
+/* ---- starting Lv of a skill (ch.sl[id] = Lv 2…★) ---- */
+function slOf(ch,id){ return Math.max(1,(ch&&ch.sl&&svHas(ch.sl,id)?ch.sl[id]|0:1)); }
+function slSpentTo(lv){ let n=0; for(let i=2;i<=lv;i++) n+=RSHOP.slCost[i]|0; return n; }
+function slSpent(ch){ let n=0; for(const id in (ch&&ch.sl)||{}) n+=slSpentTo(ch.sl[id]|0); return n; }
+function slWhy(ch,id){ if(!ch) return 'ไม่มีตัวละคร'; if(typeof pgRO==='function'&&pgRO()) return 'ข้อมูลเป็นเวอร์ชันใหม่กว่าแอป แก้ไขไม่ได้';
+  const cur=slOf(ch,id), nx=cur+1, r=(ch.sk||{})[id]|0;
+  if(!r) return 'ยังไม่ได้ฝึกสกิลนี้'; if(nx>r) return 'ต้องฝึกลำต้นถึง ★'+nx+' ก่อน (ตอนนี้ ★'+r+')';
+  const c=RSHOP.slCost[nx]|0, free=tfFree(ch); if(free+shopWallet()<c) return 'รูนไม่พอ (ต้องใช้ '+c+' มี '+free+(shopWallet()?' + กระเป๋า '+shopWallet():'')+')';
+  return ''; }
+function slBuy(ch,id){ ch=typeof pgFresh==='function'?pgFresh(ch):ch; if(!ch||slWhy(ch,id)!=='') return false;
+  const nx=slOf(ch,id)+1, c=RSHOP.slCost[nx]; if(tfFree(ch)<c&&!shopFund(ch,c-tfFree(ch))) return false;
+  if(!ch.sl) ch.sl={}; ch.sl[id]=nx; if(typeof pgSave==='function') pgSave(ch,'startLv',true); return true; }
 /* ================= 30-balance.js · lane C · pure · every number of §2–§5 (single source) ================= */
 // Tune here, then measure with RG.sim. Formulas are DESIGN §2.2 · §2.4 · §3.2–3.5 · §4.6–4.12 · §5.3–5.6.
 // Rule for every multiplier at its neutral input (T0, Lv1, +0): it returns exactly 1 / 22 / 0, so classic-equal paths stay bit-equal.
@@ -3891,8 +3968,8 @@ DEV.loot={
 // Forward compatibility inside v1: an item / rune id this app does not know survives validation (item → unk:1, rune id kept in
 // its socket), so a newer client's loot is never destroyed. A new class, job, skill or passive does NOT survive (they are matched
 // against CLS / SK / PASSIVES): adding one needs a SCHEMA_V bump, so older apps open such a save read-only instead.
-const SCHEMA_V=4;                                    // 2: acct.up (gold upgrades) · 3: up.stat · 4: ch.tr (skill trees) + ★6–8 + resets.trFree · an older app opens a newer save read-only, so it never drops what was paid for
-const SV_APP='2.3.0';                                 // app version stamped into every local write (saveSummary.appVer)
+const SCHEMA_V=5;                                    // 2: acct.up (gold upgrades) · 3: up.stat · 4: ch.tr (skill trees) + ★6–8 + resets.trFree · 5: ch.rb / ch.sl / acct.ru (bought runes, starting Lv) · an older app opens a newer save read-only, so it never drops what was paid for
+const SV_APP='2.4.0';                                 // app version stamped into every local write (saveSummary.appVer)
 const SV_NAME_RE=/^[\p{L}\p{M}\p{N} ]{2,16}$/u;
 const SV_SLOTS=['weapon','off','head','face','body','cloak','hands','feet','neck','ring'];
 const SV_WEAPON={swordsman:'w_sword_1', mage:'w_staff_1', archer:'w_bow_1', cleric:'w_rod_1', thief:'w_dagger_1'};   // §3.8 starter (M2)
@@ -3933,7 +4010,7 @@ function svOwner(o){ return typeof o==='string'&&/^[A-Za-z0-9_-]{1,64}$/.test(o)
 function svEmptyEq(){ const o={}; for(const k of SV_SLOTS) o[k]=null; return o; }
 function svNewAcct(){ return {gold:0, marks:0, stash:[], stashMax:BAL.PRICE.stash.start, survTier:0, kits:0,
   records:{classic:{}, survival:{}, boss:{}}, fboss:{}, bossUnlock:{colossus:0, lich:0, king:0},
-  daily:{day:'', surv:{}, boss:{}, rushWeek:''}, up:{}, flags:{pioneer:false, migratedBest:false, pioneerCloak:false, tips:{}}, runIds:[]}; }
+  daily:{day:'', surv:{}, boss:{}, rushWeek:''}, up:{}, ru:0, flags:{pioneer:false, migratedBest:false, pioneerCloak:false, tips:{}}, runIds:[]}; }
 
 function newSave(owner){ const t=Date.now();
   return {v:SCHEMA_V, sid:uid('s_'), owner:svOwner(owner), created:t, mt:t, wc:0, wb:uid('w_'), play:0, app:SV_APP, acct:svNewAcct(), chars:[], active:null}; }
@@ -3942,7 +4019,7 @@ function newChar(name,clsId){
   const ch={id:uid('c_'), name:svCleanName(name)||c.n, cls:c.id, job:null, created:t, play:0, kills:0, deaths:0,
     lv:1, xp:0, pts:BAL.START_PTS, st:{STR:0,VIT:0,AGI:0,DEX:0,INT:0,LUK:0}, jlv:1, jxp:0, sp:BAL.START_SP,
     sk:{[first]:1}, pas:{}, load:[first], eq:svEmptyEq(), inv:[], bagMax:BAL.PRICE.bagStart, quick:[null,null],
-    trial:{t2:0}, zone:'z1', visited:['z1'], bestiary:{}, resets:{free:1, skFree:1, trFree:1}, tr:{}, dye:{}};
+    trial:{t2:0}, zone:'z1', visited:['z1'], bestiary:{}, resets:{free:1, skFree:1, trFree:1}, tr:{}, rb:0, sl:{}, dye:{}};
   // §3.8 starter kit: the class's training weapon, worn · small potion ×3 on the first quick slot (tier 1 has no sockets: no RNG)
   // the weapon is bound (b:1 = never sells: no gold from create → sell → delete) · createChar (41) limits the potions (BAL.KIT_POTS)
   const wid=SV_WEAPON[c.id];
@@ -3979,7 +4056,8 @@ function svMig0(o,best){   // v0 = the old single-file game: nothing but runegua
 function svMig1(o){ const s=Object.assign({},o); s.v=2; return s; }   // v1 → v2: only adds acct.up (validateSave fills it empty)
 function svMig2(o){ const s=Object.assign({},o); s.v=3; return s; }   // v2 → v3: only adds acct.up.stat
 function svMig3(o){ const s=Object.assign({},o); s.v=4; return s; }   // v3 → v4: only adds ch.tr / ★6–8 / resets.trFree
-const SV_MIG={0:svMig0, 1:svMig1, 2:svMig2, 3:svMig3};      // SV_MIG[v](o) → save of version v+1
+function svMig4(o){ const s=Object.assign({},o); s.v=5; return s; }   // v4 → v5: only adds ch.rb / ch.sl / acct.ru
+const SV_MIG={0:svMig0, 1:svMig1, 2:svMig2, 3:svMig3, 4:svMig4};      // SV_MIG[v](o) → save of version v+1
 function migrateSave(o,legacyBest){
   if(!svObj(o)) o=null;
   const v=o?o.v:undefined;
@@ -4032,7 +4110,8 @@ function svAcct(a){
   o.stashMax=svInt(a.stashMax,BAL.PRICE.stash.start,cap.stash,BAL.PRICE.stash.start);
   o.stash=svTrim(svItemList(a.stash,new Map()),o.stashMax,null);         // uids re-checked against the bags in validateSave
   o.survTier=svInt(a.survTier,0,BAL.SURV.maxT,0);
-  o.kits=svInt(a.kits,0,999,0);                                          // characters ever created (starter potions: BAL.KIT_POTS)
+  o.kits=svInt(a.kits,0,999,0); o.ru=svInt(a.ru,0,1e9,0);              // ru: bought runes moved to characters (28)
+                                          // characters ever created (starter potions: BAL.KIT_POTS)
   const r=svObj(a.records)?a.records:{};
   for(const k of svKeys(r.classic)) if(svHas(CLS,k)){ const x=svRecClassic(r.classic[k]); if(x) o.records.classic[k]=x; }
   for(const cid of svKeys(r.survival)){ if(!/^c_[a-z0-9]{1,24}$/.test(cid)) continue; const m={}, src=r.survival[cid];
@@ -4073,6 +4152,8 @@ function svChar(c,seen){
   const tr=svObj(c.tr)?c.tr:{}; o.tr={};                                // skill trees (27): known nodes only, each 0…max
   for(const id of cls.skills.concat(adv?adv.skills:[])){ const t=svObj(tr[id])?tr[id]:null; if(!t) continue; const q={};
     for(const nd of tfNodes(id)){ const l=svInt(t[nd.id],0,nd.max,0); if(l) q[nd.id]=l; } if(Object.keys(q).length) o.tr[id]=q; }
+  o.rb=svInt(c.rb,0,1e9,0);                                              // bought runes moved onto this character (28)
+  const sl=svObj(c.sl)?c.sl:{}; o.sl={}; for(const id of cls.skills.concat(adv?adv.skills:[])){ const v=svInt(sl[id],0,8,0); if(v>=2) o.sl[id]=v; }
   tfSanitize(o);                                                         // requirements + rune points (lv) hold, like sp / pts
   if(!o.sk[first]) o.sk[first]=1;                                   // the free ★1 of the first skill never goes away
   const pas=svObj(c.pas)?c.pas:{}; o.pas={};
@@ -4652,7 +4733,9 @@ function prepareRun(G,P,ch,modeId){
   if(!P.loadout.length){ const f=P.cls.skills[0]; P.loadout=[f]; P.rank[f]=Math.max(1,P.rank[f]|0); }
   P.lv=1; P.xp=0; P.need=xpNeed(1);                                     // proficiency restarts every run
   const how=PG_START[modeId]||'first';
-  if(how==='first') P.skills=[makeSkill(P.loadout[0])];
+  P.sl={}; for(const id of P.loadout){ const v=Math.min(slOf(ch,id),P.rank[id]||1); if(v>1) P.sl[id]=v; }   // starting Lv (28)
+  G.rerolls=runRerolls();                                               // 2 · supporter: unlimited (28)
+  if(how==='first'){ const s=makeSkill(P.loadout[0]); if(P.sl[s.id]) s.lv=P.sl[s.id]; P.skills=[s]; }
   else P.skills=P.loadout.map(id=>{ const s=makeSkill(id);
     if(how==='rank'){ s.lv=P.rank[id]; const e=s.def.evo; if(s.lv>=5&&e&&((ch.st||{})[e.s]|0)>=25) s.evolved=true; }
     return s; });
@@ -5788,7 +5871,8 @@ function pksRender(){
   if(!c){ root.innerHTML=prgTop('สกิล','')+'<p class="prg-empty">ยังไม่มีตัวละคร · สร้างตัวละครที่เมนูหลักก่อน</p>'; return; }
   const tier=pgTier(ch), n=BAL.LOADOUT[tier], a=pgAdvOf(ch), load=ch.load||[];
   if(pksTab!==1&&pksTab!==2) pksTab=tier; if(pksSel>=load.length) pksSel=-1;
-  let h=prgTop('สกิล','แต้มสกิล <b>'+(ch.sp|0)+'</b> · รูน <b>'+tfFree(ch)+'</b><br>Job '+(ch.jlv|0)+'/'+pgJobCap(ch)+' <button type="button" class="tf-q" data-a="help" aria-label="อธิบายหน้าสกิล">?</button>')+(saveReadOnly()?prgRO():'');
+  let h=prgTop('สกิล','แต้มสกิล <b>'+(ch.sp|0)+'</b> · รูน <b>'+tfFree(ch)+'</b><br>Job '+(ch.jlv|0)+'/'+pgJobCap(ch)+' <button type="button" class="tf-q" data-a="help" aria-label="อธิบายหน้าสกิล">?</button>')
+    +'<div class="pks-shop"><button type="button" class="btn ghost" data-a="startlv">🚀 ระดับเริ่มต้น</button><button type="button" class="btn ghost" data-a="shop">💎 ร้านรูน</button></div>'+(saveReadOnly()?prgRO():'');
   h+=`<div class="box pks-load"><div class="pks-lh"><b>ช่องติดตัว (${load.length}/${n})</b><small>แตะสองช่องเพื่อสลับ · ช่องแรกคือสกิลเริ่มรอบเอาชีวิตรอด</small></div><div class="pks-slots">`;
   for(let i=0;i<n;i++){ const id=load[i], d=id&&SK[id];
     h+=d?`<button type="button" class="pks-sl${i===pksSel?' sel':''}" data-a="slot" data-i="${i}" aria-pressed="${i===pksSel}" aria-label="ช่อง ${i+1} ${esc(d.n)}"><span aria-hidden="true">${d.i}</span>${i?'':'<em>เริ่ม</em>'}<b>★${(ch.sk||{})[id]|0}</b></button>`
@@ -5818,6 +5902,8 @@ function pksClick(e){
     else toast(saveReadOnly()?'แก้ไขไม่ได้':'ช่องเต็ม · แตะช่องที่จะแทนก่อน','info'); }
   else if(a==='reset'){ prgReset(ch,'sk',pksRender); return; }
   else if(a==='tree'){ tfOpen(id); return; }
+  else if(a==='startlv'){ slOpen(); return; }
+  else if(a==='shop'){ shopOpen(''); return; }
   else if(a==='help'){ tfHelp('skills'); return; }
   else return;
   pksRender(); }
@@ -6377,6 +6463,9 @@ function tfRender(){
   let h=`<div class="tf-head"><span class="tf-ic" aria-hidden="true">${d.i}</span><div class="tf-hn"><b>${tfE(d.n)}</b><small>${main?'ค่าหลัก '+main+' · ':''}ลำต้น ${prgStars(r,rc)}</small></div>`
     +`<div class="tf-pts"><b>${tfFree(ch)}</b><small>แต้มรูนเหลือ (${tfSpentOne(ch,id)} ในต้นนี้)</small></div><button type="button" class="tf-q" data-help="tree" aria-label="อธิบายต้นไม้สกิล">?</button></div>`;
   if(saveReadOnly()) h+=prgRO();
+  { const sl=slOf(ch,id), sw=slWhy(ch,id), sc=RSHOP.slCost[sl+1]|0;                 // starting Lv of this skill (28)
+    h+=`<div class="tf-sl"><span>🚀 เริ่มรอบที่ <b>Lv ${sl}</b></span>`+(sl>=r?'':`<button type="button" class="btn ghost" data-a="sl"${sw?' disabled':''} title="${tfE(sw)}">Lv ${sl+1} · ${sc} รูน</button>`)
+      +`<button type="button" class="tf-q" data-help="startlv" aria-label="อธิบายระดับเริ่มต้น">?</button></div>`; }
   h+='<div class="tf-grid"><svg class="tf-links" aria-hidden="true"></svg>';
   for(let b=0;b<3;b++){ const n=N.find(x=>x.b===b); h+=`<div class="tf-colh" style="grid-column:${b+1};grid-row:1"><span aria-hidden="true">${n.bi}</span> ${tfE(n.bn)}</div>`; }
   for(const nd of N){ const st=tfState(ch,id,nd), l=tfLv(ch,id,nd.id);
@@ -6388,10 +6477,10 @@ function tfRender(){
   h+=`<div class="tf-det" aria-live="polite"><div class="tf-dh"><b>${nd.i} ${tfE(nd.n)}</b><small>${nd.crown?'มงกุฎ':nd.kind==='fx'?'ความพิเศษ · สาย'+tfE(nd.bn):'สาย'+tfE(nd.bn)+' · ชั้น '+nd.t}</small></div>`
     +`<p>${l?'ตอนนี้: '+tfE(tfText(nd,l)):'ยังไม่ได้ฝึก'}</p>`+(l<nd.max?`<p class="tf-nx">${l?'ขั้นถัดไป':'เมื่อฝึก'}: ${tfE(tfText(nd,l+1))}</p>`:'')
     +'<ul class="tf-req">'+tfReqs(ch,id,nd).map(q=>`<li class="${q.ok?'ok':''}">${tfE(q.t)}</li>`).join('')+'</ul>'
-    +`<div class="tf-act"><button type="button" class="btn${why?' ghost':''}" data-a="buy"${why?' disabled':''}>${l>=nd.max?'เต็มแล้ว':'ฝึก · '+nd.cost+' แต้มรูน'}</button>`
+    +`<div class="tf-act"><button type="button" class="btn${why?' ghost':''}" data-a="buy"${why?' disabled':''}>${l>=nd.max?'เต็มแล้ว':'ฝึก · '+nd.cost+' แต้มรูน'+(tfFree(ch)<nd.cost?' (ใช้รูนที่ซื้อ '+(nd.cost-tfFree(ch))+')':'')}</button>`
     +`<button type="button" class="tf-q" data-help="node" aria-label="อธิบาย ${tfE(nd.n)} ละเอียด">?</button>`
-    +`<button type="button" class="btn ghost" data-a="reset"${tfSpentOne(ch,id)&&!saveReadOnly()?'':' disabled'}>รีเซ็ตต้นนี้</button></div>`
-    +(why&&l<nd.max?`<p class="tf-why">${tfE(why)}</p>`:'')+'</div>';
+    +`<button type="button" class="btn ghost" data-a="reset"${tfResetGain(ch,id)&&!saveReadOnly()?'':' disabled'}>รีเซ็ตต้นนี้</button></div>`
+    +(why&&l<nd.max?`<p class="tf-why">${tfE(why)}</p>`:'')+(/รูนไม่พอ/.test(why)?'<button type="button" class="btn ghost" data-a="shop">💎 เติมรูน</button>':'')+'</div>';
   box.innerHTML=h; requestAnimationFrame(tfLinks); }
 // connector lines: solid = same branch (and specials → crown) · dashed = cross-branch requirements (A1 → B2 · A2 → B3)
 function tfLinks(){
@@ -6415,12 +6504,14 @@ function tfClick(e){
   const q=e.target.closest('[data-help]'); if(q){ if(q.dataset.help==='node') tfNodeHelp(); else tfHelp(q.dataset.help); return; }
   const n=e.target.closest('[data-n]'); if(n){ TFW.sel=n.dataset.n; tfRender(); const d=TFW.box&&TFW.box.querySelector('.tf-det'); if(d&&d.scrollIntoView) try{ d.scrollIntoView({block:'nearest'}); }catch(_){} return; }
   const b=e.target.closest('[data-a]'); if(!b||b.disabled) return; const ch=tfCh(), id=TFW.id; if(!ch) return;
-  if(b.dataset.a==='buy'){ const nd=tfNode(id,TFW.sel);
+  if(b.dataset.a==='shop'){ shopOpen('rune'); return; }
+  if(b.dataset.a==='sl'){ if(slBuy(ch,id)) toast(SK[id].n+' เริ่มที่ Lv '+slOf(tfCh(),id),'good'); else toast(slWhy(ch,id)||'ซื้อไม่ได้','bad'); }
+  else if(b.dataset.a==='buy'){ const nd=tfNode(id,TFW.sel);
     if(tfBuy(ch,id,TFW.sel)){ toast(nd.n+' ขั้น '+tfLv(tfCh(),id,TFW.sel),'good'); try{ initAudio(); tone(660,.1,'triangle',.07); tone(990,.16,'sine',.05,0,.07); }catch(_){} }
     else toast(tfWhy(ch,id,TFW.sel)||'ฝึกไม่ได้','bad'); }
   else if(b.dataset.a==='reset'){ const way=tfResetWay(ch), have=typeof invCount==='function'?invCount(ch,'u_forget')|0:0;
     const label=way==='free'?'ฟรี (ก่อน Lv '+BAL.RESET.freeBelow+')':way==='freeOnce'?'ฟรี (เหลือ 1 ครั้ง)':'ใช้ม้วนลืมเลือน 1 ม้วน (มี '+have+')';
-    Promise.resolve(confirmBox('รีเซ็ตต้นไม้ '+SK[id].n+'? ได้แต้มรูนคืน '+tfSpentOne(ch,id)+' แต้ม · '+label,{okText:'รีเซ็ต'})).then(ok=>{
+    Promise.resolve(confirmBox('รีเซ็ตต้นไม้ '+SK[id].n+'? ได้แต้มรูนคืน '+tfResetGain(ch,id)+' แต้ม (รวมระดับเริ่มต้น) · '+label,{okText:'รีเซ็ต'})).then(ok=>{
       if(!ok) return; const done=tfReset(tfCh(),id,{scroll:way==='scroll'}); toast(done?'รีเซ็ตต้นไม้แล้ว':'รีเซ็ตไม่ได้',done?'good':'bad'); tfRender(); if(prgVis('scrSkills')) pksRender(); }).catch(er=>console.error(er));
     return; }
   tfRender(); if(prgVis('scrSkills')) pksRender(); }
@@ -6462,6 +6553,73 @@ function tfCardQ(c,o){
 // dev (§7.9): RG.tree.buy('thunder','A1') on the active character · RG.tree.info() = rune points + trees · RG.tree.open(id) · RG.tree.fx() = effects of the running skills
 DEV.tree={ buy(id,n){ const ch=curChar(); return tfBuy(ch,id,n)||tfWhy(ch,id,n); }, info(){ const ch=curChar(); return ch&&{free:tfFree(ch), spent:tfSpent(ch), tr:ch.tr}; },
   open(id){ tfOpen(id); return !!TFW.box; }, fx(){ return P?{tf:!!P.tf, tfg:P.tfg||null, skills:P.skills.map(s=>({id:s.id, lv:s.lv, fx:s.fx||null, mod:s.mod||null}))}:null; } };
+/* ================= 59a-ui-shop.js · lane P · shop sheet + starting-Lv sheet (docs/PROPOSAL-shop.md) ================= */
+// shopOpen(reason): the shop (supporter pack + rune packs) · from a locked level-up card, the 🔒 reroll, the skills page and the fort.
+// Real payment = step ค. (Stripe through a Vercel function) · until then "ซื้อ" says so; #dev has a test grant (RG.shop).
+// slOpen(): starting Lv of every loadout skill, bought with rune points (28 slBuy).
+const SHOP_WHY={cards:'การ์ดใบที่ 4–5 เลือกได้เฉพาะผู้สนับสนุน', reroll:'สุ่มใหม่ครบ 2 ครั้งแล้วในรอบนี้ · ผู้สนับสนุนสุ่มได้ไม่จำกัด', rune:'รูนไม่พอ · เติมรูนเพื่ออัปได้เร็วขึ้น'};
+const SHOP_PAY_ON=false;                                                   // step ค. turns this on (checkout through /api/checkout)
+let SHW={box:null, reason:''};
+function shopBaht(n){ return n.toLocaleString('en-US')+' บาท'; }
+function shopOpen(reason){ SHW.reason=reason||''; const box=shMk('div','sp-win'); SHW.box=box;
+  box.addEventListener('click',shopClick); sheet(box,{title:'💎 ร้านรูน', onClose:()=>{ if(SHW.box===box) SHW.box=null; }}); shopRender(); }
+function shopRender(){
+  const box=SHW.box; if(!box) return; const sup=isSupporter(), w=shopWallet(), dev=entGet().src==='dev'||location.hash==='#dev';
+  let h=SHW.reason&&SHOP_WHY[SHW.reason]?`<p class="sp-why">${tfE(SHOP_WHY[SHW.reason])}</p>`:'';
+  h+=`<div class="sp-stat"><div><b>${sup?'💎 ผู้สนับสนุน':'ยังไม่เป็นผู้สนับสนุน'}</b><small>${sup?'เหลือ '+supDaysLeft()+' วัน':'การ์ด 3 จาก 5 ใบ · สุ่มใหม่ 2 ครั้งต่อรอบ'}</small></div>`
+    +`<div><b>🔷 ${w.toLocaleString('en-US')}</b><small>รูนในกระเป๋าบัญชี</small></div><button type="button" class="tf-q" data-help="shop" aria-label="อธิบายร้านรูน">?</button></div>`;
+  h+='<ul class="sp-list">'+RSHOP.products.map(p=>`<li class="sp-item${p.days?' sup':''}"><span class="sp-ic" aria-hidden="true">${p.i}</span><div class="sp-m"><b>${tfE(p.n)}</b><small>${tfE(p.d)}</small></div>`
+    +`<button type="button" class="btn${p.days?'':' ghost'}" data-buy="${p.id}">${shopBaht(p.thb)}</button></li>`).join('')+'</ul>';
+  h+=`<p class="sp-note">${SHOP_PAY_ON?'จ่ายผ่าน Stripe (บัตร / พร้อมเพย์) · ต้องล็อกอินก่อนเพื่อให้สิทธิ์ติดบัญชี':'ระบบชำระเงินกำลังเปิดเร็ว ๆ นี้ (ต้องล็อกอินเพื่อให้สิทธิ์ติดบัญชี)'}</p>`;
+  if(dev) h+='<p class="sp-dev">#dev: ปุ่มซื้อ = มอบสิทธิ์ทดสอบในเครื่องนี้ · <button type="button" class="btn ghost" data-a="devclear">ล้างสิทธิ์ทดสอบ</button></p>';
+  box.innerHTML=h; }
+function shopClick(e){
+  const q=e.target.closest('[data-help]'); if(q){ tfHelp(q.dataset.help); return; }
+  const b=e.target.closest('[data-buy],[data-a]'); if(!b) return;
+  if(b.dataset.a==='devclear'){ DEV.shop.clear(); toast('ล้างสิทธิ์ทดสอบแล้ว','info'); shopAfter(); return; }
+  const p=RSHOP.products.find(x=>x.id===b.dataset.buy); if(!p) return;
+  if(location.hash==='#dev'){ DEV.shop.grant(p.id); toast('ทดสอบ: ได้ '+p.n,'good'); shopAfter(); return; }
+  if(!SHOP_PAY_ON){ toast('ระบบชำระเงินยังไม่เปิด · เร็ว ๆ นี้','info'); return; }
+  if(typeof shopCheckout==='function') shopCheckout(p.id); }
+// after a purchase: the sheet, the level-up cards (locks / reroll button) and the open tree all redraw
+function shopAfter(){ shopRender(); try{ if(G&&G.ui==='level'){ if(G.char&&G.rerolls<=RSHOP.freeRerolls&&isSupporter()) G.rerolls=1e9; renderCards(); HD.info=null; } }catch(e){ console.error(e); }
+  if(typeof tfRender==='function'&&TFW.box) tfRender(); if(typeof pksRender==='function'&&prgVis('scrSkills')) pksRender(); }
+
+/* ---- starting Lv ---- */
+let SLW={box:null};
+function slOpen(){ const box=shMk('div','sl-win'); SLW.box=box; box.addEventListener('click',slClick);
+  sheet(box,{title:'🚀 ระดับเริ่มต้นของสกิล', onClose:()=>{ if(SLW.box===box) SLW.box=null; }}); slRender(); }
+function slRender(){ const box=SLW.box, ch=tfCh(); if(!box) return; if(!ch){ box.textContent='ไม่มีตัวละคร'; return; }
+  const ids=pgSkillPool(ch).filter(id=>((ch.sk||{})[id]|0)>0);
+  let h=`<div class="sp-stat"><div><b>🔷 ${tfFree(ch)}</b><small>แต้มรูนของตัวละคร</small></div><div><b>${shopWallet()}</b><small>กระเป๋าบัญชี</small></div>`
+    +`<button type="button" class="tf-q" data-help="startlv" aria-label="อธิบายระดับเริ่มต้น">?</button></div><ul class="sp-list">`;
+  for(const id of ids){ const d=SK[id], cur=slOf(ch,id), r=ch.sk[id]|0, why=slWhy(ch,id), c=RSHOP.slCost[cur+1]|0;
+    h+=`<li class="sp-item"><span class="sp-ic" aria-hidden="true">${d.i}</span><div class="sp-m"><b>${tfE(d.n)} · เริ่มที่ Lv ${cur}</b><small>ฝึกไว้ ★${r}${(ch.load||[]).indexOf(id)>=0?' · ติดตัว':''}${why&&cur<r?' · '+tfE(why):''}</small></div>`
+      +(cur>=r?'<span class="pks-max">เต็ม ★</span>':`<button type="button" class="btn${why?' ghost':''}" data-up="${id}"${why?' disabled':''}>Lv ${cur+1} · ${c} รูน</button>`)+'</li>'; }
+  h+='</ul><p class="sp-note">ซื้อแล้วถาวร · รีเซ็ตพร้อมต้นไม้ของสกิลนั้น · ใช้ทุกโหมดยกเว้นคลาสสิก</p>';
+  if(!isSupporter()||shopWallet()<40) h+='<button type="button" class="btn ghost" data-a="shop">💎 เติมรูน</button>';
+  box.innerHTML=h; }
+function slClick(e){ const q=e.target.closest('[data-help]'); if(q){ tfHelp(q.dataset.help); return; }
+  const b=e.target.closest('[data-up],[data-a]'); if(!b||b.disabled) return;
+  if(b.dataset.a==='shop'){ shopOpen('rune'); return; }
+  const ch=tfCh(), id=b.dataset.up; if(slBuy(ch,id)) toast(SK[id].n+' เริ่มที่ Lv '+slOf(tfCh(),id),'good'); else toast(slWhy(ch,id)||'ซื้อไม่ได้','bad');
+  slRender(); if(prgVis('scrSkills')) pksRender(); }
+
+TF_HELP.shop=['ร้านรูน',()=>`<h4>💎 แพคสนับสนุน 30 วัน · 35 บาท</h4><p>ระหว่างที่เป็นผู้สนับสนุน: สุ่มการ์ดใหม่ได้ไม่จำกัดทุกรอบ · เลือกการ์ดเลเวลอัปได้ทั้ง 5 ใบ (คนทั่วไปเลือกได้ใบ 1–3 และสุ่มใหม่ 2 ครั้งต่อรอบ) · จ่ายครั้งเดียว ไม่ต่ออัตโนมัติ · ซื้อซ้ำ = ต่อเวลาอีก 30 วัน</p>
+  <h4>🔷 รูน</h4><p>รูนที่ซื้อเข้ากระเป๋าบัญชี ใช้กับตัวละครไหนก็ได้ · ตอนฝึกโหนดหรือซื้อระดับเริ่มต้นแล้วรูนของตัวละครไม่พอ เกมหยิบจากกระเป๋าให้ แล้วรูนนั้นเป็นของตัวละครนั้น (รีเซ็ตต้นไม้ = คืนเข้าตัวละครเดิม)</p>
+  <table>${tfRow('รูน 60','35 บาท')}${tfRow('รูน 200','99 บาท')}${tfRow('รูน 700','299 บาท')}${tfRow('รูน 2500','899 บาท')}</table>
+  <h4>การจ่ายเงิน</h4><p>ผ่าน Stripe (บัตร / พร้อมเพย์) · ต้องล็อกอินก่อน สิทธิ์จึงติดบัญชีและใช้ได้ทุกเครื่อง</p>`];
+TF_HELP.startlv=['ระดับเริ่มต้นของสกิล',()=>`<p>ตั้งว่าสกิลจะเริ่มที่ Lv เท่าไรตอนได้มาในรอบ (รวมสกิลที่ถือเริ่มรอบ) · ไม่เกิน ★ ที่ฝึกไว้ · ใช้ทุกโหมดยกเว้นคลาสสิก</p>
+  <table>${[2,3,4,5,6,7,8].map(l=>tfRow('Lv '+l,RSHOP.slCost[l]+' รูน (รวม '+slSpentTo(l)+')')).join('')}</table>
+  <p>ใช้แต้มรูนเดียวกับต้นไม้สกิล · ราคาสูงตั้งใจให้เป็นที่ใช้รูนก้อนใหญ่ ผู้ที่เติมรูนจะไปได้เร็วกว่า · รีเซ็ตต้นไม้ของสกิลไหน ระดับเริ่มต้นของสกิลนั้นรีเซ็ตด้วย (ได้รูนคืนครบ)</p>`];
+
+SERVICES.push({id:'shop', npc:'แม่ค้ารูน', n:'แม่ค้ารูน · ร้านรูน', i:'💎', order:16, open(){ shopOpen(''); }});
+// dev (§7.9): RG.shop.grant('sup30'|'rune200'…) adds a test entitlement on this browser · RG.shop.clear() · RG.shop.info()
+DEV.shop={ grant(id){ const p=RSHOP.products.find(x=>x.id===id); if(!p) return 'no product'; const e=entGet(), now=Date.now();
+    const o={sup:p.days?Math.max(e.sup,now)+p.days*864e5:e.sup, runes:(e.runes|0)+(p.runes|0)};
+    try{ localStorage.setItem('runeguard.devEnt',JSON.stringify(o)); }catch(_){} entOk=false; return entGet(); },
+  clear(){ try{ localStorage.removeItem('runeguard.devEnt'); }catch(_){} entOk=false; return entGet(); },
+  info(){ return {ent:entGet(), sup:isSupporter(), wallet:shopWallet()}; }, open(r){ shopOpen(r); return !!SHW.box; }, start(){ slOpen(); return !!SLW.box; } };
 /* ================= 60-zones-data.js · lane F · pure · zones and mobs (merged into EN on load) ================= */
 /* M0 stub: frozen signatures from DESIGN §7.8, neutral values — classic never calls these. Lane F writes the real body. */
 const ZONES={};

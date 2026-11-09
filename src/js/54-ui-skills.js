@@ -95,7 +95,8 @@ function pksRender(){
   if(!c){ root.innerHTML=prgTop('สกิล','')+'<p class="prg-empty">ยังไม่มีตัวละคร · สร้างตัวละครที่เมนูหลักก่อน</p>'; return; }
   const tier=pgTier(ch), n=BAL.LOADOUT[tier], a=pgAdvOf(ch), load=ch.load||[];
   if(pksTab!==1&&pksTab!==2) pksTab=tier; if(pksSel>=load.length) pksSel=-1;
-  let h=prgTop('สกิล','แต้มสกิล <b>'+(ch.sp|0)+'</b> · รูน <b>'+tfFree(ch)+'</b><br>Job '+(ch.jlv|0)+'/'+pgJobCap(ch)+' <button type="button" class="tf-q" data-a="help" aria-label="อธิบายหน้าสกิล">?</button>')+(saveReadOnly()?prgRO():'');
+  let h=prgTop('สกิล','แต้มสกิล <b>'+(ch.sp|0)+'</b> · รูน <b>'+tfFree(ch)+'</b><br>Job '+(ch.jlv|0)+'/'+pgJobCap(ch)+' <button type="button" class="tf-q" data-a="help" aria-label="อธิบายหน้าสกิล">?</button>')
+    +'<div class="pks-shop"><button type="button" class="btn ghost" data-a="startlv">🚀 ระดับเริ่มต้น</button><button type="button" class="btn ghost" data-a="shop">💎 ร้านรูน</button></div>'+(saveReadOnly()?prgRO():'');
   h+=`<div class="box pks-load"><div class="pks-lh"><b>ช่องติดตัว (${load.length}/${n})</b><small>แตะสองช่องเพื่อสลับ · ช่องแรกคือสกิลเริ่มรอบเอาชีวิตรอด</small></div><div class="pks-slots">`;
   for(let i=0;i<n;i++){ const id=load[i], d=id&&SK[id];
     h+=d?`<button type="button" class="pks-sl${i===pksSel?' sel':''}" data-a="slot" data-i="${i}" aria-pressed="${i===pksSel}" aria-label="ช่อง ${i+1} ${esc(d.n)}"><span aria-hidden="true">${d.i}</span>${i?'':'<em>เริ่ม</em>'}<b>★${(ch.sk||{})[id]|0}</b></button>`
@@ -125,6 +126,8 @@ function pksClick(e){
     else toast(saveReadOnly()?'แก้ไขไม่ได้':'ช่องเต็ม · แตะช่องที่จะแทนก่อน','info'); }
   else if(a==='reset'){ prgReset(ch,'sk',pksRender); return; }
   else if(a==='tree'){ tfOpen(id); return; }
+  else if(a==='startlv'){ slOpen(); return; }
+  else if(a==='shop'){ shopOpen(''); return; }
   else if(a==='help'){ tfHelp('skills'); return; }
   else return;
   pksRender(); }

@@ -58,3 +58,25 @@
 .tf-act{display:flex;gap:8px;align-items:center;flex-wrap:wrap}
 .tf-why{color:var(--ash);font-size:12px}
 @media (prefers-reduced-motion:no-preference){.tf-node{transition:border-color .15s,box-shadow .2s,background .2s}}
+/* ---------- 59a shop + starting Lv + 5 cards ---------- */
+.tf-sl{display:flex;align-items:center;gap:8px;flex-wrap:wrap;font-size:14px;padding:6px 10px;border:1px solid var(--line);border-radius:12px;background:var(--well)}
+.tf-sl>span{margin-right:auto}
+.pks-shop{display:flex;gap:8px;flex-wrap:wrap;margin:8px 0}
+.sp-win,.sl-win{display:flex;flex-direction:column;gap:12px}
+.sp-why{margin:0;padding:8px 12px;border-radius:10px;background:rgba(240,181,69,.12);color:var(--rune);font-size:14px}
+.sp-stat{display:flex;gap:16px;align-items:center;flex-wrap:wrap}
+.sp-stat>div{display:flex;flex-direction:column}
+.sp-stat small{color:var(--ash);font-size:12px}
+.sp-stat .tf-q{margin-left:auto}
+.sp-list{list-style:none;margin:0;padding:0;display:flex;flex-direction:column;gap:8px}
+.sp-item{display:flex;align-items:center;gap:10px;padding:10px;border:1px solid var(--line);border-radius:12px;background:var(--card)}
+.sp-item.sup{border-color:var(--rune-deep);background:linear-gradient(160deg,#2f2612,var(--card))}
+.sp-ic{font-size:24px;flex:none;width:36px;text-align:center}
+.sp-m{min-width:0;flex:1;display:flex;flex-direction:column;gap:2px}
+.sp-m small{color:var(--ash);font-size:12px}
+.sp-item .btn{flex:none;white-space:nowrap}
+.sp-note,.sp-dev{margin:0;color:var(--ash);font-size:12px}
+.card.locked{opacity:.55;filter:saturate(.35)}
+.card.locked::after{content:'🔒 ผู้สนับสนุน';position:absolute;right:12px;top:10px;font-size:11px;font-weight:700;color:var(--rune)}
+.card.locked kbd{display:none}
+.cards.five{max-height:calc(100vh - 210px);overflow-y:auto}

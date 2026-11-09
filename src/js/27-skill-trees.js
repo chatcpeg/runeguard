@@ -249,8 +249,9 @@ function tfText(nd,l){
 function tfOf(ch,id){ return ch&&ch.tr&&svHas(ch.tr,id)&&ch.tr[id]||{}; }
 function tfLv(ch,id,nid){ return tfOf(ch,id)[nid]|0; }
 function tfSpentOne(ch,id){ let n=0; const t=tfOf(ch,id); for(const nd of tfNodes(id)) n+=(t[nd.id]|0)*nd.cost; return n; }
-function tfSpent(ch){ let n=0; for(const id in (ch&&ch.tr)||{}) n+=tfSpentOne(ch,id); return n; }
-function tfTotal(ch){ return ch?Math.max(0,ch.lv|0):0; }                // 1 rune point per Base Lv
+function tfResetGain(ch,id){ return tfSpentOne(ch,id)+(typeof slSpentTo==='function'&&ch&&ch.sl&&svHas(ch.sl,id)?slSpentTo(ch.sl[id]|0):0); }
+function tfSpent(ch){ let n=0; for(const id in (ch&&ch.tr)||{}) n+=tfSpentOne(ch,id); return n+(typeof slSpent==='function'?slSpent(ch):0); }   // + starting Lv (28)
+function tfTotal(ch){ return ch?Math.max(0,ch.lv|0)+Math.max(0,ch.rb|0):0; }   // 1 rune point per Base Lv + bought runes moved here (28)
 function tfFree(ch){ return Math.max(0,tfTotal(ch)-tfSpent(ch)); }
 function tfSpecials(ch,id){ return ['A3','B3','C3'].filter(n=>tfLv(ch,id,n)>0).length; }
 // requirements of node nd of skill id → [{t, ok}]
@@ -271,30 +272,36 @@ function tfWhy(ch,id,nid){
   if(typeof pgSkillPool==='function'&&pgSkillPool(ch).indexOf(id)<0) return 'สกิลนี้ยังใช้ไม่ได้';
   if(tfLv(ch,id,nid)>=nd.max) return 'เต็มแล้ว';
   const miss=tfReqs(ch,id,nd).find(q=>!q.ok); if(miss) return 'ต้อง: '+miss.t;
-  if(tfFree(ch)<nd.cost) return 'แต้มรูนไม่พอ (ต้องใช้ '+nd.cost+' มี '+tfFree(ch)+')';
+  const w=typeof shopWallet==='function'?shopWallet():0;
+  if(tfFree(ch)+w<nd.cost) return 'แต้มรูนไม่พอ (ต้องใช้ '+nd.cost+' มี '+tfFree(ch)+(w?' + กระเป๋า '+w:'')+')';
   return ''; }
 function tfBuy(ch,id,nid){
   ch=typeof pgFresh==='function'?pgFresh(ch):ch; if(!ch||tfWhy(ch,id,nid)!=='') return false;
+  const nd=tfNode(id,nid); if(tfFree(ch)<nd.cost&&!(typeof shopFund==='function'&&shopFund(ch,nd.cost-tfFree(ch)))) return false;   // bought runes from the wallet
   if(!ch.tr) ch.tr={}; const t=ch.tr[id]||(ch.tr[id]={}); t[nid]=(t[nid]|0)+1;
   if(typeof pgSave==='function') pgSave(ch,'tree',true); return true; }
 // reset one tree: same rules as the skill reset (free below Lv 20 · one free reset per character · then a ม้วนลืมเลือน)
 function tfResetWay(ch){ if((ch.lv|0)<BAL.RESET.freeBelow) return 'free'; return ch.resets&&ch.resets.trFree?'freeOnce':'scroll'; }
 function tfReset(ch,id,o){
-  ch=typeof pgFresh==='function'?pgFresh(ch):ch; if(!ch||(typeof pgRO==='function'&&pgRO())||!tfSpentOne(ch,id)) return false;
+  ch=typeof pgFresh==='function'?pgFresh(ch):ch; if(!ch||(typeof pgRO==='function'&&pgRO())||!tfResetGain(ch,id)) return false;
   const way=tfResetWay(ch);
   if(way==='scroll'){ if(!(o&&o.scroll)||!(typeof invRemove==='function'&&invRemove(ch,'u_forget',1))) return false; }
   if(way==='freeOnce') ch.resets.trFree=0;
-  delete ch.tr[id]; if(typeof pgSave==='function') pgSave(ch,'resetTree',true); return true; }
+  if(ch.tr) delete ch.tr[id]; if(ch.sl) delete ch.sl[id]; if(typeof pgSave==='function') pgSave(ch,'resetTree',true); return true; }   // the tree and its starting Lv
 // keep only what the rules allow (save load · after resetSkills · prepareRun): nodes in tree order whose requirements hold with
 // the nodes kept so far · then whole trees dropped from the last until the spend fits the rune points (tester r1 F1/F2)
-function tfSanitize(ch){ if(!ch||!ch.tr) return ch; const tmp={sk:ch.sk||{}, job:ch.job, lv:ch.lv, tr:{}}, out={};
+function tfSanitize(ch){ if(!ch) return ch;
+  if(ch.sl){ const sl={}; for(const id of Object.keys(ch.sl)){ const v=ch.sl[id]|0, r=(ch.sk||{})[id]|0; if(svHas(SK,id)&&v>=2&&r>=2) sl[id]=Math.min(v,r); } ch.sl=sl; }
+  if(!ch.tr) ch.tr={}; const tmp={sk:ch.sk||{}, job:ch.job, lv:ch.lv, tr:{}}, out={};
   for(const id of Object.keys(ch.tr)){ const t=ch.tr[id]; if(!t||!TFD[id]||!svHas(TFD,id)) continue; tmp.tr[id]={};
     for(const nd of tfNodes(id)){ const want=Math.min(nd.max,t[nd.id]|0); for(let l=0;l<want;l++){ if(!tfReqs(tmp,id,nd).every(q=>q.ok)) break; tmp.tr[id][nd.id]=l+1; } }
     if(Object.keys(tmp.tr[id]).length) out[id]=tmp.tr[id]; else delete tmp.tr[id]; }
-  const ids=Object.keys(out); while(ids.length&&tfSpent({tr:out})>tfTotal(ch)) delete out[ids.pop()];
+  const ids=Object.keys(out), sls=Object.keys(ch.sl||{}), over=()=>tfSpent({tr:out, sl:ch.sl})>tfTotal(ch);
+  while(sls.length&&over()) delete ch.sl[sls.pop()];                   // starting Lv first (the dearer, simpler loss) · then whole trees
+  while(ids.length&&over()) delete out[ids.pop()];
   ch.tr=out; return ch; }
 // run copy (prepareRun): only skills of the character's pool
-function tfRunTree(ch){ const o={}; ch=tfSanitize(JSON.parse(JSON.stringify({sk:ch.sk, job:ch.job, lv:ch.lv, tr:ch.tr||{}, cls:ch.cls}))); const pool=typeof pgSkillPool==='function'?pgSkillPool(ch):Object.keys(ch.tr||{});
+function tfRunTree(ch){ const o={}; ch=tfSanitize(JSON.parse(JSON.stringify({sk:ch.sk, job:ch.job, lv:ch.lv, rb:ch.rb|0, sl:ch.sl||{}, tr:ch.tr||{}, cls:ch.cls}))); const pool=typeof pgSkillPool==='function'?pgSkillPool(ch):Object.keys(ch.tr||{});
   for(const id of pool){ const t=tfOf(ch,id); if(Object.keys(t).length) o[id]=Object.assign({},t); } return o; }
 
 /* ---- in-run: numbers + effects of one skill (called from sxMods) ---- */
