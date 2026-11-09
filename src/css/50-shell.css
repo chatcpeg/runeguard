@@ -168,3 +168,22 @@ button.hb-st{padding:0;border:0;background:none;text-decoration:underline dotted
 .hd-sheet-grid{line-height:1.55}
 .hd-sk-e,.hd-sk-x,.hd-sheet-lv{line-height:1.5}
 .hd-sk-x{font-size:12px;color:#f0c75a}
+/* skill bar cooldown clock · concrete numbers on level-up cards */
+.sk{--cd:0;overflow:visible}
+.sk.cd::after{content:"";position:absolute;inset:0;border-radius:inherit;pointer-events:none;background:conic-gradient(rgba(10,12,18,.72) calc(var(--cd)*360deg),transparent 0)}
+.sk.cd>span{filter:grayscale(.7) brightness(.8)}
+.sk b{z-index:1}
+.card .hd-ci{grid-column:1/-1;display:flex;flex-wrap:wrap;gap:2px 12px;margin-top:6px;padding-top:6px;border-top:1px dashed rgba(255,255,255,.12);font-size:12.5px;line-height:1.5;color:#9fd6c4;text-align:left;font-variant-numeric:tabular-nums}
+.card .hd-ci em{flex-basis:100%;font-style:normal;font-size:11px;color:var(--muted,#b9b3a0)}
+/* off-screen special drop arrows */
+#hdEdge{position:fixed;inset:0;pointer-events:none;z-index:4;overflow:hidden}
+.hd-edge{position:absolute;left:0;top:0;width:0;height:0}
+.hd-edge i{position:absolute;left:-17px;top:-17px;width:34px;height:34px;border-radius:50%;background:rgba(14,16,22,.72);border:1.5px solid rgba(240,199,90,.75);box-shadow:0 0 10px rgba(240,199,90,.35)}
+.hd-edge i::after{content:"";position:absolute;right:-9px;top:50%;margin-top:-6px;border:6px solid transparent;border-left:9px solid #f0c75a;border-right:0}
+.hd-edge span{position:absolute;left:-12px;top:-13px;width:24px;text-align:center;font-size:17px;line-height:26px}
+.hd-edge b{position:absolute;left:-24px;top:19px;width:48px;text-align:center;font-size:10px;font-weight:700;color:#f3ead2;text-shadow:0 1px 2px #000}
+.hd-edge.big i{border-color:#ffd36a;animation:hdEdgeP 1s ease-in-out infinite}
+@keyframes hdEdgeP{50%{box-shadow:0 0 18px rgba(255,211,106,.8)}}
+@media (prefers-reduced-motion:reduce){.hd-edge.big i{animation:none}}
+.sk.cd::after{box-shadow:inset 0 0 0 1px rgba(240,199,90,.25)}
+.sk[data-cd]::before{content:attr(data-cd);position:absolute;inset:0;display:grid;place-items:center;z-index:1;font-size:13px;font-weight:800;color:#fff;text-shadow:0 0 3px #000,0 1px 2px #000;pointer-events:none;font-variant-numeric:tabular-nums}

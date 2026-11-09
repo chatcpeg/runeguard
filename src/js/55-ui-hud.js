@@ -6,8 +6,70 @@ const HD={g:null, cards:null, bars:false, manual:false, auto:false, n:-1, xr:-1,
   got:0, free:0, sfree:0, need:0, full:0, seen:null, pot:[null,null], potN:[0,0], potCd:-1, potSig:'', potWired:false};
 UIX.hud=hdTick; UIX.endExtra=hdEnd; UIX.pauseExtra=hdPause;
 
+/* ---------- skill bar cooldown clock (every mode) · card details: concrete numbers (every mode) ---------- */
+const HD_NOCD={passive:1, orbit:1, aura:1};
+function hdCdBar(){
+  const bar=document.getElementById('skillBar'); if(!bar||!P) return;
+  P.skills.forEach((s,i)=>{ const n=bar.children[i]; if(!n) return;
+    const cd=HD_NOCD[s.def.type]||pv(s,'cd')==null?0:cdOf(s), f=cd>0?Math.max(0,Math.min(1,(s.cdT||0)/cd)):0, q=Math.round(f*40)/40;
+    if(n.__cdq!==q){ n.__cdq=q; n.style.setProperty('--cd',String(q)); n.classList.toggle('cd',q>0); }
+    const left=f>0?s.cdT:0, lt=left>=1?String(Math.ceil(left)):left>0&&cd>=1?(Math.ceil(left*10)/10).toFixed(1):'';   // seconds left on long cooldowns
+    if(n.__cdt!==lt){ n.__cdt=lt; if(lt) n.dataset.cd=lt; else delete n.dataset.cd; } }); }
+// stat card: what +1 of this stat does to THIS character's numbers right now
+function hdStatEffect(k){
+  const L=[], sk=P.skills, eff=(s,key,mul)=>pv(s,key)!=null&&pv(s,key)?HD_N(pv(s,key)*mul):null;
+  if(k==='STR'){ const a=P.might, b=a+.12; for(const s of sk){ const d=pv(s,'dmg'); if(d) L.push(s.def.n+' ดาเมจ '+HD_N(d*a)+' → '+HD_N(d*b)); } }
+  if(k==='AGI'){ { const g=1+.07*P.stats.AGI; L.push('ความเร็วเดิน '+Math.round(P.speed)+' → '+Math.round(P.speed*(g+.07)/g)); } for(const s of sk){ if(HD_NOCD[s.def.type]||pv(s,'cd')==null) continue; const c=cdOf(s); L.push(s.def.n+' คูลดาวน์ '+HD_N(c)+' → '+HD_N(Math.max(.08,c*.96))+' วิ'); } }
+  if(k==='VIT') L.push('HP สูงสุด '+Math.ceil(P.maxHp)+' → '+Math.ceil(P.maxHp+20)+' · ฟื้น '+HD_N(P.regen)+' → '+HD_N(P.regen+.4)+'/วิ');
+  if(k==='INT'){ const a=P.area, b=a+.1, da=P.durMul, db=da+.1;
+    for(const s of sk){ const parts=[]; for(const [key,nm] of [['r','รัศมี'],['range','ระยะ'],['explode','วงระเบิด'],['jump','ระยะกระโดด']]){ const x=eff(s,key,a), y=eff(s,key,b); if(x) parts.push(nm+' '+x+' → '+y); }
+      if(pv(s,'dur')) parts.push('นาน '+HD_N(pv(s,'dur')*da)+' → '+HD_N(pv(s,'dur')*db)+' วิ');
+      if(s.def.type==='proj'){ const z=pv(s,'size')||6; parts.push('ขนาดลูก '+HD_N(z*(1+(a-1)*.5))+' → '+HD_N(z*(1+(b-1)*.5))); }   // = fireProj
+      if(parts.length) L.push(s.def.n+': '+parts.join(' · ')); }
+    L.unshift('พื้นที่ ×'+HD_N(a)+' → ×'+HD_N(b)+' · ระยะเวลา ×'+HD_N(da)+' → ×'+HD_N(db)+' (ทุกสกิล)'); }
+  if(k==='DEX') for(const s of sk){ if(HD_NOCD[s.def.type]||pv(s,'cd')==null) continue; const c=cdOf(s); L.push(s.def.n+' คูลดาวน์ '+HD_N(c)+' → '+HD_N(Math.max(.08,c*.94))+' วิ'); }
+  if(k==='LUK') L.push('คริติคอล '+Math.round(P.crit*100)+'% → '+Math.round((P.crit+.05)*100)+'% · ดูดของ '+Math.round(P.magnet)+' → '+Math.round(P.magnet*(1+.2*(P.stats.LUK+1))/(1+.2*P.stats.LUK))+' · EXP ×'+HD_N(P.xpMul)+' → ×'+HD_N(P.xpMul+.06));
+  return L; }
+function hdCardInfo(){
+  const box=$('#lvCards'); if(!box||!G.choices) return; HD.info=G.choices;
+  G.choices.forEach((o,i)=>{ const c=box.children[i]; if(!c||c.querySelector('.hd-ci')) return; let lines=[];
+    if(o.k==='new') lines=hdSkillLines(makeSkill(o.id)).map(([k,v])=>k+' '+String(v).split(' (')[0]);
+    else if(o.k==='up'||o.k==='evo'){ const t=hdNextText(o.s), cd=hdSkillLines(o.s).find(x=>x[0]==='คูลดาวน์');
+      if(t) lines.push(...t.replace(/^[^:]*: /,'').split(' · '));
+      if(cd&&!(t&&t.indexOf('คูลดาวน์')>=0)) lines.push('คูลดาวน์ '+String(cd[1]).split(' (')[0]+' (ไม่เปลี่ยน)'); }
+    else if(o.k==='stat') lines=hdStatEffect(o.stat);
+    if(o.k==='up'){ const df=c.querySelector('.df'), have=df?df.textContent:'', mod=P.might!==1||P.area!==1||P.durMul!==1||P.cdMul!==1||P.extraProj>0;
+      lines=lines.filter(t=>have.indexOf(t)<0&&(mod||/^คูลดาวน์/.test(t)&&have.indexOf('คูลดาวน์')<0)); }   // core diffText already says it (no stat bonus yet) → don't repeat
+    if(!lines.length) return; const d=document.createElement('span'); d.className='hd-ci';
+    if(o.k==='up'&&!/^คูลดาวน์.*ไม่เปลี่ยน/.test(lines[0]||'')) d.append(Object.assign(document.createElement('em'),{textContent:'ค่าจริงรวมสถานะ'}));
+    for(const t of lines.slice(0,6)){ const r=document.createElement('span'); r.textContent=t; d.append(r); }
+    const kb=c.querySelector('kbd'); if(kb) c.insertBefore(d,kb); else c.append(d); }); }
+// special drops outside the view → an arrow on the screen edge pointing at them (every mode · DOM only, no RNG, no sim state)
+const HD_EDGE_I={chest:'🎁', bosschest:'🎁', heart:'❤️', magnet:'🧲', bomb:'💣'}, HD_EDGE_MAX=8;
+function hdEdgeIcon(g){ if(HD_EDGE_I[g.kind]) return HD_EDGE_I[g.kind]; if(g.kind==='loot'){ const d=typeof itemDef==='function'&&g.it&&itemDef(g.it.id); return d&&d.i||'💎'; } return ''; }
+function hdEdge(){
+  let box=HD.edge; if(!box||!box.isConnected){ box=HD.edge=document.createElement('div'); box.id='hdEdge'; box.setAttribute('aria-hidden','true'); document.body.append(box); HD.edgeN=[]; }
+  const live=G&&P&&!G.ui&&!G.over, pick=[];
+  if(live){ const now=performance.now();
+    if(!HD.edgeR||now-HD.edgeRT>1000){ const t=$('.hud-top'), b=$('.hud-bot'), rt=t&&t.getBoundingClientRect(), rb=b&&b.getBoundingClientRect(), ok=rt&&rt.height>0&&rb&&rb.height>0;
+      HD.edgeRT=ok?now:0; HD.edgeR=[ok?rt.bottom:90, ok?rb.top:H-50]; }   // HUD not laid out yet → safe guess, measure again next frame
+    const m=26, x0=m, y0=Math.min(H/2,HD.edgeR[0]+m), x1=W-m, y1=Math.max(H/2,HD.edgeR[1]-m-12);
+    for(const g of G.gems){ if(g.dead) continue; const ic=hdEdgeIcon(g); if(!ic) continue;
+      const sx=(g.x-cam.x)*ZOOM+W/2, sy=(g.y-cam.y)*ZOOM+H/2; if(sx>=0&&sx<=W&&sy>=0&&sy<=H) continue;
+      const dx=g.x-P.x, dy=g.y-P.y; pick.push({ic, d:dx*dx+dy*dy, sx, sy, big:g.kind==='bosschest'||g.kind==='chest'}); }
+    pick.sort((a,b)=>(b.big-a.big)||(a.d-b.d)); pick.length=Math.min(pick.length,HD_EDGE_MAX);
+    for(const p of pick){ const cx=W/2, cy=H/2, vx=p.sx-cx, vy=p.sy-cy, k=Math.min(vx?Math.abs((vx>0?x1-cx:cx-x0)/vx):1e9, vy?Math.abs((vy>0?y1-cy:cy-y0)/vy):1e9);
+      p.x=cx+vx*k; p.y=cy+vy*k; p.a=Math.atan2(vy,vx); p.m=Math.round(Math.sqrt(p.d)/10); } }
+  const N=HD.edgeN;
+  while(N.length<pick.length){ const n=document.createElement('div'); n.className='hd-edge'; n.innerHTML='<i></i><span></span><b></b>'; box.append(n); N.push(n); }
+  N.forEach((n,i)=>{ const p=pick[i]; if(!p){ if(!n.hidden) n.hidden=true; return; } n.hidden=false;
+    n.style.transform='translate('+Math.round(p.x)+'px,'+Math.round(p.y)+'px)'; n.firstChild.style.transform='rotate('+p.a.toFixed(2)+'rad)';
+    if(n.__ic!==p.ic){ n.__ic=p.ic; n.children[1].textContent=p.ic; } const t=p.m+' ม.'; if(n.__t!==t){ n.__t=t; n.children[2].textContent=t; }
+    n.classList.toggle('big',p.big); }); }
 function hdTick(){
   if(HD.g!==G) hdStart();
+  try{ hdEdge(); }catch(e){ console.error(e); }
+  try{ hdCdBar(); if(G.ui==='level'&&G.choices!==HD.info) hdCardInfo(); }catch(e){ console.error(e); }
   if(!G.char) return;
   if(G.ui==='level'&&G.choices!==HD.cards) hdCards();
   if(G.loot&&G.loot.length>HD.loot){ for(let i=HD.loot;i<G.loot.length;i++) hdGot(G.loot[i]); HD.loot=G.loot.length; hdBag(); }
@@ -238,3 +300,5 @@ function hdPause(box){
   hdMenuText(G); try{ hdStatSheet(box); }catch(e){ console.error(e); }
   if(!G||!G.char||G.modeId!=='survival'||!box) return;
   box.append(shBtn('🏳\uFE0F ถอยทัพ · รับรางวัล','btn ghost sh-wide',()=>{ if(!G||G.over||G.ui!=='pause') return; G.retreat=true; G.ui=null; show(null); endRun(false); })); }
+function hdEdgeOff(){ if(HD.edgeN) for(const n of HD.edgeN) n.hidden=true; }
+BUS.on('runEnd',hdEdgeOff); BUS.on('screen',hdEdgeOff);

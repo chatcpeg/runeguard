@@ -336,6 +336,25 @@ button.hb-st{padding:0;border:0;background:none;text-decoration:underline dotted
 .hd-sheet-grid{line-height:1.55}
 .hd-sk-e,.hd-sk-x,.hd-sheet-lv{line-height:1.5}
 .hd-sk-x{font-size:12px;color:#f0c75a}
+/* skill bar cooldown clock · concrete numbers on level-up cards */
+.sk{--cd:0;overflow:visible}
+.sk.cd::after{content:"";position:absolute;inset:0;border-radius:inherit;pointer-events:none;background:conic-gradient(rgba(10,12,18,.72) calc(var(--cd)*360deg),transparent 0)}
+.sk.cd>span{filter:grayscale(.7) brightness(.8)}
+.sk b{z-index:1}
+.card .hd-ci{grid-column:1/-1;display:flex;flex-wrap:wrap;gap:2px 12px;margin-top:6px;padding-top:6px;border-top:1px dashed rgba(255,255,255,.12);font-size:12.5px;line-height:1.5;color:#9fd6c4;text-align:left;font-variant-numeric:tabular-nums}
+.card .hd-ci em{flex-basis:100%;font-style:normal;font-size:11px;color:var(--muted,#b9b3a0)}
+/* off-screen special drop arrows */
+#hdEdge{position:fixed;inset:0;pointer-events:none;z-index:4;overflow:hidden}
+.hd-edge{position:absolute;left:0;top:0;width:0;height:0}
+.hd-edge i{position:absolute;left:-17px;top:-17px;width:34px;height:34px;border-radius:50%;background:rgba(14,16,22,.72);border:1.5px solid rgba(240,199,90,.75);box-shadow:0 0 10px rgba(240,199,90,.35)}
+.hd-edge i::after{content:"";position:absolute;right:-9px;top:50%;margin-top:-6px;border:6px solid transparent;border-left:9px solid #f0c75a;border-right:0}
+.hd-edge span{position:absolute;left:-12px;top:-13px;width:24px;text-align:center;font-size:17px;line-height:26px}
+.hd-edge b{position:absolute;left:-24px;top:19px;width:48px;text-align:center;font-size:10px;font-weight:700;color:#f3ead2;text-shadow:0 1px 2px #000}
+.hd-edge.big i{border-color:#ffd36a;animation:hdEdgeP 1s ease-in-out infinite}
+@keyframes hdEdgeP{50%{box-shadow:0 0 18px rgba(255,211,106,.8)}}
+@media (prefers-reduced-motion:reduce){.hd-edge.big i{animation:none}}
+.sk.cd::after{box-shadow:inset 0 0 0 1px rgba(240,199,90,.25)}
+.sk[data-cd]::before{content:attr(data-cd);position:absolute;inset:0;display:grid;place-items:center;z-index:1;font-size:13px;font-weight:800;color:#fff;text-shadow:0 0 3px #000,0 1px 2px #000;pointer-events:none;font-variant-numeric:tabular-nums}
 /* 51-auth.css · lane N · M0 stub (empty) */
 /* 53-char.css · lane E · equipment / bag tabs, item sheet, smith (refine), rune scribe, shop, stash · phone first (360 px, 44 px targets) */
 .uc{display:flex;flex-direction:column;gap:10px;min-width:0}
@@ -5112,8 +5131,70 @@ const HD={g:null, cards:null, bars:false, manual:false, auto:false, n:-1, xr:-1,
   got:0, free:0, sfree:0, need:0, full:0, seen:null, pot:[null,null], potN:[0,0], potCd:-1, potSig:'', potWired:false};
 UIX.hud=hdTick; UIX.endExtra=hdEnd; UIX.pauseExtra=hdPause;
 
+/* ---------- skill bar cooldown clock (every mode) · card details: concrete numbers (every mode) ---------- */
+const HD_NOCD={passive:1, orbit:1, aura:1};
+function hdCdBar(){
+  const bar=document.getElementById('skillBar'); if(!bar||!P) return;
+  P.skills.forEach((s,i)=>{ const n=bar.children[i]; if(!n) return;
+    const cd=HD_NOCD[s.def.type]||pv(s,'cd')==null?0:cdOf(s), f=cd>0?Math.max(0,Math.min(1,(s.cdT||0)/cd)):0, q=Math.round(f*40)/40;
+    if(n.__cdq!==q){ n.__cdq=q; n.style.setProperty('--cd',String(q)); n.classList.toggle('cd',q>0); }
+    const left=f>0?s.cdT:0, lt=left>=1?String(Math.ceil(left)):left>0&&cd>=1?(Math.ceil(left*10)/10).toFixed(1):'';   // seconds left on long cooldowns
+    if(n.__cdt!==lt){ n.__cdt=lt; if(lt) n.dataset.cd=lt; else delete n.dataset.cd; } }); }
+// stat card: what +1 of this stat does to THIS character's numbers right now
+function hdStatEffect(k){
+  const L=[], sk=P.skills, eff=(s,key,mul)=>pv(s,key)!=null&&pv(s,key)?HD_N(pv(s,key)*mul):null;
+  if(k==='STR'){ const a=P.might, b=a+.12; for(const s of sk){ const d=pv(s,'dmg'); if(d) L.push(s.def.n+' ดาเมจ '+HD_N(d*a)+' → '+HD_N(d*b)); } }
+  if(k==='AGI'){ { const g=1+.07*P.stats.AGI; L.push('ความเร็วเดิน '+Math.round(P.speed)+' → '+Math.round(P.speed*(g+.07)/g)); } for(const s of sk){ if(HD_NOCD[s.def.type]||pv(s,'cd')==null) continue; const c=cdOf(s); L.push(s.def.n+' คูลดาวน์ '+HD_N(c)+' → '+HD_N(Math.max(.08,c*.96))+' วิ'); } }
+  if(k==='VIT') L.push('HP สูงสุด '+Math.ceil(P.maxHp)+' → '+Math.ceil(P.maxHp+20)+' · ฟื้น '+HD_N(P.regen)+' → '+HD_N(P.regen+.4)+'/วิ');
+  if(k==='INT'){ const a=P.area, b=a+.1, da=P.durMul, db=da+.1;
+    for(const s of sk){ const parts=[]; for(const [key,nm] of [['r','รัศมี'],['range','ระยะ'],['explode','วงระเบิด'],['jump','ระยะกระโดด']]){ const x=eff(s,key,a), y=eff(s,key,b); if(x) parts.push(nm+' '+x+' → '+y); }
+      if(pv(s,'dur')) parts.push('นาน '+HD_N(pv(s,'dur')*da)+' → '+HD_N(pv(s,'dur')*db)+' วิ');
+      if(s.def.type==='proj'){ const z=pv(s,'size')||6; parts.push('ขนาดลูก '+HD_N(z*(1+(a-1)*.5))+' → '+HD_N(z*(1+(b-1)*.5))); }   // = fireProj
+      if(parts.length) L.push(s.def.n+': '+parts.join(' · ')); }
+    L.unshift('พื้นที่ ×'+HD_N(a)+' → ×'+HD_N(b)+' · ระยะเวลา ×'+HD_N(da)+' → ×'+HD_N(db)+' (ทุกสกิล)'); }
+  if(k==='DEX') for(const s of sk){ if(HD_NOCD[s.def.type]||pv(s,'cd')==null) continue; const c=cdOf(s); L.push(s.def.n+' คูลดาวน์ '+HD_N(c)+' → '+HD_N(Math.max(.08,c*.94))+' วิ'); }
+  if(k==='LUK') L.push('คริติคอล '+Math.round(P.crit*100)+'% → '+Math.round((P.crit+.05)*100)+'% · ดูดของ '+Math.round(P.magnet)+' → '+Math.round(P.magnet*(1+.2*(P.stats.LUK+1))/(1+.2*P.stats.LUK))+' · EXP ×'+HD_N(P.xpMul)+' → ×'+HD_N(P.xpMul+.06));
+  return L; }
+function hdCardInfo(){
+  const box=$('#lvCards'); if(!box||!G.choices) return; HD.info=G.choices;
+  G.choices.forEach((o,i)=>{ const c=box.children[i]; if(!c||c.querySelector('.hd-ci')) return; let lines=[];
+    if(o.k==='new') lines=hdSkillLines(makeSkill(o.id)).map(([k,v])=>k+' '+String(v).split(' (')[0]);
+    else if(o.k==='up'||o.k==='evo'){ const t=hdNextText(o.s), cd=hdSkillLines(o.s).find(x=>x[0]==='คูลดาวน์');
+      if(t) lines.push(...t.replace(/^[^:]*: /,'').split(' · '));
+      if(cd&&!(t&&t.indexOf('คูลดาวน์')>=0)) lines.push('คูลดาวน์ '+String(cd[1]).split(' (')[0]+' (ไม่เปลี่ยน)'); }
+    else if(o.k==='stat') lines=hdStatEffect(o.stat);
+    if(o.k==='up'){ const df=c.querySelector('.df'), have=df?df.textContent:'', mod=P.might!==1||P.area!==1||P.durMul!==1||P.cdMul!==1||P.extraProj>0;
+      lines=lines.filter(t=>have.indexOf(t)<0&&(mod||/^คูลดาวน์/.test(t)&&have.indexOf('คูลดาวน์')<0)); }   // core diffText already says it (no stat bonus yet) → don't repeat
+    if(!lines.length) return; const d=document.createElement('span'); d.className='hd-ci';
+    if(o.k==='up'&&!/^คูลดาวน์.*ไม่เปลี่ยน/.test(lines[0]||'')) d.append(Object.assign(document.createElement('em'),{textContent:'ค่าจริงรวมสถานะ'}));
+    for(const t of lines.slice(0,6)){ const r=document.createElement('span'); r.textContent=t; d.append(r); }
+    const kb=c.querySelector('kbd'); if(kb) c.insertBefore(d,kb); else c.append(d); }); }
+// special drops outside the view → an arrow on the screen edge pointing at them (every mode · DOM only, no RNG, no sim state)
+const HD_EDGE_I={chest:'🎁', bosschest:'🎁', heart:'❤️', magnet:'🧲', bomb:'💣'}, HD_EDGE_MAX=8;
+function hdEdgeIcon(g){ if(HD_EDGE_I[g.kind]) return HD_EDGE_I[g.kind]; if(g.kind==='loot'){ const d=typeof itemDef==='function'&&g.it&&itemDef(g.it.id); return d&&d.i||'💎'; } return ''; }
+function hdEdge(){
+  let box=HD.edge; if(!box||!box.isConnected){ box=HD.edge=document.createElement('div'); box.id='hdEdge'; box.setAttribute('aria-hidden','true'); document.body.append(box); HD.edgeN=[]; }
+  const live=G&&P&&!G.ui&&!G.over, pick=[];
+  if(live){ const now=performance.now();
+    if(!HD.edgeR||now-HD.edgeRT>1000){ const t=$('.hud-top'), b=$('.hud-bot'), rt=t&&t.getBoundingClientRect(), rb=b&&b.getBoundingClientRect(), ok=rt&&rt.height>0&&rb&&rb.height>0;
+      HD.edgeRT=ok?now:0; HD.edgeR=[ok?rt.bottom:90, ok?rb.top:H-50]; }   // HUD not laid out yet → safe guess, measure again next frame
+    const m=26, x0=m, y0=Math.min(H/2,HD.edgeR[0]+m), x1=W-m, y1=Math.max(H/2,HD.edgeR[1]-m-12);
+    for(const g of G.gems){ if(g.dead) continue; const ic=hdEdgeIcon(g); if(!ic) continue;
+      const sx=(g.x-cam.x)*ZOOM+W/2, sy=(g.y-cam.y)*ZOOM+H/2; if(sx>=0&&sx<=W&&sy>=0&&sy<=H) continue;
+      const dx=g.x-P.x, dy=g.y-P.y; pick.push({ic, d:dx*dx+dy*dy, sx, sy, big:g.kind==='bosschest'||g.kind==='chest'}); }
+    pick.sort((a,b)=>(b.big-a.big)||(a.d-b.d)); pick.length=Math.min(pick.length,HD_EDGE_MAX);
+    for(const p of pick){ const cx=W/2, cy=H/2, vx=p.sx-cx, vy=p.sy-cy, k=Math.min(vx?Math.abs((vx>0?x1-cx:cx-x0)/vx):1e9, vy?Math.abs((vy>0?y1-cy:cy-y0)/vy):1e9);
+      p.x=cx+vx*k; p.y=cy+vy*k; p.a=Math.atan2(vy,vx); p.m=Math.round(Math.sqrt(p.d)/10); } }
+  const N=HD.edgeN;
+  while(N.length<pick.length){ const n=document.createElement('div'); n.className='hd-edge'; n.innerHTML='<i></i><span></span><b></b>'; box.append(n); N.push(n); }
+  N.forEach((n,i)=>{ const p=pick[i]; if(!p){ if(!n.hidden) n.hidden=true; return; } n.hidden=false;
+    n.style.transform='translate('+Math.round(p.x)+'px,'+Math.round(p.y)+'px)'; n.firstChild.style.transform='rotate('+p.a.toFixed(2)+'rad)';
+    if(n.__ic!==p.ic){ n.__ic=p.ic; n.children[1].textContent=p.ic; } const t=p.m+' ม.'; if(n.__t!==t){ n.__t=t; n.children[2].textContent=t; }
+    n.classList.toggle('big',p.big); }); }
 function hdTick(){
   if(HD.g!==G) hdStart();
+  try{ hdEdge(); }catch(e){ console.error(e); }
+  try{ hdCdBar(); if(G.ui==='level'&&G.choices!==HD.info) hdCardInfo(); }catch(e){ console.error(e); }
   if(!G.char) return;
   if(G.ui==='level'&&G.choices!==HD.cards) hdCards();
   if(G.loot&&G.loot.length>HD.loot){ for(let i=HD.loot;i<G.loot.length;i++) hdGot(G.loot[i]); HD.loot=G.loot.length; hdBag(); }
@@ -5344,6 +5425,8 @@ function hdPause(box){
   hdMenuText(G); try{ hdStatSheet(box); }catch(e){ console.error(e); }
   if(!G||!G.char||G.modeId!=='survival'||!box) return;
   box.append(shBtn('🏳\uFE0F ถอยทัพ · รับรางวัล','btn ghost sh-wide',()=>{ if(!G||G.over||G.ui!=='pause') return; G.retreat=true; G.ui=null; show(null); endRun(false); })); }
+function hdEdgeOff(){ if(HD.edgeN) for(const n of HD.edgeN) n.hidden=true; }
+BUS.on('runEnd',hdEdgeOff); BUS.on('screen',hdEdgeOff);
 /* ================= 56-ui-stats.js · lane P · stats tab (CHARTABS.stats) ================= */
 // §3.3 · §8.8: every change waits as "pending" until [ยืนยัน] (commitStats) or [ยกเลิก] · [+] tap = 1 point, hold = 5 at a time ·
 // (n) = cost of the next point (statCost) · [แจกอัตโนมัติ] spends what is left by the class preset (pgAutoStats) ·
