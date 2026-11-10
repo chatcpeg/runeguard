@@ -5,7 +5,8 @@ function updatePlayer(dt){
   else { if(keys.KeyA||keys.ArrowLeft) ix-=1; if(keys.KeyD||keys.ArrowRight) ix+=1; if(keys.KeyW||keys.ArrowUp) iy-=1; if(keys.KeyS||keys.ArrowDown) iy+=1; if(joy.on){ ix+=joy.dx; iy+=joy.dy; } }
   let m=Math.hypot(ix,iy); if(m>1){ ix/=m; iy/=m; m=1; }
   const k=1-Math.exp(-dt*(m>.05?12:9));
-  P.vx+=(ix*P.speed-P.vx)*k; P.vy+=(iy*P.speed-P.vy)*k;
+  const ps=P.speed*(P.tSlow||1);                                         // bush / water slow (29a terrain)
+  P.vx+=(ix*ps-P.vx)*k; P.vy+=(iy*ps-P.vy)*k;
   const kd=Math.exp(-dt*9); P.kx*=kd; P.ky*=kd;
   P.x+=(P.vx+P.kx)*dt; P.y+=(P.vy+P.ky)*dt;
   P.moving=Math.hypot(P.vx,P.vy)>25;
@@ -14,7 +15,7 @@ function updatePlayer(dt){
   P.hurtT=Math.max(0,P.hurtT-dt); P.atkT=Math.max(0,P.atkT-dt); P.dodgeCd-=dt;
   if(P.swing){ P.swing.t+=dt; if(P.swing.t>P.swing.dur) P.swing=null; }
   if(P.moving){ P.stepT-=dt; if(P.stepT<=0){ P.stepT=.16; part({x:P.x+rand(-5,5),y:P.y+15,vx:-P.vx*.15+rand(-10,10),vy:rand(-14,-4),life:.45,s:3,grow:9,c:'#7a7a5e',g:0,drag:3,k:'puff',add:false,a:.35}); } }
-  if(G.bounds) clampToBounds(P); if(G.obstacles) pushOutObstacles(P);
+  if(G.bounds) clampToBounds(P); if(G.obstacles){ P.tSlow=1; pushOutObstacles(P); }
 }
 /* world edge for modes that set G.bounds = {k:'rect',x0,y0,x1,y1} | {k:'circle',x,y,r} (null in classic) */
 function clampToBounds(o){ const b=G.bounds,r=o.r||0;
@@ -26,7 +27,9 @@ function pushOutObstacles(o){ const ob=G.obstacles,r=o.r||0; let list=ob.list;
   if(ob.grid){ const cx=Math.floor(o.x/CELL),cy=Math.floor(o.y/CELL); list=null;
     for(let ox=-1;ox<=1;ox++) for(let oy=-1;oy<=1;oy++){ const a=ob.grid.get(gkey(cx+ox,cy+oy)); if(a) for(const s of a) pushOutOne(o,s,r); } }
   if(list) for(const s of list) pushOutOne(o,s,r); }
-function pushOutOne(o,s,r){ const dx=o.x-s.x,dy=o.y-s.y,rr=s.r+r,d2=dx*dx+dy*dy; if(d2>=rr*rr) return; const d=Math.sqrt(d2);
+function pushOutOne(o,s,r){ const dx=o.x-s.x,dy=o.y-s.y;
+  if(s.soft){ if(dx*dx+dy*dy<s.r*s.r&&s.soft<(o.tSlow||1)) o.tSlow=s.soft; return; }   // soft feature (bush / water): slows, never pushes
+  const rr=s.r+r,d2=dx*dx+dy*dy; if(d2>=rr*rr) return; const d=Math.sqrt(d2);
   if(d<.01){ o.x=s.x+rr; return; } o.x=s.x+dx/d*rr; o.y=s.y+dy/d*rr; }
 function updateEnemies(dt){
   const kd=Math.exp(-dt*6.5),far=Math.hypot(VW,VH)/2+320;
@@ -38,10 +41,10 @@ function updateEnemies(dt){
     if(e.stunT>0) e.stunT-=dt;
     if(e.slowT>0){ e.slowT-=dt; if(e.slowT<=0) e.slowF=1; }
     let dx=P.x-e.x,dy=P.y-e.y; const d=Math.hypot(dx,dy)||1; dx/=d; dy/=d;
-    if(e.boss){ bossAI(e,dt,d,dx,dy); e.walk+=Math.hypot(e.vx,e.vy)*dt/(e.d.r*.9); if(G.bounds) clampToBounds(e); continue; }
+    if(e.boss){ bossAI(e,dt,d,dx,dy); e.walk+=Math.hypot(e.vx,e.vy)*dt/(e.d.r*.9); if(G.bounds) clampToBounds(e); if(G.obstacles&&!e.d.fly) pushOutObstacles(e); continue; }
     if(d>far){ if(G.mode.relocate){ relocate(e); continue; } if(G.mode.far&&G.mode.far(e,d)) continue; }
     if(e.ai.home&&G.mode.steer&&G.mode.steer(e,dt,d,dx,dy)) continue;
-    let sp=e.speed*e.slowF; if(e.freezeT>0||e.stunT>0) sp=0;
+    let sp=e.speed*e.slowF*(e.tSlow||1); if(e.freezeT>0||e.stunT>0) sp=0;
     let tx=dx,ty=dy;
     if(e.d.ranged){
       if(d<e.d.keep*.8){ tx=-dx; ty=-dy; }
@@ -55,6 +58,7 @@ function updateEnemies(dt){
     if(Math.abs(e.vx)>3) e.face=e.vx<0?-1:1;
     e.walk+=e.d.fly?dt*14:Math.hypot(e.vx,e.vy)*dt/(e.d.r*.9);
     if(G.bounds) clampToBounds(e);
+    if(G.obstacles&&!e.d.fly){ e.tSlow=1; pushOutObstacles(e); }          // terrain (29a): walk around rocks / trunks · slowed in bush and water
   }
 }
 function bossAI(e,dt,d,dx,dy){
@@ -125,6 +129,7 @@ function updateProjs(dt){
       const rr=e.r+p.r; if(segD2(e.x,e.y,ox,oy,p.x,p.y)>rr*rr) continue;
       projHit(p,e); if(p.dead) break;
     }
+    if(!p.dead&&G.obstacles&&p.pierce<99&&terBlocks(p.x,p.y,p.r)){ p.dead=true; if(p.explode) explode(p.x,p.y,p.explode,p.dmg*.7,p.src,{c:p.c}); else if(!G.auto) burst(p.x,p.y,4,'#a49a86',120,.35,2,'rock'); }   // a rock stops it (29a)
     if(!p.dead&&p.life<=0){ p.dead=true; if(p.explode) explode(p.x,p.y,p.explode,p.dmg*.7,p.src,{c:p.c}); }
     if(!p.dead&&!G.auto){ const q=qLv();
       if(p.shape==='fire'&&Math.random()<dt*(q?40:12)) part({x:p.x,y:p.y,vx:rand(-30,30)-p.vx*.1,vy:rand(-40,10),life:.35,s:3,c:pick(['#ffb050','#ff7a2a','#ffe28a']),g:-40,drag:2,k:'sq',add:true});
@@ -140,7 +145,7 @@ function projHit(p,e){
   p.pierce--; if(p.pierce<=0) p.dead=true;
 }
 function updateEProjs(dt){
-  for(const b of G.eprojs){ b.life-=dt; b.x+=b.vx*dt; b.y+=b.vy*dt; b.rot+=dt*10; if(b.life<=0){ b.dead=true; continue; }
+  for(const b of G.eprojs){ b.life-=dt; b.x+=b.vx*dt; b.y+=b.vy*dt; b.rot+=dt*10; if(b.life<=0||G.obstacles&&terBlocks(b.x,b.y,b.r)){ b.dead=true; continue; }
     const dx=b.x-P.x,dy=b.y-(P.y-6),rr=b.r+P.r*.8; if(dx*dx+dy*dy<rr*rr){ b.dead=true; hurtPlayer(b.dmg); if(G.over) break; } }
   compact(G.eprojs);
 }

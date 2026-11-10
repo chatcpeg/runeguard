@@ -31,6 +31,7 @@ const TF_HELP={
   level:['การเลือกการ์ด',()=>`<p>ทุกครั้งที่ความชำนาญเพิ่มขึ้นในรอบ เกมหยุดให้เลือกการ์ด 1 ใบ · แตะ <b>?</b> ที่มุมการ์ดเพื่อดูตัวเลขเต็มของใบนั้น</p>
   <h4>ชนิดการ์ด</h4><table>${tfRow('สกิลใหม่','ได้สกิลในช่องติดตัว เริ่ม Lv 1')}${tfRow('อัปเลเวล','สกิลที่มีอยู่ +1 Lv ไม่เกิน ★ ที่ฝึกไว้')}${tfRow('วิวัฒนาการ','สกิล Lv 5 + ค่าสถานะถึงเกณฑ์ → ร่างใหม่')}${tfRow('ค่าสถานะ','สุ่มมาตลอดไม่มีหมด · เพิ่มพลังสกิลที่ใช้ค่านั้นเป็นค่าหลัก 0.5% ต่อใบ · ครบทุก 5 ใบได้จุดเปลี่ยน · ใบที่ 6 ขึ้นไปผลทั่วไปครึ่งหนึ่ง')}${tfRow('ไอเทม','ยาหรือทอง ขึ้นเมื่อการ์ดอื่นหมด')}</table>
   <h4>สุ่มใหม่</h4><p>ปุ่มสุ่มใหม่เปลี่ยนการ์ดทั้งชุด · จำนวนครั้งแสดงบนปุ่ม</p>
+  <h4>ธาตุ</h4><p>ป้ายสีบนการ์ดบอกธาตุของสกิล · ตีมอนที่แพ้ธาตุ ดาเมจ ×1.5 · ตีมอนที่ต้านธาตุ ×0.6 (มอนอันเดดไม่มีธาตุ) · แตะ ? บนหน้าด่านรายวันเพื่อดูวงล้อธาตุ</p>
   <h4>ปุ่มลัด</h4><p>กด 1–${G&&G.choices?G.choices.length:3} เลือกการ์ด</p>`]};
 function tfHelp(key){ const h=TF_HELP[key]; if(h) tfHelpBox(h[0],h[1]()); }
 
@@ -43,7 +44,7 @@ function tfState(ch,id,nd){ const l=tfLv(ch,id,nd.id), ok=tfReqs(ch,id,nd).every
 function tfRender(){
   const box=TFW.box, id=TFW.id, ch=tfCh(); if(!box||!id) return; if(!ch){ box.textContent='ไม่มีตัวละคร'; return; }
   const d=SK[id], r=(ch.sk||{})[id]|0, rc=rankCap(ch,id), N=tfNodes(id), main=typeof SX!=='undefined'&&SX.main[id];
-  let h=`<div class="tf-head"><span class="tf-ic" aria-hidden="true">${d.i}</span><div class="tf-hn"><b>${tfE(d.n)}</b><small>${main?'ค่าหลัก '+main+' · ':''}ลำต้น ${prgStars(r,rc)}</small></div>`
+  let h=`<div class="tf-head"><span class="tf-ic" aria-hidden="true">${d.i}</span><div class="tf-hn"><b>${tfE(d.n)}</b><small>${d.el&&EL[d.el]?EL[d.el].i+' ธาตุ'+EL[d.el].n+' · ':''}${main?'ค่าหลัก '+main+' · ':''}ลำต้น ${prgStars(r,rc)}</small></div>`
     +`<div class="tf-pts"><b>${tfFree(ch)}</b><small>แต้มรูนเหลือ (${tfSpentOne(ch,id)} ในต้นนี้)</small></div><button type="button" class="tf-q" data-help="tree" aria-label="อธิบายต้นไม้สกิล">?</button></div>`;
   if(saveReadOnly()) h+=prgRO();
   { const sl=slOf(ch,id), sw=slWhy(ch,id), sc=RSHOP.slCost[sl+1]|0;                 // starting Lv of this skill (28)
@@ -127,7 +128,9 @@ function tfCardDetail(o){
   if(o.k==='potion') return ['🧪 ยาฟื้นฟู','<p>ฟื้นฟู HP 40% ของ HP สูงสุดทันที · ขึ้นเมื่อไม่มีการ์ดอื่นให้สุ่มพอ</p>'];
   return ['💰 ถุงทอง','<p>คะแนน +250'+(G.char?' และทองจริง +'+5*P.lv+' (5 × Lv ความชำนาญตอนนี้)':'')+' · ขึ้นเมื่อไม่มีการ์ดอื่นให้สุ่มพอ</p>']; }
 function tfCardQ(c,o){
-  if(c.querySelector('.tf-cq')) return; const q=document.createElement('span'); q.className='tf-cq'; q.textContent='?'; q.setAttribute('role','button');
+  if(c.querySelector('.tf-cq')) return;
+  { const el=o.k==='new'?SK[o.id]&&SK[o.id].el:o.k==='up'?skEl(o.s):o.k==='evo'?(SK_EVO_EL[o.s.id]||o.s.def.el):null, t=c.querySelector('.tag');   // element chip (29)
+    if(el&&t&&EL[el]) t.insertAdjacentHTML('beforeend',` <span class="el-chip" style="--elc:${EL[el].c}">${EL[el].i} ${EL[el].n}</span>`); } const q=document.createElement('span'); q.className='tf-cq'; q.textContent='?'; q.setAttribute('role','button');
   q.setAttribute('aria-label','อธิบายการ์ดนี้ละเอียด'); q.title='อธิบายละเอียด';
   const go=e=>{ e.preventDefault(); e.stopPropagation(); try{ const [t,h]=tfCardDetail(o); tfHelpBox(t,h); }catch(er){ console.error(er); } };
   q.tabIndex=0; q.addEventListener('click',go); q.addEventListener('keydown',e=>{ if(e.key==='Enter'||e.key===' ') go(e); }); q.addEventListener('pointerdown',e=>e.stopPropagation()); c.append(q);

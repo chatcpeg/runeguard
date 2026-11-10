@@ -4,7 +4,7 @@
 // and save themselves when ch belongs to SAVE: player actions (stats, skills, passives, loadout, resets, job change, rewards) at once
 // (saveNow) — a debounced write that meets another tab's save is dropped by the reload · EXP / field death are debounced (saveLocal).
 // Every player action starts with pgFresh(ch): a stale tab reloads the other tab's save first and acts on that (never loses it).
-const PG_START={survival:'first', field:'all1', boss:'rank', trial:'rank'};   // skills at run start (§3.6) · other modes: 'first'
+const PG_START={survival:'first', field:'all1', boss:'rank', trial:'rank', dexp:'all1', dgold:'all1', drare:'all1'};   // skills at run start (§3.6) · other modes: 'first'
 const PG_TIP='ความชำนาญเริ่มที่ 1 ทุกครั้ง · สกิลอัปได้ถึง ★ ที่ฝึกไว้';
 const PG_RUNIDS=[];                                                            // fallback when there is no SAVE (never in the game)
 function pgAcct(){ return SAVE&&SAVE.acct||null; }
@@ -264,7 +264,7 @@ function grantRewards(ch,r,again){
   ch.play=(+ch.play||0)+t; ch.kills=(ch.kills|0)+kills; if(st.died) ch.deaths=(ch.deaths|0)+1;
   if(SAVE) SAVE.play=(+SAVE.play||0)+t;
   if(A){
-    const today=svDay(); if(A.daily.day!==today){ A.daily.day=today; A.daily.surv={}; A.daily.boss={}; }
+    const today=svDay(); if(A.daily.day!==today){ A.daily.day=today; A.daily.surv={}; A.daily.boss={}; A.daily.dg={}; }
     if(r.mode==='survival'){ const T=String(r.tier|0), m=A.records.survival[ch.id]||(A.records.survival[ch.id]={}), old=m[T];
       if(!old||wave>old.wave||(wave===old.wave&&kills>old.kills)||(st.won&&!old.won)) m[T]={wave, kills, won:!!st.won||!!(old&&old.won)};
       if(r.daily) A.daily.surv[T]=1; }

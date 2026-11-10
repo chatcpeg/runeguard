@@ -75,7 +75,7 @@ function pksNext(d,r){ if(r<1) return pksLv(d,1); const o=[];
 function pksRowHtml(r){
   const d=r.pas?PASSIVES[r.id]:SK[r.id];
   let h=`<li class="pks-row${r.r?' got':''}${r.lock?' lock':''}"><span class="pks-ic" aria-hidden="true">${d.i}</span><div class="pks-m">`
-    +`<div class="pks-n">${esc(d.n)} <span class="pks-st" aria-label="ระดับ ${r.r} จาก ${r.rc}">${prgStars(r.r,r.rc)}</span>${r.inLoad?'<em class="pks-in">ติดตัว</em>':''}</div>`;
+    +`<div class="pks-n">${esc(d.n)}${!r.pas&&d.el&&EL[d.el]?` <span class="el-chip" style="--elc:${EL[d.el].c}">${EL[d.el].i}</span>`:''} <span class="pks-st" aria-label="ระดับ ${r.r} จาก ${r.rc}">${prgStars(r.r,r.rc)}</span>${r.inLoad?'<em class="pks-in">ติดตัว</em>':''}</div>`;
   if(r.pas){ if(r.r) h+=`<div class="pks-i">ตอนนี้: ${jdBonusText(jdPassiveAt(r.id,r.r))}</div>`;
     if(!r.max) h+=`<div class="pks-x">→ ★${r.r+1}: ${jdBonusText(jdPassiveAt(r.id,r.r+1))}</div>`; }
   else { if(r.r) h+=`<div class="pks-i">★${r.r}: ${pksLv(d,r.r)}</div>`;

@@ -5,8 +5,8 @@
 // Forward compatibility inside v1: an item / rune id this app does not know survives validation (item → unk:1, rune id kept in
 // its socket), so a newer client's loot is never destroyed. A new class, job, skill or passive does NOT survive (they are matched
 // against CLS / SK / PASSIVES): adding one needs a SCHEMA_V bump, so older apps open such a save read-only instead.
-const SCHEMA_V=5;                                    // 2: acct.up (gold upgrades) · 3: up.stat · 4: ch.tr (skill trees) + ★6–8 + resets.trFree · 5: ch.rb / ch.sl / acct.ru (bought runes, starting Lv) · an older app opens a newer save read-only, so it never drops what was paid for
-const SV_APP='2.4.0';                                 // app version stamped into every local write (saveSummary.appVer)
+const SCHEMA_V=6;                                    // 2: acct.up (gold upgrades) · 3: up.stat · 4: ch.tr (skill trees) + ★6–8 + resets.trFree · 5: ch.rb / ch.sl / acct.ru (bought runes, starting Lv) · 6: acct.daily.dg (daily dungeons used today) · an older app opens a newer save read-only, so it never drops what was paid for
+const SV_APP='2.5.0';                                 // app version stamped into every local write (saveSummary.appVer)
 const SV_NAME_RE=/^[\p{L}\p{M}\p{N} ]{2,16}$/u;
 const SV_SLOTS=['weapon','off','head','face','body','cloak','hands','feet','neck','ring'];
 const SV_WEAPON={swordsman:'w_sword_1', mage:'w_staff_1', archer:'w_bow_1', cleric:'w_rod_1', thief:'w_dagger_1'};   // §3.8 starter (M2)
@@ -47,7 +47,7 @@ function svOwner(o){ return typeof o==='string'&&/^[A-Za-z0-9_-]{1,64}$/.test(o)
 function svEmptyEq(){ const o={}; for(const k of SV_SLOTS) o[k]=null; return o; }
 function svNewAcct(){ return {gold:0, marks:0, stash:[], stashMax:BAL.PRICE.stash.start, survTier:0, kits:0,
   records:{classic:{}, survival:{}, boss:{}}, fboss:{}, bossUnlock:{colossus:0, lich:0, king:0},
-  daily:{day:'', surv:{}, boss:{}, rushWeek:''}, up:{}, ru:0, flags:{pioneer:false, migratedBest:false, pioneerCloak:false, tips:{}}, runIds:[]}; }
+  daily:{day:'', surv:{}, boss:{}, rushWeek:'', dg:{}}, up:{}, ru:0, flags:{pioneer:false, migratedBest:false, pioneerCloak:false, tips:{}}, runIds:[]}; }
 
 function newSave(owner){ const t=Date.now();
   return {v:SCHEMA_V, sid:uid('s_'), owner:svOwner(owner), created:t, mt:t, wc:0, wb:uid('w_'), play:0, app:SV_APP, acct:svNewAcct(), chars:[], active:null}; }
@@ -94,7 +94,8 @@ function svMig1(o){ const s=Object.assign({},o); s.v=2; return s; }   // v1 → 
 function svMig2(o){ const s=Object.assign({},o); s.v=3; return s; }   // v2 → v3: only adds acct.up.stat
 function svMig3(o){ const s=Object.assign({},o); s.v=4; return s; }   // v3 → v4: only adds ch.tr / ★6–8 / resets.trFree
 function svMig4(o){ const s=Object.assign({},o); s.v=5; return s; }   // v4 → v5: only adds ch.rb / ch.sl / acct.ru
-const SV_MIG={0:svMig0, 1:svMig1, 2:svMig2, 3:svMig3, 4:svMig4};      // SV_MIG[v](o) → save of version v+1
+function svMig5(o){ const s=Object.assign({},o); s.v=6; return s; }   // v5 → v6: only adds acct.daily.dg
+const SV_MIG={0:svMig0, 1:svMig1, 2:svMig2, 3:svMig3, 4:svMig4, 5:svMig5};      // SV_MIG[v](o) → save of version v+1
 function migrateSave(o,legacyBest){
   if(!svObj(o)) o=null;
   const v=o?o.v:undefined;
@@ -161,7 +162,8 @@ function svAcct(a){
   for(const b of svKeys(a.bossUnlock)) if(SV_ID.test(b)) o.bossUnlock[b]=a.bossUnlock[b]?1:0;
   const d=svObj(a.daily)?a.daily:{};
   o.daily={day:svStr(d.day,/^\d{4}-\d{2}-\d{2}$/,''), surv:svFlagMap(d.surv,/^(10|[0-9])$/,16), boss:svFlagMap(d.boss,/^[a-z0-9_:-]{1,40}$/,64),
-    rushWeek:svStr(d.rushWeek,/^\d{4}-W\d{2}$/,'')};
+    rushWeek:svStr(d.rushWeek,/^\d{4}-W\d{2}$/,''), dg:{}};
+  const dg=svObj(d.dg)?d.dg:{}; for(const k of ['exp','gold','rare']){ const v=svInt(dg[k],0,9,0); if(v) o.daily.dg[k]=v; }   // daily dungeons entered today (69)
   // known lines and any future line name (a newer app's upgrade survives this app's write) · 0–max each, ≤ 24 lines
   const u=svObj(a.up)?a.up:{}, keys=BAL.UP.order.filter(k=>svHas(u,k)).concat(svKeys(u,64).filter(k=>BAL.UP.order.indexOf(k)<0&&/^[a-z]{1,12}$/.test(k)).slice(0,24));
   for(const k of keys){ const n=svInt(u[k],0,BAL.UP.max,0); if(n) o.up[k]=n; }   // known lines first: junk keys never push them out
