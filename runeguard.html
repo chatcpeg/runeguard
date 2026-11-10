@@ -1809,7 +1809,7 @@ function pushOutObstacles(o){ const ob=G.obstacles,r=o.r||0; let list=ob.list;
     for(let ox=-1;ox<=1;ox++) for(let oy=-1;oy<=1;oy++){ const a=ob.grid.get(gkey(cx+ox,cy+oy)); if(a) for(const s of a) pushOutOne(o,s,r); } }
   if(list) for(const s of list) pushOutOne(o,s,r); }
 function pushOutOne(o,s,r){ const dx=o.x-s.x,dy=o.y-s.y;
-  if(s.soft){ if(dx*dx+dy*dy<s.r*s.r&&s.soft<(o.tSlow||1)) o.tSlow=s.soft; return; }   // soft feature (bush / water): slows, never pushes
+  if(s.soft){ if(s.k==='water'&&o.el==='water') return; if(dx*dx+dy*dy<s.r*s.r&&s.soft<(o.tSlow||1)) o.tSlow=s.soft; return; }   // soft feature (bush / water): slows, never pushes
   const rr=s.r+r,d2=dx*dx+dy*dy; if(d2>=rr*rr) return; const d=Math.sqrt(d2);
   if(d<.01){ o.x=s.x+rr; return; } o.x=s.x+dx/d*rr; o.y=s.y+dy/d*rr; }
 function updateEnemies(dt){
@@ -2501,9 +2501,9 @@ $('#btnStart').addEventListener('click',()=>startRun(selected));
 $('#btnMuteT').addEventListener('click',toggleMute); $('#btnMuteP').addEventListener('click',toggleMute); $('#btnMute').addEventListener('click',()=>{ initAudio(); toggleMute(); });
 $('#btnPause').addEventListener('click',pauseGame);
 $('#btnResume').addEventListener('click',resumeGame);
-$('#btnRestartP').addEventListener('click',()=>startRun(G.cls.id,G.modeId,G.opts));
+$('#btnRestartP').addEventListener('click',()=>{ if(G&&G.mode.again){ G.mode.again(); return; } startRun(G.cls.id,G.modeId,G.opts); });   // mode.again: daily dungeons ask for a new entry
 $('#btnMenuP').addEventListener('click',toTitle);
-$('#btnAgain').addEventListener('click',()=>G?startRun(G.cls.id,G.modeId,G.opts):startRun(selected));
+$('#btnAgain').addEventListener('click',()=>{ if(G&&G.mode.again){ G.mode.again(); return; } G?startRun(G.cls.id,G.modeId,G.opts):startRun(selected); });
 $('#btnMenuE').addEventListener('click',toTitle);
 $('#btnReroll').addEventListener('click',reroll);
 for(const b of document.querySelectorAll('#qSeg button')) b.addEventListener('click',()=>setQuality(b.dataset.q));
@@ -3183,7 +3183,7 @@ for(const id in SK_EL) if(SK[id]) SK[id].el=SK_EL[id];
 function skEl(s){ if(!s||!s.def) return null; if(s.evolved&&SK_EVO_EL[s.id]) return SK_EVO_EL[s.id]; return s.def.el||null; }
 function elChip(el){ const E=el&&EL[el]; return E?E.i:''; }
 // damageEnemy calls this only when the monster has an element · remembers the last result for the label over its head
-function elHit(e,s){ const m=elMul(skEl(s),e.el); if(m!==1){ e.elM=m; e.elT=G.t; } return m; }
+function elHit(e,s){ const m=elMul(skEl(s),e.el); if(m>1||m===EL_MUL.weak){ e.elM=m; e.elT=G.t; } return m; }
 
 /* ---- rank colours (§2) ---- */
 const RANK=[
@@ -3210,7 +3210,7 @@ Object.assign(EN,{
   dg_stone:{n:'ร่างรูนศิลา', base:'brute', tint:'#a8824a', hp:70, speed:40, r:20, dmg:14, mass:4, xp:4, goo:'#c89a5a', el:'earth'},
   dg_halo:{n:'ร่างรูนอรุณ', base:'wraith', tint:'#ffe27a', hp:26, speed:70, r:13, dmg:8, mass:.6, xp:3, goo:'#ffe27a', phase:1, el:'light'},
   dg_gloom:{n:'ร่างรูนราตรี', base:'spitter', tint:'#6a3aaa', hp:24, speed:52, r:12, dmg:6, mass:.9, xp:3, goo:'#b48cff', ranged:1, keep:240, shotCd:2.6, shotSp:210, shotDmg:7, el:'dark'},
-  dg_guard:{boss:1, n:'ผู้เฝ้าคลังรูน', base:'colossus', ai:'colossus', tint:'#4a7ab8', hp:2400, speed:58, r:40, dmg:22, mass:70, xp:120, goo:'#8fb8ff'}});
+  dg_guard:{boss:1, n:'ผู้เฝ้าคลังรูน', base:'colossus', ai:'colossus', tint:'#4a7ab8', hp:1500, speed:58, r:40, dmg:22, mass:70, xp:120, goo:'#8fb8ff'}});
 
 // goblin painter: small green body, big ears, leather vest · a sack on the back for couriers (d.bag)
 if(typeof EDRAW!=='undefined'){                                         // painters (13) · absent in pure test loads
@@ -4981,7 +4981,7 @@ function grantRewards(ch,r,again){
   ch.play=(+ch.play||0)+t; ch.kills=(ch.kills|0)+kills; if(st.died) ch.deaths=(ch.deaths|0)+1;
   if(SAVE) SAVE.play=(+SAVE.play||0)+t;
   if(A){
-    const today=svDay(); if(A.daily.day!==today){ A.daily.day=today; A.daily.surv={}; A.daily.boss={}; A.daily.dg={}; }
+    const today=svDay(); if(A.daily.day<today){ A.daily.day=today; A.daily.surv={}; A.daily.boss={}; A.daily.dg={}; }   // forward only: a clock set back keeps today's counts
     if(r.mode==='survival'){ const T=String(r.tier|0), m=A.records.survival[ch.id]||(A.records.survival[ch.id]={}), old=m[T];
       if(!old||wave>old.wave||(wave===old.wave&&kills>old.kills)||(st.won&&!old.won)) m[T]={wave, kills, won:!!st.won||!!(old&&old.won)};
       if(r.daily) A.daily.surv[T]=1; }
@@ -6346,7 +6346,7 @@ function hdGroup(list){ const out=[], st=new Map();
 function hdItemName(it){ let s=''; try{ s=it&&it.u?itemName(it):((itemDef(it&&it.id)||{}).n||''); }catch(e){} return (s||String(it&&it.id||'?'))+(it&&it.n>1?' ×'+it.n:''); }
 // pause / end buttons say "กลับป้อม" in character runs; classic gets its own words back
 // survival: restart (core: startRun, no endRun) drops this run's loot / gold / EXP like กลับป้อม does, so both say so
-function hdMenuText(g){ const c=!!(g&&g.char), sv=!!(g&&g.modeId==='survival');
+function hdMenuText(g){ const c=!!(g&&g.char), sv=!!(g&&(g.modeId==='survival'||g.mode&&g.mode.daily));
   for(const [id,t] of [['btnMenuP',sv?'กลับป้อม (ไม่รับรางวัล)':'กลับป้อม'],['btnRestartP',sv?'เริ่มใหม่ (ไม่รับรางวัล)':null],['btnMenuE','กลับป้อม']]){ const b=$('#'+id); if(!b) continue;
     if(!(id in SH.txt)) SH.txt[id]=b.textContent; const want=c&&t?t:SH.txt[id]; if(b.textContent!==want) b.textContent=want; } }
 /* ---------- pause: full stat sheet + per-skill numbers (what every card picked so far added up to) ---------- */
@@ -6427,7 +6427,7 @@ function hdStatSheet(box){
   box.append(wrap); }
 function hdPause(box){
   hdMenuText(G); try{ hdStatSheet(box); }catch(e){ console.error(e); }
-  if(!G||!G.char||G.modeId!=='survival'||!box) return;
+  if(!G||!G.char||(G.modeId!=='survival'&&!(G.mode&&G.mode.daily))||!box) return;   // survival + daily dungeons (69)
   box.append(shBtn('🏳\uFE0F ถอยทัพ · รับรางวัล','btn ghost sh-wide',()=>{ if(!G||G.over||G.ui!=='pause') return; G.retreat=true; G.ui=null; show(null); endRun(false); })); }
 function hdEdgeOff(){ if(HD.edgeN) for(const n of HD.edgeN) n.hidden=true; }
 BUS.on('runEnd',hdEdgeOff); BUS.on('screen',hdEdgeOff);
@@ -6618,7 +6618,7 @@ function tfHelpBox(title,html){
   let r=document.getElementById('tfHelp');
   if(!r){ r=document.createElement('div'); r.id='tfHelp'; r.className='tf-help'; r.hidden=true;
     r.innerHTML='<div class="tf-hcard" role="dialog" aria-modal="true" aria-labelledby="tfHelpT"><h3 id="tfHelpT"></h3><div class="tf-hbody"></div><button type="button" class="btn" data-x="1">เข้าใจแล้ว</button></div>';
-    r.addEventListener('click',e=>{ if(e.target===r||e.target.closest('[data-x]')) tfHelpOff(); });
+    r.addEventListener('click',e=>{ const h=e.target.closest('[data-help]'); if(h){ tfHelp(h.dataset.help); return; } if(e.target===r||e.target.closest('[data-x]')) tfHelpOff(); });   // links between help pages
     addEventListener('keydown',e=>{ if(r.hidden) return; e.stopPropagation(); if(e.key==='Escape'||e.key==='Enter'||e.key===' '){ e.preventDefault(); tfHelpOff(); } },true);   // keys never reach the cards under it
     document.body.append(r); }
   r.querySelector('#tfHelpT').textContent=title; r.querySelector('.tf-hbody').innerHTML=html; r.hidden=false;
@@ -6642,7 +6642,7 @@ const TF_HELP={
   level:['การเลือกการ์ด',()=>`<p>ทุกครั้งที่ความชำนาญเพิ่มขึ้นในรอบ เกมหยุดให้เลือกการ์ด 1 ใบ · แตะ <b>?</b> ที่มุมการ์ดเพื่อดูตัวเลขเต็มของใบนั้น</p>
   <h4>ชนิดการ์ด</h4><table>${tfRow('สกิลใหม่','ได้สกิลในช่องติดตัว เริ่ม Lv 1')}${tfRow('อัปเลเวล','สกิลที่มีอยู่ +1 Lv ไม่เกิน ★ ที่ฝึกไว้')}${tfRow('วิวัฒนาการ','สกิล Lv 5 + ค่าสถานะถึงเกณฑ์ → ร่างใหม่')}${tfRow('ค่าสถานะ','สุ่มมาตลอดไม่มีหมด · เพิ่มพลังสกิลที่ใช้ค่านั้นเป็นค่าหลัก 0.5% ต่อใบ · ครบทุก 5 ใบได้จุดเปลี่ยน · ใบที่ 6 ขึ้นไปผลทั่วไปครึ่งหนึ่ง')}${tfRow('ไอเทม','ยาหรือทอง ขึ้นเมื่อการ์ดอื่นหมด')}</table>
   <h4>สุ่มใหม่</h4><p>ปุ่มสุ่มใหม่เปลี่ยนการ์ดทั้งชุด · จำนวนครั้งแสดงบนปุ่ม</p>
-  <h4>ธาตุ</h4><p>ป้ายสีบนการ์ดบอกธาตุของสกิล · ตีมอนที่แพ้ธาตุ ดาเมจ ×1.5 · ตีมอนที่ต้านธาตุ ×0.6 (มอนอันเดดไม่มีธาตุ) · แตะ ? บนหน้าด่านรายวันเพื่อดูวงล้อธาตุ</p>
+  <h4>ธาตุ</h4><p>ป้ายสีบนการ์ดบอกธาตุของสกิล · ตีมอนที่แพ้ธาตุ ดาเมจ ×1.5 · ตีมอนที่ต้านธาตุ ×0.6 (มอนอันเดดไม่มีธาตุ) · <button type="button" class="btn ghost" data-help="elements">ดูวงล้อธาตุ</button></p>
   <h4>ปุ่มลัด</h4><p>กด 1–${G&&G.choices?G.choices.length:3} เลือกการ์ด</p>`]};
 function tfHelp(key){ const h=TF_HELP[key]; if(h) tfHelpBox(h[0],h[1]()); }
 
@@ -6740,7 +6740,7 @@ function tfCardDetail(o){
   return ['💰 ถุงทอง','<p>คะแนน +250'+(G.char?' และทองจริง +'+5*P.lv+' (5 × Lv ความชำนาญตอนนี้)':'')+' · ขึ้นเมื่อไม่มีการ์ดอื่นให้สุ่มพอ</p>']; }
 function tfCardQ(c,o){
   if(c.querySelector('.tf-cq')) return;
-  { const el=o.k==='new'?SK[o.id]&&SK[o.id].el:o.k==='up'?skEl(o.s):o.k==='evo'?(SK_EVO_EL[o.s.id]||o.s.def.el):null, t=c.querySelector('.tag');   // element chip (29)
+  if(G&&G.char){ const el=o.k==='new'?SK[o.id]&&SK[o.id].el:o.k==='up'?skEl(o.s):o.k==='evo'?(SK_EVO_EL[o.s.id]||o.s.def.el):null, t=c.querySelector('.tag');   // element chip (29)
     if(el&&t&&EL[el]) t.insertAdjacentHTML('beforeend',` <span class="el-chip" style="--elc:${EL[el].c}">${EL[el].i} ${EL[el].n}</span>`); } const q=document.createElement('span'); q.className='tf-cq'; q.textContent='?'; q.setAttribute('role','button');
   q.setAttribute('aria-label','อธิบายการ์ดนี้ละเอียด'); q.title='อธิบายละเอียด';
   const go=e=>{ e.preventDefault(); e.stopPropagation(); try{ const [t,h]=tfCardDetail(o); tfHelpBox(t,h); }catch(er){ console.error(er); } };
@@ -6882,21 +6882,29 @@ const DG={
     {n:'สุ่มทุกแบบ', el:['light','dark','fire','water','wind','earth'], t:[{id:'m_dust', n:[3,6]}, {id:'m_crystal', p:.6}, {shard:'surv', n:[1,3]}, {gear:'T'}, {id:'m_seal', p:.4}, {id:'u_potion_l'}]}],
   elMob:{fire:'dg_ember', water:'dg_tide', wind:'dg_gale', earth:'dg_stone', light:'dg_halo', dark:'dg_gloom'}};
 function dgWeekend(t){ const d=new Date(t==null?Date.now():t).getDay(); return d===0||d===6; }
-function dgPer(kind){ const K=DG.kinds[kind]; return kind==='rare'&&dgWeekend()?2:K.per; }
-function dgUsed(kind,A){ A=A||pgAcct(); if(!A||!A.daily||A.daily.day!==svDay()) return 0; return (A.daily.dg&&A.daily.dg[kind])|0; }
+function dgKind(kind){ return typeof kind==='string'&&svHas(DG.kinds,kind)?DG.kinds[kind]:null; }
+function dgPer(kind){ const K=dgKind(kind); return !K?0:kind==='rare'&&dgWeekend()?2:K.per; }
+// the day only moves forward: a save stamped later than the clock (clock set back) keeps its counts (tester r4 F6)
+function dgUsed(kind,A){ A=A||pgAcct(); if(!A||!A.daily||A.daily.day<svDay()) return 0; return (A.daily.dg&&svHas(A.daily.dg,kind)&&A.daily.dg[kind])|0; }
 function dgLeft(kind){ return Math.max(0,dgPer(kind)-dgUsed(kind)); }
 function dgLeftAll(){ return dgLeft('exp')+dgLeft('gold')+dgLeft('rare'); }
 function dgWhy(kind,di,ch){ if(!ch) return 'ต้องมีตัวละครก่อน'; if(pgRO()) return 'ข้อมูลเป็นเวอร์ชันใหม่กว่าแอป แก้ไขไม่ได้';
-  const D=DG.diff[di]; if(!D||!DG.kinds[kind]) return 'ไม่พบด่าน'; if((ch.lv|0)<D.lv) return 'ต้องเลเวล '+D.lv+' ขึ้นไป';
+  const D=DG.diff[di]; if(!D||!dgKind(kind)) return 'ไม่พบด่าน'; if((ch.lv|0)<D.lv) return 'ต้องเลเวล '+D.lv+' ขึ้นไป';
   if(dgLeft(kind)<=0) return 'วันนี้ใช้สิทธิ์ครบแล้ว · รีเซ็ตเที่ยงคืน'; return ''; }
+// one-use tickets: only a run started by dgEnter (which took the entry) pays · play again / restart / the dev hook get none (tester r4 F1)
+const DG_TICKETS=new Set();
+function dgTicket(){ const t='t'+Math.floor(rngUnit()*1e12).toString(36)+DG_TICKETS.size; DG_TICKETS.add(t); return t; }
 // take one entry (saved before the run starts, so closing the app never gives it back) → start the run
 function dgEnter(kind,di){
   if(typeof svlFresh==='function') try{ svlFresh(); }catch(e){}
   const ch=pgFresh(curChar()); if(dgWhy(kind,di,ch)) return false; const A=pgAcct(); if(!A) return false;
-  const today=svDay(); if(A.daily.day!==today){ A.daily.day=today; A.daily.surv={}; A.daily.boss={}; A.daily.dg={}; }
-  if(!A.daily.dg) A.daily.dg={}; A.daily.dg[kind]=(A.daily.dg[kind]|0)+1; pgSave(ch,'daily',true);
+  const today=svDay(); if(A.daily.day<today){ A.daily.day=today; A.daily.surv={}; A.daily.boss={}; A.daily.dg={}; }
+  if(!A.daily.dg) A.daily.dg={}; A.daily.dg[kind]=(A.daily.dg[kind]|0)+1;
+  const S0=SAVE; pgSave(ch,'daily',true); if(SAVE!==S0) return false;    // another tab's save came in instead: the entry was not kept -> no run
   if(typeof closeSheet==='function') closeSheet(); if(typeof shChrome==='function') shChrome(null);
-  startRun(ch.cls,'d'+kind,{char:ch, diff:di}); return true; }
+  startRun(ch.cls,'d'+kind,{char:ch, diff:di, ticket:dgTicket()}); return true; }
+// play again / restart inside a daily dungeon -> back to the fort's daily sheet (a new entry is needed)
+function dgAgain(){ try{ toTitle(); }catch(e){ console.error(e); } setTimeout(()=>{ try{ dgOpen(); }catch(e){ console.error(e); } },60); }
 
 /* ---- shared run logic ---- */
 function dgCfg(){ const c=waveCfg(G.dgW), T=G.tier||0, D=G.diff; c.hpMul*=BAL.SURV.hpMul(T)*D.hp; c.dmgMul*=BAL.SURV.dmgMul(T)*D.dmg; c.W={}; return c; }
@@ -6913,7 +6921,7 @@ function dgSteer(e,dt,d,dx,dy){ if(!e.d.flee) return false;
   e.x+=(e.vx+e.kx)*dt; e.y+=(e.vy+e.ky)*dt; if(Math.abs(e.vx)>3) e.face=e.vx<0?-1:1;
   e.walk+=e.d.fly?dt*14:Math.hypot(e.vx,e.vy)*dt/(e.d.r*.9);
   if(G.obstacles&&!e.d.fly){ e.tSlow=1; pushOutObstacles(e); } return true; }
-function dgCoin(x,y){ const v=Math.max(1,Math.round(1+.15*((G.char&&G.char.lv)|0))); ltGem(x,y,'gold',{gold:v}); }
+function dgCoin(x,y){ const v=Math.max(1,Math.round((15+5*(G.tier||0))/20)); ltGem(x,y,'gold',{gold:v}); }   // about survival's gold rate before x10 (tester r4 F3)
 // rank + element tags over heads, the strong/resist flash, rank rings · only visible monsters, at most 50
 function dgLabels(L,T,R,B){ let n=0; ctx.textAlign='center'; ctx.textBaseline='middle';
   for(const e of G.enemies){ if(e.dead||e.x<L-40||e.x>R+40||e.y<T-40||e.y>B+40) continue; if(++n>50) break;
@@ -6924,16 +6932,16 @@ function dgLabels(L,T,R,B){ let n=0; ctx.textAlign='center'; ctx.textBaseline='m
     if(e.elT!=null&&G.t-e.elT<.6){ const s=e.elM>1, t=s?'แรง!':'ต้าน'; ctx.font='bold '+(s?14:11)+'px Mali, Tahoma, sans-serif'; ctx.lineWidth=3; ctx.strokeStyle='rgba(0,0,0,.8)';
       ctx.strokeText(t,e.x,y-14); ctx.fillStyle=s?'#ffe14a':'#a0a6b0'; ctx.fillText(t,e.x,y-14); } } }
 function dgMode(kind,o){ const K=DG.kinds[kind];
-  return Object.assign({id:'d'+kind, n:K.n, cards:'auto', relocate:true,
-    init(opts){ const ch=G.char; G.dk=kind; G.diff=DG.diff[(opts&&opts.diff)|0]||DG.diff[0]; G.tier=Math.max(0,Math.min(10,Math.floor(((ch&&ch.lv)|0)/6)));
+  return Object.assign({id:'d'+kind, n:K.n, cards:'auto', relocate:true, daily:true, again:dgAgain,
+    init(opts){ const ch=G.char; G.dk=kind; G.dgPaid=!!(opts&&opts.ticket&&DG_TICKETS.delete(opts.ticket)); G.diff=DG.diff[(opts&&opts.diff)|0]||DG.diff[0]; G.tier=Math.max(0,Math.min(10,Math.floor(((ch&&ch.lv)|0)/6)));
       G.defK=BAL.SURV.defK(G.tier); G.dgT=K.sec; G.dgW=3; G.dgRamp=30; G.dgPts=0; G.wave=1; G.cfg=dgCfg(); terInit(K.biome); if(o.init) o.init(); },
-    update(dt){ terTick(dt); G.dgT-=dt; G.dgRamp-=dt; if(G.dgRamp<=0){ G.dgRamp=30; G.dgW=Math.min(14,G.dgW+1); G.wave++; G.cfg=dgCfg(); }
+    update(dt){ terTick(dt); if(!(o.frozen&&o.frozen())) G.dgT-=dt; G.dgRamp-=dt; if(G.dgRamp<=0){ G.dgRamp=30; G.dgW=Math.min(14,G.dgW+1); G.wave++; G.cfg=dgCfg(); }
       o.update(dt); if(!G.over&&G.dgT<=0) endRun(o.timeWin!==false); },
     steer:dgSteer, onKill(e){ if(o.onKill) o.onKill(e); },
     hud(){ return {lv:'ชำนาญ Lv '+P.lv+' · '+(P.adv?P.adv.n:P.cls.n), wave:K.i+' '+o.score()+' · '+G.diff.n, time:'เหลือ '+fmtTime(Math.max(0,G.dgT))}; },
     pauseTitle(){ return K.n+' · '+G.diff.n+' · '+o.score()+' · เหลือ '+fmtClock(Math.max(0,G.dgT)); },
-    end(won){ return {eyebrow:K.n+' · '+G.diff.n, title:o.title(won), rows:()=>[['ผลงาน',o.score()],['เวลา',fmtClock(G.t)],['สังหาร',fmtNum(G.kills)],['ชำนาญ',P.lv],['ความยาก',G.diff.n+' (รางวัล ×'+G.diff.rw+')']]}; },
-    rewards(r,won){ r.daily=true; o.rewards(r,won); },
+    end(won){ if(o.end) won=o.end(won); return {eyebrow:K.n+' · '+G.diff.n+(G.dgPaid?'':' · ไม่ได้ใช้สิทธิ์ (ไม่มีรางวัล)'), title:o.title(won), rows:()=>[['ผลงาน',o.score()],['เวลา',fmtClock(G.t)],['สังหาร',fmtNum(G.kills)],['ชำนาญ',P.lv],['ความยาก',G.diff.n+' (รางวัล ×'+G.diff.rw+')']]}; },
+    rewards(r,won){ if(!G.dgPaid){ r.baseXp=0; r.gold=0; r.items=[]; r.unpaid=true; return; } r.dgMul=G.diff.rw; o.rewards(r,won); },
     drawGround(L,T,R,B){ ctx.fillStyle=groundPat; ctx.fillRect(L,T,R-L,B-T); ctx.fillStyle=o.tint; ctx.fillRect(L,T,R-L,B-T); },
     drawWorld(L,T,R,B){ terDrawGround(L,T,R,B); if(o.drawWorld) o.drawWorld(L,T,R,B); },
     drawOver(L,T,R,B){ terDrawOver(L,T,R,B); dgLabels(L,T,R,B); }}, o.extra||{}); }
@@ -6950,35 +6958,45 @@ MODES.dexp=dgMode('exp',{tint:'rgba(120,200,90,.10)',
 
 /* ---- คลังทองก็อบลิน ---- */
 MODES.dgold=dgMode('gold',{tint:'rgba(30,60,20,.18)',
-  init(){ for(let i=0;i<8;i++) dgSpawn('dg_courier',1); G.dgAcc=0; G.dgChests=[]; G.dgChestT=8; },
+  init(){ for(let i=0;i<8;i++) dgSpawn('dg_courier',1); G.dgAcc=0; G.dgChests=[]; G.dgChestT=10; },
   update(dt){ G.dgAcc+=dt*(1.6+G.dgW*.14);
     while(G.dgAcc>=1){ G.dgAcc-=1; if(dgCount(e=>e.d.flee)<12) dgSpawn('dg_courier',1);
       if(dgCount(e=>!e.d.flee)<4+G.dgW*1.4) dgSpawn(Math.random()<.3?'dg_slinger':'dg_raider',1); }
-    G.dgChestT-=dt; if(G.dgChestT<=0&&G.dgChests.length<2){ G.dgChestT=22; const a=Math.random()*TAU, d=300+Math.random()*180; let x=P.x+Math.cos(a)*d, y=P.y+Math.sin(a)*d;
+    G.dgChestT-=dt; if(G.dgChestT<=0&&G.dgChests.length<2){ G.dgChestT=30; const a=Math.random()*TAU, d=300+Math.random()*180; let x=P.x+Math.cos(a)*d, y=P.y+Math.sin(a)*d;
       for(let k=0;k<6&&G.obstacles&&terBlocks(x,y,30);k++){ x+=60; y+=30; }
       G.dgChests.push({x,y,t:0,hold:0}); addText(P.x,P.y-54,'หีบทองโผล่!','#f0c75a',true); }
     for(const c of G.dgChests){ c.t+=dt; const inR=Math.hypot(P.x-c.x,P.y-c.y)<52; c.hold=inR?c.hold+dt:Math.max(0,c.hold-dt*2);
-      if(c.hold>=2){ c.dead=true; for(let i=0;i<14;i++) dgCoin(c.x,c.y); burst(c.x,c.y,16,'#f0c75a',200,.6,3); sfx('level'); addText(c.x,c.y-30,'หีบทองแตก!','#f0c75a',true); }
+      if(c.hold>=2){ c.dead=true; for(let i=0;i<8;i++) dgCoin(c.x,c.y); burst(c.x,c.y,16,'#f0c75a',200,.6,3); sfx('level'); addText(c.x,c.y-30,'หีบทองแตก!','#f0c75a',true); }
       else if(c.t>40) c.dead=true; }
     G.dgChests=G.dgChests.filter(c=>!c.dead); },
-  onKill(e){ if(e.d.bag){ const n=6+(e.rank|0)*4; for(let i=0;i<n;i++) dgCoin(e.x,e.y); burst(e.x,e.y,10,'#f0c75a',160,.5,3); }
-    else if(Math.random()<.35) dgCoin(e.x,e.y); },
+  onKill(e){ if(e.d.bag){ const n=3+(e.rank|0)*2; for(let i=0;i<n;i++) dgCoin(e.x,e.y); burst(e.x,e.y,10,'#f0c75a',160,.5,3); }
+    else if(Math.random()<.12) dgCoin(e.x,e.y); },
   score(){ return 'ทอง '+fmtNum(G.goldRun|0); }, title(){ return 'จบด่าน'; },
   rewards(r){ r.dgGold=G.goldRun|0; r.gold=Math.round((G.goldRun|0)*DG.mul*G.diff.rw); },
   drawWorld(){ for(const c of G.dgChests||[]){ const x=c.x, y=c.y; ctx.fillStyle='rgba(0,0,0,.3)'; ctx.beginPath(); ctx.ellipse(x,y+14,26,8,0,0,TAU); ctx.fill();
     ctx.fillStyle='#8a5a2a'; ctx.strokeStyle='#120c10'; ctx.lineWidth=3; ctx.fillRect(x-22,y-14,44,28); ctx.strokeRect(x-22,y-14,44,28);
     ctx.fillStyle='#f0c75a'; ctx.fillRect(x-22,y-4,44,5); ctx.fillRect(x-4,y-8,8,12); glow(x,y-6,40,'#f0c75a',.25+.15*Math.sin(G.t*5));
     ctx.strokeStyle='rgba(255,255,255,.25)'; ctx.lineWidth=2; ctx.beginPath(); ctx.arc(x,y,52,0,TAU); ctx.stroke();
-    if(c.hold>0){ ctx.strokeStyle='#f0c75a'; ctx.lineWidth=5; ctx.beginPath(); ctx.arc(x,y,52,-PI/2,-PI/2+TAU*Math.min(1,c.hold/2)); ctx.stroke(); } } }});
+    if(c.hold>0){ ctx.strokeStyle='#f0c75a'; ctx.lineWidth=5; ctx.beginPath(); ctx.arc(x,y,52,-PI/2,-PI/2+TAU*Math.min(1,c.hold/2)); ctx.stroke(); } } },
+  extra:{drawOver(L,T,R,B){ terDrawOver(L,T,R,B); dgLabels(L,T,R,B); dgChestArrows(L,T,R,B); }}});
+// a gold chest outside the view -> an arrow + chest icon on the view edge (like the HUD drop arrows)
+function dgChestArrows(L,T,R,B){ const m=34; for(const c of G.dgChests||[]){ if(c.x>L&&c.x<R&&c.y>T&&c.y<B) continue;
+  const cx=(L+R)/2, cy=(T+B)/2, dx=c.x-cx, dy=c.y-cy, s=Math.min(((R-L)/2-m)/Math.abs(dx||1e-6),((B-T)/2-m)/Math.abs(dy||1e-6)), x=cx+dx*s, y=cy+dy*s, a=Math.atan2(dy,dx);
+  ctx.save(); ctx.translate(x,y); ctx.fillStyle='rgba(20,16,8,.75)'; ctx.beginPath(); ctx.arc(0,0,18,0,TAU); ctx.fill(); ctx.strokeStyle='#f0c75a'; ctx.lineWidth=2.5; ctx.stroke();
+  ctx.rotate(a); ctx.fillStyle='#f0c75a'; ctx.beginPath(); ctx.moveTo(26,0); ctx.lineTo(17,-7); ctx.lineTo(17,7); ctx.closePath(); ctx.fill(); ctx.rotate(-a);
+  ctx.font='16px sans-serif'; ctx.textAlign='center'; ctx.textBaseline='middle'; ctx.fillText('💰',0,1); ctx.restore(); } }
 
 /* ---- ห้องสมบัติหายาก ---- */
 function dgRareDay(){ return DG.rare[new Date().getDay()]; }
 MODES.drare=dgMode('rare',{tint:'rgba(60,70,120,.14)', timeWin:false,
+  frozen(){ return G.dgPhase==='loot'||G.dgPhase==='done'; },                // the guardian is down: the clock stops (tester r4 F2/F5)
+  end(won){ for(const g of G.gems) if(!g.dead&&g.kind==='bosschest'){ ITEMKIND.bosschest.collect(g); g.dead=true; }   // any ending keeps a dropped chest
+    return won||G.dgPhase==='loot'||G.dgPhase==='done'; },
   init(){ G.dgDay=dgRareDay(); G.dgWave=0; G.dgPhase='wait'; G.dgNext=1.5; G.dgQ=0; },
   update(dt){ const Dd=G.dgDay;
     if(G.dgPhase==='wait'){ G.dgNext-=dt; if(G.dgNext>0) return; G.dgWave++;
       if(G.dgWave<=3){ G.dgPhase='wave'; G.dgQ=[10,14,18][G.dgWave-1]; G.dgSp=0; banner('คลื่นที่ '+G.dgWave+'/3','ธาตุวันนี้: '+Dd.el.slice(0,2).map(k=>EL[k].i+EL[k].n).join(' · ')); sfx('wave'); }
-      else { G.dgPhase='boss'; const a=-PI/2, R=Math.max(VW,VH)/2*.7; const hp=EN.dg_guard.hp*BAL.SURV.hpMul(G.tier)*G.diff.hp;
+      else { G.dgPhase='boss'; const a=-PI/2, R=Math.max(VW,VH)/2*.7; const hp=EN.dg_guard.hp*BAL.SURV.hpMul(G.tier)*(1+(G.diff.hp-1)*.6);   // hard x2.2 (not x3): beatable at the level gate (tester r4 F14)
         const e=spawnEnemy('dg_guard',P.x+Math.cos(a)*R,P.y+Math.sin(a)*R,{hp}); e.boss=true; e.el=Dd.el[0]; G.boss=true; G.bosses=[e];
         banner('ผู้เฝ้าคลังรูน',EL[e.el].i+' ธาตุ'+EL[e.el].n+' · ใช้ธาตุที่ชนะ'); sfx('boss'); }
       return; }
@@ -7014,15 +7032,17 @@ HUB.push({id:'daily', n:'ด่านรายวัน', i:'📅', order:22, ba
 if(typeof TF_HELP!=='undefined'){                                      // help pages (59) · absent in pure test loads
 TF_HELP.daily=['ด่านรายวัน',()=>`<p>ด่านสั้น ๆ ที่ให้รางวัลก้อนใหญ่ · นับสิทธิ์ตามวันในเครื่อง รีเซ็ตเที่ยงคืน · สิทธิ์ถูกใช้ทันทีที่กดเข้า (ปิดแอปหนีก็ไม่คืน)</p>
   <table>${tfRow('✨ ลานวิญญาณ','2 ครั้ง/วัน · 3 นาที · ไล่ฆ่าภูตที่วิ่งหนี (ภูตทอง ×5 แต้ม) → EXP ×10')}${tfRow('💰 คลังทอง','2 ครั้ง/วัน · 3 นาที · ฆ่าก็อบลินแบกถุงทอง ยืนเปิดหีบ 2 วิ → ทอง ×10')}${tfRow('🎁 ห้องสมบัติ','1 ครั้ง/วัน (เสาร์อาทิตย์ 2) · 3 คลื่น + ผู้เฝ้าคลัง → หีบของประจำวัน')}</table>
+  <p>ปุ่ม เล่นอีกครั้ง / เริ่มใหม่ พากลับมาหน้านี้ (ต้องใช้สิทธิ์ใหม่) · ถอยทัพ · รับรางวัล ในเมนูพักออกพร้อมรางวัลที่ได้</p>
   <h4>ความยาก</h4><table>${DG.diff.map(D=>tfRow(D.n,'Lv '+D.lv+'+ · มอน HP ×'+D.hp+' ดาเมจ ×'+D.dmg+' · รางวัล ×'+D.rw)).join('')}</table>
   <h4>ห้องสมบัติแต่ละวัน</h4><table>${['อาทิตย์','จันทร์','อังคาร','พุธ','พฤหัส','ศุกร์','เสาร์'].map((n,i)=>tfRow(n,DG.rare[i].n+' · ธาตุ '+DG.rare[i].el.slice(0,2).map(k=>EL[k].i).join(''))).join('')}</table>
+  <p><button type="button" class="btn ghost" data-help="elements">ดูวงล้อธาตุ</button></p>
   <h4>ในด่าน</h4><p>ทุกสกิลในช่องติดตัวเริ่มที่ Lv 1 (หรือระดับเริ่มต้นที่ซื้อไว้) แล้วอัปด้วยการ์ด · มอนมีธาตุและสีชั้น (ฟ้า ชำนาญ · ม่วง หัวหน้า · ทอง ยอดฝีมือ) · พื้นมีหิน ต้นไม้ พุ่มไม้ และน้ำ</p>`];
 TF_HELP.elements=['ธาตุ',()=>`<p>สกิลที่มีธาตุตีมอนที่มีธาตุ จะแรงหรือเบาลงตามวงล้อ · มอนในเอาชีวิตรอดและคลาสสิก (อันเดด) ไม่มีธาตุ</p>
   <p>🔥 ไฟ → 🌪️ ลม → 🪨 ดิน → 💧 น้ำ → 🔥 ไฟ (ลูกศร = ชนะ) · ✨ แสง ⇄ 🌑 มืด ชนะกันและกัน</p>
   <table>${tfRow('ชนะธาตุ','ดาเมจ ×1.5 · ขึ้นคำว่า แรง!')}${tfRow('แพ้ธาตุ','ดาเมจ ×0.6 · ขึ้นคำว่า ต้าน')}${tfRow('ธาตุเดียวกัน','ดาเมจ ×0.75')}${tfRow('อื่น ๆ','×1')}</table>
   <h4>สกิลแต่ละธาตุ</h4><table>${Object.keys(EL).map(k=>tfRow(EL[k].i+' '+EL[k].n,Object.keys(SK).filter(id=>SK[id].el===k).map(id=>SK[id].n).join(' · ')||'-')).join('')}${tfRow('⚪ ไม่มี','สกิลที่เหลือ (×1 กับทุกธาตุ)')}</table>`]; }
 // dev (§7.9): RG.daily.go('exp'|'gold'|'rare', 0–2) starts without using an entry · RG.daily.left()
-DEV.daily={ go(k,d){ const ch=curChar(); if(!ch) return 'no char'; startRun(ch.cls,'d'+k,{char:ch, diff:d|0}); return G&&G.modeId; }, left(){ return {exp:dgLeft('exp'), gold:dgLeft('gold'), rare:dgLeft('rare')}; } };
+DEV.daily={ go(k,d){ if(typeof shopDevHost==='function'&&!shopDevHost()) return 'local dev only'; const ch=curChar(); if(!ch) return 'no char'; startRun(ch.cls,'d'+k,{char:ch, diff:d|0}); return G&&G.modeId; }, left(){ return {exp:dgLeft('exp'), gold:dgLeft('gold'), rare:dgLeft('rare')}; } };
 /* test hook (only with #dev in the address): lets a script fast-forward a run without the screen
    lanes add DEV.<ns> in their own files; it is merged in here. Lanes never assign window.RG themselves. */
 if(location.hash==='#dev'){ const RG=Object.assign({

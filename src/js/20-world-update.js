@@ -28,7 +28,7 @@ function pushOutObstacles(o){ const ob=G.obstacles,r=o.r||0; let list=ob.list;
     for(let ox=-1;ox<=1;ox++) for(let oy=-1;oy<=1;oy++){ const a=ob.grid.get(gkey(cx+ox,cy+oy)); if(a) for(const s of a) pushOutOne(o,s,r); } }
   if(list) for(const s of list) pushOutOne(o,s,r); }
 function pushOutOne(o,s,r){ const dx=o.x-s.x,dy=o.y-s.y;
-  if(s.soft){ if(dx*dx+dy*dy<s.r*s.r&&s.soft<(o.tSlow||1)) o.tSlow=s.soft; return; }   // soft feature (bush / water): slows, never pushes
+  if(s.soft){ if(s.k==='water'&&o.el==='water') return; if(dx*dx+dy*dy<s.r*s.r&&s.soft<(o.tSlow||1)) o.tSlow=s.soft; return; }   // soft feature (bush / water): slows, never pushes
   const rr=s.r+r,d2=dx*dx+dy*dy; if(d2>=rr*rr) return; const d=Math.sqrt(d2);
   if(d<.01){ o.x=s.x+rr; return; } o.x=s.x+dx/d*rr; o.y=s.y+dy/d*rr; }
 function updateEnemies(dt){

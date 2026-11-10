@@ -38,9 +38,9 @@ $('#btnStart').addEventListener('click',()=>startRun(selected));
 $('#btnMuteT').addEventListener('click',toggleMute); $('#btnMuteP').addEventListener('click',toggleMute); $('#btnMute').addEventListener('click',()=>{ initAudio(); toggleMute(); });
 $('#btnPause').addEventListener('click',pauseGame);
 $('#btnResume').addEventListener('click',resumeGame);
-$('#btnRestartP').addEventListener('click',()=>startRun(G.cls.id,G.modeId,G.opts));
+$('#btnRestartP').addEventListener('click',()=>{ if(G&&G.mode.again){ G.mode.again(); return; } startRun(G.cls.id,G.modeId,G.opts); });   // mode.again: daily dungeons ask for a new entry
 $('#btnMenuP').addEventListener('click',toTitle);
-$('#btnAgain').addEventListener('click',()=>G?startRun(G.cls.id,G.modeId,G.opts):startRun(selected));
+$('#btnAgain').addEventListener('click',()=>{ if(G&&G.mode.again){ G.mode.again(); return; } G?startRun(G.cls.id,G.modeId,G.opts):startRun(selected); });
 $('#btnMenuE').addEventListener('click',toTitle);
 $('#btnReroll').addEventListener('click',reroll);
 for(const b of document.querySelectorAll('#qSeg button')) b.addEventListener('click',()=>setQuality(b.dataset.q));

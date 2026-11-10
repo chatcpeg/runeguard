@@ -264,7 +264,7 @@ function grantRewards(ch,r,again){
   ch.play=(+ch.play||0)+t; ch.kills=(ch.kills|0)+kills; if(st.died) ch.deaths=(ch.deaths|0)+1;
   if(SAVE) SAVE.play=(+SAVE.play||0)+t;
   if(A){
-    const today=svDay(); if(A.daily.day!==today){ A.daily.day=today; A.daily.surv={}; A.daily.boss={}; A.daily.dg={}; }
+    const today=svDay(); if(A.daily.day<today){ A.daily.day=today; A.daily.surv={}; A.daily.boss={}; A.daily.dg={}; }   // forward only: a clock set back keeps today's counts
     if(r.mode==='survival'){ const T=String(r.tier|0), m=A.records.survival[ch.id]||(A.records.survival[ch.id]={}), old=m[T];
       if(!old||wave>old.wave||(wave===old.wave&&kills>old.kills)||(st.won&&!old.won)) m[T]={wave, kills, won:!!st.won||!!(old&&old.won)};
       if(r.daily) A.daily.surv[T]=1; }

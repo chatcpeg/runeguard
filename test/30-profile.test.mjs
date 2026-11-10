@@ -1678,5 +1678,23 @@ console.log('เฟส A: ธาตุ · สีชั้น · ด่านร�
   ok('โหมด dexp/dgold/drare มีรางวัล และเริ่มทุกสกิลที่ Lv1 (หรือระดับเริ่มต้น)', r.modes, r.modes);
 }
 
+console.log('ด่านรายวัน: ข้อที่ tester รอบ 4 เจอ');
+{
+  const { X } = fresh();
+  const r = X(`(()=>{ const o={}; SAVE=newSave(null); const ch=newChar('ตั๋ว','mage'); SAVE.chars.push(ch); SAVE.active=ch.id; ch.lv=30;
+    const t=dgTicket(); o.t=[DG_TICKETS.has(t), DG_TICKETS.delete(t), DG_TICKETS.delete(t)];
+    G={char:ch, dgPaid:false, diff:DG.diff[1], goldRun:500, dgPts:100}; const r1={baseXp:0, gold:500, items:[{id:'m_dust', n:3}]}; MODES.dgold.rewards(r1,true); o.unpaid=[r1.gold, r1.items.length, !!r1.unpaid];
+    G.dgPaid=true; const r2={gold:500, items:[]}; MODES.dgold.rewards(r2,true); o.paid=[r2.gold, r2.daily===undefined];
+    SAVE.acct.daily.day='2999-01-01'; SAVE.acct.daily.dg={gold:2}; o.future=dgLeft('gold');
+    o.again=['dexp','dgold','drare'].every(k=>MODES[k].again===dgAgain&&MODES[k].daily===true);
+    o.proto=[dgWhy('constructor',0,ch), dgPer('__proto__')];
+    return o; })()`);
+  ok('ตั๋วเข้าด่านใช้ได้ครั้งเดียว', JSON.stringify(r.t) === '[true,true,false]', r.t);
+  ok('รอบที่ไม่ได้ใช้สิทธิ์ (เล่นอีกครั้ง/เริ่มใหม่/dev) ไม่ได้รางวัลเลย', JSON.stringify(r.unpaid) === '[0,0,true]', r.unpaid);
+  ok('รอบที่ใช้สิทธิ์: ทอง ×10 × ความยาก · ไม่ขึ้นป้าย ×2 ของเอาชีวิตรอด', r.paid[0] === 7500 && r.paid[1], r.paid);
+  ok('ถอยนาฬิกาเครื่องกลับ ไม่ได้สิทธิ์คืน', r.future === 0, r.future);
+  ok('เล่นอีกครั้ง/เริ่มใหม่ ในด่านรายวัน = กลับหน้าด่านรายวัน · ชื่อแปลก (constructor/__proto__) ไม่ผ่าน', r.again && /ไม่พบ/.test(r.proto[0]) && r.proto[1] === 0, r);
+}
+
 console.log(`\nผล: ผ่าน ${pass} · ไม่ผ่าน ${fail}`);
 process.exit(fail ? 1 : 0);

@@ -22,21 +22,29 @@ const DG={
     {n:'สุ่มทุกแบบ', el:['light','dark','fire','water','wind','earth'], t:[{id:'m_dust', n:[3,6]}, {id:'m_crystal', p:.6}, {shard:'surv', n:[1,3]}, {gear:'T'}, {id:'m_seal', p:.4}, {id:'u_potion_l'}]}],
   elMob:{fire:'dg_ember', water:'dg_tide', wind:'dg_gale', earth:'dg_stone', light:'dg_halo', dark:'dg_gloom'}};
 function dgWeekend(t){ const d=new Date(t==null?Date.now():t).getDay(); return d===0||d===6; }
-function dgPer(kind){ const K=DG.kinds[kind]; return kind==='rare'&&dgWeekend()?2:K.per; }
-function dgUsed(kind,A){ A=A||pgAcct(); if(!A||!A.daily||A.daily.day!==svDay()) return 0; return (A.daily.dg&&A.daily.dg[kind])|0; }
+function dgKind(kind){ return typeof kind==='string'&&svHas(DG.kinds,kind)?DG.kinds[kind]:null; }
+function dgPer(kind){ const K=dgKind(kind); return !K?0:kind==='rare'&&dgWeekend()?2:K.per; }
+// the day only moves forward: a save stamped later than the clock (clock set back) keeps its counts (tester r4 F6)
+function dgUsed(kind,A){ A=A||pgAcct(); if(!A||!A.daily||A.daily.day<svDay()) return 0; return (A.daily.dg&&svHas(A.daily.dg,kind)&&A.daily.dg[kind])|0; }
 function dgLeft(kind){ return Math.max(0,dgPer(kind)-dgUsed(kind)); }
 function dgLeftAll(){ return dgLeft('exp')+dgLeft('gold')+dgLeft('rare'); }
 function dgWhy(kind,di,ch){ if(!ch) return 'ต้องมีตัวละครก่อน'; if(pgRO()) return 'ข้อมูลเป็นเวอร์ชันใหม่กว่าแอป แก้ไขไม่ได้';
-  const D=DG.diff[di]; if(!D||!DG.kinds[kind]) return 'ไม่พบด่าน'; if((ch.lv|0)<D.lv) return 'ต้องเลเวล '+D.lv+' ขึ้นไป';
+  const D=DG.diff[di]; if(!D||!dgKind(kind)) return 'ไม่พบด่าน'; if((ch.lv|0)<D.lv) return 'ต้องเลเวล '+D.lv+' ขึ้นไป';
   if(dgLeft(kind)<=0) return 'วันนี้ใช้สิทธิ์ครบแล้ว · รีเซ็ตเที่ยงคืน'; return ''; }
+// one-use tickets: only a run started by dgEnter (which took the entry) pays · play again / restart / the dev hook get none (tester r4 F1)
+const DG_TICKETS=new Set();
+function dgTicket(){ const t='t'+Math.floor(rngUnit()*1e12).toString(36)+DG_TICKETS.size; DG_TICKETS.add(t); return t; }
 // take one entry (saved before the run starts, so closing the app never gives it back) → start the run
 function dgEnter(kind,di){
   if(typeof svlFresh==='function') try{ svlFresh(); }catch(e){}
   const ch=pgFresh(curChar()); if(dgWhy(kind,di,ch)) return false; const A=pgAcct(); if(!A) return false;
-  const today=svDay(); if(A.daily.day!==today){ A.daily.day=today; A.daily.surv={}; A.daily.boss={}; A.daily.dg={}; }
-  if(!A.daily.dg) A.daily.dg={}; A.daily.dg[kind]=(A.daily.dg[kind]|0)+1; pgSave(ch,'daily',true);
+  const today=svDay(); if(A.daily.day<today){ A.daily.day=today; A.daily.surv={}; A.daily.boss={}; A.daily.dg={}; }
+  if(!A.daily.dg) A.daily.dg={}; A.daily.dg[kind]=(A.daily.dg[kind]|0)+1;
+  const S0=SAVE; pgSave(ch,'daily',true); if(SAVE!==S0) return false;    // another tab's save came in instead: the entry was not kept -> no run
   if(typeof closeSheet==='function') closeSheet(); if(typeof shChrome==='function') shChrome(null);
-  startRun(ch.cls,'d'+kind,{char:ch, diff:di}); return true; }
+  startRun(ch.cls,'d'+kind,{char:ch, diff:di, ticket:dgTicket()}); return true; }
+// play again / restart inside a daily dungeon -> back to the fort's daily sheet (a new entry is needed)
+function dgAgain(){ try{ toTitle(); }catch(e){ console.error(e); } setTimeout(()=>{ try{ dgOpen(); }catch(e){ console.error(e); } },60); }
 
 /* ---- shared run logic ---- */
 function dgCfg(){ const c=waveCfg(G.dgW), T=G.tier||0, D=G.diff; c.hpMul*=BAL.SURV.hpMul(T)*D.hp; c.dmgMul*=BAL.SURV.dmgMul(T)*D.dmg; c.W={}; return c; }
@@ -53,7 +61,7 @@ function dgSteer(e,dt,d,dx,dy){ if(!e.d.flee) return false;
   e.x+=(e.vx+e.kx)*dt; e.y+=(e.vy+e.ky)*dt; if(Math.abs(e.vx)>3) e.face=e.vx<0?-1:1;
   e.walk+=e.d.fly?dt*14:Math.hypot(e.vx,e.vy)*dt/(e.d.r*.9);
   if(G.obstacles&&!e.d.fly){ e.tSlow=1; pushOutObstacles(e); } return true; }
-function dgCoin(x,y){ const v=Math.max(1,Math.round(1+.15*((G.char&&G.char.lv)|0))); ltGem(x,y,'gold',{gold:v}); }
+function dgCoin(x,y){ const v=Math.max(1,Math.round((15+5*(G.tier||0))/20)); ltGem(x,y,'gold',{gold:v}); }   // about survival's gold rate before x10 (tester r4 F3)
 // rank + element tags over heads, the strong/resist flash, rank rings · only visible monsters, at most 50
 function dgLabels(L,T,R,B){ let n=0; ctx.textAlign='center'; ctx.textBaseline='middle';
   for(const e of G.enemies){ if(e.dead||e.x<L-40||e.x>R+40||e.y<T-40||e.y>B+40) continue; if(++n>50) break;
@@ -64,16 +72,16 @@ function dgLabels(L,T,R,B){ let n=0; ctx.textAlign='center'; ctx.textBaseline='m
     if(e.elT!=null&&G.t-e.elT<.6){ const s=e.elM>1, t=s?'แรง!':'ต้าน'; ctx.font='bold '+(s?14:11)+'px Mali, Tahoma, sans-serif'; ctx.lineWidth=3; ctx.strokeStyle='rgba(0,0,0,.8)';
       ctx.strokeText(t,e.x,y-14); ctx.fillStyle=s?'#ffe14a':'#a0a6b0'; ctx.fillText(t,e.x,y-14); } } }
 function dgMode(kind,o){ const K=DG.kinds[kind];
-  return Object.assign({id:'d'+kind, n:K.n, cards:'auto', relocate:true,
-    init(opts){ const ch=G.char; G.dk=kind; G.diff=DG.diff[(opts&&opts.diff)|0]||DG.diff[0]; G.tier=Math.max(0,Math.min(10,Math.floor(((ch&&ch.lv)|0)/6)));
+  return Object.assign({id:'d'+kind, n:K.n, cards:'auto', relocate:true, daily:true, again:dgAgain,
+    init(opts){ const ch=G.char; G.dk=kind; G.dgPaid=!!(opts&&opts.ticket&&DG_TICKETS.delete(opts.ticket)); G.diff=DG.diff[(opts&&opts.diff)|0]||DG.diff[0]; G.tier=Math.max(0,Math.min(10,Math.floor(((ch&&ch.lv)|0)/6)));
       G.defK=BAL.SURV.defK(G.tier); G.dgT=K.sec; G.dgW=3; G.dgRamp=30; G.dgPts=0; G.wave=1; G.cfg=dgCfg(); terInit(K.biome); if(o.init) o.init(); },
-    update(dt){ terTick(dt); G.dgT-=dt; G.dgRamp-=dt; if(G.dgRamp<=0){ G.dgRamp=30; G.dgW=Math.min(14,G.dgW+1); G.wave++; G.cfg=dgCfg(); }
+    update(dt){ terTick(dt); if(!(o.frozen&&o.frozen())) G.dgT-=dt; G.dgRamp-=dt; if(G.dgRamp<=0){ G.dgRamp=30; G.dgW=Math.min(14,G.dgW+1); G.wave++; G.cfg=dgCfg(); }
       o.update(dt); if(!G.over&&G.dgT<=0) endRun(o.timeWin!==false); },
     steer:dgSteer, onKill(e){ if(o.onKill) o.onKill(e); },
     hud(){ return {lv:'ชำนาญ Lv '+P.lv+' · '+(P.adv?P.adv.n:P.cls.n), wave:K.i+' '+o.score()+' · '+G.diff.n, time:'เหลือ '+fmtTime(Math.max(0,G.dgT))}; },
     pauseTitle(){ return K.n+' · '+G.diff.n+' · '+o.score()+' · เหลือ '+fmtClock(Math.max(0,G.dgT)); },
-    end(won){ return {eyebrow:K.n+' · '+G.diff.n, title:o.title(won), rows:()=>[['ผลงาน',o.score()],['เวลา',fmtClock(G.t)],['สังหาร',fmtNum(G.kills)],['ชำนาญ',P.lv],['ความยาก',G.diff.n+' (รางวัล ×'+G.diff.rw+')']]}; },
-    rewards(r,won){ r.daily=true; o.rewards(r,won); },
+    end(won){ if(o.end) won=o.end(won); return {eyebrow:K.n+' · '+G.diff.n+(G.dgPaid?'':' · ไม่ได้ใช้สิทธิ์ (ไม่มีรางวัล)'), title:o.title(won), rows:()=>[['ผลงาน',o.score()],['เวลา',fmtClock(G.t)],['สังหาร',fmtNum(G.kills)],['ชำนาญ',P.lv],['ความยาก',G.diff.n+' (รางวัล ×'+G.diff.rw+')']]}; },
+    rewards(r,won){ if(!G.dgPaid){ r.baseXp=0; r.gold=0; r.items=[]; r.unpaid=true; return; } r.dgMul=G.diff.rw; o.rewards(r,won); },
     drawGround(L,T,R,B){ ctx.fillStyle=groundPat; ctx.fillRect(L,T,R-L,B-T); ctx.fillStyle=o.tint; ctx.fillRect(L,T,R-L,B-T); },
     drawWorld(L,T,R,B){ terDrawGround(L,T,R,B); if(o.drawWorld) o.drawWorld(L,T,R,B); },
     drawOver(L,T,R,B){ terDrawOver(L,T,R,B); dgLabels(L,T,R,B); }}, o.extra||{}); }
@@ -90,35 +98,45 @@ MODES.dexp=dgMode('exp',{tint:'rgba(120,200,90,.10)',
 
 /* ---- คลังทองก็อบลิน ---- */
 MODES.dgold=dgMode('gold',{tint:'rgba(30,60,20,.18)',
-  init(){ for(let i=0;i<8;i++) dgSpawn('dg_courier',1); G.dgAcc=0; G.dgChests=[]; G.dgChestT=8; },
+  init(){ for(let i=0;i<8;i++) dgSpawn('dg_courier',1); G.dgAcc=0; G.dgChests=[]; G.dgChestT=10; },
   update(dt){ G.dgAcc+=dt*(1.6+G.dgW*.14);
     while(G.dgAcc>=1){ G.dgAcc-=1; if(dgCount(e=>e.d.flee)<12) dgSpawn('dg_courier',1);
       if(dgCount(e=>!e.d.flee)<4+G.dgW*1.4) dgSpawn(Math.random()<.3?'dg_slinger':'dg_raider',1); }
-    G.dgChestT-=dt; if(G.dgChestT<=0&&G.dgChests.length<2){ G.dgChestT=22; const a=Math.random()*TAU, d=300+Math.random()*180; let x=P.x+Math.cos(a)*d, y=P.y+Math.sin(a)*d;
+    G.dgChestT-=dt; if(G.dgChestT<=0&&G.dgChests.length<2){ G.dgChestT=30; const a=Math.random()*TAU, d=300+Math.random()*180; let x=P.x+Math.cos(a)*d, y=P.y+Math.sin(a)*d;
       for(let k=0;k<6&&G.obstacles&&terBlocks(x,y,30);k++){ x+=60; y+=30; }
       G.dgChests.push({x,y,t:0,hold:0}); addText(P.x,P.y-54,'หีบทองโผล่!','#f0c75a',true); }
     for(const c of G.dgChests){ c.t+=dt; const inR=Math.hypot(P.x-c.x,P.y-c.y)<52; c.hold=inR?c.hold+dt:Math.max(0,c.hold-dt*2);
-      if(c.hold>=2){ c.dead=true; for(let i=0;i<14;i++) dgCoin(c.x,c.y); burst(c.x,c.y,16,'#f0c75a',200,.6,3); sfx('level'); addText(c.x,c.y-30,'หีบทองแตก!','#f0c75a',true); }
+      if(c.hold>=2){ c.dead=true; for(let i=0;i<8;i++) dgCoin(c.x,c.y); burst(c.x,c.y,16,'#f0c75a',200,.6,3); sfx('level'); addText(c.x,c.y-30,'หีบทองแตก!','#f0c75a',true); }
       else if(c.t>40) c.dead=true; }
     G.dgChests=G.dgChests.filter(c=>!c.dead); },
-  onKill(e){ if(e.d.bag){ const n=6+(e.rank|0)*4; for(let i=0;i<n;i++) dgCoin(e.x,e.y); burst(e.x,e.y,10,'#f0c75a',160,.5,3); }
-    else if(Math.random()<.35) dgCoin(e.x,e.y); },
+  onKill(e){ if(e.d.bag){ const n=3+(e.rank|0)*2; for(let i=0;i<n;i++) dgCoin(e.x,e.y); burst(e.x,e.y,10,'#f0c75a',160,.5,3); }
+    else if(Math.random()<.12) dgCoin(e.x,e.y); },
   score(){ return 'ทอง '+fmtNum(G.goldRun|0); }, title(){ return 'จบด่าน'; },
   rewards(r){ r.dgGold=G.goldRun|0; r.gold=Math.round((G.goldRun|0)*DG.mul*G.diff.rw); },
   drawWorld(){ for(const c of G.dgChests||[]){ const x=c.x, y=c.y; ctx.fillStyle='rgba(0,0,0,.3)'; ctx.beginPath(); ctx.ellipse(x,y+14,26,8,0,0,TAU); ctx.fill();
     ctx.fillStyle='#8a5a2a'; ctx.strokeStyle='#120c10'; ctx.lineWidth=3; ctx.fillRect(x-22,y-14,44,28); ctx.strokeRect(x-22,y-14,44,28);
     ctx.fillStyle='#f0c75a'; ctx.fillRect(x-22,y-4,44,5); ctx.fillRect(x-4,y-8,8,12); glow(x,y-6,40,'#f0c75a',.25+.15*Math.sin(G.t*5));
     ctx.strokeStyle='rgba(255,255,255,.25)'; ctx.lineWidth=2; ctx.beginPath(); ctx.arc(x,y,52,0,TAU); ctx.stroke();
-    if(c.hold>0){ ctx.strokeStyle='#f0c75a'; ctx.lineWidth=5; ctx.beginPath(); ctx.arc(x,y,52,-PI/2,-PI/2+TAU*Math.min(1,c.hold/2)); ctx.stroke(); } } }});
+    if(c.hold>0){ ctx.strokeStyle='#f0c75a'; ctx.lineWidth=5; ctx.beginPath(); ctx.arc(x,y,52,-PI/2,-PI/2+TAU*Math.min(1,c.hold/2)); ctx.stroke(); } } },
+  extra:{drawOver(L,T,R,B){ terDrawOver(L,T,R,B); dgLabels(L,T,R,B); dgChestArrows(L,T,R,B); }}});
+// a gold chest outside the view -> an arrow + chest icon on the view edge (like the HUD drop arrows)
+function dgChestArrows(L,T,R,B){ const m=34; for(const c of G.dgChests||[]){ if(c.x>L&&c.x<R&&c.y>T&&c.y<B) continue;
+  const cx=(L+R)/2, cy=(T+B)/2, dx=c.x-cx, dy=c.y-cy, s=Math.min(((R-L)/2-m)/Math.abs(dx||1e-6),((B-T)/2-m)/Math.abs(dy||1e-6)), x=cx+dx*s, y=cy+dy*s, a=Math.atan2(dy,dx);
+  ctx.save(); ctx.translate(x,y); ctx.fillStyle='rgba(20,16,8,.75)'; ctx.beginPath(); ctx.arc(0,0,18,0,TAU); ctx.fill(); ctx.strokeStyle='#f0c75a'; ctx.lineWidth=2.5; ctx.stroke();
+  ctx.rotate(a); ctx.fillStyle='#f0c75a'; ctx.beginPath(); ctx.moveTo(26,0); ctx.lineTo(17,-7); ctx.lineTo(17,7); ctx.closePath(); ctx.fill(); ctx.rotate(-a);
+  ctx.font='16px sans-serif'; ctx.textAlign='center'; ctx.textBaseline='middle'; ctx.fillText('💰',0,1); ctx.restore(); } }
 
 /* ---- ห้องสมบัติหายาก ---- */
 function dgRareDay(){ return DG.rare[new Date().getDay()]; }
 MODES.drare=dgMode('rare',{tint:'rgba(60,70,120,.14)', timeWin:false,
+  frozen(){ return G.dgPhase==='loot'||G.dgPhase==='done'; },                // the guardian is down: the clock stops (tester r4 F2/F5)
+  end(won){ for(const g of G.gems) if(!g.dead&&g.kind==='bosschest'){ ITEMKIND.bosschest.collect(g); g.dead=true; }   // any ending keeps a dropped chest
+    return won||G.dgPhase==='loot'||G.dgPhase==='done'; },
   init(){ G.dgDay=dgRareDay(); G.dgWave=0; G.dgPhase='wait'; G.dgNext=1.5; G.dgQ=0; },
   update(dt){ const Dd=G.dgDay;
     if(G.dgPhase==='wait'){ G.dgNext-=dt; if(G.dgNext>0) return; G.dgWave++;
       if(G.dgWave<=3){ G.dgPhase='wave'; G.dgQ=[10,14,18][G.dgWave-1]; G.dgSp=0; banner('คลื่นที่ '+G.dgWave+'/3','ธาตุวันนี้: '+Dd.el.slice(0,2).map(k=>EL[k].i+EL[k].n).join(' · ')); sfx('wave'); }
-      else { G.dgPhase='boss'; const a=-PI/2, R=Math.max(VW,VH)/2*.7; const hp=EN.dg_guard.hp*BAL.SURV.hpMul(G.tier)*G.diff.hp;
+      else { G.dgPhase='boss'; const a=-PI/2, R=Math.max(VW,VH)/2*.7; const hp=EN.dg_guard.hp*BAL.SURV.hpMul(G.tier)*(1+(G.diff.hp-1)*.6);   // hard x2.2 (not x3): beatable at the level gate (tester r4 F14)
         const e=spawnEnemy('dg_guard',P.x+Math.cos(a)*R,P.y+Math.sin(a)*R,{hp}); e.boss=true; e.el=Dd.el[0]; G.boss=true; G.bosses=[e];
         banner('ผู้เฝ้าคลังรูน',EL[e.el].i+' ธาตุ'+EL[e.el].n+' · ใช้ธาตุที่ชนะ'); sfx('boss'); }
       return; }
@@ -154,12 +172,14 @@ HUB.push({id:'daily', n:'ด่านรายวัน', i:'📅', order:22, ba
 if(typeof TF_HELP!=='undefined'){                                      // help pages (59) · absent in pure test loads
 TF_HELP.daily=['ด่านรายวัน',()=>`<p>ด่านสั้น ๆ ที่ให้รางวัลก้อนใหญ่ · นับสิทธิ์ตามวันในเครื่อง รีเซ็ตเที่ยงคืน · สิทธิ์ถูกใช้ทันทีที่กดเข้า (ปิดแอปหนีก็ไม่คืน)</p>
   <table>${tfRow('✨ ลานวิญญาณ','2 ครั้ง/วัน · 3 นาที · ไล่ฆ่าภูตที่วิ่งหนี (ภูตทอง ×5 แต้ม) → EXP ×10')}${tfRow('💰 คลังทอง','2 ครั้ง/วัน · 3 นาที · ฆ่าก็อบลินแบกถุงทอง ยืนเปิดหีบ 2 วิ → ทอง ×10')}${tfRow('🎁 ห้องสมบัติ','1 ครั้ง/วัน (เสาร์อาทิตย์ 2) · 3 คลื่น + ผู้เฝ้าคลัง → หีบของประจำวัน')}</table>
+  <p>ปุ่ม เล่นอีกครั้ง / เริ่มใหม่ พากลับมาหน้านี้ (ต้องใช้สิทธิ์ใหม่) · ถอยทัพ · รับรางวัล ในเมนูพักออกพร้อมรางวัลที่ได้</p>
   <h4>ความยาก</h4><table>${DG.diff.map(D=>tfRow(D.n,'Lv '+D.lv+'+ · มอน HP ×'+D.hp+' ดาเมจ ×'+D.dmg+' · รางวัล ×'+D.rw)).join('')}</table>
   <h4>ห้องสมบัติแต่ละวัน</h4><table>${['อาทิตย์','จันทร์','อังคาร','พุธ','พฤหัส','ศุกร์','เสาร์'].map((n,i)=>tfRow(n,DG.rare[i].n+' · ธาตุ '+DG.rare[i].el.slice(0,2).map(k=>EL[k].i).join(''))).join('')}</table>
+  <p><button type="button" class="btn ghost" data-help="elements">ดูวงล้อธาตุ</button></p>
   <h4>ในด่าน</h4><p>ทุกสกิลในช่องติดตัวเริ่มที่ Lv 1 (หรือระดับเริ่มต้นที่ซื้อไว้) แล้วอัปด้วยการ์ด · มอนมีธาตุและสีชั้น (ฟ้า ชำนาญ · ม่วง หัวหน้า · ทอง ยอดฝีมือ) · พื้นมีหิน ต้นไม้ พุ่มไม้ และน้ำ</p>`];
 TF_HELP.elements=['ธาตุ',()=>`<p>สกิลที่มีธาตุตีมอนที่มีธาตุ จะแรงหรือเบาลงตามวงล้อ · มอนในเอาชีวิตรอดและคลาสสิก (อันเดด) ไม่มีธาตุ</p>
   <p>🔥 ไฟ → 🌪️ ลม → 🪨 ดิน → 💧 น้ำ → 🔥 ไฟ (ลูกศร = ชนะ) · ✨ แสง ⇄ 🌑 มืด ชนะกันและกัน</p>
   <table>${tfRow('ชนะธาตุ','ดาเมจ ×1.5 · ขึ้นคำว่า แรง!')}${tfRow('แพ้ธาตุ','ดาเมจ ×0.6 · ขึ้นคำว่า ต้าน')}${tfRow('ธาตุเดียวกัน','ดาเมจ ×0.75')}${tfRow('อื่น ๆ','×1')}</table>
   <h4>สกิลแต่ละธาตุ</h4><table>${Object.keys(EL).map(k=>tfRow(EL[k].i+' '+EL[k].n,Object.keys(SK).filter(id=>SK[id].el===k).map(id=>SK[id].n).join(' · ')||'-')).join('')}${tfRow('⚪ ไม่มี','สกิลที่เหลือ (×1 กับทุกธาตุ)')}</table>`]; }
 // dev (§7.9): RG.daily.go('exp'|'gold'|'rare', 0–2) starts without using an entry · RG.daily.left()
-DEV.daily={ go(k,d){ const ch=curChar(); if(!ch) return 'no char'; startRun(ch.cls,'d'+k,{char:ch, diff:d|0}); return G&&G.modeId; }, left(){ return {exp:dgLeft('exp'), gold:dgLeft('gold'), rare:dgLeft('rare')}; } };
+DEV.daily={ go(k,d){ if(typeof shopDevHost==='function'&&!shopDevHost()) return 'local dev only'; const ch=curChar(); if(!ch) return 'no char'; startRun(ch.cls,'d'+k,{char:ch, diff:d|0}); return G&&G.modeId; }, left(){ return {exp:dgLeft('exp'), gold:dgLeft('gold'), rare:dgLeft('rare')}; } };

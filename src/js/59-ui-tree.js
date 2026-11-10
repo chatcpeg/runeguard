@@ -7,7 +7,7 @@ function tfHelpBox(title,html){
   let r=document.getElementById('tfHelp');
   if(!r){ r=document.createElement('div'); r.id='tfHelp'; r.className='tf-help'; r.hidden=true;
     r.innerHTML='<div class="tf-hcard" role="dialog" aria-modal="true" aria-labelledby="tfHelpT"><h3 id="tfHelpT"></h3><div class="tf-hbody"></div><button type="button" class="btn" data-x="1">เข้าใจแล้ว</button></div>';
-    r.addEventListener('click',e=>{ if(e.target===r||e.target.closest('[data-x]')) tfHelpOff(); });
+    r.addEventListener('click',e=>{ const h=e.target.closest('[data-help]'); if(h){ tfHelp(h.dataset.help); return; } if(e.target===r||e.target.closest('[data-x]')) tfHelpOff(); });   // links between help pages
     addEventListener('keydown',e=>{ if(r.hidden) return; e.stopPropagation(); if(e.key==='Escape'||e.key==='Enter'||e.key===' '){ e.preventDefault(); tfHelpOff(); } },true);   // keys never reach the cards under it
     document.body.append(r); }
   r.querySelector('#tfHelpT').textContent=title; r.querySelector('.tf-hbody').innerHTML=html; r.hidden=false;
@@ -31,7 +31,7 @@ const TF_HELP={
   level:['การเลือกการ์ด',()=>`<p>ทุกครั้งที่ความชำนาญเพิ่มขึ้นในรอบ เกมหยุดให้เลือกการ์ด 1 ใบ · แตะ <b>?</b> ที่มุมการ์ดเพื่อดูตัวเลขเต็มของใบนั้น</p>
   <h4>ชนิดการ์ด</h4><table>${tfRow('สกิลใหม่','ได้สกิลในช่องติดตัว เริ่ม Lv 1')}${tfRow('อัปเลเวล','สกิลที่มีอยู่ +1 Lv ไม่เกิน ★ ที่ฝึกไว้')}${tfRow('วิวัฒนาการ','สกิล Lv 5 + ค่าสถานะถึงเกณฑ์ → ร่างใหม่')}${tfRow('ค่าสถานะ','สุ่มมาตลอดไม่มีหมด · เพิ่มพลังสกิลที่ใช้ค่านั้นเป็นค่าหลัก 0.5% ต่อใบ · ครบทุก 5 ใบได้จุดเปลี่ยน · ใบที่ 6 ขึ้นไปผลทั่วไปครึ่งหนึ่ง')}${tfRow('ไอเทม','ยาหรือทอง ขึ้นเมื่อการ์ดอื่นหมด')}</table>
   <h4>สุ่มใหม่</h4><p>ปุ่มสุ่มใหม่เปลี่ยนการ์ดทั้งชุด · จำนวนครั้งแสดงบนปุ่ม</p>
-  <h4>ธาตุ</h4><p>ป้ายสีบนการ์ดบอกธาตุของสกิล · ตีมอนที่แพ้ธาตุ ดาเมจ ×1.5 · ตีมอนที่ต้านธาตุ ×0.6 (มอนอันเดดไม่มีธาตุ) · แตะ ? บนหน้าด่านรายวันเพื่อดูวงล้อธาตุ</p>
+  <h4>ธาตุ</h4><p>ป้ายสีบนการ์ดบอกธาตุของสกิล · ตีมอนที่แพ้ธาตุ ดาเมจ ×1.5 · ตีมอนที่ต้านธาตุ ×0.6 (มอนอันเดดไม่มีธาตุ) · <button type="button" class="btn ghost" data-help="elements">ดูวงล้อธาตุ</button></p>
   <h4>ปุ่มลัด</h4><p>กด 1–${G&&G.choices?G.choices.length:3} เลือกการ์ด</p>`]};
 function tfHelp(key){ const h=TF_HELP[key]; if(h) tfHelpBox(h[0],h[1]()); }
 
@@ -129,7 +129,7 @@ function tfCardDetail(o){
   return ['💰 ถุงทอง','<p>คะแนน +250'+(G.char?' และทองจริง +'+5*P.lv+' (5 × Lv ความชำนาญตอนนี้)':'')+' · ขึ้นเมื่อไม่มีการ์ดอื่นให้สุ่มพอ</p>']; }
 function tfCardQ(c,o){
   if(c.querySelector('.tf-cq')) return;
-  { const el=o.k==='new'?SK[o.id]&&SK[o.id].el:o.k==='up'?skEl(o.s):o.k==='evo'?(SK_EVO_EL[o.s.id]||o.s.def.el):null, t=c.querySelector('.tag');   // element chip (29)
+  if(G&&G.char){ const el=o.k==='new'?SK[o.id]&&SK[o.id].el:o.k==='up'?skEl(o.s):o.k==='evo'?(SK_EVO_EL[o.s.id]||o.s.def.el):null, t=c.querySelector('.tag');   // element chip (29)
     if(el&&t&&EL[el]) t.insertAdjacentHTML('beforeend',` <span class="el-chip" style="--elc:${EL[el].c}">${EL[el].i} ${EL[el].n}</span>`); } const q=document.createElement('span'); q.className='tf-cq'; q.textContent='?'; q.setAttribute('role','button');
   q.setAttribute('aria-label','อธิบายการ์ดนี้ละเอียด'); q.title='อธิบายละเอียด';
   const go=e=>{ e.preventDefault(); e.stopPropagation(); try{ const [t,h]=tfCardDetail(o); tfHelpBox(t,h); }catch(er){ console.error(er); } };

@@ -20,7 +20,7 @@ for(const id in SK_EL) if(SK[id]) SK[id].el=SK_EL[id];
 function skEl(s){ if(!s||!s.def) return null; if(s.evolved&&SK_EVO_EL[s.id]) return SK_EVO_EL[s.id]; return s.def.el||null; }
 function elChip(el){ const E=el&&EL[el]; return E?E.i:''; }
 // damageEnemy calls this only when the monster has an element · remembers the last result for the label over its head
-function elHit(e,s){ const m=elMul(skEl(s),e.el); if(m!==1){ e.elM=m; e.elT=G.t; } return m; }
+function elHit(e,s){ const m=elMul(skEl(s),e.el); if(m>1||m===EL_MUL.weak){ e.elM=m; e.elT=G.t; } return m; }
 
 /* ---- rank colours (§2) ---- */
 const RANK=[
@@ -47,7 +47,7 @@ Object.assign(EN,{
   dg_stone:{n:'ร่างรูนศิลา', base:'brute', tint:'#a8824a', hp:70, speed:40, r:20, dmg:14, mass:4, xp:4, goo:'#c89a5a', el:'earth'},
   dg_halo:{n:'ร่างรูนอรุณ', base:'wraith', tint:'#ffe27a', hp:26, speed:70, r:13, dmg:8, mass:.6, xp:3, goo:'#ffe27a', phase:1, el:'light'},
   dg_gloom:{n:'ร่างรูนราตรี', base:'spitter', tint:'#6a3aaa', hp:24, speed:52, r:12, dmg:6, mass:.9, xp:3, goo:'#b48cff', ranged:1, keep:240, shotCd:2.6, shotSp:210, shotDmg:7, el:'dark'},
-  dg_guard:{boss:1, n:'ผู้เฝ้าคลังรูน', base:'colossus', ai:'colossus', tint:'#4a7ab8', hp:2400, speed:58, r:40, dmg:22, mass:70, xp:120, goo:'#8fb8ff'}});
+  dg_guard:{boss:1, n:'ผู้เฝ้าคลังรูน', base:'colossus', ai:'colossus', tint:'#4a7ab8', hp:1500, speed:58, r:40, dmg:22, mass:70, xp:120, goo:'#8fb8ff'}});
 
 // goblin painter: small green body, big ears, leather vest · a sack on the back for couriers (d.bag)
 if(typeof EDRAW!=='undefined'){                                         // painters (13) · absent in pure test loads
