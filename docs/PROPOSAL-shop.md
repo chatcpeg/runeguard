@@ -48,7 +48,7 @@ BAZI จะตอบ 400 (ไม่มี `credits`) → Stripe ส่งซ้�
 **เจ้าของต้องทำเอง** (ผมใส่คีย์หรือสมัครแทนไม่ได้)
 1. อนุมัติ SQL `rg_001_init.sql` (cloud save, ค้างอยู่) และ `rg_002_purchases.sql` (ข้างล่าง)
 2. ใน Stripe: สร้าง webhook endpoint `https://runeguard-lac.vercel.app/api/stripe-webhook` (event `checkout.session.completed`)
-3. ใน Vercel โปรเจกต์ runeguard → Environment Variables: `STRIPE_SECRET_KEY`, `STRIPE_WEBHOOK_SECRET`, `SUPABASE_SERVICE_ROLE_KEY` (เริ่มด้วย test mode ก่อน)
+3. ใน Vercel โปรเจกต์ runeguard → Environment Variables: `STRIPE_SECRET_KEY`, `STRIPE_WEBHOOK_SECRET`, `SUPABASE_SECRET_KEY` (คีย์ลับแยกของ Runeguard · เริ่มด้วย test mode ก่อน) — ขั้นตอนละเอียดใน `SETUP-payments.md`
 
 **ร่าง SQL `rg_002_purchases.sql`** (แตะแค่ rg_* · ไม่มี trigger บน auth.users · client อ่านได้อย่างเดียว)
 ```sql
