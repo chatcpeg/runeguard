@@ -35,6 +35,8 @@ function uid(prefix){
   let s=''; for(let i=0;i<8;i++) s+='0123456789abcdefghijklmnopqrstuvwxyz'[a[i]%36]; return p+s; }
 // local calendar day / ISO week (daily bonus · weekly rush)
 function svDay(t){ const d=new Date(t==null?Date.now():t); return d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0'); }
+// acct.daily.day still counts as today: the same day, or one day ahead at most (a save from a timezone ahead) · else stale
+function svDayCur(d,t){ t=t||svDay(); return d===t||(typeof d==='string'&&d>t&&d<=svDay(new Date(t+'T12:00:00').getTime()+864e5)); }   // t: the reference day (tests pass one)
 function svWeek(t){ const d=new Date(t==null?Date.now():t); const u=new Date(Date.UTC(d.getFullYear(),d.getMonth(),d.getDate())); const dn=u.getUTCDay()||7;
   u.setUTCDate(u.getUTCDate()+4-dn); const y=u.getUTCFullYear(), w=Math.ceil(((u-Date.UTC(y,0,1))/864e5+1)/7); return y+'-W'+String(w).padStart(2,'0'); }
 // a name the player typed: Unicode letters/marks/digits/space only, ≤ 16 characters ('' = unusable)

@@ -234,7 +234,7 @@ function onRunEnd(G,won,o){
       r.tier=T; r.waves=waves;
       r.baseXp=Math.round(BAL.bxpNeed(rec)*S.expMul(waves,won)*S.overLv(ch.lv|0,rec));
       r.gold=gpw*waves+(won?gpw*S.winGoldWaves:0)+(G.goldRun|0);
-      const used=A&&A.daily.day===today&&A.daily.surv[T];
+      const used=A&&svDayCur(A.daily.day)&&A.daily.surv[T];
       if((G.wave|0)>=S.dailyWave&&!used){ r.daily=true; r.baseXp*=S.dailyMul; r.gold*=S.dailyMul; }
       // next tier: reach wave 10 in the highest tier unlocked so far (never skips: a lower tier, or a locked one, unlocks nothing)
       if((G.wave|0)>=S.unlockWave&&T<S.maxT&&A&&(A.survTier|0)===T) r.unlocks.push('survTier:'+(T+1));
@@ -264,7 +264,7 @@ function grantRewards(ch,r,again){
   ch.play=(+ch.play||0)+t; ch.kills=(ch.kills|0)+kills; if(st.died) ch.deaths=(ch.deaths|0)+1;
   if(SAVE) SAVE.play=(+SAVE.play||0)+t;
   if(A){
-    const today=svDay(); if(A.daily.day<today){ A.daily.day=today; A.daily.surv={}; A.daily.boss={}; A.daily.dg={}; }   // forward only: a clock set back keeps today's counts
+    const today=svDay(); if(!svDayCur(A.daily.day)){ A.daily.day=today; A.daily.surv={}; A.daily.boss={}; A.daily.dg={}; }   // svDayCur: a clock set back a day keeps today's counts
     if(r.mode==='survival'){ const T=String(r.tier|0), m=A.records.survival[ch.id]||(A.records.survival[ch.id]={}), old=m[T];
       if(!old||wave>old.wave||(wave===old.wave&&kills>old.kills)||(st.won&&!old.won)) m[T]={wave, kills, won:!!st.won||!!(old&&old.won)};
       if(r.daily) A.daily.surv[T]=1; }

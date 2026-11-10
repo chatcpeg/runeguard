@@ -8,7 +8,9 @@ function tfHelpBox(title,html){
   if(!r){ r=document.createElement('div'); r.id='tfHelp'; r.className='tf-help'; r.hidden=true;
     r.innerHTML='<div class="tf-hcard" role="dialog" aria-modal="true" aria-labelledby="tfHelpT"><h3 id="tfHelpT"></h3><div class="tf-hbody"></div><button type="button" class="btn" data-x="1">เข้าใจแล้ว</button></div>';
     r.addEventListener('click',e=>{ const h=e.target.closest('[data-help]'); if(h){ tfHelp(h.dataset.help); return; } if(e.target===r||e.target.closest('[data-x]')) tfHelpOff(); });   // links between help pages
-    addEventListener('keydown',e=>{ if(r.hidden) return; e.stopPropagation(); if(e.key==='Escape'||e.key==='Enter'||e.key===' '){ e.preventDefault(); tfHelpOff(); } },true);   // keys never reach the cards under it
+    addEventListener('keydown',e=>{ if(r.hidden) return; e.stopPropagation(); const a=document.activeElement;
+      if((e.key==='Enter'||e.key===' ')&&a&&r.contains(a)&&a.dataset&&a.dataset.help){ e.preventDefault(); tfHelp(a.dataset.help); return; }
+      if(e.key==='Escape'||e.key==='Enter'||e.key===' '){ e.preventDefault(); tfHelpOff(); } },true);   // keys never reach the cards under it
     document.body.append(r); }
   r.querySelector('#tfHelpT').textContent=title; r.querySelector('.tf-hbody').innerHTML=html; r.hidden=false;
   const b=r.querySelector('[data-x]'); try{ b.focus(); }catch(e){} }

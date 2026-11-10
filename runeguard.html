@@ -4190,6 +4190,8 @@ function uid(prefix){
   let s=''; for(let i=0;i<8;i++) s+='0123456789abcdefghijklmnopqrstuvwxyz'[a[i]%36]; return p+s; }
 // local calendar day / ISO week (daily bonus · weekly rush)
 function svDay(t){ const d=new Date(t==null?Date.now():t); return d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0'); }
+// acct.daily.day still counts as today: the same day, or one day ahead at most (a save from a timezone ahead) · else stale
+function svDayCur(d,t){ t=t||svDay(); return d===t||(typeof d==='string'&&d>t&&d<=svDay(new Date(t+'T12:00:00').getTime()+864e5)); }   // t: the reference day (tests pass one)
 function svWeek(t){ const d=new Date(t==null?Date.now():t); const u=new Date(Date.UTC(d.getFullYear(),d.getMonth(),d.getDate())); const dn=u.getUTCDay()||7;
   u.setUTCDate(u.getUTCDate()+4-dn); const y=u.getUTCFullYear(), w=Math.ceil(((u-Date.UTC(y,0,1))/864e5+1)/7); return y+'-W'+String(w).padStart(2,'0'); }
 // a name the player typed: Unicode letters/marks/digits/space only, ≤ 16 characters ('' = unusable)
@@ -4951,7 +4953,7 @@ function onRunEnd(G,won,o){
       r.tier=T; r.waves=waves;
       r.baseXp=Math.round(BAL.bxpNeed(rec)*S.expMul(waves,won)*S.overLv(ch.lv|0,rec));
       r.gold=gpw*waves+(won?gpw*S.winGoldWaves:0)+(G.goldRun|0);
-      const used=A&&A.daily.day===today&&A.daily.surv[T];
+      const used=A&&svDayCur(A.daily.day)&&A.daily.surv[T];
       if((G.wave|0)>=S.dailyWave&&!used){ r.daily=true; r.baseXp*=S.dailyMul; r.gold*=S.dailyMul; }
       // next tier: reach wave 10 in the highest tier unlocked so far (never skips: a lower tier, or a locked one, unlocks nothing)
       if((G.wave|0)>=S.unlockWave&&T<S.maxT&&A&&(A.survTier|0)===T) r.unlocks.push('survTier:'+(T+1));
@@ -4981,7 +4983,7 @@ function grantRewards(ch,r,again){
   ch.play=(+ch.play||0)+t; ch.kills=(ch.kills|0)+kills; if(st.died) ch.deaths=(ch.deaths|0)+1;
   if(SAVE) SAVE.play=(+SAVE.play||0)+t;
   if(A){
-    const today=svDay(); if(A.daily.day<today){ A.daily.day=today; A.daily.surv={}; A.daily.boss={}; A.daily.dg={}; }   // forward only: a clock set back keeps today's counts
+    const today=svDay(); if(!svDayCur(A.daily.day)){ A.daily.day=today; A.daily.surv={}; A.daily.boss={}; A.daily.dg={}; }   // svDayCur: a clock set back a day keeps today's counts
     if(r.mode==='survival'){ const T=String(r.tier|0), m=A.records.survival[ch.id]||(A.records.survival[ch.id]={}), old=m[T];
       if(!old||wave>old.wave||(wave===old.wave&&kills>old.kills)||(st.won&&!old.won)) m[T]={wave, kills, won:!!st.won||!!(old&&old.won)};
       if(r.daily) A.daily.surv[T]=1; }
@@ -5427,7 +5429,7 @@ function hbSurvInfo(ch,T,A,day){   // pure: §2.2 tier row + this character's fu
   const exp=Math.round(BAL.bxpNeed(rec)*S.expMul(S.WAVES,true)*over), r=ch&&A&&A.records.survival[ch.id];
   const top=typeof IT_MAXT==='number'?IT_MAXT:5, gear=Math.min(S.gearTier(T),top);   // tiers above the shipped ones drop the highest shipped
   return {T, rec, hp:S.hpMul(T), dmg:S.dmgMul(T), gpw, gear, gear20:Math.min(S.gearTier(T)+1,top), over, exp, lvs:hbLvGain(ch,exp), gold:gpw*(S.WAVES+S.winGoldWaves),
-    daily:!(A&&A.daily.day===day&&A.daily.surv[T]), open:T<=HB_TIER_OPEN, unlocked:!!A&&T<=(A.survTier|0), record:r&&r[String(T)]||null}; }
+    daily:!(A&&svDayCur(A.daily.day,day)&&A.daily.surv[T]), open:T<=HB_TIER_OPEN, unlocked:!!A&&T<=(A.survTier|0), record:r&&r[String(T)]||null}; }
 function hbLvGain(ch,exp){ let L=ch?ch.lv|0:1, x=(ch?ch.xp|0:0); const p=L+x/BAL.bxpNeed(L); x+=exp;   // levels gained (fraction)
   while(L<BAL.CAP.base&&x>=BAL.bxpNeed(L)){ x-=BAL.bxpNeed(L); L++; } return L>=BAL.CAP.base?BAL.CAP.base-p:L+x/BAL.bxpNeed(L)-p; }
 function hbTier0(){ const A=SAVE&&SAVE.acct; return Math.max(0,Math.min(A?A.survTier|0:0,HB_TIER_OPEN,BAL.SURV.maxT)); }
@@ -6347,7 +6349,8 @@ function hdItemName(it){ let s=''; try{ s=it&&it.u?itemName(it):((itemDef(it&&it
 // pause / end buttons say "กลับป้อม" in character runs; classic gets its own words back
 // survival: restart (core: startRun, no endRun) drops this run's loot / gold / EXP like กลับป้อม does, so both say so
 function hdMenuText(g){ const c=!!(g&&g.char), sv=!!(g&&(g.modeId==='survival'||g.mode&&g.mode.daily));
-  for(const [id,t] of [['btnMenuP',sv?'กลับป้อม (ไม่รับรางวัล)':'กลับป้อม'],['btnRestartP',sv?'เริ่มใหม่ (ไม่รับรางวัล)':null],['btnMenuE','กลับป้อม']]){ const b=$('#'+id); if(!b) continue;
+  const dl=!!(g&&g.mode&&g.mode.daily);                                    // daily dungeons: restart / again lead to the daily sheet (69)
+  for(const [id,t] of [['btnMenuP',sv?'กลับป้อม (ไม่รับรางวัล)':'กลับป้อม'],['btnRestartP',dl?'เลือกด่านใหม่ (ไม่รับรางวัล)':sv?'เริ่มใหม่ (ไม่รับรางวัล)':null],['btnMenuE','กลับป้อม'],['btnAgain',dl?'เลือกด่านใหม่':null]]){ const b=$('#'+id); if(!b) continue;
     if(!(id in SH.txt)) SH.txt[id]=b.textContent; const want=c&&t?t:SH.txt[id]; if(b.textContent!==want) b.textContent=want; } }
 /* ---------- pause: full stat sheet + per-skill numbers (what every card picked so far added up to) ---------- */
 const HD_PCT=v=>(v>=0?'+':'')+Math.round(v*100)+'%';
@@ -6619,7 +6622,9 @@ function tfHelpBox(title,html){
   if(!r){ r=document.createElement('div'); r.id='tfHelp'; r.className='tf-help'; r.hidden=true;
     r.innerHTML='<div class="tf-hcard" role="dialog" aria-modal="true" aria-labelledby="tfHelpT"><h3 id="tfHelpT"></h3><div class="tf-hbody"></div><button type="button" class="btn" data-x="1">เข้าใจแล้ว</button></div>';
     r.addEventListener('click',e=>{ const h=e.target.closest('[data-help]'); if(h){ tfHelp(h.dataset.help); return; } if(e.target===r||e.target.closest('[data-x]')) tfHelpOff(); });   // links between help pages
-    addEventListener('keydown',e=>{ if(r.hidden) return; e.stopPropagation(); if(e.key==='Escape'||e.key==='Enter'||e.key===' '){ e.preventDefault(); tfHelpOff(); } },true);   // keys never reach the cards under it
+    addEventListener('keydown',e=>{ if(r.hidden) return; e.stopPropagation(); const a=document.activeElement;
+      if((e.key==='Enter'||e.key===' ')&&a&&r.contains(a)&&a.dataset&&a.dataset.help){ e.preventDefault(); tfHelp(a.dataset.help); return; }
+      if(e.key==='Escape'||e.key==='Enter'||e.key===' '){ e.preventDefault(); tfHelpOff(); } },true);   // keys never reach the cards under it
     document.body.append(r); }
   r.querySelector('#tfHelpT').textContent=title; r.querySelector('.tf-hbody').innerHTML=html; r.hidden=false;
   const b=r.querySelector('[data-x]'); try{ b.focus(); }catch(e){} }
@@ -6885,7 +6890,7 @@ function dgWeekend(t){ const d=new Date(t==null?Date.now():t).getDay(); return d
 function dgKind(kind){ return typeof kind==='string'&&svHas(DG.kinds,kind)?DG.kinds[kind]:null; }
 function dgPer(kind){ const K=dgKind(kind); return !K?0:kind==='rare'&&dgWeekend()?2:K.per; }
 // the day only moves forward: a save stamped later than the clock (clock set back) keeps its counts (tester r4 F6)
-function dgUsed(kind,A){ A=A||pgAcct(); if(!A||!A.daily||A.daily.day<svDay()) return 0; return (A.daily.dg&&svHas(A.daily.dg,kind)&&A.daily.dg[kind])|0; }
+function dgUsed(kind,A){ A=A||pgAcct(); if(!A||!A.daily||!svDayCur(A.daily.day)) return 0; return (A.daily.dg&&svHas(A.daily.dg,kind)&&A.daily.dg[kind])|0; }
 function dgLeft(kind){ return Math.max(0,dgPer(kind)-dgUsed(kind)); }
 function dgLeftAll(){ return dgLeft('exp')+dgLeft('gold')+dgLeft('rare'); }
 function dgWhy(kind,di,ch){ if(!ch) return 'ต้องมีตัวละครก่อน'; if(pgRO()) return 'ข้อมูลเป็นเวอร์ชันใหม่กว่าแอป แก้ไขไม่ได้';
@@ -6898,7 +6903,7 @@ function dgTicket(){ const t='t'+Math.floor(rngUnit()*1e12).toString(36)+DG_TICK
 function dgEnter(kind,di){
   if(typeof svlFresh==='function') try{ svlFresh(); }catch(e){}
   const ch=pgFresh(curChar()); if(dgWhy(kind,di,ch)) return false; const A=pgAcct(); if(!A) return false;
-  const today=svDay(); if(A.daily.day<today){ A.daily.day=today; A.daily.surv={}; A.daily.boss={}; A.daily.dg={}; }
+  const today=svDay(); if(!svDayCur(A.daily.day)){ A.daily.day=today; A.daily.surv={}; A.daily.boss={}; A.daily.dg={}; }
   if(!A.daily.dg) A.daily.dg={}; A.daily.dg[kind]=(A.daily.dg[kind]|0)+1;
   const S0=SAVE; pgSave(ch,'daily',true); if(SAVE!==S0) return false;    // another tab's save came in instead: the entry was not kept -> no run
   if(typeof closeSheet==='function') closeSheet(); if(typeof shChrome==='function') shChrome(null);
@@ -6980,7 +6985,7 @@ MODES.dgold=dgMode('gold',{tint:'rgba(30,60,20,.18)',
     if(c.hold>0){ ctx.strokeStyle='#f0c75a'; ctx.lineWidth=5; ctx.beginPath(); ctx.arc(x,y,52,-PI/2,-PI/2+TAU*Math.min(1,c.hold/2)); ctx.stroke(); } } },
   extra:{drawOver(L,T,R,B){ terDrawOver(L,T,R,B); dgLabels(L,T,R,B); dgChestArrows(L,T,R,B); }}});
 // a gold chest outside the view -> an arrow + chest icon on the view edge (like the HUD drop arrows)
-function dgChestArrows(L,T,R,B){ const m=34; for(const c of G.dgChests||[]){ if(c.x>L&&c.x<R&&c.y>T&&c.y<B) continue;
+function dgChestArrows(){ const m=34, L=cam.x-VW/2, R=cam.x+VW/2, T=cam.y-VH/2, B=cam.y+VH/2; for(const c of G.dgChests||[]){ if(c.x>L&&c.x<R&&c.y>T&&c.y<B) continue;   // the real screen edge (render bounds carry an 80 px cull margin)
   const cx=(L+R)/2, cy=(T+B)/2, dx=c.x-cx, dy=c.y-cy, s=Math.min(((R-L)/2-m)/Math.abs(dx||1e-6),((B-T)/2-m)/Math.abs(dy||1e-6)), x=cx+dx*s, y=cy+dy*s, a=Math.atan2(dy,dx);
   ctx.save(); ctx.translate(x,y); ctx.fillStyle='rgba(20,16,8,.75)'; ctx.beginPath(); ctx.arc(0,0,18,0,TAU); ctx.fill(); ctx.strokeStyle='#f0c75a'; ctx.lineWidth=2.5; ctx.stroke();
   ctx.rotate(a); ctx.fillStyle='#f0c75a'; ctx.beginPath(); ctx.moveTo(26,0); ctx.lineTo(17,-7); ctx.lineTo(17,7); ctx.closePath(); ctx.fill(); ctx.rotate(-a);
@@ -6991,7 +6996,7 @@ function dgRareDay(){ return DG.rare[new Date().getDay()]; }
 MODES.drare=dgMode('rare',{tint:'rgba(60,70,120,.14)', timeWin:false,
   frozen(){ return G.dgPhase==='loot'||G.dgPhase==='done'; },                // the guardian is down: the clock stops (tester r4 F2/F5)
   end(won){ for(const g of G.gems) if(!g.dead&&g.kind==='bosschest'){ ITEMKIND.bosschest.collect(g); g.dead=true; }   // any ending keeps a dropped chest
-    return won||G.dgPhase==='loot'||G.dgPhase==='done'; },
+    const w=won||G.dgPhase==='loot'||G.dgPhase==='done'; if(w) G.won=true; return w; },
   init(){ G.dgDay=dgRareDay(); G.dgWave=0; G.dgPhase='wait'; G.dgNext=1.5; G.dgQ=0; },
   update(dt){ const Dd=G.dgDay;
     if(G.dgPhase==='wait'){ G.dgNext-=dt; if(G.dgNext>0) return; G.dgWave++;

@@ -1685,7 +1685,7 @@ console.log('ด่านรายวัน: ข้อที่ tester รอบ
     const t=dgTicket(); o.t=[DG_TICKETS.has(t), DG_TICKETS.delete(t), DG_TICKETS.delete(t)];
     G={char:ch, dgPaid:false, diff:DG.diff[1], goldRun:500, dgPts:100}; const r1={baseXp:0, gold:500, items:[{id:'m_dust', n:3}]}; MODES.dgold.rewards(r1,true); o.unpaid=[r1.gold, r1.items.length, !!r1.unpaid];
     G.dgPaid=true; const r2={gold:500, items:[]}; MODES.dgold.rewards(r2,true); o.paid=[r2.gold, r2.daily===undefined];
-    SAVE.acct.daily.day='2999-01-01'; SAVE.acct.daily.dg={gold:2}; o.future=dgLeft('gold');
+    SAVE.acct.daily.day=svDay(Date.now()+864e5); SAVE.acct.daily.dg={gold:2}; o.future=dgLeft('gold');
     o.again=['dexp','dgold','drare'].every(k=>MODES[k].again===dgAgain&&MODES[k].daily===true);
     o.proto=[dgWhy('constructor',0,ch), dgPer('__proto__')];
     return o; })()`);
@@ -1694,6 +1694,19 @@ console.log('ด่านรายวัน: ข้อที่ tester รอบ
   ok('รอบที่ใช้สิทธิ์: ทอง ×10 × ความยาก · ไม่ขึ้นป้าย ×2 ของเอาชีวิตรอด', r.paid[0] === 7500 && r.paid[1], r.paid);
   ok('ถอยนาฬิกาเครื่องกลับ ไม่ได้สิทธิ์คืน', r.future === 0, r.future);
   ok('เล่นอีกครั้ง/เริ่มใหม่ ในด่านรายวัน = กลับหน้าด่านรายวัน · ชื่อแปลก (constructor/__proto__) ไม่ผ่าน', r.again && /ไม่พบ/.test(r.proto[0]) && r.proto[1] === 0, r);
+}
+
+console.log('วันของรายวัน: ข้อที่ tester รอบ 5 เจอ');
+{
+  const { X } = fresh();
+  const r = X(`(()=>{ const o={}, d=k=>svDay(Date.now()+k*864e5);
+    o.cur=[svDayCur(d(0)), svDayCur(d(1)), svDayCur(d(2)), svDayCur(d(-1)), svDayCur(''), svDayCur(null)];
+    SAVE=newSave(null); const ch=newChar('วัน','mage'); SAVE.chars.push(ch); SAVE.active=ch.id;
+    SAVE.acct.daily.day=d(1); SAVE.acct.daily.dg={gold:2}; o.ahead1=dgLeft('gold');
+    SAVE.acct.daily.day=d(30); o.ahead30=dgLeft('gold');
+    return o; })()`);
+  ok('วันในเซฟนับเป็นวันนี้: วันเดียวกัน หรือล่วงหน้าไม่เกิน 1 วัน (เกินนั้น = นาฬิกาเคยผิด → รีเซ็ต)', JSON.stringify(r.cur) === '[true,true,false,false,false,false]', r.cur);
+  ok('เซฟล่วงหน้า 1 วัน: สิทธิ์ที่ใช้ไปยังนับ · ล่วงหน้า 30 วัน: ไม่ล็อกด่าน', r.ahead1 === 0 && r.ahead30 === 2, r);
 }
 
 console.log(`\nผล: ผ่าน ${pass} · ไม่ผ่าน ${fail}`);

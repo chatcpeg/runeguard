@@ -237,7 +237,8 @@ function hdItemName(it){ let s=''; try{ s=it&&it.u?itemName(it):((itemDef(it&&it
 // pause / end buttons say "กลับป้อม" in character runs; classic gets its own words back
 // survival: restart (core: startRun, no endRun) drops this run's loot / gold / EXP like กลับป้อม does, so both say so
 function hdMenuText(g){ const c=!!(g&&g.char), sv=!!(g&&(g.modeId==='survival'||g.mode&&g.mode.daily));
-  for(const [id,t] of [['btnMenuP',sv?'กลับป้อม (ไม่รับรางวัล)':'กลับป้อม'],['btnRestartP',sv?'เริ่มใหม่ (ไม่รับรางวัล)':null],['btnMenuE','กลับป้อม']]){ const b=$('#'+id); if(!b) continue;
+  const dl=!!(g&&g.mode&&g.mode.daily);                                    // daily dungeons: restart / again lead to the daily sheet (69)
+  for(const [id,t] of [['btnMenuP',sv?'กลับป้อม (ไม่รับรางวัล)':'กลับป้อม'],['btnRestartP',dl?'เลือกด่านใหม่ (ไม่รับรางวัล)':sv?'เริ่มใหม่ (ไม่รับรางวัล)':null],['btnMenuE','กลับป้อม'],['btnAgain',dl?'เลือกด่านใหม่':null]]){ const b=$('#'+id); if(!b) continue;
     if(!(id in SH.txt)) SH.txt[id]=b.textContent; const want=c&&t?t:SH.txt[id]; if(b.textContent!==want) b.textContent=want; } }
 /* ---------- pause: full stat sheet + per-skill numbers (what every card picked so far added up to) ---------- */
 const HD_PCT=v=>(v>=0?'+':'')+Math.round(v*100)+'%';

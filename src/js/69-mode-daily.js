@@ -25,7 +25,7 @@ function dgWeekend(t){ const d=new Date(t==null?Date.now():t).getDay(); return d
 function dgKind(kind){ return typeof kind==='string'&&svHas(DG.kinds,kind)?DG.kinds[kind]:null; }
 function dgPer(kind){ const K=dgKind(kind); return !K?0:kind==='rare'&&dgWeekend()?2:K.per; }
 // the day only moves forward: a save stamped later than the clock (clock set back) keeps its counts (tester r4 F6)
-function dgUsed(kind,A){ A=A||pgAcct(); if(!A||!A.daily||A.daily.day<svDay()) return 0; return (A.daily.dg&&svHas(A.daily.dg,kind)&&A.daily.dg[kind])|0; }
+function dgUsed(kind,A){ A=A||pgAcct(); if(!A||!A.daily||!svDayCur(A.daily.day)) return 0; return (A.daily.dg&&svHas(A.daily.dg,kind)&&A.daily.dg[kind])|0; }
 function dgLeft(kind){ return Math.max(0,dgPer(kind)-dgUsed(kind)); }
 function dgLeftAll(){ return dgLeft('exp')+dgLeft('gold')+dgLeft('rare'); }
 function dgWhy(kind,di,ch){ if(!ch) return 'ต้องมีตัวละครก่อน'; if(pgRO()) return 'ข้อมูลเป็นเวอร์ชันใหม่กว่าแอป แก้ไขไม่ได้';
@@ -38,7 +38,7 @@ function dgTicket(){ const t='t'+Math.floor(rngUnit()*1e12).toString(36)+DG_TICK
 function dgEnter(kind,di){
   if(typeof svlFresh==='function') try{ svlFresh(); }catch(e){}
   const ch=pgFresh(curChar()); if(dgWhy(kind,di,ch)) return false; const A=pgAcct(); if(!A) return false;
-  const today=svDay(); if(A.daily.day<today){ A.daily.day=today; A.daily.surv={}; A.daily.boss={}; A.daily.dg={}; }
+  const today=svDay(); if(!svDayCur(A.daily.day)){ A.daily.day=today; A.daily.surv={}; A.daily.boss={}; A.daily.dg={}; }
   if(!A.daily.dg) A.daily.dg={}; A.daily.dg[kind]=(A.daily.dg[kind]|0)+1;
   const S0=SAVE; pgSave(ch,'daily',true); if(SAVE!==S0) return false;    // another tab's save came in instead: the entry was not kept -> no run
   if(typeof closeSheet==='function') closeSheet(); if(typeof shChrome==='function') shChrome(null);
@@ -120,7 +120,7 @@ MODES.dgold=dgMode('gold',{tint:'rgba(30,60,20,.18)',
     if(c.hold>0){ ctx.strokeStyle='#f0c75a'; ctx.lineWidth=5; ctx.beginPath(); ctx.arc(x,y,52,-PI/2,-PI/2+TAU*Math.min(1,c.hold/2)); ctx.stroke(); } } },
   extra:{drawOver(L,T,R,B){ terDrawOver(L,T,R,B); dgLabels(L,T,R,B); dgChestArrows(L,T,R,B); }}});
 // a gold chest outside the view -> an arrow + chest icon on the view edge (like the HUD drop arrows)
-function dgChestArrows(L,T,R,B){ const m=34; for(const c of G.dgChests||[]){ if(c.x>L&&c.x<R&&c.y>T&&c.y<B) continue;
+function dgChestArrows(){ const m=34, L=cam.x-VW/2, R=cam.x+VW/2, T=cam.y-VH/2, B=cam.y+VH/2; for(const c of G.dgChests||[]){ if(c.x>L&&c.x<R&&c.y>T&&c.y<B) continue;   // the real screen edge (render bounds carry an 80 px cull margin)
   const cx=(L+R)/2, cy=(T+B)/2, dx=c.x-cx, dy=c.y-cy, s=Math.min(((R-L)/2-m)/Math.abs(dx||1e-6),((B-T)/2-m)/Math.abs(dy||1e-6)), x=cx+dx*s, y=cy+dy*s, a=Math.atan2(dy,dx);
   ctx.save(); ctx.translate(x,y); ctx.fillStyle='rgba(20,16,8,.75)'; ctx.beginPath(); ctx.arc(0,0,18,0,TAU); ctx.fill(); ctx.strokeStyle='#f0c75a'; ctx.lineWidth=2.5; ctx.stroke();
   ctx.rotate(a); ctx.fillStyle='#f0c75a'; ctx.beginPath(); ctx.moveTo(26,0); ctx.lineTo(17,-7); ctx.lineTo(17,7); ctx.closePath(); ctx.fill(); ctx.rotate(-a);
@@ -131,7 +131,7 @@ function dgRareDay(){ return DG.rare[new Date().getDay()]; }
 MODES.drare=dgMode('rare',{tint:'rgba(60,70,120,.14)', timeWin:false,
   frozen(){ return G.dgPhase==='loot'||G.dgPhase==='done'; },                // the guardian is down: the clock stops (tester r4 F2/F5)
   end(won){ for(const g of G.gems) if(!g.dead&&g.kind==='bosschest'){ ITEMKIND.bosschest.collect(g); g.dead=true; }   // any ending keeps a dropped chest
-    return won||G.dgPhase==='loot'||G.dgPhase==='done'; },
+    const w=won||G.dgPhase==='loot'||G.dgPhase==='done'; if(w) G.won=true; return w; },
   init(){ G.dgDay=dgRareDay(); G.dgWave=0; G.dgPhase='wait'; G.dgNext=1.5; G.dgQ=0; },
   update(dt){ const Dd=G.dgDay;
     if(G.dgPhase==='wait'){ G.dgNext-=dt; if(G.dgNext>0) return; G.dgWave++;
