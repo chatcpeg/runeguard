@@ -2869,8 +2869,8 @@ function sxHave(p,s){ const id=s.id, pk=SX.pk[id]||'dmg', has=s.def.p[pk]!=null|
 // Every stat card: (a) a small general effect (sxStats in 26) · (b) mastery +1 for every skill whose main stat it is (SX.main).
 // Mastery L of a skill = cards of its main stat + floor(permanent stat / 5) + the account upgrade 🧬 (start mastery).
 // Each level: power +4 % (to 35, then +1 %) and a little size · tiers (MX_T) add tricks through the same s.mod / s.fx paths
-// the skill tree uses (27), so every hook (burst, ignite, trail, echo …) is shared. Mage first; the other classes keep their
-// old 5-card milestones (SX.ms) until their ladders land. Classic never sets P.sx → none of this runs there (golden).
+// the skill tree uses (27), so every hook (burst, ignite, trail, echo …) is shared. Every class skill has a ladder now (the
+// old 5-card milestones SX.ms only serve skills without one). Classic never sets P.sx → none of this runs there (golden).
 const MX={pow:.04, powOver:.01, cap:35};
 // general effect of one card, shown on the cards (character runs)
 const MX_CARD={
@@ -2956,6 +2956,264 @@ spikes:[
   [25,'สตัน 0.5 วิ',{fx:{shock:{ch:.2, t:.5}}}],
   [30,'หนามใหญ่ +20%',{mul:{r:1.2}}],
   [35,'ร่างสุดท้าย ภูเขาหนาม · หนามผุดเป็นวง',{fx:{radial:{every:2, n:12, pct:.5}}}]]};
+// ---- round 2–3: swordsman · archer · cleric · thief (every tier uses only the skill's own numbers + the 27 effect library) ----
+Object.assign(MX_T,{
+slash:[
+  [6,'คมดาบเรืองแสง · ระยะ +10%',{mul:{range:1.1}}],
+  [10,'มุมฟันกว้าง +25%',{mul:{arc:1.25}}],
+  [15,'แผลลึก (เลือดไหล 3 วิ)',{fx:{ignite:{ch:.3, pct:.15, t:3}}}],
+  [20,'คลื่นดาบพุ่งจากปลายดาบ',{fx:{shards:{on:'hit', ch:.35, n:2, pct:.4}}}],
+  [25,'+1 ครั้งฟัน',{add:{count:1}}],
+  [30,'เป้าเลือดต่ำกว่า 25% แรง ×1.5',{fx:{execute:{hp:.25, m:1.5}}}],
+  [35,'ร่างสุดท้าย ดาบพิฆาต · ฟันซ้ำทุก 2 ครั้ง',{mul:{range:1.15}, fx:{echo:{every:2}}}]],
+slam:[
+  [6,'แรงกระแทก +20%',{mul:{knock:1.2}}],
+  [10,'วงกว้าง +10%',{mul:{r:1.1}}],
+  [15,'มึน +0.3 วิ',{add:{stun:.3}}],
+  [20,'ศัตรูที่ตายระเบิดเศษหิน',{fx:{burst:{r:60, pct:.4}}}],
+  [25,'ทุบซ้ำทุก 2 ครั้ง',{fx:{echo:{every:2}}}],
+  [30,'เป้าที่มึนโดนแรง ×1.4',{fx:{vsStun:{m:1.4}}}],
+  [35,'ร่างสุดท้าย แผ่นดินไหว · วง ×1.4',{mul:{r:1.4, dmg:1.2}}]],
+blades:[
+  [6,'ดาบวนเร็ว +10%',{mul:{spin:1.1}}],
+  [10,'ดาบใหญ่ +15%',{mul:{size:1.15}}],
+  [15,'+1 เล่ม',{add:{count:1}}],
+  [20,'โดนแล้วมึนบางครั้ง',{fx:{shock:{ch:.15, t:.2}}}],
+  [25,'วงกว้าง +15%',{mul:{r:1.15}}],
+  [30,'+1 เล่ม',{add:{count:1}}],
+  [35,'ร่างสุดท้าย พายุดาบวิญญาณ · ดูดเลือด 3%',{mul:{dmg:1.2}, fx:{leech:{pct:.03}}}]],
+bulwark:[
+  [6,'โล่หนา +15%',{mul:{absorb:1.15}}],
+  [10,'ระเบิดโล่กว้าง +15%',{mul:{r:1.15}}],
+  [15,'ตั้งโล่แล้วฟื้น HP 3%',{fx:{mend:{pct:.03}}}],
+  [20,'คูลดาวน์ -10%',{mul:{cd:.9}}],
+  [25,'โล่หนา +25%',{mul:{absorb:1.25}}],
+  [30,'ระเบิดโล่ทำให้มึน',{fx:{shock:{ch:.5, t:.5}}}],
+  [35,'ร่างสุดท้าย ป้อมปราการ · ระเบิด ×1.5',{mul:{nova:1.5, absorb:1.3}}]],
+lance:[
+  [6,'หอกพุ่งเร็ว +15%',{mul:{speed:1.15}}],
+  [10,'ระยะพุ่ง +15%',{mul:{life:1.15}}],
+  [15,'หอกใหญ่ +20%',{mul:{size:1.2}}],
+  [20,'+1 หอก',{add:{count:1}}],
+  [25,'แทงตายแล้วระเบิดเป็นวง',{fx:{burst:{r:60, pct:.4}}}],
+  [30,'กระแทก +30% · มึนบางครั้ง',{mul:{knock:1.3}, fx:{shock:{ch:.2, t:.3}}}],
+  [35,'ร่างสุดท้าย หอกสวรรค์ · พุ่งซ้ำทุก 2 ครั้ง',{fx:{echo:{every:2}}}]],
+valor:[
+  [6,'รัศมี +10%',{mul:{r:1.1}}],
+  [10,'ชะลอ +5%',{add:{slow:.05}}],
+  [15,'ถี่ขึ้น 15%',{mul:{tick:.87}}],
+  [20,'ศัตรูในวงติดไฟศักดิ์สิทธิ์',{fx:{ignite:{ch:.1, pct:.3, t:3}}}],
+  [25,'รัศมี +15%',{mul:{r:1.15}}],
+  [30,'ดูดเลือด 2%',{fx:{leech:{pct:.02}}}],
+  [35,'ร่างสุดท้าย ธงผู้พิทักษ์ · แรง ×1.4',{mul:{dmg:1.4, r:1.1}}]],
+cyclone:[
+  [6,'ระยะเหวี่ยง +10%',{mul:{range:1.1}}],
+  [10,'แรงกระแทก +25%',{mul:{knock:1.25}}],
+  [15,'ดูดศัตรูเข้าหา',{fx:{pull:{r:110}}}],
+  [20,'คูลดาวน์ -10%',{mul:{cd:.9}}],
+  [25,'หมุนซ้ำทุก 2 ครั้ง',{fx:{echo:{every:2}}}],
+  [30,'ศัตรูที่ตายระเบิด',{fx:{burst:{r:55, pct:.35}}}],
+  [35,'ร่างสุดท้าย ทอร์นาโดเหล็ก · ระยะ ×1.3',{mul:{range:1.3, dmg:1.2}}]],
+frenzy:[
+  [6,'โทสะ +10%',{mul:{rage:1.1}}],
+  [10,'ดูดเลือด +15%',{mul:{steal:1.15}}],
+  [15,'โทสะ +15%',{mul:{rage:1.15}}],
+  [20,'ดูดเลือด +20%',{mul:{steal:1.2}}],
+  [25,'โทสะ +15%',{mul:{rage:1.15}}],
+  [30,'ดูดเลือด +25%',{mul:{steal:1.25}}],
+  [35,'ร่างสุดท้าย เลือดเดือด · โทสะ ×1.3',{mul:{rage:1.3}}]],
+arrow:[
+  [6,'ลูกศรเร็ว +15%',{mul:{speed:1.15}}],
+  [10,'ทะลุ +1',{add:{pierce:1}}],
+  [15,'ระยะ +15%',{mul:{life:1.15}}],
+  [20,'+1 ลูก',{add:{count:1}}],
+  [25,'ศัตรูที่ตายแตกเป็นเศษศร',{fx:{shards:{on:'kill', ch:1, n:3, pct:.3}}}],
+  [30,'หัวศรเหล็กกล้า แรง +20%',{mul:{dmg:1.2}}],
+  [35,'ร่างสุดท้าย ศรพายุ · ยิงซ้ำทุก 2 ครั้ง',{fx:{echo:{every:2}}}]],
+spread:[
+  [6,'+1 ลูกในพัด',{add:{count:1}}],
+  [10,'ระยะ +15%',{mul:{life:1.15}}],
+  [15,'ทะลุ +1',{add:{pierce:1}}],
+  [20,'+2 ลูก',{add:{count:2}}],
+  [25,'โดนแล้วมึนบางครั้ง',{fx:{shock:{ch:.1, t:.25}}}],
+  [30,'คูลดาวน์ -15%',{mul:{cd:.85}}],
+  [35,'ร่างสุดท้าย ฝนศรพัด · ยิงซ้ำทุก 2 ครั้ง',{fx:{echo:{every:2}}}]],
+rain:[
+  [6,'ลูกศรตกเพิ่ม 1 ดอก',{add:{hits:1}}],
+  [10,'วงกว้าง +15%',{mul:{r:1.15}}],
+  [15,'+1 จุด',{add:{count:1}}],
+  [20,'ศรไฟ ติดไฟ',{fx:{ignite:{ch:.25, pct:.2, t:3}}}],
+  [25,'+2 ดอก',{add:{hits:2}}],
+  [30,'ตกซ้ำทุก 2 ครั้ง',{fx:{echo:{every:2}}}],
+  [35,'ร่างสุดท้าย ห่าศรมรณะ · แรง ×1.3 วง ×1.3',{mul:{dmg:1.3, r:1.3}}]],
+trap:[
+  [6,'กับดักใหญ่ +15%',{mul:{r:1.15}}],
+  [10,'อยู่นาน +25%',{mul:{dur:1.25}}],
+  [15,'+1 กับดัก',{add:{count:1}}],
+  [20,'ระเบิดแล้วทิ้งไฟ',{fx:{trail:{kind:'fire', r:50, pct:.2, dur:3}}}],
+  [25,'แรงระเบิดทำให้มึน',{fx:{shock:{ch:.5, t:.5}}}],
+  [30,'+1 กับดัก',{add:{count:1}}],
+  [35,'ร่างสุดท้าย ทุ่งระเบิด · แรง ×1.4',{mul:{trap:1.4, r:1.2}}]],
+hawk:[
+  [6,'เหยี่ยวโฉบถี่ขึ้น 10%',{mul:{cd:.9}}],
+  [10,'กรงเล็บกว้าง +15%',{mul:{r:1.15}}],
+  [15,'โฉบแล้วมึนบางครั้ง',{fx:{shock:{ch:.25, t:.3}}}],
+  [20,'+1 เหยี่ยว',{add:{count:1}}],
+  [25,'คูลดาวน์ -15%',{mul:{cd:.85}}],
+  [30,'กรงเล็บฉีก (เลือดไหล)',{fx:{ignite:{ch:.3, pct:.25, t:3}}}],
+  [35,'ร่างสุดท้าย พญาเหยี่ยวลม · +1 เหยี่ยว แรง ×1.3',{add:{count:1}, mul:{dmg:1.3}}]],
+arrownova:[
+  [6,'+2 ลูก',{add:{count:2}}],
+  [10,'ระยะ +15%',{mul:{life:1.15}}],
+  [15,'ทะลุ +1',{add:{pierce:1}}],
+  [20,'+4 ลูก',{add:{count:4}}],
+  [25,'คูลดาวน์ -15%',{mul:{cd:.85}}],
+  [30,'ยิงซ้ำทุก 2 ครั้ง',{fx:{echo:{every:2}}}],
+  [35,'ร่างสุดท้าย วงศรสุริยา · แรง ×1.3 ทะลุ +2',{add:{pierce:2}, mul:{dmg:1.3}}]],
+deadeye:[
+  [6,'คริ +5%',{add:{crit:.05}}],
+  [10,'ลำแสงใหญ่ +20%',{mul:{size:1.2}}],
+  [15,'คูลดาวน์ -10%',{mul:{cd:.9}}],
+  [20,'เป้าเลือดต่ำกว่า 30% แรง ×1.6',{fx:{execute:{hp:.3, m:1.6}}}],
+  [25,'คริ +10%',{add:{crit:.1}}],
+  [30,'+1 ลำแสง',{add:{count:1}}],
+  [35,'ร่างสุดท้าย ศรมรณะ · ฆ่าแล้วระเบิด',{fx:{burst:{r:80, pct:.5}}}]],
+blast:[
+  [6,'ระเบิดกว้าง +10%',{mul:{explode:1.1}}],
+  [10,'ระเบิดสองระลอก',{look:{boom2:1}}],
+  [15,'+1 ลูก',{add:{count:1}}],
+  [20,'ทะลุ 1 ตัวก่อนระเบิด',{look:{pass:1, passBoom:1}}],
+  [25,'ระเบิดแล้วทิ้งไฟ',{fx:{trail:{kind:'fire', r:45, pct:.2, dur:2.5}}}],
+  [30,'สุดระยะแตกเป็น 3 ลูก',{look:{split:3}}],
+  [35,'ร่างสุดท้าย ศรถล่มฟ้า · ระเบิด ×1.4',{mul:{explode:1.4, dmg:1.2}}]],
+holy:[
+  [6,'ลูกแสงใหญ่ +15%',{mul:{size:1.15}}],
+  [10,'ทะลุ +1',{add:{pierce:1}}],
+  [15,'+1 ลูก',{add:{count:1}}],
+  [20,'โดนแล้วแตกเป็นแสง 2 ลูก',{fx:{shards:{on:'hit', ch:.5, n:2, pct:.3}}}],
+  [25,'ดูดเลือด 2%',{fx:{leech:{pct:.02}}}],
+  [30,'แรง +20%',{mul:{dmg:1.2}}],
+  [35,'ร่างสุดท้าย แสงสวรรค์ · ทะลุทุกตัว',{add:{pierce:98}}]],
+heal:[
+  [6,'ฟื้น +15%',{mul:{heal:1.15}}],
+  [10,'วงแสงกว้าง +15%',{mul:{r:1.15}}],
+  [15,'คูลดาวน์ -10%',{mul:{cd:.9}}],
+  [20,'ฟื้นตาม HP สูงสุด +2%',{add:{healPct:.02}}],
+  [25,'แสงทำให้ศัตรูมึน',{fx:{shock:{ch:.4, t:.4}}}],
+  [30,'ร่ายซ้ำทุก 2 ครั้ง',{fx:{echo:{every:2}}}],
+  [35,'ร่างสุดท้าย พรแห่งชีวิต · ฟื้น ×1.4',{mul:{heal:1.4, dmg:1.3}}]],
+sacred:[
+  [6,'รัศมี +10%',{mul:{r:1.1}}],
+  [10,'ชะลอ 10%',{add:{slow:.1}}],
+  [15,'ถี่ขึ้น 15%',{mul:{tick:.87}}],
+  [20,'ศัตรูตายในวง ฟื้น HP 1',{fx:{feast:{amt:1}}}],
+  [25,'รัศมี +15%',{mul:{r:1.15}}],
+  [30,'ติดไฟศักดิ์สิทธิ์',{fx:{ignite:{ch:.1, pct:.3, t:3}}}],
+  [35,'ร่างสุดท้าย วิหารแสง · แรง ×1.5',{mul:{dmg:1.5}}]],
+cross:[
+  [6,'วงกางเขน +10%',{mul:{r:1.1}}],
+  [10,'ตกเร็วขึ้น 20%',{mul:{delay:.8}}],
+  [15,'+1 กางเขน',{add:{count:1}}],
+  [20,'มึนบางครั้ง',{fx:{shock:{ch:.3, t:.4}}}],
+  [25,'คูลดาวน์ -15%',{mul:{cd:.85}}],
+  [30,'ตกซ้ำทุก 2 ครั้ง',{fx:{echo:{every:2}}}],
+  [35,'ร่างสุดท้าย กางเขนสวรรค์ · ฆ่าแล้วระเบิดแสง',{mul:{r:1.2}, fx:{burst:{r:70, pct:.5}}}]],
+judgment:[
+  [6,'+1 ลำแสง',{add:{count:1}}],
+  [10,'วงกว้าง +10%',{mul:{r:1.1}}],
+  [15,'ตกเร็วขึ้น 20%',{mul:{delay:.8}}],
+  [20,'+2 ลำแสง',{add:{count:2}}],
+  [25,'เป้าที่มึนโดนแรง ×1.4',{fx:{vsStun:{m:1.4}}}],
+  [30,'ติดไฟศักดิ์สิทธิ์',{fx:{ignite:{ch:.3, pct:.25, t:3}}}],
+  [35,'ร่างสุดท้าย วันพิพากษา · ตกซ้ำทุก 2 ครั้ง',{fx:{echo:{every:2}}}]],
+aegis:[
+  [6,'เกราะหนา +15%',{mul:{absorb:1.15}}],
+  [10,'คลื่นเกราะกว้าง +15%',{mul:{r:1.15}}],
+  [15,'ตั้งเกราะแล้วฟื้น HP 4%',{fx:{mend:{pct:.04}}}],
+  [20,'คูลดาวน์ -10%',{mul:{cd:.9}}],
+  [25,'คลื่นเกราะทำให้มึน',{fx:{shock:{ch:.5, t:.5}}}],
+  [30,'เกราะหนา +25%',{mul:{absorb:1.25}}],
+  [35,'ร่างสุดท้าย ปีกเทวา · คลื่น ×1.5',{mul:{nova:1.5, absorb:1.3}}]],
+fists:[
+  [6,'หมัดไกล +10%',{mul:{range:1.1}}],
+  [10,'มุมกว้าง +20%',{mul:{arc:1.2}}],
+  [15,'หมัดเพลิง ติดไฟ',{fx:{ignite:{ch:.2, pct:.2, t:2.5}}}],
+  [20,'คูลดาวน์ -10%',{mul:{cd:.9}}],
+  [25,'คลื่นหมัดพุ่ง',{fx:{shards:{on:'hit', ch:.25, n:2, pct:.35}}}],
+  [30,'ดูดเลือด 2%',{fx:{leech:{pct:.02}}}],
+  [35,'ร่างสุดท้าย หมัดสุริยะ · +1 หมัด',{add:{count:1}, mul:{dmg:1.2}}]],
+spheres:[
+  [6,'ดวงไฟใหญ่ +15%',{mul:{size:1.15}}],
+  [10,'หมุนเร็ว +10%',{mul:{spin:1.1}}],
+  [15,'+1 ดวง',{add:{count:1}}],
+  [20,'ติดไฟ',{fx:{ignite:{ch:.2, pct:.25, t:3}}}],
+  [25,'วงกว้าง +15%',{mul:{r:1.15}}],
+  [30,'+1 ดวง',{add:{count:1}}],
+  [35,'ร่างสุดท้าย สุริยะจักร · ระเบิดเมื่อโดน',{fx:{hitboom:{r:40, pct:.3}}}]],
+dagger:[
+  [6,'มีดเร็ว +15%',{mul:{speed:1.15}}],
+  [10,'คริ +5%',{add:{crit:.05}}],
+  [15,'+1 มีด',{add:{count:1}}],
+  [20,'ทะลุ +1',{add:{pierce:1}}],
+  [25,'มีดอาบพิษ',{fx:{ignite:{ch:.3, pct:.2, t:3}}}],
+  [30,'คริ +10%',{add:{crit:.1}}],
+  [35,'ร่างสุดท้าย มีดเงาพันเล่ม · ปาซ้ำทุก 2 ครั้ง',{fx:{echo:{every:2}}}]],
+fan:[
+  [6,'+2 ใบ',{add:{count:2}}],
+  [10,'ระยะ +15%',{mul:{life:1.15}}],
+  [15,'ทะลุ +1',{add:{pierce:1}}],
+  [20,'คูลดาวน์ -15%',{mul:{cd:.85}}],
+  [25,'+4 ใบ',{add:{count:4}}],
+  [30,'ปาซ้ำทุก 2 ครั้ง',{fx:{echo:{every:2}}}],
+  [35,'ร่างสุดท้าย พายุใบมีด · แรง ×1.3 ทะลุ +1',{add:{pierce:1}, mul:{dmg:1.3}}]],
+venom:[
+  [6,'หมอกกว้าง +10%',{mul:{r:1.1}}],
+  [10,'อยู่นาน +25%',{mul:{dur:1.25}}],
+  [15,'ชะลอ +10%',{add:{slow:.1}}],
+  [20,'+1 หมอก',{add:{count:1}}],
+  [25,'ศัตรูตายในหมอก ระเบิดพิษ',{fx:{burst:{r:60, pct:.4}}}],
+  [30,'ถี่ขึ้น 20%',{mul:{tick:.83}}],
+  [35,'ร่างสุดท้าย หมอกมรณะ · แรง ×1.5 วง ×1.3',{mul:{dmg:1.5, r:1.3}}]],
+shadow:[
+  [6,'หลบ +2%',{add:{dodge:.02}}],
+  [10,'ระเบิดเงากว้าง +15%',{mul:{r:1.15}}],
+  [15,'หลบ +3%',{add:{dodge:.03}}],
+  [20,'ระเบิดเงา ×1.25',{mul:{nova:1.25}}],
+  [25,'หลบ +3%',{add:{dodge:.03}}],
+  [30,'ระเบิดเงากว้าง +20%',{mul:{r:1.2}}],
+  [35,'ร่างสุดท้าย เงาไร้ตัวตน · หลบ +5% ระเบิด ×1.3',{add:{dodge:.05}, mul:{nova:1.3}}]],
+phantom:[
+  [6,'+1 เป้า',{add:{targets:1}}],
+  [10,'คริ +5%',{add:{crit:.05}}],
+  [15,'ระยะ +15%',{mul:{range:1.15}}],
+  [20,'เป้าเลือดต่ำกว่า 30% แรง ×1.5',{fx:{execute:{hp:.3, m:1.5}}}],
+  [25,'+2 เป้า',{add:{targets:2}}],
+  [30,'ฟันซ้ำทุก 2 ครั้ง',{fx:{echo:{every:2}}}],
+  [35,'ร่างสุดท้าย เงามรณะ · ฆ่าแล้วแตกเป็นมีด',{fx:{shards:{on:'kill', ch:1, n:4, pct:.4}}}]],
+whirl:[
+  [6,'ระยะ +10%',{mul:{range:1.1}}],
+  [10,'คูลดาวน์ -10%',{mul:{cd:.9}}],
+  [15,'ดูดเลือด 2%',{fx:{leech:{pct:.02}}}],
+  [20,'+1 รอบ',{add:{count:1}}],
+  [25,'ใบมีดพุ่งออก',{fx:{shards:{on:'hit', ch:.2, n:2, pct:.35}}}],
+  [30,'ระยะ +15%',{mul:{range:1.15}}],
+  [35,'ร่างสุดท้าย พายุมีดเงา · หมุนซ้ำทุก 2 ครั้ง',{fx:{echo:{every:2}}}]],
+clones:[
+  [6,'ร่างเงาโจมตีถี่ +10%',{mul:{cd:.9}}],
+  [10,'แรง +15%',{mul:{dmg:1.15}}],
+  [15,'+1 ร่าง',{add:{count:1}}],
+  [20,'ร่างเงาอาบพิษ',{fx:{ignite:{ch:.2, pct:.2, t:3}}}],
+  [25,'คูลดาวน์ -15%',{mul:{cd:.85}}],
+  [30,'+1 ร่าง',{add:{count:1}}],
+  [35,'ร่างสุดท้าย กองทัพเงา · แรง ×1.3',{mul:{dmg:1.3}}]],
+smoke:[
+  [6,'ควันกว้าง +10%',{mul:{r:1.1}}],
+  [10,'มึนนาน +0.2 วิ',{add:{stun:.2}}],
+  [15,'คูลดาวน์ -10%',{mul:{cd:.9}}],
+  [20,'ชะลอนานขึ้น 40%',{mul:{slowDur:1.4}}],
+  [25,'ระเบิดควันซ้ำทุก 2 ครั้ง',{fx:{echo:{every:2}}}],
+  [30,'เป้าที่มึนโดนแรง ×1.4',{fx:{vsStun:{m:1.4}}}],
+  [35,'ร่างสุดท้าย ม่านควันมรณะ · วง ×1.4',{mul:{r:1.4, dmg:1.3}}]]});
 // called from sxMods after the tree (27) → power + growth + the tiers reached
 function mxApply(p,s,add,mul){
   const L=mxLv(p,s); delete s.mxLook; if(!L){ delete s.mxL; return; } s.mxL=L;
@@ -3013,11 +3271,11 @@ function mxDrawProj(p,sp,a){ const m=p.mx; if(!m||!m.look) return false; const k
         ctx.quadraticCurveTo(bx-Math.cos(a)*r*2.4+nx*r*.9,by-Math.sin(a)*r*2.4+ny*r*.9,bx,by); ctx.fill(); } }
     streak(x,y,a,Math.min(90,40+L*1.4),r*3,c1,.75); glow(x,y,r*(3.2+(k.sun?1:0)),c2,.85);
     ctx.globalCompositeOperation='source-over'; circ(ctx,c2,x,y,r*.95); circ(ctx,k.white?'#ffffff':c3,x-r*.2,y-r*.2,r*(k.white?.62:.45));
-    return true; }
+    ctx.globalCompositeOperation='lighter'; return true; }
   if(p.shape==='bolt'&&(k.sparkle||k.rainbow)){ const c=k.rainbow?`hsl(${(G.t*360+p.t*600)%360},90%,65%)`:p.c;
     ctx.globalCompositeOperation='lighter'; streak(p.x,p.y,a,sp*.06,p.r*3,k.rainbow?'#ffffff':p.c,.7); glow(p.x,p.y,p.r*2.8,k.rainbow?'#ffffff':p.c,.85);
     for(let i=0;i<3;i++){ const t=G.t*8+i*TAU/3; ctx.fillStyle=k.rainbow?`hsl(${(i*120+G.t*300)%360},90%,70%)`:'#e8dcff'; ctx.fillRect(p.x+Math.cos(t)*p.r*2-1.5,p.y+Math.sin(t)*p.r*2-1.5,3,3); }
-    ctx.globalCompositeOperation='source-over'; circ(ctx,k.rainbow?c:'#ffffff',p.x,p.y,p.r*.7); return true; }
+    ctx.globalCompositeOperation='source-over'; circ(ctx,k.rainbow?c:'#ffffff',p.x,p.y,p.r*.7); ctx.globalCompositeOperation='lighter'; return true; }
   return false; }
 /* ================= 27-skill-trees.js · lane B · skill trees (docs/PROPOSAL-skill-trees.md §2) + ★6–8 tier 2 (§4) ================= */
 // Every skill: 3 branches × 3 tiers + a crown. Tier 1–2 = numbers (into s.mod, the same path as the stat milestones of 26),

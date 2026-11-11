@@ -1513,7 +1513,7 @@ console.log('การ์ดค่าสถานะ = ความชำนา�
     const pm=g({}); pm.permSt={INT:25}; pm.skills.push(makeSkill('thunder')); recalc(pm); o.perm=pm.skills[1].mxL;
     const f=g({}); f.skills.push(makeSkill('thunder')); recalc(f); o.freshMod=f.skills.some(s=>s.mod);
     const n5=g({INT:5}); n5.skills.push(makeSkill('flame')); recalc(n5); o.next=sxNext(n5,'INT').map(x=>x.n+':'+x.s.id+':'+x.lv);
-    const sw=mk(true,{STR:5},'swordsman'); recalc(sw); const sl=sw.skills[0]; o.slash=[+(pv(sl,'dmg')/SK.slash.p.dmg[0]).toFixed(4), +(pv(sl,'arc')-SK.slash.p.arc).toFixed(2)];
+    const sw=mk(true,{STR:10},'swordsman'); recalc(sw); const sl=sw.skills[0]; o.slash=[+(pv(sl,'dmg')/SK.slash.p.dmg[0]).toFixed(4), +(pv(sl,'arc')/SK.slash.p.arc).toFixed(4), +(pv(sl,'range')/SK.slash.p.range[0]).toFixed(4), sl.mxL];
     return o; })()`);
   ok('ไม่มีการ์ด: ทุก field เท่าคลาสสิก', r.zero.length === 0, r.zero);
   ok('STR 10 (จอมเวท): HP ×1.2 · DEF +10 · ไม่เพิ่มดาเมจ (might 1)', JSON.stringify(r.str) === '[1.2,10,1]', r.str);
@@ -1528,7 +1528,26 @@ console.log('การ์ดค่าสถานะ = ความชำนา�
   ok('อัปถาวร 🧬 ขั้น 3 = เริ่มรอบด้วยความชำนาญ +3 (แรง ×1.12) · INT ถาวร 25 = +5 ระดับ', r.start === 1.12 && r.perm === 5, r);
   ok('ตัวละครใหม่ไม่มีการ์ด: ไม่มี s.mod', r.freshMod === false, r.freshMod);
   ok('ใบถัดไปของ INT 5: หอกเพลิงได้ลูกเล่น Lv6 (อีก 1 ใบ)', r.next.includes('1:flame:6'), r.next);
-  ok('นักดาบ (ยังไม่มีบันไดความชำนาญ): STR 5 = แรง ×1.2 + จุดเปลี่ยนเดิม (มุมฟัน +0.26)', r.slash[0] === 1.2 && r.slash[1] === .26, r.slash);
+  ok('นักดาบ ฟันดาบ ความชำนาญ STR 10: แรง ×1.4 · มุมฟัน ×1.25 (Lv10) · ระยะ ×1.1 (Lv6)', r.slash[0] === 1.4 && r.slash[1] === 1.25 && r.slash[2] === 1.1 && r.slash[3] === 10, r.slash);
+}
+
+console.log('บันไดความชำนาญครบทุกอาชีพ (26a MX_T)');
+{
+  const { X } = fresh();
+  const r = X(`(()=>{ const bad=[], FX={burst:1,shock:1,chill:1,ignite:1,trail:1,pull:1,leech:1,feast:1,mend:1,execute:1,vsStun:1,shards:1,echo:1,radial:1,fork:1,hitboom:1};
+    const ids=[]; for(const c of CLASSES) ids.push(...c.skills, ...c.adv.flatMap(a=>a.skills));
+    for(const id of ids){ const T=MX_T[id], d=SK[id]; if(!T){ bad.push(id+': ไม่มีบันได'); continue; }
+      let last=0; for(const [lv,t,o] of T){ if(!(lv>last)) bad.push(id+': ระดับไม่เรียง '+lv); last=lv; if(!t) bad.push(id+': ไม่มีข้อความ '+lv);
+        for(const k of Object.keys(o.add||{}).concat(Object.keys(o.mul||{}))) if(d.p[k]==null) bad.push(id+' Lv'+lv+': ไม่มีค่า '+k);
+        for(const f in o.fx||{}){ if(!FX[f]) bad.push(id+' Lv'+lv+': fx '+f); if(f==='echo'&&!TF_ECHO[d.type]) bad.push(id+' Lv'+lv+': echo ใช้กับ '+d.type+' ไม่ได้'); if(f==='fork'&&d.type!=='chain') bad.push(id+': fork'); } }
+      if(last!==35) bad.push(id+': ระดับสุดท้ายไม่ใช่ 35'); }
+    const p=makePlayer(CLS.thief); p.sx=true; p.permSt={}; p.stats.AGI=40; p.stats.LUK=40; p.stats.DEX=40; p.stats.INT=40;
+    for(const id of ['fan','venom','shadow','phantom','whirl','clones','smoke']) p.skills.push(makeSkill(id)); recalc(p);
+    const nums=[]; for(const s of p.skills) for(const k in s.def.p){ const v=pv(s,k); if(typeof v==='number'&&!isFinite(v)) nums.push(s.id+'.'+k); }
+    return {bad, n:ids.length, nums, tf:p.tf===true, sh:+pv(p.skills.find(s=>s.id==='shadow'),'dodge').toFixed(3)}; })()`);
+  ok('ทุกสกิลของ 5 อาชีพมีบันได 35 ระดับ · ใช้แต่ค่าที่สกิลมีจริง · fx อยู่ในคลัง · echo เฉพาะชนิดที่ร่ายซ้ำได้', r.bad.length === 0 && r.n === 40, r.bad.slice(0, 8));
+  ok('โจร ความชำนาญ 40 ทุกค่า: ทุกตัวเลขของ 8 สกิลเป็นจำนวนจริง · เปิดระบบผลพิเศษ', r.nums.length === 0 && r.tf, r);
+  ok('เงาพริ้ว Lv40: หลบ 0.08 + 0.02 + 0.03 + 0.03 + 0.05 = 0.21', r.sh === .21, r.sh);
 }
 
 console.log('ค่าสถานะ: ข้อที่ tester รอบ 2 เจอ (F1–F8)');
@@ -1549,7 +1568,7 @@ console.log('ค่าสถานะ: ข้อที่ tester รอบ 2 เ
     return o; })()`);
   ok('ปราการเหล็ก: ความชำนาญ VIT ไปเพิ่มดาเมจระเบิดโล่ (nova ×1.2 ที่ VIT 5) · หน้าพักเกมบอกว่าเป็นระเบิดโล่', Math.abs(r.nova - 1.2) < 1e-9 && r.bwHave.pk === 'nova' && r.bwHave.main === 'VIT', r);
   ok('เลือดคลั่ง (ไม่มีดาเมจ): ไม่ขึ้นบรรทัดความแรง', r.frenzy === null, r.frenzy);
-  ok('ผลคูณเป็นเส้นตรง: VIT 40 → ดูดซับ ×(1+0.1·8) = ×1.8 ไม่ใช่ทบต้น', Math.abs(r.abs - 1.8) < 1e-9, r.abs);
+  ok('บันไดปราการเหล็ก: VIT 40 → ดูดซับ ×1.15 (Lv6) ×1.25 (Lv25) ×1.3 (Lv35) ไม่ทบต้นต่อใบ', Math.abs(r.abs - 1.15 * 1.25 * 1.3) < 1e-9, r.abs);
   ok('ชะลอไม่เกิน 80% แม้การ์ด 100 ใบ (ศัตรูไม่หยุด/ไม่ถอยหลัง)', r.slow.length === 2 && r.slow.every(v => v <= .8 + 1e-9), r.slow);
   ok('หลบจากเงาพริ้วไม่เกิน 50%', r.dodge <= .5 + 1e-9, r.dodge);
   ok('คริจากอุปกรณ์สูง (70%) + การ์ด LUK: การ์ดดันได้ถึง 75% เท่านั้น · อุปกรณ์อย่างเดียวไม่ถูกตัด', r.crit[1] < r.crit[0] && Math.abs(r.critOver - r.crit[1]) < 1e-9 && Math.abs(r.crit[0] - r.crit[1] - .25) < 1e-9, r);
