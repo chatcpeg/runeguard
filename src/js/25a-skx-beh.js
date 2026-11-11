@@ -139,6 +139,8 @@ function zxCast(s){
   if(!G.near||G.nearD>wake){ s.cdT=.2; return; }
   s.cdT=cdOf(s); const n=countOf(s), r=v('r')*P.area, t=G.near, a=Math.atan2(t.y-P.y,t.x-P.x), mv=Math.hypot(P.vx,P.vy), ba=mv>20?Math.atan2(-P.vy,-P.vx):a+PI;
   for(let i=0;i<n;i++){ let x=P.x, y=P.y; const o={};
+    if(s.def.maxZ){ let c=0, first=-1; for(let j=0;j<G.zones.length;j++){ const q=G.zones[j]; if(q.src===s&&!q.dead){ c++; if(first<0) first=j; } }   // many small zones (caltrops): drop our own
+      if(c>=s.def.maxZ&&first>=0) G.zones.splice(first,1); }                                                               // oldest, never another skill's
     if(pl==='self'){ if(i||s.def.shoot){ const b=s.def.shoot?a+PI+(i-(n-1)/2)*1.2:i*TAU/n, d=s.def.shoot?28:r*.6; x+=Math.cos(b)*d; y+=Math.sin(b)*d*.75; } if(s.def.follow||v('follow')) o.follow=1; }   // a turret stands just behind the hero
     else if(pl==='aim'){ const b=a+(i-(n-1)/2)*.35, sp=v('speed')||200; x+=Math.cos(b)*36; y+=Math.sin(b)*36; o.aim={vx:Math.cos(b)*sp, vy:Math.sin(b)*sp}; }
     else if(pl==='enemy'){ const q=aimCluster(t,i,r*2); x=q[0]; y=q[1]; }
