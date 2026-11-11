@@ -55,7 +55,9 @@
 | `build.mjs` | ประกอบ `src/` → `runeguard.html`, ตรวจกฎ L1–L11 (§7.3), สร้าง PWA: `index.html` (+ CSP), `manifest.webmanifest`, `sw.js`, ไอคอน PNG (วาดด้วยโค้ด) |
 | `test/` | `run.mjs` รันเทสต์ทุกไฟล์ · `build.test.mjs` กฎตรวจทุกข้อ · `names.test.mjs` ชื่อที่แสดงห้ามซ้ำ · `NN-*.test.mjs` เทสต์ของแต่ละ lane · `_vm.mjs` โหลดไฟล์ใน `src/js` มาทดสอบใน node · `golden/` ผล golden run ของโหมดคลาสสิก + วิธีวัด |
 | `vercel.json` | ให้ Vercel รัน `node build.mjs` แล้วเสิร์ฟโฟลเดอร์ `dist/` + security header + header ของ service worker |
-| `package.json` | สคริปต์ `build` `lint` `check` `test` ไม่มี dependency |
+| `api/` | Vercel Functions (Node · ไม่มี dependency): `checkout.js` สร้าง Stripe Checkout Session · `stripe-webhook.js` ตรวจลายเซ็นแล้วบันทึกลง `rg_purchases` · `_shop.js` ตารางราคาฝั่ง server (ไฟล์ขึ้นต้น `_` ไม่เป็น route) · คีย์อยู่ใน env ของ Vercel เท่านั้น (`docs/SETUP-payments.md`) |
+| `sql/` | SQL ของตาราง `rg_*` บนโปรเจกต์ Supabase ที่ใช้ร่วม (up / down / เทสต์ RLS) · รันโดย orchestrator หลังเจ้าของอนุมัติเท่านั้น |
+| `package.json` | สคริปต์ `build` `lint` `check` `test` ไม่มี dependency · `"type": "module"` (ไฟล์ใน `api/` เป็น ESM) |
 
 repo นี้เก็บแค่โค้ด — ไอคอนและไฟล์ build ทั้งหมดสร้างตอน build ไม่ commit (`dist/` อยู่ใน `.gitignore`) · ไฟล์ทุกตัวเป็น LF (`.gitattributes`)
 

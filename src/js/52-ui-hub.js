@@ -212,7 +212,7 @@ function hbSet(){
     row('ใช้ยาอัตโนมัติเมื่อ HP ต่ำกว่า',p);
     row('เปิดการ์ดทันทีในทุ่ง',hbTog(s.cardAuto,()=>{ saveSettings({cardAuto:!s.cardAuto}); hbSet(); })); }
   row('เซฟในเครื่อง',shBtn('ส่งออก','btn ghost',hbExport),shBtn('นำเข้า','btn ghost',hbImport));
-  if(typeof AUTH_ON!=='undefined'&&AUTH_ON&&typeof uiaOpenAccount==='function') row('บัญชีออนไลน์',shBtn('เปิด ›','btn ghost',()=>uiaOpenAccount()));
+  if(typeof CLOUD_OK!=='undefined'&&CLOUD_OK&&typeof uiaOpenAccount==='function') row('บัญชีออนไลน์',shBtn('เปิด ›','btn ghost',()=>uiaOpenAccount()));
   L.append(shMk('p','st-ver','Runeguard '+(typeof SV_APP==='string'?SV_APP:'')+' · ข้อมูลเก็บในเครื่องนี้')); }
 function hbTog(on,fn){ const b=shBtn(on?'เปิด':'ปิด','st-tg',fn); b.setAttribute('aria-pressed',String(!!on)); return b; }
 function hbExport(){
