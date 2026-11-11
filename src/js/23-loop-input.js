@@ -44,4 +44,5 @@ $('#btnAgain').addEventListener('click',()=>{ if(G&&G.mode.again){ G.mode.again(
 $('#btnMenuE').addEventListener('click',toTitle);
 $('#btnReroll').addEventListener('click',reroll);
 for(const b of document.querySelectorAll('#qSeg button')) b.addEventListener('click',()=>setQuality(b.dataset.q));
+for(const b of document.querySelectorAll('#artSeg button')) b.addEventListener('click',()=>artSet(b.dataset.art==='on'));
 

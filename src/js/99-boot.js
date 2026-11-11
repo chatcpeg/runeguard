@@ -6,9 +6,10 @@
 // the host page (lane B), and a blocked localStorage plays from memory (STORE). No network here (AUTH_ON=false, M3).
 function boot(data){
   resize(); groundPat=ctx.createPattern(makeGround(),'repeat'); buildNum();
+  if(typeof artBoot==='function'&&ART.on) artBoot();                   // painted art (12b) · the vector look until it arrives
   for(const t in EN) if(!EN[t].boss&&!EN[t].lazy) getSpr(t);   // zone mobs set lazy:1 and are built on entry
   if(data&&data.cls&&CLS[data.cls]) selected=data.cls;
-  renderTitle(); setMuteLabels(); renderQualityButtons();
+  renderTitle(); setMuteLabels(); renderQualityButtons(); if(typeof renderArtButtons==='function') renderArtButtons();
   let hub=false;
   try{
     if(loadSettings().mute&&AU.on) toggleMute();               // runeguard.settings · lane B keeps it in sync afterwards

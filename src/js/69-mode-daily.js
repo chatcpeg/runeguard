@@ -82,7 +82,7 @@ function dgMode(kind,o){ const K=DG.kinds[kind];
     pauseTitle(){ return K.n+' · '+G.diff.n+' · '+o.score()+' · เหลือ '+fmtClock(Math.max(0,G.dgT)); },
     end(won){ if(o.end) won=o.end(won); return {eyebrow:K.n+' · '+G.diff.n+(G.dgPaid?'':' · ไม่ได้ใช้สิทธิ์ (ไม่มีรางวัล)'), title:o.title(won), rows:()=>[['ผลงาน',o.score()],['เวลา',fmtClock(G.t)],['สังหาร',fmtNum(G.kills)],['ชำนาญ',P.lv],['ความยาก',G.diff.n+' (รางวัล ×'+G.diff.rw+')']]}; },
     rewards(r,won){ if(!G.dgPaid){ r.baseXp=0; r.gold=0; r.items=[]; r.unpaid=true; return; } r.dgMul=G.diff.rw; o.rewards(r,won); },
-    drawGround(L,T,R,B){ ctx.fillStyle=groundPat; ctx.fillRect(L,T,R-L,B-T); ctx.fillStyle=o.tint; ctx.fillRect(L,T,R-L,B-T); },
+    drawGround(L,T,R,B){ if(typeof artGround==='function') artGround(L,T,R,B); else { ctx.fillStyle=groundPat; ctx.fillRect(L,T,R-L,B-T); } ctx.fillStyle=o.tint; ctx.fillRect(L,T,R-L,B-T); },
     drawWorld(L,T,R,B){ terDrawGround(L,T,R,B); if(o.drawWorld) o.drawWorld(L,T,R,B); },
     drawOver(L,T,R,B){ terDrawOver(L,T,R,B); dgLabels(L,T,R,B); }}, o.extra||{}); }
 

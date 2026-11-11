@@ -109,5 +109,7 @@ function heroOutlined(target,L,x,y,sc,t,face,moving,aim,o){
   if(o.tint){ sg.globalCompositeOperation='copy'; sg.drawImage(heroCv,0,0); sg.globalCompositeOperation='source-in'; sg.fillStyle=o.tint; sg.fillRect(0,0,WW,WW); sg.globalCompositeOperation='source-over';
     target.save(); target.globalAlpha*=o.tintA||.5; target.drawImage(heroSil,dx,dy,dw,dw); target.restore(); }
 }
-function portrait(cvs,look,sz){ sz=sz||72; const d=Math.min(2,window.devicePixelRatio||1); cvs.width=sz*d; cvs.height=sz*d; const c=cvs.getContext('2d'); c.setTransform(d,0,0,d,0,0); c.clearRect(0,0,sz,sz); heroOutlined(c,look,sz*.42,sz*.68,sz/70,.3,1,false,-.55,{}); }
+function portrait(cvs,look,sz){ sz=sz||72; const d=Math.min(2,window.devicePixelRatio||1); cvs.width=sz*d; cvs.height=sz*d; const c=cvs.getContext('2d'); c.setTransform(d,0,0,d,0,0); c.clearRect(0,0,sz,sz);
+  if(typeof artPortrait==='function'&&artPortrait(c,look,sz,cvs)) return;              // painted art (12b)
+  heroOutlined(c,look,sz*.42,sz*.68,sz/70,.3,1,false,-.55,{}); }
 

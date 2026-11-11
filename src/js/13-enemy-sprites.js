@@ -101,7 +101,8 @@ const EDRAW={
 function getSpr(type){
   let S=SPR[type]; if(S) return S;
   const d=EN[type],ss=d.boss?Math.min(SPR_SS,1.25):SPR_SS,pad=d.boss?d.r*1.45+30:d.r*1.3+16,w=Math.ceil((d.r+pad)*2),h=w,PW=Math.ceil(w*ss),PH=Math.ceil(h*ss);
-  const tmp=mkCanvas(PW,PH),sil=mkCanvas(PW,PH),draw=EDRAW[d.base||type];   // d.base: reuse another painter (zone mobs) · d.r is still this type's own
+  const ak=typeof artKeyEN==='function'?artKeyEN(type):null, im=ak?artImg(ak):null;   // painted art (12b) once it has loaded · vector until then
+  const tmp=mkCanvas(PW,PH),sil=mkCanvas(PW,PH),draw=im?artPaint(im,ak,d):EDRAW[d.base||type];   // d.base: reuse another painter (zone mobs) · d.r is still this type's own
   const mk=(f,dir,white)=>{
     const tc=tmp.getContext('2d'); tc.setTransform(1,0,0,1,0,0); tc.clearRect(0,0,PW,PH); tc.setTransform(ss,0,0,ss,PW/2,PH/2); if(dir) tc.scale(-1,1); draw(tc,f);
     if(d.tint){ tc.save(); tc.setTransform(1,0,0,1,0,0); tc.globalCompositeOperation='source-atop'; tc.globalAlpha=.35; tc.fillStyle=d.tint; tc.fillRect(0,0,PW,PH); tc.restore(); }
@@ -111,7 +112,7 @@ function getSpr(type){
     oc.setTransform(ss,0,0,ss,PW/2,PH/2); shadowE(oc,d.r); oc.setTransform(1,0,0,1,0,0);
     const o=Math.max(1,1.3*ss); for(const q of OFF8) oc.drawImage(sil,q[0]*o,q[1]*o);
     oc.drawImage(tmp,0,0); return out; };
-  S={w,h,f:[0,1,2,3,0,1,2,3].map((f,i)=>mk(f,i>=4?1:0)),wh:[mk(1,0,1),mk(1,1,1)]};
+  S={w,h,f:[0,1,2,3,0,1,2,3].map((f,i)=>mk(f,i>=4?1:0)),wh:[mk(1,0,1),mk(1,1,1)],ak,art:!!im};
   return SPR[type]=S;
 }
 

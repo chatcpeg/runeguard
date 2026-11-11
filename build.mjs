@@ -347,6 +347,7 @@ export function lintAll(src, html) {
 
 /* ================= PWA dist ================= */
 const SUPA_ORIGIN = 'https://edmwctmnasggdtdbcxkb.supabase.co';
+const ART_ORIGIN = 'https://cdn.jsdelivr.net';   // painted art: the `art` branch through jsDelivr (src/js/12a-art-data.js)
 const cspHash = s => "'sha256-" + createHash('sha256').update(s, 'utf8').digest('base64') + "'";
 export function buildDist(html, OUT) {
   // the page AND this builder (index/sw templates) decide the version, so a change to either ships a new worker + update toast
@@ -378,7 +379,7 @@ if ('serviceWorker' in navigator) {
 `;
   const game = gameScript(bodyPart);
   const csp = ["default-src 'self'", `script-src 'self' ${cspHash(game)} ${cspHash(reg)}`, "style-src 'self' 'unsafe-inline' https://fonts.googleapis.com",
-    'font-src https://fonts.gstatic.com', "img-src 'self' data: blob:", `connect-src 'self' ${SUPA_ORIGIN} https://fonts.googleapis.com https://fonts.gstatic.com`,
+    'font-src https://fonts.gstatic.com', `img-src 'self' data: blob: ${ART_ORIGIN}`, `connect-src 'self' ${SUPA_ORIGIN} ${ART_ORIGIN} https://fonts.googleapis.com https://fonts.gstatic.com`,
     "worker-src 'self'", "manifest-src 'self'", "base-uri 'none'", "form-action 'self'", "object-src 'none'"].join('; ');
   const index = `<!doctype html>
 <html lang="th">
@@ -430,6 +431,7 @@ ${bodyPart}
   const sw = `// Runeguard service worker — build ${version}
 const VERSION = 'runeguard-${version}';
 const FONTS = 'runeguard-fonts';
+const ART = 'runeguard-art';
 const CORE = ${JSON.stringify(CORE)};
 const FONT_CSS = ${JSON.stringify(fontCss)};
 // fonts are fetched before this worker exists on the first visit, so pull them in during install
@@ -451,7 +453,7 @@ self.addEventListener('install', e => {
 });
 self.addEventListener('activate', e => {
   e.waitUntil(caches.keys()
-    .then(keys => Promise.all(keys.filter(k => k !== VERSION && k !== FONTS).map(k => caches.delete(k))))
+    .then(keys => Promise.all(keys.filter(k => k !== VERSION && k !== FONTS && k !== ART).map(k => caches.delete(k))))
     .then(() => self.clients.claim()));
 });
 // the page asks a waiting worker to take over (see the registration script in index.html)
@@ -468,6 +470,17 @@ self.addEventListener('fetch', e => {
       const net = fetch(req).then(r => { if (r.ok) c.put(key, r.clone()); return r; }).catch(() => hit);
       if (hit) { e.waitUntil(net); return hit; }
       return net;
+    }));
+    return;
+  }
+  // painted art: each URL names a fixed commit of the art branch, so a cached copy never goes stale
+  if (url.hostname === 'cdn.jsdelivr.net' && url.pathname.startsWith('/gh/chatcpeg/runeguard@')) {
+    e.respondWith(caches.open(ART).then(async c => {
+      const hit = await c.match(req);
+      if (hit) return hit;
+      const r = await fetch(req);
+      if (r.ok) c.put(req, r.clone());
+      return r;
     }));
     return;
   }

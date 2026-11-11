@@ -1,0 +1,510 @@
+{
+ "subdir": "prod_v2",
+ "_note": "scene + 3 maps art (make_v2.py) · original designs",
+ "jobs": [
+  {
+   "name": "gr_haunted",
+   "seed": 3101,
+   "prompt": "Seamless tileable ground texture for a cute hand-painted mobile RPG battle map, seen straight down from directly above (orthographic top-down, no perspective, no horizon), soft painterly cel-shaded style that matches chibi anime game art, colors slightly muted and low contrast so characters stand out on it, even flat lighting, only small details (no trees, no rocks bigger than pebbles, no paths crossing the frame), the pattern fills the whole square edge to edge. Dark mossy forest floor of a gentle haunted wood at dusk: deep olive and slate-violet soil, patches of moss, scattered fallen dry leaves, tiny mushrooms, a faint cool purple tint. No text, no logo, no watermark, no frame, no border, no vignette."
+  },
+  {
+   "name": "gr_meadow",
+   "seed": 3102,
+   "prompt": "Seamless tileable ground texture for a cute hand-painted mobile RPG battle map, seen straight down from directly above (orthographic top-down, no perspective, no horizon), soft painterly cel-shaded style that matches chibi anime game art, colors slightly muted and low contrast so characters stand out on it, even flat lighting, only small details (no trees, no rocks bigger than pebbles, no paths crossing the frame), the pattern fills the whole square edge to edge. Soft spring meadow grass: short lush green grass with tiny scattered yellow, white and pink flowers and clover, warm sunny green tones. No text, no logo, no watermark, no frame, no border, no vignette."
+  },
+  {
+   "name": "gr_forest",
+   "seed": 3103,
+   "prompt": "Seamless tileable ground texture for a cute hand-painted mobile RPG battle map, seen straight down from directly above (orthographic top-down, no perspective, no horizon), soft painterly cel-shaded style that matches chibi anime game art, colors slightly muted and low contrast so characters stand out on it, even flat lighting, only small details (no trees, no rocks bigger than pebbles, no paths crossing the frame), the pattern fills the whole square edge to edge. Pine forest floor: dark green moss and short grass mixed with brown pine needles, small twigs and tiny ferns, deep green tones. No text, no logo, no watermark, no frame, no border, no vignette."
+  },
+  {
+   "name": "gr_ruins",
+   "seed": 3104,
+   "prompt": "Seamless tileable ground texture for a cute hand-painted mobile RPG battle map, seen straight down from directly above (orthographic top-down, no perspective, no horizon), soft painterly cel-shaded style that matches chibi anime game art, colors slightly muted and low contrast so characters stand out on it, even flat lighting, only small details (no trees, no rocks bigger than pebbles, no paths crossing the frame), the pattern fills the whole square edge to edge. Old temple courtyard: worn sandy-grey stone slabs with cracks, grass and moss growing in the gaps, a few faint carved rune lines, warm grey tones. No text, no logo, no watermark, no frame, no border, no vignette."
+  },
+  {
+   "name": "gr_grave",
+   "seed": 3105,
+   "prompt": "Seamless tileable ground texture for a cute hand-painted mobile RPG battle map, seen straight down from directly above (orthographic top-down, no perspective, no horizon), soft painterly cel-shaded style that matches chibi anime game art, colors slightly muted and low contrast so characters stand out on it, even flat lighting, only small details (no trees, no rocks bigger than pebbles, no paths crossing the frame), the pattern fills the whole square edge to edge. Old graveyard soil at night: dark brown-grey earth, short dry grass tufts, small pebbles, a few fallen leaves, cool muted tones. No text, no logo, no watermark, no frame, no border, no vignette."
+  },
+  {
+   "name": "gr_swamp",
+   "seed": 3106,
+   "prompt": "Seamless tileable ground texture for a cute hand-painted mobile RPG battle map, seen straight down from directly above (orthographic top-down, no perspective, no horizon), soft painterly cel-shaded style that matches chibi anime game art, colors slightly muted and low contrast so characters stand out on it, even flat lighting, only small details (no trees, no rocks bigger than pebbles, no paths crossing the frame), the pattern fills the whole square edge to edge. Shallow swamp marsh ground: damp teal-green grass islands with small puddles of clear shallow water, reeds, lily leaves, cool aqua-green tones. No text, no logo, no watermark, no frame, no border, no vignette."
+  },
+  {
+   "name": "gr_canyon",
+   "seed": 3107,
+   "prompt": "Seamless tileable ground texture for a cute hand-painted mobile RPG battle map, seen straight down from directly above (orthographic top-down, no perspective, no horizon), soft painterly cel-shaded style that matches chibi anime game art, colors slightly muted and low contrast so characters stand out on it, even flat lighting, only small details (no trees, no rocks bigger than pebbles, no paths crossing the frame), the pattern fills the whole square edge to edge. Red rock canyon ground: rusty red-orange packed dirt and flat stone, small gravel, dry grass tufts, warm red-brown tones. No text, no logo, no watermark, no frame, no border, no vignette."
+  },
+  {
+   "name": "t_tree_dead0",
+   "seed": 3201,
+   "w": 1024,
+   "h": 1024,
+   "prompt": "Cute hand-painted mobile RPG game environment prop, soft cel shading with gentle gradients, clean thin dark lineart, bright pastel fantasy colors, polished game asset quality, seen from a high three-quarter top-down angle like an object on a game map. A spooky-but-cute leafless dead tree with a twisted dark grey-brown trunk and curling bare branches, a hollow knot like a sleepy face. Single object, the whole object visible with empty margin around it, centered, isolated on a plain flat light grey background, only a soft contact shadow under it. No characters, no text, no logo, no watermark, no frame."
+  },
+  {
+   "name": "t_tree_dead1",
+   "seed": 3202,
+   "w": 1024,
+   "h": 1024,
+   "prompt": "Cute hand-painted mobile RPG game environment prop, soft cel shading with gentle gradients, clean thin dark lineart, bright pastel fantasy colors, polished game asset quality, seen from a high three-quarter top-down angle like an object on a game map. A crooked leafless dead tree with dark bark, long drooping grey moss hanging from its bare branches, a tiny lantern hanging from one branch. Single object, the whole object visible with empty margin around it, centered, isolated on a plain flat light grey background, only a soft contact shadow under it. No characters, no text, no logo, no watermark, no frame."
+  },
+  {
+   "name": "t_tree_dead2",
+   "seed": 3203,
+   "w": 1024,
+   "h": 1024,
+   "prompt": "Cute hand-painted mobile RPG game environment prop, soft cel shading with gentle gradients, clean thin dark lineart, bright pastel fantasy colors, polished game asset quality, seen from a high three-quarter top-down angle like an object on a game map. A short gnarled dead tree stump-tree with split dark bark, two bare branches, small glowing purple mushrooms at its roots. Single object, the whole object visible with empty margin around it, centered, isolated on a plain flat light grey background, only a soft contact shadow under it. No characters, no text, no logo, no watermark, no frame."
+  },
+  {
+   "name": "t_tree_round0",
+   "seed": 3211,
+   "w": 1024,
+   "h": 1024,
+   "prompt": "Cute hand-painted mobile RPG game environment prop, soft cel shading with gentle gradients, clean thin dark lineart, bright pastel fantasy colors, polished game asset quality, seen from a high three-quarter top-down angle like an object on a game map. A round fluffy leafy tree with a short thick brown trunk and a big puffy bright green canopy made of soft cloud-like clumps. Single object, the whole object visible with empty margin around it, centered, isolated on a plain flat light grey background, only a soft contact shadow under it. No characters, no text, no logo, no watermark, no frame."
+  },
+  {
+   "name": "t_tree_round1",
+   "seed": 3212,
+   "w": 1024,
+   "h": 1024,
+   "prompt": "Cute hand-painted mobile RPG game environment prop, soft cel shading with gentle gradients, clean thin dark lineart, bright pastel fantasy colors, polished game asset quality, seen from a high three-quarter top-down angle like an object on a game map. A round fluffy tree with a short thick trunk and a puffy canopy covered in soft pink blossoms. Single object, the whole object visible with empty margin around it, centered, isolated on a plain flat light grey background, only a soft contact shadow under it. No characters, no text, no logo, no watermark, no frame."
+  },
+  {
+   "name": "t_tree_round2",
+   "seed": 3213,
+   "w": 1024,
+   "h": 1024,
+   "prompt": "Cute hand-painted mobile RPG game environment prop, soft cel shading with gentle gradients, clean thin dark lineart, bright pastel fantasy colors, polished game asset quality, seen from a high three-quarter top-down angle like an object on a game map. A round fluffy leafy tree with a short thick trunk and a puffy green canopy dotted with shiny red apples. Single object, the whole object visible with empty margin around it, centered, isolated on a plain flat light grey background, only a soft contact shadow under it. No characters, no text, no logo, no watermark, no frame."
+  },
+  {
+   "name": "t_tree_pine0",
+   "seed": 3221,
+   "w": 1024,
+   "h": 1024,
+   "prompt": "Cute hand-painted mobile RPG game environment prop, soft cel shading with gentle gradients, clean thin dark lineart, bright pastel fantasy colors, polished game asset quality, seen from a high three-quarter top-down angle like an object on a game map. A tall cute pine tree with three layered dark green needle tiers and a straight brown trunk. Single object, the whole object visible with empty margin around it, centered, isolated on a plain flat light grey background, only a soft contact shadow under it. No characters, no text, no logo, no watermark, no frame."
+  },
+  {
+   "name": "t_tree_pine1",
+   "seed": 3222,
+   "w": 1024,
+   "h": 1024,
+   "prompt": "Cute hand-painted mobile RPG game environment prop, soft cel shading with gentle gradients, clean thin dark lineart, bright pastel fantasy colors, polished game asset quality, seen from a high three-quarter top-down angle like an object on a game map. A tall cute fir tree with layered blue-green needle tiers, small pine cones, slightly leaning. Single object, the whole object visible with empty margin around it, centered, isolated on a plain flat light grey background, only a soft contact shadow under it. No characters, no text, no logo, no watermark, no frame."
+  },
+  {
+   "name": "t_tree_pine2",
+   "seed": 3223,
+   "w": 1024,
+   "h": 1024,
+   "prompt": "Cute hand-painted mobile RPG game environment prop, soft cel shading with gentle gradients, clean thin dark lineart, bright pastel fantasy colors, polished game asset quality, seen from a high three-quarter top-down angle like an object on a game map. A slim cute cypress-pine tree with dense dark green needles and a short brown trunk. Single object, the whole object visible with empty margin around it, centered, isolated on a plain flat light grey background, only a soft contact shadow under it. No characters, no text, no logo, no watermark, no frame."
+  },
+  {
+   "name": "t_rock_boulder0",
+   "seed": 3301,
+   "w": 1024,
+   "h": 1024,
+   "prompt": "Cute hand-painted mobile RPG game environment prop, soft cel shading with gentle gradients, clean thin dark lineart, bright pastel fantasy colors, polished game asset quality, seen from a high three-quarter top-down angle like an object on a game map. A big rounded grey boulder with soft moss patches and small grass tufts at its base. Single object, the whole object visible with empty margin around it, centered, isolated on a plain flat light grey background, only a soft contact shadow under it. No characters, no text, no logo, no watermark, no frame."
+  },
+  {
+   "name": "t_rock_boulder1",
+   "seed": 3302,
+   "w": 1024,
+   "h": 1024,
+   "prompt": "Cute hand-painted mobile RPG game environment prop, soft cel shading with gentle gradients, clean thin dark lineart, bright pastel fantasy colors, polished game asset quality, seen from a high three-quarter top-down angle like an object on a game map. A cluster of two large grey-brown rocks with a crack and tiny flowers growing beside them. Single object, the whole object visible with empty margin around it, centered, isolated on a plain flat light grey background, only a soft contact shadow under it. No characters, no text, no logo, no watermark, no frame."
+  },
+  {
+   "name": "t_rock_boulder2",
+   "seed": 3303,
+   "w": 1024,
+   "h": 1024,
+   "prompt": "Cute hand-painted mobile RPG game environment prop, soft cel shading with gentle gradients, clean thin dark lineart, bright pastel fantasy colors, polished game asset quality, seen from a high three-quarter top-down angle like an object on a game map. A wide flat grey stone with a mossy top and pebbles around it. Single object, the whole object visible with empty margin around it, centered, isolated on a plain flat light grey background, only a soft contact shadow under it. No characters, no text, no logo, no watermark, no frame."
+  },
+  {
+   "name": "t_rock_tomb0",
+   "seed": 3311,
+   "w": 1024,
+   "h": 1024,
+   "prompt": "Cute hand-painted mobile RPG game environment prop, soft cel shading with gentle gradients, clean thin dark lineart, bright pastel fantasy colors, polished game asset quality, seen from a high three-quarter top-down angle like an object on a game map. A cute rounded old gravestone with a carved rune cross, mossy edges and a small candle in front. Single object, the whole object visible with empty margin around it, centered, isolated on a plain flat light grey background, only a soft contact shadow under it. No characters, no text, no logo, no watermark, no frame."
+  },
+  {
+   "name": "t_rock_tomb1",
+   "seed": 3312,
+   "w": 1024,
+   "h": 1024,
+   "prompt": "Cute hand-painted mobile RPG game environment prop, soft cel shading with gentle gradients, clean thin dark lineart, bright pastel fantasy colors, polished game asset quality, seen from a high three-quarter top-down angle like an object on a game map. A cracked tilted gravestone with a pointed top, ivy climbing it, a few small white flowers. Single object, the whole object visible with empty margin around it, centered, isolated on a plain flat light grey background, only a soft contact shadow under it. No characters, no text, no logo, no watermark, no frame."
+  },
+  {
+   "name": "t_rock_tomb2",
+   "seed": 3313,
+   "w": 1024,
+   "h": 1024,
+   "prompt": "Cute hand-painted mobile RPG game environment prop, soft cel shading with gentle gradients, clean thin dark lineart, bright pastel fantasy colors, polished game asset quality, seen from a high three-quarter top-down angle like an object on a game map. A small stone grave marker shaped like a simple rune slab with a wilted flower wreath. Single object, the whole object visible with empty margin around it, centered, isolated on a plain flat light grey background, only a soft contact shadow under it. No characters, no text, no logo, no watermark, no frame."
+  },
+  {
+   "name": "t_rock_pillar0",
+   "seed": 3321,
+   "w": 1024,
+   "h": 1024,
+   "prompt": "Cute hand-painted mobile RPG game environment prop, soft cel shading with gentle gradients, clean thin dark lineart, bright pastel fantasy colors, polished game asset quality, seen from a high three-quarter top-down angle like an object on a game map. A tall ancient stone pillar with softly glowing blue rune carvings and green ivy. Single object, the whole object visible with empty margin around it, centered, isolated on a plain flat light grey background, only a soft contact shadow under it. No characters, no text, no logo, no watermark, no frame."
+  },
+  {
+   "name": "t_rock_pillar1",
+   "seed": 3322,
+   "w": 1024,
+   "h": 1024,
+   "prompt": "Cute hand-painted mobile RPG game environment prop, soft cel shading with gentle gradients, clean thin dark lineart, bright pastel fantasy colors, polished game asset quality, seen from a high three-quarter top-down angle like an object on a game map. A broken ancient stone pillar, the top half snapped off, faint blue rune carvings, rubble at its base. Single object, the whole object visible with empty margin around it, centered, isolated on a plain flat light grey background, only a soft contact shadow under it. No characters, no text, no logo, no watermark, no frame."
+  },
+  {
+   "name": "t_rock_pillar2",
+   "seed": 3323,
+   "w": 1024,
+   "h": 1024,
+   "prompt": "Cute hand-painted mobile RPG game environment prop, soft cel shading with gentle gradients, clean thin dark lineart, bright pastel fantasy colors, polished game asset quality, seen from a high three-quarter top-down angle like an object on a game map. A short toppled stone pillar stump with a carved capital lying beside it, moss and grass. Single object, the whole object visible with empty margin around it, centered, isolated on a plain flat light grey background, only a soft contact shadow under it. No characters, no text, no logo, no watermark, no frame."
+  },
+  {
+   "name": "t_bush_thorn0",
+   "seed": 3401,
+   "w": 1024,
+   "h": 1024,
+   "prompt": "Cute hand-painted mobile RPG game environment prop, soft cel shading with gentle gradients, clean thin dark lineart, bright pastel fantasy colors, polished game asset quality, seen from a high three-quarter top-down angle like an object on a game map. A dark green thorny bramble bush with curled thorns and small purple berries. Single object, the whole object visible with empty margin around it, centered, isolated on a plain flat light grey background, only a soft contact shadow under it. No characters, no text, no logo, no watermark, no frame."
+  },
+  {
+   "name": "t_bush_thorn1",
+   "seed": 3402,
+   "w": 1024,
+   "h": 1024,
+   "prompt": "Cute hand-painted mobile RPG game environment prop, soft cel shading with gentle gradients, clean thin dark lineart, bright pastel fantasy colors, polished game asset quality, seen from a high three-quarter top-down angle like an object on a game map. A low spiky dry thorn bush with grey-green leaves and red berries. Single object, the whole object visible with empty margin around it, centered, isolated on a plain flat light grey background, only a soft contact shadow under it. No characters, no text, no logo, no watermark, no frame."
+  },
+  {
+   "name": "t_bush_flower0",
+   "seed": 3411,
+   "w": 1024,
+   "h": 1024,
+   "prompt": "Cute hand-painted mobile RPG game environment prop, soft cel shading with gentle gradients, clean thin dark lineart, bright pastel fantasy colors, polished game asset quality, seen from a high three-quarter top-down angle like an object on a game map. A round green bush covered in small bright yellow flowers. Single object, the whole object visible with empty margin around it, centered, isolated on a plain flat light grey background, only a soft contact shadow under it. No characters, no text, no logo, no watermark, no frame."
+  },
+  {
+   "name": "t_bush_flower1",
+   "seed": 3412,
+   "w": 1024,
+   "h": 1024,
+   "prompt": "Cute hand-painted mobile RPG game environment prop, soft cel shading with gentle gradients, clean thin dark lineart, bright pastel fantasy colors, polished game asset quality, seen from a high three-quarter top-down angle like an object on a game map. A round green bush covered in small pink flowers. Single object, the whole object visible with empty margin around it, centered, isolated on a plain flat light grey background, only a soft contact shadow under it. No characters, no text, no logo, no watermark, no frame."
+  },
+  {
+   "name": "t_bush_flower2",
+   "seed": 3413,
+   "w": 1024,
+   "h": 1024,
+   "prompt": "Cute hand-painted mobile RPG game environment prop, soft cel shading with gentle gradients, clean thin dark lineart, bright pastel fantasy colors, polished game asset quality, seen from a high three-quarter top-down angle like an object on a game map. A round green bush covered in small white flowers. Single object, the whole object visible with empty margin around it, centered, isolated on a plain flat light grey background, only a soft contact shadow under it. No characters, no text, no logo, no watermark, no frame."
+  },
+  {
+   "name": "t_wet_water0",
+   "seed": 3501,
+   "w": 1024,
+   "h": 768,
+   "prompt": "Cute hand-painted mobile RPG game environment prop, soft cel shading with gentle gradients, clean thin dark lineart, bright pastel fantasy colors, polished game asset quality, seen from a high three-quarter top-down angle like an object on a game map. A small round clear blue pond with lily pads, a pink lotus and reeds around its rocky grassy edge. Single object, the whole object visible with empty margin around it, centered, isolated on a plain flat light grey background, only a soft contact shadow under it. No characters, no text, no logo, no watermark, no frame."
+  },
+  {
+   "name": "t_wet_water1",
+   "seed": 3502,
+   "w": 1024,
+   "h": 768,
+   "prompt": "Cute hand-painted mobile RPG game environment prop, soft cel shading with gentle gradients, clean thin dark lineart, bright pastel fantasy colors, polished game asset quality, seen from a high three-quarter top-down angle like an object on a game map. A small oval clear blue pond with stepping stones along one edge, reeds and tiny rocks around it. Single object, the whole object visible with empty margin around it, centered, isolated on a plain flat light grey background, only a soft contact shadow under it. No characters, no text, no logo, no watermark, no frame."
+  },
+  {
+   "name": "t_wet_mud0",
+   "seed": 3511,
+   "w": 1024,
+   "h": 768,
+   "prompt": "Cute hand-painted mobile RPG game environment prop, soft cel shading with gentle gradients, clean thin dark lineart, bright pastel fantasy colors, polished game asset quality, seen from a high three-quarter top-down angle like an object on a game map. A murky brown mud puddle with a few bubbles, dark reeds and a small rotten log at its edge. Single object, the whole object visible with empty margin around it, centered, isolated on a plain flat light grey background, only a soft contact shadow under it. No characters, no text, no logo, no watermark, no frame."
+  },
+  {
+   "name": "t_wet_mud1",
+   "seed": 3512,
+   "w": 1024,
+   "h": 768,
+   "prompt": "Cute hand-painted mobile RPG game environment prop, soft cel shading with gentle gradients, clean thin dark lineart, bright pastel fantasy colors, polished game asset quality, seen from a high three-quarter top-down angle like an object on a game map. A wide dark violet-brown bog puddle with small glowing bubbles and dead reeds. Single object, the whole object visible with empty margin around it, centered, isolated on a plain flat light grey background, only a soft contact shadow under it. No characters, no text, no logo, no watermark, no frame."
+  },
+  {
+   "name": "t_mount_rock0",
+   "seed": 3601,
+   "w": 1024,
+   "h": 1024,
+   "prompt": "Cute hand-painted mobile RPG game environment prop, soft cel shading with gentle gradients, clean thin dark lineart, bright pastel fantasy colors, polished game asset quality, seen from a high three-quarter top-down angle like an object on a game map. A big rocky mountain outcrop: a tall layered grey-brown rock mass with steep cliffs, a grassy top with two small pine trees, small rocks at its foot. Single object, the whole object visible with empty margin around it, centered, isolated on a plain flat light grey background, only a soft contact shadow under it. No characters, no text, no logo, no watermark, no frame."
+  },
+  {
+   "name": "t_mount_rock1",
+   "seed": 3602,
+   "w": 1024,
+   "h": 1024,
+   "prompt": "Cute hand-painted mobile RPG game environment prop, soft cel shading with gentle gradients, clean thin dark lineart, bright pastel fantasy colors, polished game asset quality, seen from a high three-quarter top-down angle like an object on a game map. A wide rocky hill: stacked boulders and cliffs of warm grey stone, green grass on top. Single object, the whole object visible with empty margin around it, centered, isolated on a plain flat light grey background, only a soft contact shadow under it. No characters, no text, no logo, no watermark, no frame."
+  },
+  {
+   "name": "t_mount_haunt0",
+   "seed": 3603,
+   "w": 1024,
+   "h": 1024,
+   "prompt": "Cute hand-painted mobile RPG game environment prop, soft cel shading with gentle gradients, clean thin dark lineart, bright pastel fantasy colors, polished game asset quality, seen from a high three-quarter top-down angle like an object on a game map. A dark craggy rock spire mass of slate-violet stone with glowing purple crystals growing from its cracks and a dead tree on top. Single object, the whole object visible with empty margin around it, centered, isolated on a plain flat light grey background, only a soft contact shadow under it. No characters, no text, no logo, no watermark, no frame."
+  },
+  {
+   "name": "t_mount_red0",
+   "seed": 3604,
+   "w": 1024,
+   "h": 1024,
+   "prompt": "Cute hand-painted mobile RPG game environment prop, soft cel shading with gentle gradients, clean thin dark lineart, bright pastel fantasy colors, polished game asset quality, seen from a high three-quarter top-down angle like an object on a game map. A big red sandstone mesa rock with layered rusty red cliffs and dry grass on top. Single object, the whole object visible with empty margin around it, centered, isolated on a plain flat light grey background, only a soft contact shadow under it. No characters, no text, no logo, no watermark, no frame."
+  },
+  {
+   "name": "t_mount_crystal0",
+   "seed": 3605,
+   "w": 1024,
+   "h": 1024,
+   "prompt": "Cute hand-painted mobile RPG game environment prop, soft cel shading with gentle gradients, clean thin dark lineart, bright pastel fantasy colors, polished game asset quality, seen from a high three-quarter top-down angle like an object on a game map. A cluster of large pale blue rune crystals growing out of a mossy rock mound, softly glowing. Single object, the whole object visible with empty margin around it, centered, isolated on a plain flat light grey background, only a soft contact shadow under it. No characters, no text, no logo, no watermark, no frame."
+  },
+  {
+   "name": "t_fence0",
+   "seed": 3701,
+   "w": 1024,
+   "h": 768,
+   "prompt": "Cute hand-painted mobile RPG game environment prop, soft cel shading with gentle gradients, clean thin dark lineart, bright pastel fantasy colors, polished game asset quality, seen from a high three-quarter top-down angle like an object on a game map. A short section of goblin camp fence: sharpened wooden stakes tied with rope, leaning slightly, a crude painted wooden shield hung on it. Single object, the whole object visible with empty margin around it, centered, isolated on a plain flat light grey background, only a soft contact shadow under it. No characters, no text, no logo, no watermark, no frame."
+  },
+  {
+   "name": "t_campfire0",
+   "seed": 3702,
+   "w": 1024,
+   "h": 1024,
+   "prompt": "Cute hand-painted mobile RPG game environment prop, soft cel shading with gentle gradients, clean thin dark lineart, bright pastel fantasy colors, polished game asset quality, seen from a high three-quarter top-down angle like an object on a game map. A small campfire with crackling orange flames inside a ring of stones and logs, a spit with a roasting mushroom. Single object, the whole object visible with empty margin around it, centered, isolated on a plain flat light grey background, only a soft contact shadow under it. No characters, no text, no logo, no watermark, no frame."
+  },
+  {
+   "name": "t_tent_goblin",
+   "seed": 3703,
+   "w": 1024,
+   "h": 1024,
+   "prompt": "Cute hand-painted mobile RPG game environment prop, soft cel shading with gentle gradients, clean thin dark lineart, bright pastel fantasy colors, polished game asset quality, seen from a high three-quarter top-down angle like an object on a game map. A small patched goblin tent made of brown hides and sticks, a little flag on top. Single object, the whole object visible with empty margin around it, centered, isolated on a plain flat light grey background, only a soft contact shadow under it. No characters, no text, no logo, no watermark, no frame."
+  },
+  {
+   "name": "t_tower_orc",
+   "seed": 3704,
+   "w": 768,
+   "h": 1024,
+   "prompt": "Cute hand-painted mobile RPG game environment prop, soft cel shading with gentle gradients, clean thin dark lineart, bright pastel fantasy colors, polished game asset quality, seen from a high three-quarter top-down angle like an object on a game map. A tall wooden orc watch tower on four log legs with a platform, a rusty red banner and spikes. Single object, the whole object visible with empty margin around it, centered, isolated on a plain flat light grey background, only a soft contact shadow under it. No characters, no text, no logo, no watermark, no frame."
+  },
+  {
+   "name": "t_tent_orc",
+   "seed": 3705,
+   "w": 1024,
+   "h": 1024,
+   "prompt": "Cute hand-painted mobile RPG game environment prop, soft cel shading with gentle gradients, clean thin dark lineart, bright pastel fantasy colors, polished game asset quality, seen from a high three-quarter top-down angle like an object on a game map. A big rusty-red orc war tent with iron spikes and a horned banner. Single object, the whole object visible with empty margin around it, centered, isolated on a plain flat light grey background, only a soft contact shadow under it. No characters, no text, no logo, no watermark, no frame."
+  },
+  {
+   "name": "t_wall_log",
+   "seed": 3706,
+   "w": 1024,
+   "h": 768,
+   "prompt": "Cute hand-painted mobile RPG game environment prop, soft cel shading with gentle gradients, clean thin dark lineart, bright pastel fantasy colors, polished game asset quality, seen from a high three-quarter top-down angle like an object on a game map. A short section of a thick log palisade wall with iron bands, sharpened tops. Single object, the whole object visible with empty margin around it, centered, isolated on a plain flat light grey background, only a soft contact shadow under it. No characters, no text, no logo, no watermark, no frame."
+  },
+  {
+   "name": "t_hotspring",
+   "seed": 3707,
+   "w": 1024,
+   "h": 768,
+   "prompt": "Cute hand-painted mobile RPG game environment prop, soft cel shading with gentle gradients, clean thin dark lineart, bright pastel fantasy colors, polished game asset quality, seen from a high three-quarter top-down angle like an object on a game map. A small steaming hot spring pool with smooth stones around it and warm turquoise water. Single object, the whole object visible with empty margin around it, centered, isolated on a plain flat light grey background, only a soft contact shadow under it. No characters, no text, no logo, no watermark, no frame."
+  },
+  {
+   "name": "t_altar_rune",
+   "seed": 3708,
+   "w": 1024,
+   "h": 1024,
+   "prompt": "Cute hand-painted mobile RPG game environment prop, soft cel shading with gentle gradients, clean thin dark lineart, bright pastel fantasy colors, polished game asset quality, seen from a high three-quarter top-down angle like an object on a game map. An old round stone rune altar platform with a glowing rune circle carved on top and four small pillars. Single object, the whole object visible with empty margin around it, centered, isolated on a plain flat light grey background, only a soft contact shadow under it. No characters, no text, no logo, no watermark, no frame."
+  },
+  {
+   "name": "t_portal",
+   "seed": 3709,
+   "w": 768,
+   "h": 1024,
+   "prompt": "Cute hand-painted mobile RPG game environment prop, soft cel shading with gentle gradients, clean thin dark lineart, bright pastel fantasy colors, polished game asset quality, seen from a high three-quarter top-down angle like an object on a game map. A glowing magic portal gate: an arch of two mossy stone pillars with a swirling soft blue light between them. Single object, the whole object visible with empty margin around it, centered, isolated on a plain flat light grey background, only a soft contact shadow under it. No characters, no text, no logo, no watermark, no frame."
+  },
+  {
+   "name": "t_chest_gold",
+   "seed": 3710,
+   "w": 1024,
+   "h": 1024,
+   "prompt": "Cute hand-painted mobile RPG game environment prop, soft cel shading with gentle gradients, clean thin dark lineart, bright pastel fantasy colors, polished game asset quality, seen from a high three-quarter top-down angle like an object on a game map. A small wooden treasure chest with gold trim, slightly open with gold coins glinting inside. Single object, the whole object visible with empty margin around it, centered, isolated on a plain flat light grey background, only a soft contact shadow under it. No characters, no text, no logo, no watermark, no frame."
+  },
+  {
+   "name": "g_sprout",
+   "seed": 4101,
+   "prompt": "Cute chibi anime mobile RPG monster art, 2.5-heads-tall proportions, big expressive eyes, soft cel shading with gentle gradients, clean thin lineart, bright pastel fantasy colors, polished game key-art quality. A tiny baby goblin: a small green-skinned goblin with big pointy ears, a round nose, a mischievous grin and a patched leather vest, very small and round, wearing a leaf on its head, waving a twig. Full body, three-quarter view, centered, isolated on a plain flat light grey background. No text, no logo, no watermark, no frame."
+  },
+  {
+   "name": "g_grunt",
+   "seed": 4102,
+   "prompt": "Cute chibi anime mobile RPG monster art, 2.5-heads-tall proportions, big expressive eyes, soft cel shading with gentle gradients, clean thin lineart, bright pastel fantasy colors, polished game key-art quality. A goblin: a small green-skinned goblin with big pointy ears, a round nose, a mischievous grin and a patched leather vest, holding a big knobby wooden club over its shoulder. Full body, three-quarter view, centered, isolated on a plain flat light grey background. No text, no logo, no watermark, no frame."
+  },
+  {
+   "name": "g_thrower",
+   "seed": 4103,
+   "prompt": "Cute chibi anime mobile RPG monster art, 2.5-heads-tall proportions, big expressive eyes, soft cel shading with gentle gradients, clean thin lineart, bright pastel fantasy colors, polished game key-art quality. A goblin: a small green-skinned goblin with big pointy ears, a round nose, a mischievous grin and a patched leather vest, with a sling and a pouch of stones, winding up to throw a rock. Full body, three-quarter view, centered, isolated on a plain flat light grey background. No text, no logo, no watermark, no frame."
+  },
+  {
+   "name": "g_spear",
+   "seed": 4104,
+   "prompt": "Cute chibi anime mobile RPG monster art, 2.5-heads-tall proportions, big expressive eyes, soft cel shading with gentle gradients, clean thin lineart, bright pastel fantasy colors, polished game key-art quality. A goblin: a small green-skinned goblin with big pointy ears, a round nose, a mischievous grin and a patched leather vest, wearing a small dented helmet, holding a long wooden spear pointed forward. Full body, three-quarter view, centered, isolated on a plain flat light grey background. No text, no logo, no watermark, no frame."
+  },
+  {
+   "name": "g_thief",
+   "seed": 4105,
+   "prompt": "Cute chibi anime mobile RPG monster art, 2.5-heads-tall proportions, big expressive eyes, soft cel shading with gentle gradients, clean thin lineart, bright pastel fantasy colors, polished game key-art quality. A sneaky goblin: a small green-skinned goblin with big pointy ears, a round nose, a mischievous grin and a patched leather vest, wearing a dark bandana mask, carrying a stolen sack of gold coins, tiptoeing. Full body, three-quarter view, centered, isolated on a plain flat light grey background. No text, no logo, no watermark, no frame."
+  },
+  {
+   "name": "g_boarrider",
+   "seed": 4106,
+   "prompt": "Cute chibi anime mobile RPG monster art, 2.5-heads-tall proportions, big expressive eyes, soft cel shading with gentle gradients, clean thin lineart, bright pastel fantasy colors, polished game key-art quality. A goblin: a small green-skinned goblin with big pointy ears, a round nose, a mischievous grin and a patched leather vest, riding a chubby brown wild boar with small tusks, holding reins and a short spear. Full body, three-quarter view, centered, isolated on a plain flat light grey background. No text, no logo, no watermark, no frame."
+  },
+  {
+   "name": "g_boar",
+   "seed": 4107,
+   "prompt": "Cute chibi anime mobile RPG monster art, 2.5-heads-tall proportions, big expressive eyes, soft cel shading with gentle gradients, clean thin lineart, bright pastel fantasy colors, polished game key-art quality. A chubby brown wild boar with small white tusks, bristly mane and an angry little face. Full body, three-quarter view, centered, isolated on a plain flat light grey background. No text, no logo, no watermark, no frame."
+  },
+  {
+   "name": "g_shaman",
+   "seed": 4108,
+   "prompt": "Cute chibi anime mobile RPG monster art, 2.5-heads-tall proportions, big expressive eyes, soft cel shading with gentle gradients, clean thin lineart, bright pastel fantasy colors, polished game key-art quality. A goblin shaman with a feathered bone headdress, a robe of leaves, holding a crooked staff with a small fire flame on top. Full body, three-quarter view, centered, isolated on a plain flat light grey background. No text, no logo, no watermark, no frame."
+  },
+  {
+   "name": "g_drummer",
+   "seed": 4109,
+   "prompt": "Cute chibi anime mobile RPG monster art, 2.5-heads-tall proportions, big expressive eyes, soft cel shading with gentle gradients, clean thin lineart, bright pastel fantasy colors, polished game key-art quality. A goblin: a small green-skinned goblin with big pointy ears, a round nose, a mischievous grin and a patched leather vest, beating a big round war drum hanging from its neck with two sticks. Full body, three-quarter view, centered, isolated on a plain flat light grey background. No text, no logo, no watermark, no frame."
+  },
+  {
+   "name": "g_trapper",
+   "seed": 4110,
+   "prompt": "Cute chibi anime mobile RPG monster art, 2.5-heads-tall proportions, big expressive eyes, soft cel shading with gentle gradients, clean thin lineart, bright pastel fantasy colors, polished game key-art quality. A goblin: a small green-skinned goblin with big pointy ears, a round nose, a mischievous grin and a patched leather vest, wearing goggles, carrying a bag of spiky caltrops and a small bear trap. Full body, three-quarter view, centered, isolated on a plain flat light grey background. No text, no logo, no watermark, no frame."
+  },
+  {
+   "name": "g_hob",
+   "seed": 4111,
+   "prompt": "Cute chibi anime mobile RPG monster art, 2.5-heads-tall proportions, big expressive eyes, soft cel shading with gentle gradients, clean thin lineart, bright pastel fantasy colors, polished game key-art quality. A big muscular hobgoblin with darker green skin, a wooden round shield and a short sword, sturdy stance. Full body, three-quarter view, centered, isolated on a plain flat light grey background. No text, no logo, no watermark, no frame."
+  },
+  {
+   "name": "gb_king",
+   "seed": 4112,
+   "prompt": "Cute chibi anime mobile RPG boss monster art, 2.5-heads-tall proportions, big expressive eyes, soft cel shading with gentle gradients, clean thin lineart, bright pastel fantasy colors, polished game key-art quality. The Rust-crown Goblin King as a round chubby chibi goblin: a big rusty iron crown, a red fur cape, a huge spiked club, a proud grin. Full body, three-quarter view, centered, isolated on a plain flat light grey background. No text, no logo, no watermark, no frame."
+  },
+  {
+   "name": "s_drop",
+   "seed": 4201,
+   "prompt": "Cute chibi anime mobile RPG monster art, 2.5-heads-tall proportions, big expressive eyes, soft cel shading with gentle gradients, clean thin lineart, bright pastel fantasy colors, polished game key-art quality. A water slime: a round translucent jelly blob with a small glowing rune stone core floating inside it, big cute eyes, clear blue like a water drop with a little drip on top. Full body, three-quarter view, centered, isolated on a plain flat light grey background. No text, no logo, no watermark, no frame."
+  },
+  {
+   "name": "s_ember",
+   "seed": 4202,
+   "prompt": "Cute chibi anime mobile RPG monster art, 2.5-heads-tall proportions, big expressive eyes, soft cel shading with gentle gradients, clean thin lineart, bright pastel fantasy colors, polished game key-art quality. A fire slime: a round translucent jelly blob with a small glowing rune stone core floating inside it, big cute eyes, glowing ember red-orange with tiny flames and a charcoal core. Full body, three-quarter view, centered, isolated on a plain flat light grey background. No text, no logo, no watermark, no frame."
+  },
+  {
+   "name": "s_breeze",
+   "seed": 4203,
+   "prompt": "Cute chibi anime mobile RPG monster art, 2.5-heads-tall proportions, big expressive eyes, soft cel shading with gentle gradients, clean thin lineart, bright pastel fantasy colors, polished game key-art quality. A wind slime: a round translucent jelly blob with a small glowing rune stone core floating inside it, big cute eyes, pale mint green and bubbly like a soap bubble, floating with swirling breeze lines. Full body, three-quarter view, centered, isolated on a plain flat light grey background. No text, no logo, no watermark, no frame."
+  },
+  {
+   "name": "s_pebble",
+   "seed": 4204,
+   "prompt": "Cute chibi anime mobile RPG monster art, 2.5-heads-tall proportions, big expressive eyes, soft cel shading with gentle gradients, clean thin lineart, bright pastel fantasy colors, polished game key-art quality. An earth slime: a round translucent jelly blob with a small glowing rune stone core floating inside it, big cute eyes, brown with a cracked pebble-stone shell on its back. Full body, three-quarter view, centered, isolated on a plain flat light grey background. No text, no logo, no watermark, no frame."
+  },
+  {
+   "name": "s_moss",
+   "seed": 4205,
+   "prompt": "Cute chibi anime mobile RPG monster art, 2.5-heads-tall proportions, big expressive eyes, soft cel shading with gentle gradients, clean thin lineart, bright pastel fantasy colors, polished game key-art quality. A mossy slime: a round translucent jelly blob with a small glowing rune stone core floating inside it, big cute eyes, green with moss and tiny leaves growing on its top, sleepy eyes. Full body, three-quarter view, centered, isolated on a plain flat light grey background. No text, no logo, no watermark, no frame."
+  },
+  {
+   "name": "s_glow",
+   "seed": 4206,
+   "prompt": "Cute chibi anime mobile RPG monster art, 2.5-heads-tall proportions, big expressive eyes, soft cel shading with gentle gradients, clean thin lineart, bright pastel fantasy colors, polished game key-art quality. A light slime: a round translucent jelly blob with a small glowing rune stone core floating inside it, big cute eyes, soft golden and glowing warmly with little sparkles, a halo above it. Full body, three-quarter view, centered, isolated on a plain flat light grey background. No text, no logo, no watermark, no frame."
+  },
+  {
+   "name": "s_shade",
+   "seed": 4207,
+   "prompt": "Cute chibi anime mobile RPG monster art, 2.5-heads-tall proportions, big expressive eyes, soft cel shading with gentle gradients, clean thin lineart, bright pastel fantasy colors, polished game key-art quality. A dark slime: a round translucent jelly blob with a small glowing rune stone core floating inside it, big cute eyes, deep violet and half see-through like smoke, glowing purple eyes. Full body, three-quarter view, centered, isolated on a plain flat light grey background. No text, no logo, no watermark, no frame."
+  },
+  {
+   "name": "s_twin",
+   "seed": 4208,
+   "prompt": "Cute chibi anime mobile RPG monster art, 2.5-heads-tall proportions, big expressive eyes, soft cel shading with gentle gradients, clean thin lineart, bright pastel fantasy colors, polished game key-art quality. A slime: a round translucent jelly blob with a small glowing rune stone core floating inside it, big cute eyes, split in two halves, one half fire red and one half water blue, two rune cores. Full body, three-quarter view, centered, isolated on a plain flat light grey background. No text, no logo, no watermark, no frame."
+  },
+  {
+   "name": "s_big",
+   "seed": 4209,
+   "prompt": "Cute chibi anime mobile RPG monster art, 2.5-heads-tall proportions, big expressive eyes, soft cel shading with gentle gradients, clean thin lineart, bright pastel fantasy colors, polished game key-art quality. A giant slime: a round translucent jelly blob with a small glowing rune stone core floating inside it, big cute eyes, big and wobbly teal-green, with several smaller rune stones inside, a determined face. Full body, three-quarter view, centered, isolated on a plain flat light grey background. No text, no logo, no watermark, no frame."
+  },
+  {
+   "name": "s_merge",
+   "seed": 4210,
+   "prompt": "Cute chibi anime mobile RPG monster art, 2.5-heads-tall proportions, big expressive eyes, soft cel shading with gentle gradients, clean thin lineart, bright pastel fantasy colors, polished game key-art quality. Three small slimes fused into one lumpy slime: a round translucent jelly blob with a small glowing rune stone core floating inside it, big cute eyes, with three faces and three rune cores, rainbow-tinted. Full body, three-quarter view, centered, isolated on a plain flat light grey background. No text, no logo, no watermark, no frame."
+  },
+  {
+   "name": "sb_queen",
+   "seed": 4211,
+   "prompt": "Cute chibi anime mobile RPG boss monster art, 2.5-heads-tall proportions, big expressive eyes, soft cel shading with gentle gradients, clean thin lineart, bright pastel fantasy colors, polished game key-art quality. The Six-hue Slime Queen: a huge regal translucent slime with a crown of six colored rune gems, a rainbow shimmer and a large glowing core. Full body, three-quarter view, centered, isolated on a plain flat light grey background. No text, no logo, no watermark, no frame."
+  },
+  {
+   "name": "o_grunt",
+   "seed": 4301,
+   "prompt": "Cute chibi anime mobile RPG monster art, 2.5-heads-tall proportions, big expressive eyes, soft cel shading with gentle gradients, clean thin lineart, bright pastel fantasy colors, polished game key-art quality. An orc: a stocky muscular grey-green orc with small tusks, a heavy brow and rusty red iron armor pieces, holding a heavy iron cleaver, a plain helmet. Full body, three-quarter view, centered, isolated on a plain flat light grey background. No text, no logo, no watermark, no frame."
+  },
+  {
+   "name": "o_archer",
+   "seed": 4302,
+   "prompt": "Cute chibi anime mobile RPG monster art, 2.5-heads-tall proportions, big expressive eyes, soft cel shading with gentle gradients, clean thin lineart, bright pastel fantasy colors, polished game key-art quality. An orc: a stocky muscular grey-green orc with small tusks, a heavy brow and rusty red iron armor pieces, with a big wooden longbow and a quiver, leather hood. Full body, three-quarter view, centered, isolated on a plain flat light grey background. No text, no logo, no watermark, no frame."
+  },
+  {
+   "name": "o_shield",
+   "seed": 4303,
+   "prompt": "Cute chibi anime mobile RPG monster art, 2.5-heads-tall proportions, big expressive eyes, soft cel shading with gentle gradients, clean thin lineart, bright pastel fantasy colors, polished game key-art quality. An orc: a stocky muscular grey-green orc with small tusks, a heavy brow and rusty red iron armor pieces, behind a huge rectangular rusty iron tower shield, peeking over it. Full body, three-quarter view, centered, isolated on a plain flat light grey background. No text, no logo, no watermark, no frame."
+  },
+  {
+   "name": "o_berserk",
+   "seed": 4304,
+   "prompt": "Cute chibi anime mobile RPG monster art, 2.5-heads-tall proportions, big expressive eyes, soft cel shading with gentle gradients, clean thin lineart, bright pastel fantasy colors, polished game key-art quality. A wild orc: a stocky muscular grey-green orc with small tusks, a heavy brow and rusty red iron armor pieces, with red war paint, a mohawk and two hand axes, roaring. Full body, three-quarter view, centered, isolated on a plain flat light grey background. No text, no logo, no watermark, no frame."
+  },
+  {
+   "name": "o_shaman",
+   "seed": 4305,
+   "prompt": "Cute chibi anime mobile RPG monster art, 2.5-heads-tall proportions, big expressive eyes, soft cel shading with gentle gradients, clean thin lineart, bright pastel fantasy colors, polished game key-art quality. An old orc shaman with a wolf-skull headdress, bone charms and a staff with a dark purple flame. Full body, three-quarter view, centered, isolated on a plain flat light grey background. No text, no logo, no watermark, no frame."
+  },
+  {
+   "name": "o_rhino",
+   "seed": 4306,
+   "prompt": "Cute chibi anime mobile RPG monster art, 2.5-heads-tall proportions, big expressive eyes, soft cel shading with gentle gradients, clean thin lineart, bright pastel fantasy colors, polished game key-art quality. An orc: a stocky muscular grey-green orc with small tusks, a heavy brow and rusty red iron armor pieces, riding a stocky grey stone-skinned rhino with a big horn and armor plates. Full body, three-quarter view, centered, isolated on a plain flat light grey background. No text, no logo, no watermark, no frame."
+  },
+  {
+   "name": "o_horn",
+   "seed": 4307,
+   "prompt": "Cute chibi anime mobile RPG monster art, 2.5-heads-tall proportions, big expressive eyes, soft cel shading with gentle gradients, clean thin lineart, bright pastel fantasy colors, polished game key-art quality. An orc: a stocky muscular grey-green orc with small tusks, a heavy brow and rusty red iron armor pieces, blowing a huge curved war horn, cheeks puffed. Full body, three-quarter view, centered, isolated on a plain flat light grey background. No text, no logo, no watermark, no frame."
+  },
+  {
+   "name": "o_bomber",
+   "seed": 4308,
+   "prompt": "Cute chibi anime mobile RPG monster art, 2.5-heads-tall proportions, big expressive eyes, soft cel shading with gentle gradients, clean thin lineart, bright pastel fantasy colors, polished game key-art quality. A grinning orc: a stocky muscular grey-green orc with small tusks, a heavy brow and rusty red iron armor pieces, carrying a big round black powder barrel bomb with a lit fuse on its back. Full body, three-quarter view, centered, isolated on a plain flat light grey background. No text, no logo, no watermark, no frame."
+  },
+  {
+   "name": "o_brute",
+   "seed": 4309,
+   "prompt": "Cute chibi anime mobile RPG monster art, 2.5-heads-tall proportions, big expressive eyes, soft cel shading with gentle gradients, clean thin lineart, bright pastel fantasy colors, polished game key-art quality. A huge hulking orc: a stocky muscular grey-green orc with small tusks, a heavy brow and rusty red iron armor pieces, with a giant blacksmith hammer and an anvil-like chest plate. Full body, three-quarter view, centered, isolated on a plain flat light grey background. No text, no logo, no watermark, no frame."
+  },
+  {
+   "name": "o_cook",
+   "seed": 4310,
+   "prompt": "Cute chibi anime mobile RPG monster art, 2.5-heads-tall proportions, big expressive eyes, soft cel shading with gentle gradients, clean thin lineart, bright pastel fantasy colors, polished game key-art quality. A jolly round orc camp cook with an apron and a chef hat, holding a ladle and a roasted drumstick. Full body, three-quarter view, centered, isolated on a plain flat light grey background. No text, no logo, no watermark, no frame."
+  },
+  {
+   "name": "o_wolf",
+   "seed": 4311,
+   "prompt": "Cute chibi anime mobile RPG monster art, 2.5-heads-tall proportions, big expressive eyes, soft cel shading with gentle gradients, clean thin lineart, bright pastel fantasy colors, polished game key-art quality. A skeletal bone wolf with glowing purple eyes and dark wisps. Full body, three-quarter view, centered, isolated on a plain flat light grey background. No text, no logo, no watermark, no frame."
+  },
+  {
+   "name": "ob_warlord",
+   "seed": 4312,
+   "prompt": "Cute chibi anime mobile RPG boss monster art, 2.5-heads-tall proportions, big expressive eyes, soft cel shading with gentle gradients, clean thin lineart, bright pastel fantasy colors, polished game key-art quality. The Iron-fang Orc Warlord as a big chibi orc: huge iron tusks, a horned rusty helmet, a red cape, a giant two-handed axe. Full body, three-quarter view, centered, isolated on a plain flat light grey background. No text, no logo, no watermark, no frame."
+  }
+ ]
+}
