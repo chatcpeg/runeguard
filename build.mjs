@@ -225,7 +225,7 @@ function pureHit(ln) {
   return false;
 }
 const XSS_WORDS = ['name', 'email', 'msg', 'err', 'text'];
-export const SIZE_WARN = 600 * 1024, SIZE_FAIL = 800 * 1024;   // raised after M1 (353.8 KB raw = 113 KB gzip; Thai text is 3 bytes/char)
+export const SIZE_WARN = 1000 * 1024, SIZE_FAIL = 1400 * 1024;   // raised for the maps mode + art (2026-11-12 · ~754 KB raw ≈ 240 KB gzip; Thai text is 3 bytes/char)
 const lineOf = (text, idx) => text.slice(0, idx).split('\n').length;
 
 // right-hand side of `…innerHTML = <rhs>;` on one line, reduced to the parts that are code, not string text:
