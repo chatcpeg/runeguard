@@ -40,9 +40,12 @@ BEH.rite=(s,dt)=>{ s.cdT-=dt; if(s.cdT>0) return; const r=pv(s,'r')*P.area;
 /* ---- projectiles (fireProj → pxFire when SK[id].px) ---- */
 // ret: boomerang (out to its range, then back to the hand, hitting everything again) · hook: knock < 0 = pulled to the hero ·
 // slow: slows what it hits · drip: leaves burning ground on its way (the 26a fire trail) · def.pass: flies through everything and
-// only explodes where its range ends
+// only explodes where its range ends · hold: a net that freezes everything round the hit (or the end) · split: the first hit bursts into
+// `split` star shards that fly on ahead (shard × dmg each)
 function pxFire(s,p){ const v=k=>pv(s,k);
   if(v('ret')) p.ret=1;
+  const ho=v('hold'); if(ho){ p.hold=ho; p.x2=1; }
+  const sp=v('split'); if(sp){ p.split=sp; p.shard=v('shard')||.4; p.x2=1; }
   const hk=v('hook'); if(hk) p.knock=-hk;
   const sl=v('slow'); if(sl){ p.slow=sl; p.x2=1; }
   const dr=v('drip'); if(dr||s.def.pass){ const m=p.mx||(p.mx={lv:0, look:{}, ht:0, dd:0, ph:0}); if(dr) m.drip=Math.max(m.drip||0,dr*P.durMul); if(s.def.pass) m.pass=999; } }
@@ -51,15 +54,37 @@ function orbX(s,R0){ const w=pv(s,'wave'), R=w?R0*(1+w*Math.sin(G.t*2.2)):R0; s.
 // projHit → true = handled here (the shared code stops)
 function pxHit(p,e){
   if(p.slow&&!e.dead){ const f=1-p.slow*(e.boss?.5:1); if(f<e.slowF) e.slowF=f; e.slowT=Math.max(e.slowT,1.2); }
+  if(p.hold){ netBurst(p); p.dead=true; return true; }
+  if(p.split&&!p.splitDone){ p.splitDone=1; const n=p.split, a0=Math.atan2(p.vy,p.vx), sp=620, life=.34;
+    for(let i=0;i<n;i++){ const a=a0+(n>1?(i/(n-1)-.5)*.9:0);
+      G.projs.push({x:e.x,y:e.y,vx:Math.cos(a)*sp,vy:Math.sin(a)*sp,r:4,dmg:p.dmg*p.shard,pierce:1,life,max:life,knock:40,explode:0,homing:0,crit:p.crit,shape:'star',c:p.c,src:p.src,burn:0,hit:[e.id],tg:null,dead:false,t:0,fxd:true}); } }
   return false; }
 // updateProjs, end of range → true = handled here (the shared end is skipped)
-function pxEnd(p){ return false; }
+function pxEnd(p){ if(p.hold){ netBurst(p); return true; } return false; }
+// the net: freezes (hold s) and hurts everything in explode · no knock-back (they stay caught) · bosses only take the damage
+function netBurst(p){ const r=p.explode||60; aoe(p.x,p.y,r,p.dmg,p.src,{freeze:p.hold});
+  G.fx.push({k:'netx',x:p.x,y:p.y,r,t:0,dur:Math.max(.5,p.hold),c:p.c,dead:false}); G.fx.push({k:'ring',x:p.x,y:p.y,r0:r*.3,r1:r,t:0,dur:.25,c:p.c,w:4,dead:false}); sfx('hit'); }
 // boomerang flight: when the outward life runs out it turns, hits can repeat, and it homes on the hero until caught (true = gone)
 function pxRet(p,dt){
   if(!p.back){ if(p.life>0) return false; p.back=true; p.hit=null; p.life=p.max=2; }
   const dx=P.x-p.x, dy=(P.y-6)-p.y, d=Math.hypot(dx,dy)||1, sp=Math.hypot(p.vx,p.vy)||400;
   if(d<P.r+14){ p.dead=true; return true; }
   const k=Math.min(1,dt*7); p.vx+=(dx/d*sp-p.vx)*k; p.vy+=(dy/d*sp-p.vy)*k; return false; }
+
+/* ---- summons (BEH.summon: modes other than hawk / clone) ---- */
+function skxUnit(s,u,dt,i,n){ if(s.def.mode==='wolf') wolfUpdate(s,u,dt,i,n); }
+// wolf: runs at the nearest enemy (within 420 of the hero), bites on its cooldown (slow · the skill's bleed), else trots at heel
+function wolfUpdate(s,u,dt,i,n){
+  if((u.x-P.x)**2+(u.y-P.y)**2>700*700){ u.x=P.x; u.y=P.y; u.tg=null; }
+  u.cd-=dt; u.rt=(u.rt||0)-dt; if(u.bite>0) u.bite-=dt;
+  if(u.tg&&(u.tg.dead||(u.tg.x-P.x)**2+(u.tg.y-P.y)**2>420*420)) u.tg=null;
+  if(!u.tg&&u.rt<=0){ u.rt=.25; const t=nearestTo(u.x,u.y,360); u.tg=t&&(t.x-P.x)**2+(t.y-P.y)**2<420*420?t:null; }
+  const hx=P.x+Math.cos(i*TAU/n+PI*.75)*36, hy=P.y+14+Math.sin(i*TAU/n+PI*.75)*12, tx=u.tg?u.tg.x:hx, ty=u.tg?u.tg.y:hy;
+  const dx=tx-u.x, dy=ty-u.y, d=Math.hypot(dx,dy)||1, reach=u.tg?(pv(s,'r')||24)+u.tg.r*.6:4, sp=u.tg?360:300;
+  if(d>reach){ const st=Math.min(d-reach*.8,sp*dt); u.x+=dx/d*st; u.y+=dy/d*st; u.run=1; if(Math.abs(dx)>2) u.face=dx<0?-1:1; } else u.run=0;
+  if(u.tg&&d<=reach+2&&u.cd<=0){ u.cd=cdOf(s); u.bite=.18; const sl=pv(s,'slow')||0;
+    damageEnemy(u.tg,pv(s,'dmg'),s,{knock:60,nx:dx/d,ny:dy/d,slow:sl,slowDur:1});
+    G.fx.push({k:'xcut',x:u.tg.x,y:u.tg.y-u.tg.r*.3,r:u.tg.r*.7,t:0,dur:.18,c:'#e6eeff',dead:false}); if(!G.auto) sfx('slice'); } }
 
 /* ---- zones (BEH.zone → zxCast when SK[id].zx · updateZones → zxTick every frame, zxEnd when the time is up) ---- */
 // place: 'self' = on the hero (follow: stays on the hero) · 'aim' = rolls straight down the aim, slowing (speed) · 'enemy' = on the
@@ -70,10 +95,10 @@ function zxCast(s){
   if(!G.near||G.nearD>wake){ s.cdT=.2; return; }
   s.cdT=cdOf(s); const n=countOf(s), r=v('r')*P.area, t=G.near, a=Math.atan2(t.y-P.y,t.x-P.x);
   for(let i=0;i<n;i++){ let x=P.x, y=P.y; const o={};
-    if(pl==='self'){ if(i){ const b=i*TAU/n; x+=Math.cos(b)*r*.6; y+=Math.sin(b)*r*.45; } if(s.def.follow||v('follow')) o.follow=1; }
+    if(pl==='self'){ if(i||s.def.shoot){ const b=s.def.shoot?a+PI+(i-(n-1)/2)*1.2:i*TAU/n, d=s.def.shoot?28:r*.6; x+=Math.cos(b)*d; y+=Math.sin(b)*d*.75; } if(s.def.follow||v('follow')) o.follow=1; }   // a turret stands just behind the hero
     else if(pl==='aim'){ const b=a+(i-(n-1)/2)*.35, sp=v('speed')||200; x+=Math.cos(b)*36; y+=Math.sin(b)*36; o.aim={vx:Math.cos(b)*sp, vy:Math.sin(b)*sp}; }
     else if(pl==='enemy'){ const q=aimCluster(t,i,r*2); x=q[0]; y=q[1]; }
-    addZone(Object.assign({x,y,r,dur:(v('dur')||4)*P.durMul,tick:v('tick')||.4,dmg:v('dmg')||0,slow:v('slow')||0,kind:s.def.fx,src:s,x2:1,
+    addZone(Object.assign({x,y,r,dur:(v('dur')||4)*P.durMul,tick:(v('tick')||.4)*(s.def.cdTick?P.cdMul:1),dmg:v('dmg')||0,slow:v('slow')||0,kind:s.def.fx,src:s,x2:1,
       rep:v('rep')||0,stun:v('stun')||0,pull:v('pull')||0,boom:v('boom')||0,explode:(v('explode')||0)*P.area,bk:s.def.bk==null?220:s.def.bk,
       shoot:s.def.shoot?(v('shots')||1):0,lob:s.def.lob?1:0,reach:(v('reach')||300)*(P.rangeMul||1),pierce:v('pierce')||1,tt:s.def.shoot||s.def.lob?.2:0},o)); }
   if(s.def.fx==='palisade'){ G.fx.push({k:'ring',x:P.x,y:P.y,r0:r*.3,r1:r,t:0,dur:.3,c:s.def.c,w:6,follow:true,dead:false}); sfx('shield'); } }
@@ -103,7 +128,7 @@ function zxEnd(z){ if(!z.boom) return; const R=z.explode||z.r*1.4, c=z.src&&z.sr
 function zxShoot(z){ const t=nearestTo(z.x,z.y,z.reach); if(!t) return; const s=z.src, n=z.shoot, a0=Math.atan2(t.y-z.y,t.x-z.x), sp=640, life=z.reach/sp*1.1, arrow=z.kind==='turret';
   for(let i=0;i<n;i++){ const a=a0+(i-(n-1)/2)*.16;
     G.projs.push({x:z.x,y:z.y-(arrow?14:4),vx:Math.cos(a)*sp,vy:Math.sin(a)*sp,r:5,dmg:z.dmg,pierce:z.pierce,life,max:life,knock:40,explode:0,homing:0,crit:0,shape:arrow?'arrow':'star',c:s.def.c,src:s,burn:0,hit:null,tg:null,dead:false,t:0}); }
-  z.fl=.15; if(!G.auto) sfx('shoot'); }
+  z.fl=.15; z.aa=a0; if(!G.auto) sfx('shoot'); }
 // volcano: a lava bomb on a random enemy in reach (a 'lava' strike: falls, bursts, leaves a small fire)
 function zxLob(z){ const e=randomNear(z.x,z.y,z.reach); if(!e) return; const q=mkStrike(e.x+rand(-10,10),e.y+rand(-10,10),z.r*.75,.5,z.dmg,z.src,'lava',{knock:140}); q.ox=z.x; q.oy=z.y-10; G.strikes.push(q); z.fl=.2; }
 function zxLava(s){ explode(s.x,s.y,s.r,s.dmg,s.src,{knock:s.knock,c:'#ff7a2a'}); addZone({x:s.x,y:s.y,r:s.r*.6,dur:1.2*P.durMul,tick:.3,dmg:s.dmg*.05,kind:'fire',src:s.src}); }

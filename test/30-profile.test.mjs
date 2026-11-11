@@ -18,7 +18,7 @@ function fresh(stubs = {}) {
   return { ctx, X, ls, dump, notes };
 }
 const CLASSES = ['swordsman', 'mage', 'archer', 'cleric', 'thief'];
-const SKILL_TOTAL = 52;   // 40 + the character-only skills shipped so far (docs/PROPOSAL-skill-trees.md §3 → 70)
+const SKILL_TOTAL = 58;   // 40 + the character-only skills shipped so far (docs/PROPOSAL-skill-trees.md §3 → 70)
 
 // ------------------------------------------------------------------------------------------------
 console.log('§3.2 เลเวลและ EXP');

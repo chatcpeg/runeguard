@@ -37,6 +37,8 @@ const SKILL_REQ={
   bloodrite:{need:'cyclone', r:3, jlv:5}, chainaxe:{need:'frenzy', r:3, jlv:10},
   gravorb:{lv:8}, aquaring:{lv:15}, comet:{need:'meteor', r:3, jlv:5}, rift:{need:'blizzard', r:3, jlv:10},
   volcano:{need:'vortex', r:3, jlv:5}, leafblade:{need:'spikes', r:3, jlv:10},
+  ballista:{lv:8}, netshot:{lv:15}, wolf:{need:'hawk', r:3, jlv:5}, gale:{need:'arrownova', r:3, jlv:10},
+  mark:{need:'deadeye', r:3, jlv:5}, starshard:{need:'blast', r:3, jlv:10},
   lance:{need:'slash', r:3}, valor:{need:'lance', r:2},
   cyclone:{need:'blades', r:3}, frenzy:{need:'cyclone', r:2},
   meteor:{need:'flame', r:3}, blizzard:{need:'meteor', r:2},

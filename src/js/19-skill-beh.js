@@ -180,7 +180,7 @@ BEH.spikes=(s,dt)=>{
 BEH.summon=(s,dt)=>{
   const n=countOf(s),U=s.st.units||(s.st.units=[]);
   while(U.length<n) U.push({x:P.x,y:P.y,state:0,cd:rand(.2,.8),tg:null,a:rand(0,TAU),ang:0,face:1,aim:0});
-  for(let i=0;i<U.length;i++){ if(s.def.mode==='hawk') hawkUpdate(s,U[i],dt,G.t*1.4+i*TAU/U.length); else cloneUpdate(s,U[i],dt,i,U.length); }
+  for(let i=0;i<U.length;i++){ if(s.def.mode==='hawk') hawkUpdate(s,U[i],dt,G.t*1.4+i*TAU/U.length); else if(s.def.mode!=='clone') skxUnit(s,U[i],dt,i,U.length); else cloneUpdate(s,U[i],dt,i,U.length); }   // skxUnit: wolf / lantern (25a)
 };
 function hawkUpdate(s,u,dt,fa){
   const fx=P.x+Math.cos(fa)*46,fy=P.y-26+Math.sin(fa)*22,px=u.x,py=u.y;

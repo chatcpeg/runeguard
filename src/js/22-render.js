@@ -153,7 +153,7 @@ function drawHawk(u){ const flap=Math.sin(G.t*18+u.a)*.6; ctx.fillStyle='rgba(0,
   ctx.save(); ctx.translate(u.x,u.y); ctx.rotate(u.ang||0); ctx.lineJoin='round'; ctx.strokeStyle='#2a1a0e'; ctx.lineWidth=2;
   ctx.fillStyle='#b07a40'; ctx.beginPath(); ctx.moveTo(-1,0); ctx.lineTo(-6,-13-flap*6); ctx.lineTo(5,-2); ctx.closePath(); ctx.stroke(); ctx.fill(); ctx.beginPath(); ctx.moveTo(-1,0); ctx.lineTo(-6,13+flap*6); ctx.lineTo(5,2); ctx.closePath(); ctx.stroke(); ctx.fill();
   ctx.fillStyle='#8a5a30'; ctx.beginPath(); ctx.ellipse(0,0,9,4,0,0,TAU); ctx.stroke(); ctx.fill(); ctx.beginPath(); ctx.moveTo(-8,0); ctx.lineTo(-13,-3); ctx.lineTo(-13,3); ctx.closePath(); ctx.fill(); circ(ctx,'#efe4cc',8,0,3.4); circ(ctx,'#1a1410',9,-1,.9); ctx.fillStyle='#f0b545'; ctx.beginPath(); ctx.moveTo(11,-1); ctx.lineTo(14.5,0); ctx.lineTo(11,1.5); ctx.closePath(); ctx.fill(); ctx.restore(); }
-function drawUnits(){ for(const s of P.skills){ if(s.def.type!=='summon'||!s.st.units) continue; for(const u of s.st.units){ if(s.def.mode==='hawk') drawHawk(u); else { ctx.save(); ctx.globalAlpha=.6; if(!(typeof artDrawHero==='function'&&artDrawHero(ctx,P.look,u.x,u.y,u.face||1,G.t+(u.a||0),true,{}))) heroOutlined(ctx,CLONE_LOOK,u.x,u.y,1,G.t,u.face||1,true,u.aim||0,{outline:'#9a7dff',seed:u.a}); ctx.restore(); } } } }
+function drawUnits(){ for(const s of P.skills){ if(s.def.type!=='summon'||!s.st.units) continue; for(const u of s.st.units){ if(s.def.mode==='hawk') drawHawk(u); else if(s.def.mode!=='clone') sk2DrawUnit(s,u); else { ctx.save(); ctx.globalAlpha=.6; if(!(typeof artDrawHero==='function'&&artDrawHero(ctx,P.look,u.x,u.y,u.face||1,G.t+(u.a||0),true,{}))) heroOutlined(ctx,CLONE_LOOK,u.x,u.y,1,G.t,u.face||1,true,u.aim||0,{outline:'#9a7dff',seed:u.a}); ctx.restore(); } } } }
 function drawProjs(){
   for(const p of G.projs){
     const sp=Math.hypot(p.vx,p.vy),a=Math.atan2(p.vy,p.vx);
@@ -265,7 +265,7 @@ function render(){
   drawZones(); drawStrikesUnder(); drawAuras(); drawGems(L,T,R,B); drawBossTele();
   drawFx(true); drawCorpses();
   drawActors(L,T,R,B); if(M.drawOver) M.drawOver(L,T,R,B);
-  drawOrbits(); drawUnits();
+  drawOrbits(); drawUnits(); if(P.sx) sk2DrawOver();                    // marks / nets / seals of the character-only skills (22a)
   drawParts(false);
   ctx.globalCompositeOperation='lighter';
   drawProjs(); drawFx(false); drawParts(true); drawStrikesOver();
