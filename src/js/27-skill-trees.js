@@ -25,11 +25,13 @@ const TF_KN={dmg:'ดาเมจ', cd:'คูลดาวน์', count:'จำ
   nova:'ดาเมจระเบิด', tick:'ช่วงห่างแต่ละครั้ง', bounces:'ชิ่ง', jump:'ระยะกระโดด', hits:'จำนวนครั้งที่โดน', dur:'ระยะเวลา', pull:'แรงดูด', trap:'ระเบิดกับดัก',
   heal:'ฟื้น HP', healPct:'ฟื้น HP ตาม % HP สูงสุด', targets:'เป้าต่อครั้ง', rage:'โทสะ', steal:'ฟื้นต่อการสังหาร', dodge:'หลบหลีก',
   // keys of the character-only skills (25a)
-  life:'ระยะพุ่ง', hook:'แรงกระชาก', rep:'แรงผลัก', cost:'สละ HP', drain:'ดูดเลือดกลับ'};
+  life:'ระยะพุ่ง', hook:'แรงกระชาก', rep:'แรงผลัก', cost:'สละ HP', drain:'ดูดเลือดกลับ', boom:'แรงระเบิดท้าย', drip:'หางไฟ', shots:'ลูกต่อชุด', wave:'คลื่นวง'};
 // the same keys on the level-up cards / skills page (core 21 PL · PCT · SEC: only new keys are added, classic labels stay)
-if(typeof PL!=='undefined') Object.assign(PL,{life:'ระยะพุ่ง', hook:'แรงกระชาก', rep:'แรงผลัก', cost:'สละ HP', drain:'ดูดเลือดกลับ', size:'ขนาด'});
-if(typeof PCT!=='undefined') Object.assign(PCT,{cost:1, drain:1});
-const TF_PCTK={slow:1, dodge:1, crit:1, healPct:1, cost:1, drain:1}, TF_SECK={stun:1, freeze:1}, TF_REL={rage:1, steal:1};
+if(typeof PL!=='undefined') Object.assign(PL,{life:'ระยะพุ่ง', hook:'แรงกระชาก', rep:'แรงผลัก', cost:'สละ HP', drain:'ดูดเลือดกลับ', size:'ขนาด',
+  boom:'แรงระเบิดท้าย ×', drip:'หางไฟ', shots:'ลูกต่อชุด', wave:'คลื่นวง', pull:'แรงดูด', tick:'ช่วงห่าง', dur:'ระยะเวลา'});
+if(typeof PCT!=='undefined') Object.assign(PCT,{cost:1, drain:1, wave:1});
+if(typeof SEC!=='undefined') Object.assign(SEC,{tick:1, dur:1, drip:1});
+const TF_PCTK={slow:1, dodge:1, crit:1, healPct:1, cost:1, drain:1}, TF_SECK={stun:1, freeze:1, drip:1}, TF_REL={rage:1, steal:1};
 const tfPc=v=>(Math.round(v*1000)/10)+'%', tfM=r=>(Math.round(r)/10)+' ม.', tfN=v=>String(+(+v).toFixed(2));
 const TF_ZK={fire:'เปลวไฟ', ice:'น้ำแข็ง', poison:'พิษ', wind:'ลมคม'};
 // special effects: n = node name when used as a proc node · d(p) = text · glob = also allowed on passive skills (hit by any skill)
@@ -248,7 +250,31 @@ bloodrite:[['โลหิตเดือด','🩸',['dmg','*',.08,3],['r','*',.
 chainaxe:[['ขวานหนัก','🪓',['dmg','*',.08,3],['pierce','+',1,2],{fx:'execute',nm:'ลากมาประหาร',i:'💀',hp:.3,m:1.6}],
   ['โซ่ยาว','⛓️',['life','*',.08,3],['hook','*',.15,2],{fx:'pull',nm:'กระชากทั้งฝูง',i:'🧲',r:90}],
   ['ขว้างไว','⏱️',['cd','c',.05,3],['@shock',.08,2],{fx:'vsStun',nm:'ทุบตัวที่มึน',i:'💢',m:1.4}],
-  {fx:'shards',nm:'ขวานแตกสะเก็ด',i:'👑',on:'kill',ch:1,n:3,pct:.4}]});
+  {fx:'shards',nm:'ขวานแตกสะเก็ด',i:'👑',on:'kill',ch:1,n:3,pct:.4}],
+gravorb:[['แรงโน้มถ่วง','🧲',['pull','*',.1,3],['dur','*',.1,2],{fx:'chill',nm:'ห้วงเยือกแข็ง',i:'❄️',ch:.12,t:.8}],
+  ['ยุบตัว','💥',['boom','*',.1,3],['explode','*',.08,2],{fx:'burst',nm:'ยุบแล้วแตก',i:'🎆',r:55,pct:.4}],
+  ['ลูกแก้วไว','⏱️',['cd','c',.05,3],['count','+',1,1],{fx:'echo',nm:'ลูกแก้วคู่',i:'🔁',every:3}],
+  {fx:'vsStun',nm:'ขอบฟ้าเหตุการณ์',i:'👑',m:1.5}],
+aquaring:[['น้ำหนัก','💧',['dmg','*',.08,3],['size','*',.1,2],{fx:'chill',nm:'หยดน้ำเยือก',i:'❄️',ch:.06,t:.8}],
+  ['กระแสน้ำ','🌊',['count','+',1,2],['wave','*',.15,2],{fx:'pull',nm:'วังน้ำดูด',i:'🌀',r:80}],
+  ['คลื่นเย็น','🥶',['slow','+',.04,3],['spin','*',.1,2],{fx:'vsStun',nm:'แตกเป็นน้ำแข็ง',i:'💎',m:1.5}],
+  {fx:'shards',nm:'น้ำกระเซ็น',i:'👑',on:'hit',ch:.1,n:2,pct:.5}],
+comet:[['มวลดาวหาง','☄️',['dmg','*',.08,3],['explode','*',.08,2],{fx:'burst',nm:'หางระเบิด',i:'💥',r:50,pct:.4}],
+  ['หางไฟ','🔥',['drip','*',.15,3],['@ignite',.12,2],{fx:'trail',nm:'ทางลาวา',i:'🌋',kind:'fire',r:45,pct:.25,dur:3}],
+  ['ดาวหางไว','⏱️',['cd','c',.05,3],['speed','*',.1,2],{fx:'shards',nm:'สะเก็ดดาวหาง',i:'✨',on:'kill',ch:1,n:3,pct:.35}],
+  {fx:'echo',nm:'ดาวหางคู่แฝด',i:'👑',every:3}],
+rift:[['ศรดาว','⭐',['dmg','*',.08,3],['shots','+',1,1],{fx:'shards',nm:'ดาวแตก',i:'✨',on:'hit',ch:.15,n:2,pct:.4}],
+  ['ประตูกว้าง','🌌',['dur','*',.08,3],['tick','*',-.08,2],{fx:'execute',nm:'ดาวปลิดชีพ',i:'💀',hp:.3,m:1.6}],
+  ['เปิดไว','⏱️',['cd','c',.05,3],['@shock',.08,2],{fx:'chill',nm:'ห้วงอวกาศเย็น',i:'❄️',ch:.08,t:.8}],
+  {fx:'mod',nm:'ประตูคู่',i:'👑',add:{count:1}}],
+volcano:[['ลาวาร้อน','🌋',['dmg','*',.08,3],['tick','*',-.08,2],{fx:'ignite',nm:'ลาวาติดไฟ',i:'🔥',ch:.3,pct:.3,t:3}],
+  ['ปะทุ','💥',['boom','*',.1,3],['explode','*',.08,2],{fx:'burst',nm:'หินหลอมระเบิด',i:'🎆',r:55,pct:.45}],
+  ['ภูเขาไฟไว','⏱️',['cd','c',.05,3],['dur','*',.1,2],{fx:'trail',nm:'ธารลาวา',i:'♨️',kind:'fire',r:45,pct:.25,dur:3}],
+  {fx:'mod',nm:'ภูเขาไฟคู่',i:'👑',add:{count:1}}],
+leafblade:[['ใบคม','🍃',['dmg','*',.08,3],['count','+',1,2],{fx:'ignite',nm:'บาดลึก',i:'🩸',ch:.25,pct:.3,t:3}],
+  ['ลมหวน','↩️',['life','*',.08,3],['slow','+',.04,2],{fx:'pull',nm:'ใบไม้ดูดฝูง',i:'🌀',r:80}],
+  ['ร่ายไว','⏱️',['cd','c',.05,3],['speed','*',.1,2],{fx:'shards',nm:'ใบแตกกิ่ง',i:'✨',on:'kill',ch:1,n:3,pct:.35}],
+  {fx:'echo',nm:'พายุใบไม้คู่',i:'👑',every:3}]});
 const TF_COST=[0,1,2,4], TF_CROWN=6;
 
 /* ---- node list of a tree (cached) ---- */

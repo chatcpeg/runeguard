@@ -62,7 +62,8 @@ BEH.nova=(s,dt)=>{
   G.shake=Math.max(G.shake,5); P.atkT=.12; sfx('boom');
 };
 BEH.orbit=(s,dt)=>{
-  const st=s.st,n=countOf(s),R=pv(s,'r')*P.area,size=pv(s,'size')*(1+(P.area-1)*.5),dmg=pv(s,'dmg'),kn=pv(s,'knock')||100;
+  const st=s.st,n=countOf(s),R0=pv(s,'r')*P.area,size=pv(s,'size')*(1+(P.area-1)*.5),dmg=pv(s,'dmg'),kn=pv(s,'knock')||100;
+  const X=s.def.ox?orbX(s,R0):null, R=X?X.R:R0, rt=X?X.rate:.5;          // character-only orbits (25a): wave radius · hit rate · slow
   st.a=(st.a||0)+pv(s,'spin')*dt;
   if(!st.hits) st.hits=new Map();
   if(!st.pos) st.pos=[];
@@ -72,9 +73,9 @@ BEH.orbit=(s,dt)=>{
     let p=st.pos[i]; if(!p) p=st.pos[i]=[0,0,0]; p[0]=bx; p[1]=by; p[2]=a;
     for(const e of query(bx,by,size+60)){
       if(e.dead) continue; const rr=e.r+size,dx=e.x-bx,dy=e.y-by; if(dx*dx+dy*dy>rr*rr) continue;
-      const nt=st.hits.get(e.id)||0; if(G.t<nt) continue; st.hits.set(e.id,G.t+.5);
+      const nt=st.hits.get(e.id)||0; if(G.t<nt) continue; st.hits.set(e.id,G.t+rt);
       const ex=e.x-P.x,ey=e.y-P.y,l=Math.hypot(ex,ey)||1;
-      damageEnemy(e,dmg,s,{knock:kn,nx:ex/l,ny:ey/l});
+      damageEnemy(e,dmg,s,X?{knock:kn,nx:ex/l,ny:ey/l,slow:X.slow,slowDur:1}:{knock:kn,nx:ex/l,ny:ey/l});
     }
   }
   if(st.hits.size>600){ for(const [k,v] of st.hits) if(v<G.t) st.hits.delete(k); }

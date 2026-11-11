@@ -35,6 +35,8 @@ for(const k in PASSIVES) PASSIVES[k].id=k;
 const SKILL_REQ={
   flyblade:{lv:8}, riposte:{lv:15}, palisade:{need:'lance', r:3, jlv:5}, thrust:{need:'valor', r:3, jlv:10},
   bloodrite:{need:'cyclone', r:3, jlv:5}, chainaxe:{need:'frenzy', r:3, jlv:10},
+  gravorb:{lv:8}, aquaring:{lv:15}, comet:{need:'meteor', r:3, jlv:5}, rift:{need:'blizzard', r:3, jlv:10},
+  volcano:{need:'vortex', r:3, jlv:5}, leafblade:{need:'spikes', r:3, jlv:10},
   lance:{need:'slash', r:3}, valor:{need:'lance', r:2},
   cyclone:{need:'blades', r:3}, frenzy:{need:'cyclone', r:2},
   meteor:{need:'flame', r:3}, blizzard:{need:'meteor', r:2},

@@ -131,6 +131,7 @@ function updateProjs(dt){
       projHit(p,e); if(p.dead) break;
     }
     if(!p.dead&&G.obstacles&&p.pierce<99&&terBlocks(p.x,p.y,p.r)){ p.dead=true; if(p.explode) explode(p.x,p.y,p.explode,p.dmg*.7,p.src,{c:p.c}); else if(!G.auto) burst(p.x,p.y,4,'#a49a86',120,.35,2,'rock'); }   // a rock stops it (29a)
+    if(!p.dead&&p.life<=0&&p.x2&&pxEnd(p)) p.dead=true;                   // character-only projectiles end their own way (25a)
     if(!p.dead&&p.life<=0){ p.dead=true; if(p.mx&&p.mx.split) mxSplit(p); if(p.explode){ explode(p.x,p.y,p.explode,p.dmg*.7,p.src,{c:p.c});
         if(p.mx&&p.hit&&p.hit.length){ mxBoom2(p); if(p.burn) addZone({x:p.x,y:p.y,r:p.explode*.8,dur:2*P.durMul,tick:.3,dmg:p.dmg*.12,kind:'fire',src:p.src}); } } }   // 26a: passed through someone
     if(!p.dead&&!G.auto){ const q=qLv();
@@ -143,6 +144,7 @@ function projHit(p,e){
   const sp=Math.hypot(p.vx,p.vy)||1;
   damageEnemy(e,p.dmg,p.src,{knock:p.knock,nx:p.vx/sp,ny:p.vy/sp,crit:p.crit,fxd:p.fxd});
   (p.hit||(p.hit=[])).push(e.id);
+  if(p.x2&&pxHit(p,e)) return;                                           // ricochet / net / split … (25a)
   if(p.explode){ if(p.mx&&mxPassHit(p)) return; p.dead=true; explode(p.x,p.y,p.explode,p.dmg*.7,p.src,{c:p.c}); if(p.mx) mxBoom2(p); if(p.burn) addZone({x:p.x,y:p.y,r:p.explode*.8,dur:2*P.durMul,tick:.3,dmg:p.dmg*.12,kind:'fire',src:p.src}); return; }
   p.pierce--; if(p.pierce<=0) p.dead=true;
 }
@@ -175,6 +177,7 @@ function updateZones(dt){
 }
 function strikeImpact(s){
   const x=s.x,y=s.y,q=qLv();
+  if(s.kind==='lava'){ zxLava(s); return; }                                // volcano bombs (25a)
   if(s.kind==='arrows'){ aoe(x,y,s.r,s.dmg,s.src,{knock:s.knock,quiet:true}); for(let i=0;i<4;i++){ const a=rand(0,TAU),d=Math.sqrt(Math.random())*s.r,ax=x+Math.cos(a)*d,ay=y+Math.sin(a)*d; G.fx.push({k:'arrowhit',x:ax,y:ay,t:0,dur:.25,c:'#e8f5c0',dead:false}); if(q>=1&&i<2) addDecal(arrowStuckTex(),ax,ay-10,10,1.1,1,true); } sfx('hit'); return; }
   if(s.kind==='meteor'){ explode(x,y,s.r,s.dmg,s.src,{knock:s.knock,c:'#ff7a2a'}); addZone({x,y,r:s.r*.7,dur:1.6*P.durMul,tick:.3,dmg:s.dmg*.06,kind:'fire',src:s.src}); addDecal(crackTex(),x,y,s.r*.9,7,.8); burst(x,y,q?14:6,'#6a5040',s.r*3,.7,5,'rock'); G.shake=Math.max(G.shake,9); return; }
   aoe(x,y,s.r,s.dmg,s.src,{knock:s.knock,stun:s.stun});

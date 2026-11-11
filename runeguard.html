@@ -970,6 +970,21 @@ vortex:{n:'วังวนวายุ',i:'🌬️',type:'zone',fx:'wind',place:
   p:{cd:[5,4.6,4.2,3.8,3.4],count:[1,1,2,2,3],r:[60,65,70,75,85],dmg:[10,13,16,20,25],tick:.25,dur:4,drift:110,pull:160}},
 spikes:{n:'หนามศิลา',i:'🪨',type:'spikes',c:'#c9a57a',d:'หนามหินผุดเป็นแนวยาวพุ่งไปหาศัตรู',
   p:{cd:[3,2.7,2.4,2.1,1.8],dmg:[30,38,48,60,75],count:[6,7,8,10,12],r:[30,32,34,36,40],knock:200}},
+/* mage · character modes only (CLASSES skx) */
+gravorb:{n:'ลูกแก้วแรงโน้มถ่วง',i:'🌑',type:'zone',fx:'grav',place:'aim',zx:1,bk:-160,c:'#9a7dff',d:'ปล่อยลูกแก้วแรงโน้มถ่วงลอยช้า ๆ ไปทางที่เล็ง ดูดศัตรูรอบ ๆ เข้าหา แล้วยุบตัวระเบิดเมื่อหมดเวลา',
+  p:{cd:[5,4.7,4.4,4.1,3.8],count:1,r:[55,58,62,66,72],dmg:[5,6,8,10,12],tick:.3,dur:2.2,pull:[140,160,180,200,230],speed:240,boom:10,explode:[80,84,88,94,100]},
+  evo:{s:'LUK',n:'หลุมดำ',d:'หลุมดำดูดแรงมหาศาลวงกว้าง แล้วยุบตัวระเบิดรุนแรง',set:{cd:3,r:100,pull:380,dmg:16,boom:12,explode:150,dur:2.6}}},
+aquaring:{n:'ธาราวน',i:'💧',type:'orbit',os:'drop',ox:1,c:'#5fb8ff',d:'หยดน้ำวนรอบตัว วงหดขยายเป็นจังหวะคลื่น โดนแล้วศัตรูช้าลง',
+  p:{count:[2,3,3,4,4],r:[64,68,72,78,86],dmg:[13,17,21,26,32],spin:[3,3.1,3.3,3.5,3.8],size:10,knock:80,slow:[.25,.28,.31,.34,.38],wave:.35},
+  evo:{s:'VIT',n:'มหาสมุทรวน',d:'หยดน้ำ 7 ดวง คลื่นกว้าง ชะลอแรง',set:{count:7,r:100,dmg:34,slow:.5,wave:.45}}},
+comet:{n:'ดาวหางลากหาง',i:'🌠',type:'proj',shape:'comet',px:1,pass:1,c:'#ffb347',d:'ดาวหางพุ่งตรงทะลุทุกตัวไปทางที่เล็ง ลากหางไฟทิ้งไว้บนพื้น แล้วระเบิดที่ปลายทาง',
+  p:{cd:[3.2,3,2.8,2.6,2.4],dmg:[45,58,72,90,110],speed:620,life:.8,pierce:99,size:11,count:[1,1,1,2,2],spread:.3,knock:120,explode:[70,75,80,88,96],drip:[1.2,1.4,1.6,1.8,2]}},
+rift:{n:'ประตูมิติ',i:'🌌',type:'zone',fx:'rift',place:'enemy',zx:1,shoot:1,c:'#c8b4ff',d:'เปิดประตูมิติกลางฝูงศัตรู ยิงศรดาวใส่ตัวที่ใกล้ประตูที่สุดซ้ำ ๆ จนประตูปิด',
+  p:{cd:[7,6.6,6.2,5.8,5.4],count:1,r:36,dmg:[15,19,23,28,34],tick:[.55,.5,.47,.44,.4],dur:[3.5,3.8,4.1,4.4,4.8],shots:[1,1,1,2,2],reach:300}},
+volcano:{n:'ภูเขาไฟน้อย',i:'🌋',type:'zone',fx:'lava',place:'enemy',zx:1,lob:1,c:'#ff6a2a',d:'ผุดภูเขาไฟเล็กกลางฝูง พ่นก้อนลาวาตกใส่ศัตรูรอบ ๆ แล้วปะทุครั้งใหญ่ก่อนดับ',
+  p:{cd:[8,7.5,7,6.5,6],count:1,r:[50,53,56,60,65],dmg:[18,22,27,33,40],tick:[.8,.75,.7,.65,.6],dur:[3,3.2,3.4,3.7,4],boom:[3,3,3.5,3.5,4],explode:[100,105,110,118,126],reach:230}},
+leafblade:{n:'ใบมีดใบไม้',i:'🍃',type:'proj',shape:'leaf',px:1,c:'#8fe07a',d:'สาดใบมีดใบไม้เป็นพัดไปทางที่เล็ง แล้วโค้งกลับหาตัว บาดและชะลอศัตรูทั้งขาไปขากลับ',
+  p:{cd:[1.8,1.66,1.52,1.38,1.25],dmg:[12,15,19,23,28],speed:460,life:.45,pierce:99,size:7,count:[3,3,4,4,5],spread:.32,knock:40,ret:1,slow:[.15,.17,.19,.21,.24]}},
 /* --- Archer --- */
 arrow:{n:'ยิงธนู',i:'🏹',type:'proj',shape:'arrow',c:'#e9f5c8',d:'ยิงลูกธนูความเร็วสูงทะลุเป้า',
   p:{cd:[.46,.42,.38,.35,.32],dmg:[12,15,19,23,28],speed:680,life:.75,pierce:[2,2,3,3,4],size:5,count:[1,1,1,2,2],volley:1,knock:70},
@@ -1045,11 +1060,11 @@ const CLASSES=[
   {id:'berserker',n:'เบอร์เซิร์กเกอร์',e:'Berserker',d:'นักรบคลั่ง ยิ่งบาดเจ็บยิ่งอันตราย',bonus:{might:.15,speed:.08},bt:'ดาเมจ +15% · ความเร็ว +8%',skills:['cyclone','frenzy'],skx:['bloodrite','chainaxe'],
    look:{body:'#8a2f2a',trim:'#2a1a18',hatC:'#6d5c4f',orn:'horns',ornC:'#efe4cc',weapon:'axe',wc:'#cfd3d8'}}]},
 {id:'mage',n:'จอมเวท',e:'Mage',d:'ปล่อยเวทธาตุถล่มฝูงศัตรูจากระยะไกล แต่ตัวบาง',hp:90,speed:165,armor:0,crit:.05,regen:.2,
- rating:{hp:1,atk:5,spd:2,rng:4},skills:['mbolt','flame','frost','thunder'],
+ rating:{hp:1,atk:5,spd:2,rng:4},skills:['mbolt','flame','frost','thunder'],skx:['gravorb','aquaring'],
  look:{body:'#5b3a8e',trim:'#f0b545',pants:'#2a2240',hair:'#e8dcc0',hat:'wizard',hatC:'#45296f',weapon:'staff',wc:'#c09cff'},
- adv:[{id:'archmage',n:'จอมเวทดาราตก',e:'Starfall Magus',d:'ผู้เรียกอุกกาบาตและพายุหิมะ',bonus:{area:.15,might:.1},bt:'พื้นที่สกิล +15% · ดาเมจ +10%',skills:['meteor','blizzard'],
+ adv:[{id:'archmage',n:'จอมเวทดาราตก',e:'Starfall Magus',d:'ผู้เรียกอุกกาบาตและพายุหิมะ',bonus:{area:.15,might:.1},bt:'พื้นที่สกิล +15% · ดาเมจ +10%',skills:['meteor','blizzard'],skx:['comet','rift'],
    look:{body:'#7a2d4f',trim:'#ffd76a',hatC:'#5a1f3a',orn:'star',ornC:'#ffd76a',wc:'#ff8a4a',cape:'#2a1030'}},
-  {id:'elementalist',n:'นักเวทธาตุ',e:'Elementalist',d:'ควบคุมลมและหิน ดูดศัตรูมารวมแล้วบดขยี้',bonus:{cd:.88},bt:'คูลดาวน์ −12%',skills:['vortex','spikes'],
+  {id:'elementalist',n:'นักเวทธาตุ',e:'Elementalist',d:'ควบคุมลมและหิน ดูดศัตรูมารวมแล้วบดขยี้',bonus:{cd:.88},bt:'คูลดาวน์ −12%',skills:['vortex','spikes'],skx:['volcano','leafblade'],
    look:{body:'#2f6f68',trim:'#b9ffcf',hatC:'#1f4f4a',orn:'gem',ornC:'#8fffd0',wc:'#8fffd0'}}]},
 {id:'archer',n:'นักธนู',e:'Archer',d:'ยิงไวเดินไว เก่งการวิ่งวนยิงรอบฝูง',hp:100,speed:190,armor:1,crit:.08,regen:.2,
  rating:{hp:2,atk:4,spd:4,rng:5},skills:['arrow','spread','rain','trap'],
@@ -1782,7 +1797,8 @@ BEH.nova=(s,dt)=>{
   G.shake=Math.max(G.shake,5); P.atkT=.12; sfx('boom');
 };
 BEH.orbit=(s,dt)=>{
-  const st=s.st,n=countOf(s),R=pv(s,'r')*P.area,size=pv(s,'size')*(1+(P.area-1)*.5),dmg=pv(s,'dmg'),kn=pv(s,'knock')||100;
+  const st=s.st,n=countOf(s),R0=pv(s,'r')*P.area,size=pv(s,'size')*(1+(P.area-1)*.5),dmg=pv(s,'dmg'),kn=pv(s,'knock')||100;
+  const X=s.def.ox?orbX(s,R0):null, R=X?X.R:R0, rt=X?X.rate:.5;          // character-only orbits (25a): wave radius · hit rate · slow
   st.a=(st.a||0)+pv(s,'spin')*dt;
   if(!st.hits) st.hits=new Map();
   if(!st.pos) st.pos=[];
@@ -1792,9 +1808,9 @@ BEH.orbit=(s,dt)=>{
     let p=st.pos[i]; if(!p) p=st.pos[i]=[0,0,0]; p[0]=bx; p[1]=by; p[2]=a;
     for(const e of query(bx,by,size+60)){
       if(e.dead) continue; const rr=e.r+size,dx=e.x-bx,dy=e.y-by; if(dx*dx+dy*dy>rr*rr) continue;
-      const nt=st.hits.get(e.id)||0; if(G.t<nt) continue; st.hits.set(e.id,G.t+.5);
+      const nt=st.hits.get(e.id)||0; if(G.t<nt) continue; st.hits.set(e.id,G.t+rt);
       const ex=e.x-P.x,ey=e.y-P.y,l=Math.hypot(ex,ey)||1;
-      damageEnemy(e,dmg,s,{knock:kn,nx:ex/l,ny:ey/l});
+      damageEnemy(e,dmg,s,X?{knock:kn,nx:ex/l,ny:ey/l,slow:X.slow,slowDur:1}:{knock:kn,nx:ex/l,ny:ey/l});
     }
   }
   if(st.hits.size>600){ for(const [k,v] of st.hits) if(v<G.t) st.hits.delete(k); }
@@ -2052,6 +2068,7 @@ function updateProjs(dt){
       projHit(p,e); if(p.dead) break;
     }
     if(!p.dead&&G.obstacles&&p.pierce<99&&terBlocks(p.x,p.y,p.r)){ p.dead=true; if(p.explode) explode(p.x,p.y,p.explode,p.dmg*.7,p.src,{c:p.c}); else if(!G.auto) burst(p.x,p.y,4,'#a49a86',120,.35,2,'rock'); }   // a rock stops it (29a)
+    if(!p.dead&&p.life<=0&&p.x2&&pxEnd(p)) p.dead=true;                   // character-only projectiles end their own way (25a)
     if(!p.dead&&p.life<=0){ p.dead=true; if(p.mx&&p.mx.split) mxSplit(p); if(p.explode){ explode(p.x,p.y,p.explode,p.dmg*.7,p.src,{c:p.c});
         if(p.mx&&p.hit&&p.hit.length){ mxBoom2(p); if(p.burn) addZone({x:p.x,y:p.y,r:p.explode*.8,dur:2*P.durMul,tick:.3,dmg:p.dmg*.12,kind:'fire',src:p.src}); } } }   // 26a: passed through someone
     if(!p.dead&&!G.auto){ const q=qLv();
@@ -2064,6 +2081,7 @@ function projHit(p,e){
   const sp=Math.hypot(p.vx,p.vy)||1;
   damageEnemy(e,p.dmg,p.src,{knock:p.knock,nx:p.vx/sp,ny:p.vy/sp,crit:p.crit,fxd:p.fxd});
   (p.hit||(p.hit=[])).push(e.id);
+  if(p.x2&&pxHit(p,e)) return;                                           // ricochet / net / split … (25a)
   if(p.explode){ if(p.mx&&mxPassHit(p)) return; p.dead=true; explode(p.x,p.y,p.explode,p.dmg*.7,p.src,{c:p.c}); if(p.mx) mxBoom2(p); if(p.burn) addZone({x:p.x,y:p.y,r:p.explode*.8,dur:2*P.durMul,tick:.3,dmg:p.dmg*.12,kind:'fire',src:p.src}); return; }
   p.pierce--; if(p.pierce<=0) p.dead=true;
 }
@@ -2096,6 +2114,7 @@ function updateZones(dt){
 }
 function strikeImpact(s){
   const x=s.x,y=s.y,q=qLv();
+  if(s.kind==='lava'){ zxLava(s); return; }                                // volcano bombs (25a)
   if(s.kind==='arrows'){ aoe(x,y,s.r,s.dmg,s.src,{knock:s.knock,quiet:true}); for(let i=0;i<4;i++){ const a=rand(0,TAU),d=Math.sqrt(Math.random())*s.r,ax=x+Math.cos(a)*d,ay=y+Math.sin(a)*d; G.fx.push({k:'arrowhit',x:ax,y:ay,t:0,dur:.25,c:'#e8f5c0',dead:false}); if(q>=1&&i<2) addDecal(arrowStuckTex(),ax,ay-10,10,1.1,1,true); } sfx('hit'); return; }
   if(s.kind==='meteor'){ explode(x,y,s.r,s.dmg,s.src,{knock:s.knock,c:'#ff7a2a'}); addZone({x,y,r:s.r*.7,dur:1.6*P.durMul,tick:.3,dmg:s.dmg*.06,kind:'fire',src:s.src}); addDecal(crackTex(),x,y,s.r*.9,7,.8); burst(x,y,q?14:6,'#6a5040',s.r*3,.7,5,'rock'); G.shake=Math.max(G.shake,9); return; }
   aoe(x,y,s.r,s.dmg,s.src,{knock:s.knock,stun:s.stun});
@@ -2383,7 +2402,7 @@ function drawZones(){
 function drawStrikesUnder(){
   for(const s of G.strikes){ if(s.t>=s.delay||s.kind==='spike') continue; const k=s.t/s.delay;
     if(s.kind==='meteor'){ ctx.fillStyle=`rgba(0,0,0,${.15+.35*k})`; ctx.beginPath(); ctx.ellipse(s.x,s.y,s.r*(.3+.7*k),s.r*(.3+.7*k)*.6,0,0,TAU); ctx.fill(); }
-    const col=s.kind==='meteor'?'255,110,50':s.kind==='arrows'?'220,240,170':'255,240,190';
+    const col=s.kind==='meteor'||s.kind==='lava'?'255,110,50':s.kind==='arrows'?'220,240,170':'255,240,190';
     ctx.fillStyle=`rgba(${col},${.06+.14*k})`; ctx.beginPath(); ctx.arc(s.x,s.y,s.r,0,TAU); ctx.fill(); ctx.strokeStyle=`rgba(${col},${.35+.4*k})`; ctx.lineWidth=2; ctx.beginPath(); ctx.arc(s.x,s.y,s.r*k,0,TAU); ctx.stroke(); }
 }
 function drawStrikesOver(){
@@ -2392,6 +2411,7 @@ function drawStrikesOver(){
     if(s.kind==='meteor'&&s.t<s.delay){ const k=s.t/s.delay,mx=s.x+(1-k)*220,my=s.y-(1-k)*420,rr=Math.max(6,s.r*.32),a=Math.atan2(420,-220);
       streak(mx,my,a,rr*7,rr*2.4,'#ff7a2a',.8); glow(mx,my,rr*2.6,'#ff8a3a',.9); circ(ctx,'#ffb050',mx,my,rr); circ(ctx,'#fff2c0',mx,my,rr*.5); }
     else if(s.kind==='arrows'&&s.t>=s.delay-.15&&s.done<s.hits){ ctx.strokeStyle='rgba(232,245,192,.85)'; ctx.lineWidth=1.6; ctx.beginPath(); for(let i=0;i<7;i++){ const a=(i*2.4+s.t*7)%TAU,d=s.r*((i*.37+s.t*1.3)%1),x=s.x+Math.cos(a)*d,y=s.y+Math.sin(a)*d,fall=(s.t*5+i*.3)%1; ctx.moveTo(x-3,y-44+fall*30); ctx.lineTo(x,y-30+fall*30); } ctx.stroke(); }
+    else if(s.kind==='lava') sk2Lava(s);                                     // volcano bombs (22a)
   }
 }
 function drawItem(g){
@@ -2479,14 +2499,15 @@ function drawActors(L,T,R,B){
   upTo(Infinity); if(!drawn) drawPlayer();
 }
 function drawOrbits(){
-  for(const s of P.skills){ if(s.def.type!=='orbit'||!s.st.pos) continue; const size=pv(s,'size')*(1+(P.area-1)*.5),R=pv(s,'r')*P.area;
+  for(const s of P.skills){ if(s.def.type!=='orbit'||!s.st.pos) continue; const size=pv(s,'size')*(1+(P.area-1)*.5),R=s.st.R||pv(s,'r')*P.area;   // st.R: breathing radius (25a orbX)
     ctx.globalCompositeOperation='lighter'; ctx.lineCap='round';
     for(const p of s.st.pos){ if(!p) continue; ctx.strokeStyle=hexA(s.def.c,.16); ctx.lineWidth=size*1.1; ctx.beginPath(); ctx.arc(P.x,P.y-4,R,p[2]-.75,p[2]-.3); ctx.stroke(); ctx.strokeStyle=hexA(s.def.c,.34); ctx.lineWidth=size*.9; ctx.beginPath(); ctx.arc(P.x,P.y-4,R,p[2]-.32,p[2]); ctx.stroke(); }
     if(s.def.os==='orb') for(const p of s.st.pos){ if(!p) continue; glow(p[0],p[1],size*2.4,s.def.c,.75); circ(ctx,s.def.c,p[0],p[1],size); circ(ctx,'#ffffff',p[0]-size*.25,p[1]-size*.25,size*.38); }
     ctx.globalCompositeOperation='source-over';
     if(s.def.os==='blade') for(const p of s.st.pos){ if(!p) continue; ctx.save(); ctx.translate(p[0],p[1]); ctx.rotate(p[2]);
       ctx.fillStyle='#16202c'; ctx.beginPath(); ctx.moveTo(-size-1.5,-3.6); ctx.lineTo(size*.8,-3.6); ctx.lineTo(size*1.4,0); ctx.lineTo(size*.8,3.6); ctx.lineTo(-size-1.5,3.6); ctx.closePath(); ctx.fill();
-      ctx.fillStyle=s.evolved?'#fff2c0':s.def.c; ctx.beginPath(); ctx.moveTo(-size,-2.2); ctx.lineTo(size*.8,-2.2); ctx.lineTo(size*1.25,0); ctx.lineTo(size*.8,2.2); ctx.lineTo(-size,2.2); ctx.closePath(); ctx.fill(); ctx.fillStyle='rgba(255,255,255,.7)'; ctx.fillRect(-size*.6,-1.4,size*1.2,.9); ctx.fillStyle='#c9a24a'; ctx.fillRect(-size-1,-4.5,3,9); ctx.restore(); } }
+      ctx.fillStyle=s.evolved?'#fff2c0':s.def.c; ctx.beginPath(); ctx.moveTo(-size,-2.2); ctx.lineTo(size*.8,-2.2); ctx.lineTo(size*1.25,0); ctx.lineTo(size*.8,2.2); ctx.lineTo(-size,2.2); ctx.closePath(); ctx.fill(); ctx.fillStyle='rgba(255,255,255,.7)'; ctx.fillRect(-size*.6,-1.4,size*1.2,.9); ctx.fillStyle='#c9a24a'; ctx.fillRect(-size-1,-4.5,3,9); ctx.restore(); }
+    if(s.def.ox) sk2DrawOrbit(s,size); }                                     // orbit styles of the character-only skills (22a)
 }
 function drawHawk(u){ const flap=Math.sin(G.t*18+u.a)*.6; ctx.fillStyle='rgba(0,0,0,.25)'; ctx.beginPath(); ctx.ellipse(u.x,u.y+22,7,2.5,0,0,TAU); ctx.fill();
   if(u.state===1){ ctx.globalCompositeOperation='lighter'; streak(u.x,u.y,u.ang,40,10,'#ffd9a0',.6); ctx.globalCompositeOperation='source-over'; }
@@ -2619,9 +2640,15 @@ function render(){
 /* ================= 22a-render-skx.js · lane B · how the 30 character-only skills look (25a · CLASSES skx) ================= */
 // Called from the shared draw passes only for what these skills create (projectile shapes in SKX_SHAPE, zones with x2, the
 // summon modes / orbit styles they add) → classic frames draw exactly as before. Canvas only, no RNG, no game state changes.
-const SKX_SHAPE={gsword:1, axe:1};
+const SKX_SHAPE={gsword:1, axe:1, comet:1, leaf:1, star:1};
 // drawProjs (22, 'lighter' pass) → true = drawn here
 function sk2DrawProj(p,sp,a){ if(!SKX_SHAPE[p.shape]) return false; const r=p.r;
+  switch(p.shape){
+    case 'comet':{ streak(p.x,p.y,a,Math.min(120,60+sp*.08),r*3.2,'#ff6a1a',.8); streak(p.x,p.y,a,40,r*1.6,'#fff2c0',.7); glow(p.x,p.y,r*3,p.c,.9);   // long burning tail
+      ctx.globalCompositeOperation='source-over'; circ(ctx,'#fff6d8',p.x,p.y,r*.75); circ(ctx,p.c,p.x+Math.cos(a)*r*.2,p.y+Math.sin(a)*r*.2,r*.45); ctx.globalCompositeOperation='lighter'; return true; }
+    case 'star':{ glow(p.x,p.y,r*2.6,p.c,.8); ctx.save(); ctx.translate(p.x,p.y); ctx.rotate(p.t*9); ctx.fillStyle='#ffffff'; ctx.beginPath();
+      for(let i=0;i<8;i++){ const rr=i%2?r*.35:r*1.4, b=i*PI/4; ctx.lineTo(Math.cos(b)*rr,Math.sin(b)*rr); } ctx.closePath(); ctx.fill(); ctx.restore(); return true; }
+  }
   ctx.globalCompositeOperation='source-over'; ctx.save(); ctx.translate(p.x,p.y);
   if(p.shape==='gsword'){ ctx.rotate(p.t*15); const L=r*1.9;            // a spinning greatsword: dark edge, bright blade, gold guard
     ctx.fillStyle='#14202c'; ctx.beginPath(); ctx.moveTo(-L*.45,-4.2); ctx.lineTo(L*.85,-4.2); ctx.lineTo(L*1.12,0); ctx.lineTo(L*.85,4.2); ctx.lineTo(-L*.45,4.2); ctx.closePath(); ctx.fill();
@@ -2631,16 +2658,45 @@ function sk2DrawProj(p,sp,a){ if(!SKX_SHAPE[p.shape]) return false; const r=p.r;
     ctx.save(); ctx.translate(p.x,p.y); ctx.rotate(p.t*18); ctx.fillStyle='#5a3a1e'; ctx.fillRect(-r*1.3,-1.6,r*2.2,3.2);
     ctx.fillStyle='#2a2622'; ctx.beginPath(); ctx.moveTo(r*.5,-1); ctx.quadraticCurveTo(r*1.6,-r*1.4,r*1.2,-r*.2); ctx.lineTo(r*1.2,r*.2); ctx.quadraticCurveTo(r*1.6,r*1.4,r*.5,1); ctx.closePath(); ctx.fill();
     ctx.fillStyle=p.c; ctx.beginPath(); ctx.moveTo(r*.6,-1); ctx.quadraticCurveTo(r*1.45,-r*1.15,r*1.1,-r*.15); ctx.lineTo(r*1.1,r*.15); ctx.quadraticCurveTo(r*1.45,r*1.15,r*.6,1); ctx.closePath(); ctx.fill(); }
+  else if(p.shape==='leaf'){ ctx.rotate(p.t*12); ctx.fillStyle='#2f6b2a'; ctx.beginPath(); ctx.ellipse(0,0,r*1.5,r*.7,0,0,TAU); ctx.fill();   // a spinning blade leaf
+    ctx.fillStyle=p.c; ctx.beginPath(); ctx.ellipse(0,0,r*1.3,r*.5,0,0,TAU); ctx.fill(); ctx.strokeStyle='#e8ffd8'; ctx.lineWidth=1; ctx.beginPath(); ctx.moveTo(-r*1.2,0); ctx.lineTo(r*1.2,0); ctx.stroke(); }
   ctx.restore(); ctx.globalCompositeOperation='lighter';
-  glow(p.x,p.y,r*(p.shape==='gsword'?2.6:1.8),p.c,.35); return true; }
+  glow(p.x,p.y,r*(p.shape==='gsword'?2.6:1.8),p.c,p.shape==='leaf'?.25:.35); return true; }
 // drawZones (22) → zones with x2
-function sk2DrawZone(z,fade){
-  if(z.kind==='palisade'){ const n=12, up=Math.min(1,z.t*6), R=z.r;          // a ring of spear tips pointing out, popping up at the start
-    ctx.strokeStyle=`rgba(232,217,168,${.35*fade})`; ctx.lineWidth=2; ctx.beginPath(); ctx.ellipse(z.x,z.y,R,R*.8,0,0,TAU); ctx.stroke();
-    for(let i=0;i<n;i++){ const a=i*TAU/n+z.seed, cx=z.x+Math.cos(a)*R, cy=z.y+Math.sin(a)*R*.8, h=(10+6*up)*fade;
-      ctx.save(); ctx.translate(cx,cy); ctx.rotate(a); ctx.globalAlpha=fade; ctx.fillStyle='#6b4a2a'; ctx.fillRect(-8,-1.6,10,3.2);
-      ctx.fillStyle='#e8e2d0'; ctx.beginPath(); ctx.moveTo(2,-4); ctx.lineTo(2+h,0); ctx.lineTo(2,4); ctx.closePath(); ctx.fill(); ctx.restore(); }
-    ctx.globalAlpha=1; } }
+function sk2DrawZone(z,fade){ const t=G.t, sd=z.seed||0;
+  switch(z.kind){
+    case 'palisade':{ const n=12, up=Math.min(1,z.t*6), R=z.r;          // a ring of spear tips pointing out, popping up at the start
+      ctx.strokeStyle=`rgba(232,217,168,${.35*fade})`; ctx.lineWidth=2; ctx.beginPath(); ctx.ellipse(z.x,z.y,R,R*.8,0,0,TAU); ctx.stroke();
+      for(let i=0;i<n;i++){ const a=i*TAU/n+sd, cx=z.x+Math.cos(a)*R, cy=z.y+Math.sin(a)*R*.8, h=(10+6*up)*fade;
+        ctx.save(); ctx.translate(cx,cy); ctx.rotate(a); ctx.globalAlpha=fade; ctx.fillStyle='#6b4a2a'; ctx.fillRect(-8,-1.6,10,3.2);
+        ctx.fillStyle='#e8e2d0'; ctx.beginPath(); ctx.moveTo(2,-4); ctx.lineTo(2+h,0); ctx.lineTo(2,4); ctx.closePath(); ctx.fill(); ctx.restore(); }
+      ctx.globalAlpha=1; break; }
+    case 'grav':{ const R=Math.min(z.r,90), k=Math.min(1,z.t/Math.max(.1,z.dur));       // a dark core with rings spiralling in · tightens near the end
+      ctx.globalCompositeOperation='lighter'; glow(z.x,z.y,R*1.9,'#6a4ad8',.35*fade);
+      ctx.strokeStyle=`rgba(200,180,255,${.55*fade})`; ctx.lineWidth=2;
+      for(let i=0;i<3;i++){ const q=(t*.9+i/3)%1, rr=R*2*(1-q); ctx.globalAlpha=q*fade; ctx.beginPath(); ctx.ellipse(z.x,z.y,rr,rr*.75,0,0,TAU); ctx.stroke(); }
+      ctx.globalAlpha=1; ctx.globalCompositeOperation='source-over';
+      circ(ctx,`rgba(12,6,24,${.9*fade})`,z.x,z.y,R*(.42-.12*k)); ctx.strokeStyle=`rgba(180,150,255,${.9*fade})`; ctx.lineWidth=2.5; ctx.beginPath(); ctx.arc(z.x,z.y,R*(.42-.12*k),t*4,t*4+4.4); ctx.stroke(); break; }
+    case 'rift':{ const R=z.r, op=Math.min(1,z.t*5,(z.dur-z.t)*5), h=Math.min(90,R*1.1)*op, w=Math.min(36,R*.45)*op, fl=z.fl>0?z.fl/.15:0;   // an upright portal, flashes when it shoots
+      ctx.globalCompositeOperation='lighter'; glow(z.x,z.y-h*.5,h*.9,'#9a7dff',.4*fade+fl*.3);
+      ctx.globalCompositeOperation='source-over'; ctx.fillStyle=`rgba(20,10,40,${.85*fade})`; ctx.beginPath(); ctx.ellipse(z.x,z.y-h*.5,w,h*.5,0,0,TAU); ctx.fill();
+      ctx.strokeStyle=`rgba(232,220,255,${fade})`; ctx.lineWidth=3; ctx.beginPath(); ctx.ellipse(z.x,z.y-h*.5,w,h*.5,0,0,TAU); ctx.stroke();
+      ctx.fillStyle=`rgba(255,255,255,${.8*fade})`; for(let i=0;i<4;i++){ const b=t*2+i*1.7+sd; ctx.fillRect(z.x+Math.cos(b)*w*.5-1,z.y-h*.5+Math.sin(b*1.3)*h*.35-1,2,2); } break; }
+    case 'lava':{ const R=z.r, up=Math.min(1,z.t*4), fl=z.fl>0?z.fl/.2:0;   // a small volcano: glowing pool, a cone, a crater that flares on each bomb
+      ctx.globalCompositeOperation='lighter'; glow(z.x,z.y,R*1.3,'#ff5a1a',.4*fade); ctx.globalCompositeOperation='source-over';
+      const H=Math.min(48,R*.5)*up, B=Math.min(50,R*.55); ctx.globalAlpha=fade; ctx.fillStyle='#3a2418'; ctx.beginPath(); ctx.moveTo(z.x-B,z.y+4); ctx.lineTo(z.x-B*.3,z.y-H); ctx.lineTo(z.x+B*.3,z.y-H); ctx.lineTo(z.x+B,z.y+4); ctx.closePath(); ctx.fill();
+      ctx.fillStyle='#5a3a24'; ctx.beginPath(); ctx.moveTo(z.x-B*.55,z.y+2); ctx.lineTo(z.x-B*.22,z.y-H); ctx.lineTo(z.x,z.y-H); ctx.lineTo(z.x-B*.1,z.y+2); ctx.closePath(); ctx.fill();
+      ctx.fillStyle=fl>0?'#fff0a0':'#ff8a2a'; ctx.beginPath(); ctx.ellipse(z.x,z.y-H,B*.3,B*.1,0,0,TAU); ctx.fill(); ctx.globalAlpha=1;
+      if(fl>0){ ctx.globalCompositeOperation='lighter'; glow(z.x,z.y-H,R*.9,'#ffb050',fl*fade); ctx.globalCompositeOperation='source-over'; } break; }
+  } }
+// drawOrbits (22) → orbit styles of these skills (s.st.pos = [x, y, angle] per ball · size = its radius)
+function sk2DrawOrbit(s,size){ const P2=s.st.pos||[];
+  if(s.def.os==='drop'){ ctx.globalCompositeOperation='lighter'; for(const p of P2) if(p) glow(p[0],p[1],size*2.4,s.def.c,.6); ctx.globalCompositeOperation='source-over';
+    for(const p of P2){ if(!p) continue; ctx.save(); ctx.translate(p[0],p[1]); ctx.rotate(p[2]+PI/2); ctx.fillStyle='#2a7fd8'; ctx.beginPath(); ctx.moveTo(-size*1.5,0); ctx.quadraticCurveTo(0,-size*1.05,size*.9,0); ctx.quadraticCurveTo(0,size*1.05,-size*1.5,0); ctx.fill();
+      ctx.fillStyle='#bfe6ff'; ctx.beginPath(); ctx.ellipse(size*.2,-size*.25,size*.35,size*.2,0,0,TAU); ctx.fill(); ctx.restore(); } } }
+// drawStrikesOver (22) → a lava bomb arcing from the volcano to where it lands
+function sk2Lava(s){ if(s.t>=s.delay||s.ox==null) return; const k=s.t/s.delay, x=s.ox+(s.x-s.ox)*k, y=s.oy+(s.y-s.oy)*k-Math.sin(k*PI)*90, rr=Math.max(5,s.r*.22);
+  glow(x,y,rr*3,'#ff6a1a',.9); circ(ctx,'#ffb050',x,y,rr); circ(ctx,'#fff2c0',x-rr*.3,y-rr*.3,rr*.45); }
 /* ================= loop + input ================= */
 let last=performance.now();
 function frame(now){
@@ -2844,10 +2900,22 @@ BEH.rite=(s,dt)=>{ s.cdT-=dt; if(s.cdT>0) return; const r=pv(s,'r')*P.area;
   G.shake=Math.max(G.shake,5); P.atkT=.12; sfx('boom'); };
 
 /* ---- projectiles (fireProj → pxFire when SK[id].px) ---- */
-// ret: boomerang (out to its range, then back to the hand, hitting everything again) · hook: knock < 0 = pulled to the hero
+// ret: boomerang (out to its range, then back to the hand, hitting everything again) · hook: knock < 0 = pulled to the hero ·
+// slow: slows what it hits · drip: leaves burning ground on its way (the 26a fire trail) · def.pass: flies through everything and
+// only explodes where its range ends
 function pxFire(s,p){ const v=k=>pv(s,k);
   if(v('ret')) p.ret=1;
-  const hk=v('hook'); if(hk) p.knock=-hk; }
+  const hk=v('hook'); if(hk) p.knock=-hk;
+  const sl=v('slow'); if(sl){ p.slow=sl; p.x2=1; }
+  const dr=v('drip'); if(dr||s.def.pass){ const m=p.mx||(p.mx={lv:0, look:{}, ht:0, dd:0, ph:0}); if(dr) m.drip=Math.max(m.drip||0,dr*P.durMul); if(s.def.pass) m.pass=999; } }
+// orbit extras (BEH.orbit when SK[id].ox): radius breathes in and out (wave) · own hit rate · slow
+function orbX(s,R0){ const w=pv(s,'wave'), R=w?R0*(1+w*Math.sin(G.t*2.2)):R0; s.st.R=R; return {R, rate:pv(s,'rate')||.5, slow:pv(s,'slow')||0}; }
+// projHit → true = handled here (the shared code stops)
+function pxHit(p,e){
+  if(p.slow&&!e.dead){ const f=1-p.slow*(e.boss?.5:1); if(f<e.slowF) e.slowF=f; e.slowT=Math.max(e.slowT,1.2); }
+  return false; }
+// updateProjs, end of range → true = handled here (the shared end is skipped)
+function pxEnd(p){ return false; }
 // boomerang flight: when the outward life runs out it turns, hits can repeat, and it homes on the hero until caught (true = gone)
 function pxRet(p,dt){
   if(!p.back){ if(p.life>0) return false; p.back=true; p.hit=null; p.life=p.max=2; }
@@ -2856,26 +2924,51 @@ function pxRet(p,dt){
   const k=Math.min(1,dt*7); p.vx+=(dx/d*sp-p.vx)*k; p.vy+=(dy/d*sp-p.vy)*k; return false; }
 
 /* ---- zones (BEH.zone → zxCast when SK[id].zx · updateZones → zxTick every frame, zxEnd when the time is up) ---- */
-// place: 'self' = on the hero (follow: stays on the hero) · more places come with the skills that need them
+// place: 'self' = on the hero (follow: stays on the hero) · 'aim' = rolls straight down the aim, slowing (speed) · 'enemy' = on the
+// aimed target, the rest round it · zone params: rep (push out) · pull · stun · boom × dmg / explode (blast when it ends) ·
+// def.shoot: fires shots bolts every tick at the nearest enemy in reach · def.lob: lobs a lava bomb every tick
 function zxCast(s){
-  const v=k=>pv(s,k), pl=s.def.place, wake=(s.def.wake||300)*(P.rangeMul||1);
+  const v=k=>pv(s,k), pl=s.def.place, far=pl==='aim'||pl==='enemy', wake=far?Math.min(520*(P.rangeMul||1),aimReach()):(s.def.wake||300)*(P.rangeMul||1);
   if(!G.near||G.nearD>wake){ s.cdT=.2; return; }
-  s.cdT=cdOf(s); const n=countOf(s), r=v('r')*P.area;
+  s.cdT=cdOf(s); const n=countOf(s), r=v('r')*P.area, t=G.near, a=Math.atan2(t.y-P.y,t.x-P.x);
   for(let i=0;i<n;i++){ let x=P.x, y=P.y; const o={};
-    if(pl==='self'){ if(i){ const a=i*TAU/n; x+=Math.cos(a)*r*.6; y+=Math.sin(a)*r*.45; } if(s.def.follow||v('follow')) o.follow=1; }
+    if(pl==='self'){ if(i){ const b=i*TAU/n; x+=Math.cos(b)*r*.6; y+=Math.sin(b)*r*.45; } if(s.def.follow||v('follow')) o.follow=1; }
+    else if(pl==='aim'){ const b=a+(i-(n-1)/2)*.35, sp=v('speed')||200; x+=Math.cos(b)*36; y+=Math.sin(b)*36; o.aim={vx:Math.cos(b)*sp, vy:Math.sin(b)*sp}; }
+    else if(pl==='enemy'){ const q=aimCluster(t,i,r*2); x=q[0]; y=q[1]; }
     addZone(Object.assign({x,y,r,dur:(v('dur')||4)*P.durMul,tick:v('tick')||.4,dmg:v('dmg')||0,slow:v('slow')||0,kind:s.def.fx,src:s,x2:1,
-      rep:v('rep')||0,stun:v('stun')||0},o)); }
+      rep:v('rep')||0,stun:v('stun')||0,pull:v('pull')||0,boom:v('boom')||0,explode:(v('explode')||0)*P.area,bk:s.def.bk==null?220:s.def.bk,
+      shoot:s.def.shoot?(v('shots')||1):0,lob:s.def.lob?1:0,reach:(v('reach')||300)*(P.rangeMul||1),pierce:v('pierce')||1,tt:s.def.shoot||s.def.lob?.2:0},o)); }
   if(s.def.fx==='palisade'){ G.fx.push({k:'ring',x:P.x,y:P.y,r0:r*.3,r1:r,t:0,dur:.3,c:s.def.c,w:6,follow:true,dead:false}); sfx('shield'); } }
 // one frame of an x2 zone: movement, push / pull, its own ticks → always true (the classic zone code never sees it)
 function zxTick(z,dt){
   if(z.follow){ z.x=P.x; z.y=P.y; }
+  else if(z.aim){ z.x+=z.aim.vx*dt; z.y+=z.aim.vy*dt; const k=Math.exp(-dt*.7); z.aim.vx*=k; z.aim.vy*=k; }
   if(z.rep){ const R=z.r; for(const e of query(z.x,z.y,R+60)){ if(e.dead||e.boss) continue; const dx=e.x-z.x, dy=e.y-z.y, d=Math.hypot(dx,dy)||1, rr=R+e.r*.3;
       if(d<rr){ const f=Math.min(rr-d,z.rep*dt/Math.max(.6,e.mass)); e.x+=dx/d*f; e.y+=dy/d*f; } } }
+  if(z.pull){ const R=z.r*2; for(const e of query(z.x,z.y,R+60)){ if(e.dead||e.boss) continue; const dx=z.x-e.x, dy=z.y-e.y, d=Math.hypot(dx,dy)||1;
+      if(d<R&&d>4){ const f=Math.min(d-2,z.pull*dt/Math.max(.6,e.mass)); e.x+=dx/d*f; e.y+=dy/d*f; } } }
   z.tt-=dt; if(z.tt<=0){ z.tt=z.tick;
-    if(z.dmg) for(const e of query(z.x,z.y,z.r+60)){ if(e.dead) continue; const rr=z.r+e.r*.5; if((e.x-z.x)**2+(e.y-z.y)**2>rr*rr) continue;
+    if(z.shoot) zxShoot(z); else if(z.lob) zxLob(z);
+    else if(z.dmg) for(const e of query(z.x,z.y,z.r+60)){ if(e.dead) continue; const rr=z.r+e.r*.5; if((e.x-z.x)**2+(e.y-z.y)**2>rr*rr) continue;
       damageEnemy(e,z.dmg,z.src,{slow:z.slow,slowDur:.5,stun:z.stun,quiet:true,fxd:z.fxd}); } }
+  if(z.fl>0) z.fl-=dt;
+  if(!G.auto&&qLv()&&Math.random()<dt*10){ const k=z.kind;
+    if(k==='grav'){ const b=rand(0,TAU), d=z.r*rand(1.2,2); part({x:z.x+Math.cos(b)*d,y:z.y+Math.sin(b)*d*.8,vx:-Math.cos(b)*d*2,vy:-Math.sin(b)*d*1.6,life:.45,s:2,c:'#c8b4ff',g:0,drag:0,k:'streak',add:true}); }
+    else if(k==='lava') part({x:z.x+rand(-z.r*.4,z.r*.4),y:z.y-8,vx:rand(-20,20),vy:rand(-90,-50),life:.6,s:rand(2,3.5),c:pick(['#ff7a2a','#ffb050','#ffe28a']),g:120,drag:1,k:'sq',add:true}); }
   return true; }
-function zxEnd(z){}
+// the time is up: an end blast (boom × dmg in explode) · bk < 0 = an implosion that pulls everything to the middle
+function zxEnd(z){ if(!z.boom) return; const R=z.explode||z.r*1.4, c=z.src&&z.src.def.c||'#ffae4a';
+  aoe(z.x,z.y,R,z.dmg*z.boom,z.src,{knock:z.bk});
+  G.fx.push({k:'boom',x:z.x,y:z.y,r:R*.8,t:0,dur:.4,c,dead:false}); G.fx.push({k:'ring',x:z.x,y:z.y,r0:z.bk<0?R:R*.3,r1:z.bk<0?R*.2:R*1.1,t:0,dur:.32,c:'#ffffff',w:6,dead:false});
+  burst(z.x,z.y,qLv()?14:5,c,R*2.4,.5,3); G.shake=Math.max(G.shake,Math.min(6,R/20)); sfx('boom'); }
+// shooter zones: `shoot` bolts at the nearest enemy in reach, aimed once, straight (they carry the skill: tree effects work)
+function zxShoot(z){ const t=nearestTo(z.x,z.y,z.reach); if(!t) return; const s=z.src, n=z.shoot, a0=Math.atan2(t.y-z.y,t.x-z.x), sp=640, life=z.reach/sp*1.1, arrow=z.kind==='turret';
+  for(let i=0;i<n;i++){ const a=a0+(i-(n-1)/2)*.16;
+    G.projs.push({x:z.x,y:z.y-(arrow?14:4),vx:Math.cos(a)*sp,vy:Math.sin(a)*sp,r:5,dmg:z.dmg,pierce:z.pierce,life,max:life,knock:40,explode:0,homing:0,crit:0,shape:arrow?'arrow':'star',c:s.def.c,src:s,burn:0,hit:null,tg:null,dead:false,t:0}); }
+  z.fl=.15; if(!G.auto) sfx('shoot'); }
+// volcano: a lava bomb on a random enemy in reach (a 'lava' strike: falls, bursts, leaves a small fire)
+function zxLob(z){ const e=randomNear(z.x,z.y,z.reach); if(!e) return; const q=mkStrike(e.x+rand(-10,10),e.y+rand(-10,10),z.r*.75,.5,z.dmg,z.src,'lava',{knock:140}); q.ox=z.x; q.oy=z.y-10; G.strikes.push(q); z.fl=.2; }
+function zxLava(s){ explode(s.x,s.y,s.r,s.dmg,s.src,{knock:s.knock,c:'#ff7a2a'}); addZone({x:s.x,y:s.y,r:s.r*.6,dur:1.2*P.durMul,tick:.3,dmg:s.dmg*.05,kind:'fire',src:s.src}); }
 
 /* ---- dev (#dev only, through RG.skx) · balance runs: skills at ★lv, mastery L on each one's main stat, a 10M-HP hero (being hit
    still counts, nothing dies), no level-up cards, from wave `wave` · solo = one skill for `sec` s → the damage it did ---- */
@@ -2909,7 +3002,8 @@ const SX={ base:.005, over:.5, cap:{speed:.6, area:2, dur:2, crit:.75, cdMin:.45
     holy:'INT', heal:'VIT', sacred:'VIT', cross:'DEX', judgment:'INT', aegis:'VIT', fists:'STR', spheres:'INT',
     dagger:'LUK', fan:'AGI', venom:'INT', shadow:'AGI', phantom:'LUK', whirl:'AGI', clones:'DEX', smoke:'AGI',
     // the 30 character-only skills (CLASSES skx)
-    flyblade:'STR', riposte:'VIT', palisade:'VIT', thrust:'STR', bloodrite:'STR', chainaxe:'STR' },
+    flyblade:'STR', riposte:'VIT', palisade:'VIT', thrust:'STR', bloodrite:'STR', chainaxe:'STR',
+    gravorb:'INT', aquaring:'INT', comet:'INT', rift:'INT', volcano:'INT', leafblade:'INT' },
   // milestones: [stat, param, op ('+' add per step · '*' multiply per step · '=' set once reached), value, Thai text, every]
   ms:{
     slash:[['STR','arc','+',.26,'มุมฟันกว้าง +15°'], ['AGI','count','+',1,'ฟันเพิ่ม 1 ครั้ง',10]],
@@ -3396,7 +3490,55 @@ chainaxe:[
   [20,'ขวานคมเลือดไหล',{fx:{ignite:{ch:.3, pct:.2, t:3}}}],
   [25,'+1 ขวาน',{add:{count:1}}],
   [30,'กระชากจนมึน',{fx:{shock:{ch:.2, t:.4}}}],
-  [35,'ร่างสุดท้าย โซ่นรก · แรง ×1.3 ขว้างซ้ำทุก 2 ครั้ง',{mul:{dmg:1.3}, fx:{echo:{every:2}}}]]});
+  [35,'ร่างสุดท้าย โซ่นรก · แรง ×1.3 ขว้างซ้ำทุก 2 ครั้ง',{mul:{dmg:1.3}, fx:{echo:{every:2}}}]],
+gravorb:[
+  [6,'แกนมืดหมุนวน · ดูดแรง +15%',{mul:{pull:1.15}}],
+  [10,'ลอยนานขึ้น 20%',{mul:{dur:1.2}}],
+  [15,'ยุบตัวแรง +25%',{mul:{boom:1.25}}],
+  [20,'+1 ลูก',{add:{count:1}}],
+  [25,'ยุบตัวแล้วแช่แข็งบางครั้ง',{fx:{chill:{ch:.15, t:.8}}}],
+  [30,'วงระเบิดกว้าง +25%',{mul:{explode:1.25}}],
+  [35,'ร่างสุดท้าย ดาวยุบ · แรง ×1.3 ศัตรูที่ตายระเบิด',{mul:{dmg:1.3}, fx:{burst:{r:60, pct:.4}}}]],
+aquaring:[
+  [6,'หยดน้ำใหญ่ +15%',{mul:{size:1.15}}],
+  [10,'ชะลอ +5%',{add:{slow:.05}}],
+  [15,'+1 หยด',{add:{count:1}}],
+  [20,'คลื่นกว้างขึ้น 30%',{mul:{wave:1.3}}],
+  [25,'น้ำเย็นจัด แช่แข็งบางครั้ง',{fx:{chill:{ch:.08, t:.8}}}],
+  [30,'+1 หยด',{add:{count:1}}],
+  [35,'ร่างสุดท้าย วงทะเลคลั่ง · แรง ×1.3 น้ำระเบิดเมื่อโดน',{mul:{dmg:1.3}, fx:{hitboom:{r:40, pct:.3}}}]],
+comet:[
+  [6,'หางไฟยาวขึ้น 25%',{mul:{drip:1.25}}],
+  [10,'พุ่งเร็ว +15%',{mul:{speed:1.15}}],
+  [15,'วงระเบิด +20%',{mul:{explode:1.2}}],
+  [20,'+1 ดาวหาง',{add:{count:1}}],
+  [25,'ติดไฟทุกตัวที่ชน',{fx:{ignite:{ch:.5, pct:.2, t:3}}}],
+  [30,'แรง +25%',{mul:{dmg:1.25}}],
+  [35,'ร่างสุดท้าย ดาวหางนิรันดร์ · ทิ้งหลุมลาวาตามทาง',{fx:{trail:{kind:'fire', r:50, pct:.25, dur:3}}}]],
+rift:[
+  [6,'ประตูเปิดนานขึ้น 15%',{mul:{dur:1.15}}],
+  [10,'ยิงถี่ขึ้น 12%',{mul:{tick:.88}}],
+  [15,'+1 ศรต่อชุด',{add:{shots:1}}],
+  [20,'ศรดาวแตกกระจาย',{fx:{shards:{on:'hit', ch:.2, n:2, pct:.35}}}],
+  [25,'แรง +25%',{mul:{dmg:1.25}}],
+  [30,'+1 ประตู',{add:{count:1}}],
+  [35,'ร่างสุดท้าย ประตูดารา · ศรดาวระเบิดเมื่อโดน',{fx:{hitboom:{r:40, pct:.35}}}]],
+volcano:[
+  [6,'พ่นลาวาถี่ขึ้น 12%',{mul:{tick:.88}}],
+  [10,'ปะทุกว้าง +20%',{mul:{explode:1.2}}],
+  [15,'ลาวาติดไฟ',{fx:{ignite:{ch:.4, pct:.2, t:3}}}],
+  [20,'ปะทุนานขึ้น 25%',{mul:{dur:1.25}}],
+  [25,'ปะทุแรง +30%',{mul:{boom:1.3}}],
+  [30,'+1 ภูเขาไฟ',{add:{count:1}}],
+  [35,'ร่างสุดท้าย ภูเขาไฟคลั่ง · ทิ้งหลุมลาวาที่ก้อนตก',{fx:{trail:{kind:'fire', r:45, pct:.25, dur:3}}}]],
+leafblade:[
+  [6,'+1 ใบ',{add:{count:1}}],
+  [10,'บินไกลขึ้น 15%',{mul:{life:1.15}}],
+  [15,'ชะลอ +6%',{add:{slow:.06}}],
+  [20,'ใบมีดคมเลือดไหล',{fx:{ignite:{ch:.25, pct:.2, t:3}}}],
+  [25,'+2 ใบ',{add:{count:2}}],
+  [30,'แรง +25%',{mul:{dmg:1.25}}],
+  [35,'ร่างสุดท้าย พายุใบไม้ · ใบที่โดนแตกเป็นใบเล็ก',{fx:{shards:{on:'hit', ch:.25, n:2, pct:.4}}}]]});
 // called from sxMods after the tree (27) → power + growth + the tiers reached
 function mxApply(p,s,add,mul){
   const L=mxLv(p,s); delete s.mxLook; if(!L){ delete s.mxL; return; } s.mxL=L;
@@ -3506,11 +3648,13 @@ const TF_KN={dmg:'ดาเมจ', cd:'คูลดาวน์', count:'จำ
   nova:'ดาเมจระเบิด', tick:'ช่วงห่างแต่ละครั้ง', bounces:'ชิ่ง', jump:'ระยะกระโดด', hits:'จำนวนครั้งที่โดน', dur:'ระยะเวลา', pull:'แรงดูด', trap:'ระเบิดกับดัก',
   heal:'ฟื้น HP', healPct:'ฟื้น HP ตาม % HP สูงสุด', targets:'เป้าต่อครั้ง', rage:'โทสะ', steal:'ฟื้นต่อการสังหาร', dodge:'หลบหลีก',
   // keys of the character-only skills (25a)
-  life:'ระยะพุ่ง', hook:'แรงกระชาก', rep:'แรงผลัก', cost:'สละ HP', drain:'ดูดเลือดกลับ'};
+  life:'ระยะพุ่ง', hook:'แรงกระชาก', rep:'แรงผลัก', cost:'สละ HP', drain:'ดูดเลือดกลับ', boom:'แรงระเบิดท้าย', drip:'หางไฟ', shots:'ลูกต่อชุด', wave:'คลื่นวง'};
 // the same keys on the level-up cards / skills page (core 21 PL · PCT · SEC: only new keys are added, classic labels stay)
-if(typeof PL!=='undefined') Object.assign(PL,{life:'ระยะพุ่ง', hook:'แรงกระชาก', rep:'แรงผลัก', cost:'สละ HP', drain:'ดูดเลือดกลับ', size:'ขนาด'});
-if(typeof PCT!=='undefined') Object.assign(PCT,{cost:1, drain:1});
-const TF_PCTK={slow:1, dodge:1, crit:1, healPct:1, cost:1, drain:1}, TF_SECK={stun:1, freeze:1}, TF_REL={rage:1, steal:1};
+if(typeof PL!=='undefined') Object.assign(PL,{life:'ระยะพุ่ง', hook:'แรงกระชาก', rep:'แรงผลัก', cost:'สละ HP', drain:'ดูดเลือดกลับ', size:'ขนาด',
+  boom:'แรงระเบิดท้าย ×', drip:'หางไฟ', shots:'ลูกต่อชุด', wave:'คลื่นวง', pull:'แรงดูด', tick:'ช่วงห่าง', dur:'ระยะเวลา'});
+if(typeof PCT!=='undefined') Object.assign(PCT,{cost:1, drain:1, wave:1});
+if(typeof SEC!=='undefined') Object.assign(SEC,{tick:1, dur:1, drip:1});
+const TF_PCTK={slow:1, dodge:1, crit:1, healPct:1, cost:1, drain:1}, TF_SECK={stun:1, freeze:1, drip:1}, TF_REL={rage:1, steal:1};
 const tfPc=v=>(Math.round(v*1000)/10)+'%', tfM=r=>(Math.round(r)/10)+' ม.', tfN=v=>String(+(+v).toFixed(2));
 const TF_ZK={fire:'เปลวไฟ', ice:'น้ำแข็ง', poison:'พิษ', wind:'ลมคม'};
 // special effects: n = node name when used as a proc node · d(p) = text · glob = also allowed on passive skills (hit by any skill)
@@ -3729,7 +3873,31 @@ bloodrite:[['โลหิตเดือด','🩸',['dmg','*',.08,3],['r','*',.
 chainaxe:[['ขวานหนัก','🪓',['dmg','*',.08,3],['pierce','+',1,2],{fx:'execute',nm:'ลากมาประหาร',i:'💀',hp:.3,m:1.6}],
   ['โซ่ยาว','⛓️',['life','*',.08,3],['hook','*',.15,2],{fx:'pull',nm:'กระชากทั้งฝูง',i:'🧲',r:90}],
   ['ขว้างไว','⏱️',['cd','c',.05,3],['@shock',.08,2],{fx:'vsStun',nm:'ทุบตัวที่มึน',i:'💢',m:1.4}],
-  {fx:'shards',nm:'ขวานแตกสะเก็ด',i:'👑',on:'kill',ch:1,n:3,pct:.4}]});
+  {fx:'shards',nm:'ขวานแตกสะเก็ด',i:'👑',on:'kill',ch:1,n:3,pct:.4}],
+gravorb:[['แรงโน้มถ่วง','🧲',['pull','*',.1,3],['dur','*',.1,2],{fx:'chill',nm:'ห้วงเยือกแข็ง',i:'❄️',ch:.12,t:.8}],
+  ['ยุบตัว','💥',['boom','*',.1,3],['explode','*',.08,2],{fx:'burst',nm:'ยุบแล้วแตก',i:'🎆',r:55,pct:.4}],
+  ['ลูกแก้วไว','⏱️',['cd','c',.05,3],['count','+',1,1],{fx:'echo',nm:'ลูกแก้วคู่',i:'🔁',every:3}],
+  {fx:'vsStun',nm:'ขอบฟ้าเหตุการณ์',i:'👑',m:1.5}],
+aquaring:[['น้ำหนัก','💧',['dmg','*',.08,3],['size','*',.1,2],{fx:'chill',nm:'หยดน้ำเยือก',i:'❄️',ch:.06,t:.8}],
+  ['กระแสน้ำ','🌊',['count','+',1,2],['wave','*',.15,2],{fx:'pull',nm:'วังน้ำดูด',i:'🌀',r:80}],
+  ['คลื่นเย็น','🥶',['slow','+',.04,3],['spin','*',.1,2],{fx:'vsStun',nm:'แตกเป็นน้ำแข็ง',i:'💎',m:1.5}],
+  {fx:'shards',nm:'น้ำกระเซ็น',i:'👑',on:'hit',ch:.1,n:2,pct:.5}],
+comet:[['มวลดาวหาง','☄️',['dmg','*',.08,3],['explode','*',.08,2],{fx:'burst',nm:'หางระเบิด',i:'💥',r:50,pct:.4}],
+  ['หางไฟ','🔥',['drip','*',.15,3],['@ignite',.12,2],{fx:'trail',nm:'ทางลาวา',i:'🌋',kind:'fire',r:45,pct:.25,dur:3}],
+  ['ดาวหางไว','⏱️',['cd','c',.05,3],['speed','*',.1,2],{fx:'shards',nm:'สะเก็ดดาวหาง',i:'✨',on:'kill',ch:1,n:3,pct:.35}],
+  {fx:'echo',nm:'ดาวหางคู่แฝด',i:'👑',every:3}],
+rift:[['ศรดาว','⭐',['dmg','*',.08,3],['shots','+',1,1],{fx:'shards',nm:'ดาวแตก',i:'✨',on:'hit',ch:.15,n:2,pct:.4}],
+  ['ประตูกว้าง','🌌',['dur','*',.08,3],['tick','*',-.08,2],{fx:'execute',nm:'ดาวปลิดชีพ',i:'💀',hp:.3,m:1.6}],
+  ['เปิดไว','⏱️',['cd','c',.05,3],['@shock',.08,2],{fx:'chill',nm:'ห้วงอวกาศเย็น',i:'❄️',ch:.08,t:.8}],
+  {fx:'mod',nm:'ประตูคู่',i:'👑',add:{count:1}}],
+volcano:[['ลาวาร้อน','🌋',['dmg','*',.08,3],['tick','*',-.08,2],{fx:'ignite',nm:'ลาวาติดไฟ',i:'🔥',ch:.3,pct:.3,t:3}],
+  ['ปะทุ','💥',['boom','*',.1,3],['explode','*',.08,2],{fx:'burst',nm:'หินหลอมระเบิด',i:'🎆',r:55,pct:.45}],
+  ['ภูเขาไฟไว','⏱️',['cd','c',.05,3],['dur','*',.1,2],{fx:'trail',nm:'ธารลาวา',i:'♨️',kind:'fire',r:45,pct:.25,dur:3}],
+  {fx:'mod',nm:'ภูเขาไฟคู่',i:'👑',add:{count:1}}],
+leafblade:[['ใบคม','🍃',['dmg','*',.08,3],['count','+',1,2],{fx:'ignite',nm:'บาดลึก',i:'🩸',ch:.25,pct:.3,t:3}],
+  ['ลมหวน','↩️',['life','*',.08,3],['slow','+',.04,2],{fx:'pull',nm:'ใบไม้ดูดฝูง',i:'🌀',r:80}],
+  ['ร่ายไว','⏱️',['cd','c',.05,3],['speed','*',.1,2],{fx:'shards',nm:'ใบแตกกิ่ง',i:'✨',on:'kill',ch:1,n:3,pct:.35}],
+  {fx:'echo',nm:'พายุใบไม้คู่',i:'👑',every:3}]});
 const TF_COST=[0,1,2,4], TF_CROWN=6;
 
 /* ---- node list of a tree (cached) ---- */
@@ -3961,7 +4129,7 @@ const SK_EL={flame:'fire', meteor:'fire', trap:'fire', blast:'fire', spheres:'fi
   slam:'earth', spikes:'earth', bulwark:'earth',
   holy:'light', sacred:'light', cross:'light', judgment:'light', fists:'light', blades:'light',
   venom:'dark', shadow:'dark', phantom:'dark', clones:'dark', deadeye:'dark',
-  bloodrite:'dark'};   // + character-only skills (07 skx) that carry an element
+  bloodrite:'dark', gravorb:'dark', aquaring:'water', comet:'fire', rift:'light', volcano:'fire', leafblade:'wind'};   // + character-only skills (07 skx) that carry an element
 const SK_EVO_EL={mbolt:'light'};                                         // ศรดวงดาว: the evolution turns light (§1.3)
 for(const id in SK_EL) if(SK[id]) SK[id].el=SK_EL[id];
 function skEl(s){ if(!s||!s.def) return null; if(s.evolved&&SK_EVO_EL[s.id]) return SK_EVO_EL[s.id]; return s.def.el||null; }
@@ -4264,6 +4432,8 @@ for(const k in PASSIVES) PASSIVES[k].id=k;
 const SKILL_REQ={
   flyblade:{lv:8}, riposte:{lv:15}, palisade:{need:'lance', r:3, jlv:5}, thrust:{need:'valor', r:3, jlv:10},
   bloodrite:{need:'cyclone', r:3, jlv:5}, chainaxe:{need:'frenzy', r:3, jlv:10},
+  gravorb:{lv:8}, aquaring:{lv:15}, comet:{need:'meteor', r:3, jlv:5}, rift:{need:'blizzard', r:3, jlv:10},
+  volcano:{need:'vortex', r:3, jlv:5}, leafblade:{need:'spikes', r:3, jlv:10},
   lance:{need:'slash', r:3}, valor:{need:'lance', r:2},
   cyclone:{need:'blades', r:3}, frenzy:{need:'cyclone', r:2},
   meteor:{need:'flame', r:3}, blizzard:{need:'meteor', r:2},

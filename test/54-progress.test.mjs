@@ -90,10 +90,10 @@ console.log('§3.5 หน้าสกิล (ข้อมูลที่หน�
     ch.sk.mbolt=3; o.r3=pksRow(ch,'mbolt',false).cost; ch.sk.mbolt=8; const mx=pksRow(ch,'mbolt',false); o.max=[mx.max,mx.can,mx.cost]; ch.sk.mbolt=5; const m5=pksRow(ch,'mbolt',false); o.tier2=[m5.max,m5.rc,m5.cost];
     o.poor=(ch.sp=1,pksRow(ch,'flame',false)); o.next=pksNext(SK.flame,3); o.lv=pksLv(SK.mbolt,1); o.stars=prgStars(3);
     return o; })()`);
-  ok('ขั้นต้น (จอมเวท): 4 สกิลของอาชีพ (ศรเวท ★1 ฟรี) + passive สมาธิแห่งรูน · แต้ม 0 = ฝึกไม่ได้แต่ไม่ล็อก',
-    deq(m.t1, [[null, ['mbolt:1:1:0:0', 'flame:0:1:0:0', 'frost:0:1:0:0', 'thunder:0:1:0:0'], ['p_runefocus']]]), m.t1);
-  ok('ขั้นสูงก่อนเลื่อน: แสดงทั้งสองสาย (สกิล 2 + passive 2 ต่อสาย) ล็อกด้วย "ต้องเลื่อนเป็น…ก่อน"',
-    deq(m.t2, [['archmage', ['meteor:L', 'blizzard:L'], ['p_manasea', 'p_starcalm']], ['elementalist', ['vortex:L', 'spikes:L'], ['p_elemweave', 'p_earthpull']]]) && /^ต้องเลื่อนเป็น/.test(m.lock2), m);
+  ok('ขั้นต้น (จอมเวท): 6 สกิลของอาชีพ (ศรเวท ★1 ฟรี · 2 ตัวใหม่ล็อกด้วย Base Lv) + passive สมาธิแห่งรูน · แต้ม 0 = ฝึกไม่ได้แต่ไม่ล็อก',
+    deq(m.t1, [[null, ['mbolt:1:1:0:0', 'flame:0:1:0:0', 'frost:0:1:0:0', 'thunder:0:1:0:0', 'gravorb:0:1:0:1', 'aquaring:0:1:0:1'], ['p_runefocus']]]), m.t1);
+  ok('ขั้นสูงก่อนเลื่อน: แสดงทั้งสองสาย (สกิล 4 + passive 2 ต่อสาย) ล็อกด้วย "ต้องเลื่อนเป็น…ก่อน"',
+    deq(m.t2, [['archmage', ['meteor:L', 'blizzard:L', 'comet:L', 'rift:L'], ['p_manasea', 'p_starcalm']], ['elementalist', ['vortex:L', 'spikes:L', 'volcano:L', 'leafblade:L'], ['p_elemweave', 'p_earthpull']]]) && /^ต้องเลื่อนเป็น/.test(m.lock2), m);
   ok('เลื่อนแล้วเหลือสายเดียว · SKILL_REQ: อุกกาบาตต้องหอกเพลิง ★3 (★2 = ล็อก) · ครบแล้วฝึกได้ราคา 1 · พายุหิมะยังล็อก (อุกกาบาต ★2)',
     deq(m.job, ['archmage']) && /ต้องฝึก/.test(m.req) && m.reqCan === false && m.met[0] === '' && m.met[1] === true && m.met[2] === 1 && /ต้องฝึก/.test(m.blz), m);
   ok('ราคา ★: ★3 → ★4 = 2 แต้ม · เลื่อนอาชีพแล้ว ★5 → ★6 = 2 แต้ม (ขั้นสอง) · ★8 = ตัน ฝึกต่อไม่ได้ · แต้มไม่พอ = ฝึกไม่ได้แต่ไม่ล็อก', m.r3 === 2 && m.max[0] === true && m.max[1] === false && m.max[2] === 0 && deq(m.tier2, [false, 8, 2]) && m.poor.can === false && m.poor.lock === '', m);

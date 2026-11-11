@@ -38,10 +38,22 @@ BEH.rite=(s,dt)=>{ s.cdT-=dt; if(s.cdT>0) return; const r=pv(s,'r')*P.area;
   G.shake=Math.max(G.shake,5); P.atkT=.12; sfx('boom'); };
 
 /* ---- projectiles (fireProj → pxFire when SK[id].px) ---- */
-// ret: boomerang (out to its range, then back to the hand, hitting everything again) · hook: knock < 0 = pulled to the hero
+// ret: boomerang (out to its range, then back to the hand, hitting everything again) · hook: knock < 0 = pulled to the hero ·
+// slow: slows what it hits · drip: leaves burning ground on its way (the 26a fire trail) · def.pass: flies through everything and
+// only explodes where its range ends
 function pxFire(s,p){ const v=k=>pv(s,k);
   if(v('ret')) p.ret=1;
-  const hk=v('hook'); if(hk) p.knock=-hk; }
+  const hk=v('hook'); if(hk) p.knock=-hk;
+  const sl=v('slow'); if(sl){ p.slow=sl; p.x2=1; }
+  const dr=v('drip'); if(dr||s.def.pass){ const m=p.mx||(p.mx={lv:0, look:{}, ht:0, dd:0, ph:0}); if(dr) m.drip=Math.max(m.drip||0,dr*P.durMul); if(s.def.pass) m.pass=999; } }
+// orbit extras (BEH.orbit when SK[id].ox): radius breathes in and out (wave) · own hit rate · slow
+function orbX(s,R0){ const w=pv(s,'wave'), R=w?R0*(1+w*Math.sin(G.t*2.2)):R0; s.st.R=R; return {R, rate:pv(s,'rate')||.5, slow:pv(s,'slow')||0}; }
+// projHit → true = handled here (the shared code stops)
+function pxHit(p,e){
+  if(p.slow&&!e.dead){ const f=1-p.slow*(e.boss?.5:1); if(f<e.slowF) e.slowF=f; e.slowT=Math.max(e.slowT,1.2); }
+  return false; }
+// updateProjs, end of range → true = handled here (the shared end is skipped)
+function pxEnd(p){ return false; }
 // boomerang flight: when the outward life runs out it turns, hits can repeat, and it homes on the hero until caught (true = gone)
 function pxRet(p,dt){
   if(!p.back){ if(p.life>0) return false; p.back=true; p.hit=null; p.life=p.max=2; }
@@ -50,26 +62,51 @@ function pxRet(p,dt){
   const k=Math.min(1,dt*7); p.vx+=(dx/d*sp-p.vx)*k; p.vy+=(dy/d*sp-p.vy)*k; return false; }
 
 /* ---- zones (BEH.zone → zxCast when SK[id].zx · updateZones → zxTick every frame, zxEnd when the time is up) ---- */
-// place: 'self' = on the hero (follow: stays on the hero) · more places come with the skills that need them
+// place: 'self' = on the hero (follow: stays on the hero) · 'aim' = rolls straight down the aim, slowing (speed) · 'enemy' = on the
+// aimed target, the rest round it · zone params: rep (push out) · pull · stun · boom × dmg / explode (blast when it ends) ·
+// def.shoot: fires shots bolts every tick at the nearest enemy in reach · def.lob: lobs a lava bomb every tick
 function zxCast(s){
-  const v=k=>pv(s,k), pl=s.def.place, wake=(s.def.wake||300)*(P.rangeMul||1);
+  const v=k=>pv(s,k), pl=s.def.place, far=pl==='aim'||pl==='enemy', wake=far?Math.min(520*(P.rangeMul||1),aimReach()):(s.def.wake||300)*(P.rangeMul||1);
   if(!G.near||G.nearD>wake){ s.cdT=.2; return; }
-  s.cdT=cdOf(s); const n=countOf(s), r=v('r')*P.area;
+  s.cdT=cdOf(s); const n=countOf(s), r=v('r')*P.area, t=G.near, a=Math.atan2(t.y-P.y,t.x-P.x);
   for(let i=0;i<n;i++){ let x=P.x, y=P.y; const o={};
-    if(pl==='self'){ if(i){ const a=i*TAU/n; x+=Math.cos(a)*r*.6; y+=Math.sin(a)*r*.45; } if(s.def.follow||v('follow')) o.follow=1; }
+    if(pl==='self'){ if(i){ const b=i*TAU/n; x+=Math.cos(b)*r*.6; y+=Math.sin(b)*r*.45; } if(s.def.follow||v('follow')) o.follow=1; }
+    else if(pl==='aim'){ const b=a+(i-(n-1)/2)*.35, sp=v('speed')||200; x+=Math.cos(b)*36; y+=Math.sin(b)*36; o.aim={vx:Math.cos(b)*sp, vy:Math.sin(b)*sp}; }
+    else if(pl==='enemy'){ const q=aimCluster(t,i,r*2); x=q[0]; y=q[1]; }
     addZone(Object.assign({x,y,r,dur:(v('dur')||4)*P.durMul,tick:v('tick')||.4,dmg:v('dmg')||0,slow:v('slow')||0,kind:s.def.fx,src:s,x2:1,
-      rep:v('rep')||0,stun:v('stun')||0},o)); }
+      rep:v('rep')||0,stun:v('stun')||0,pull:v('pull')||0,boom:v('boom')||0,explode:(v('explode')||0)*P.area,bk:s.def.bk==null?220:s.def.bk,
+      shoot:s.def.shoot?(v('shots')||1):0,lob:s.def.lob?1:0,reach:(v('reach')||300)*(P.rangeMul||1),pierce:v('pierce')||1,tt:s.def.shoot||s.def.lob?.2:0},o)); }
   if(s.def.fx==='palisade'){ G.fx.push({k:'ring',x:P.x,y:P.y,r0:r*.3,r1:r,t:0,dur:.3,c:s.def.c,w:6,follow:true,dead:false}); sfx('shield'); } }
 // one frame of an x2 zone: movement, push / pull, its own ticks → always true (the classic zone code never sees it)
 function zxTick(z,dt){
   if(z.follow){ z.x=P.x; z.y=P.y; }
+  else if(z.aim){ z.x+=z.aim.vx*dt; z.y+=z.aim.vy*dt; const k=Math.exp(-dt*.7); z.aim.vx*=k; z.aim.vy*=k; }
   if(z.rep){ const R=z.r; for(const e of query(z.x,z.y,R+60)){ if(e.dead||e.boss) continue; const dx=e.x-z.x, dy=e.y-z.y, d=Math.hypot(dx,dy)||1, rr=R+e.r*.3;
       if(d<rr){ const f=Math.min(rr-d,z.rep*dt/Math.max(.6,e.mass)); e.x+=dx/d*f; e.y+=dy/d*f; } } }
+  if(z.pull){ const R=z.r*2; for(const e of query(z.x,z.y,R+60)){ if(e.dead||e.boss) continue; const dx=z.x-e.x, dy=z.y-e.y, d=Math.hypot(dx,dy)||1;
+      if(d<R&&d>4){ const f=Math.min(d-2,z.pull*dt/Math.max(.6,e.mass)); e.x+=dx/d*f; e.y+=dy/d*f; } } }
   z.tt-=dt; if(z.tt<=0){ z.tt=z.tick;
-    if(z.dmg) for(const e of query(z.x,z.y,z.r+60)){ if(e.dead) continue; const rr=z.r+e.r*.5; if((e.x-z.x)**2+(e.y-z.y)**2>rr*rr) continue;
+    if(z.shoot) zxShoot(z); else if(z.lob) zxLob(z);
+    else if(z.dmg) for(const e of query(z.x,z.y,z.r+60)){ if(e.dead) continue; const rr=z.r+e.r*.5; if((e.x-z.x)**2+(e.y-z.y)**2>rr*rr) continue;
       damageEnemy(e,z.dmg,z.src,{slow:z.slow,slowDur:.5,stun:z.stun,quiet:true,fxd:z.fxd}); } }
+  if(z.fl>0) z.fl-=dt;
+  if(!G.auto&&qLv()&&Math.random()<dt*10){ const k=z.kind;
+    if(k==='grav'){ const b=rand(0,TAU), d=z.r*rand(1.2,2); part({x:z.x+Math.cos(b)*d,y:z.y+Math.sin(b)*d*.8,vx:-Math.cos(b)*d*2,vy:-Math.sin(b)*d*1.6,life:.45,s:2,c:'#c8b4ff',g:0,drag:0,k:'streak',add:true}); }
+    else if(k==='lava') part({x:z.x+rand(-z.r*.4,z.r*.4),y:z.y-8,vx:rand(-20,20),vy:rand(-90,-50),life:.6,s:rand(2,3.5),c:pick(['#ff7a2a','#ffb050','#ffe28a']),g:120,drag:1,k:'sq',add:true}); }
   return true; }
-function zxEnd(z){}
+// the time is up: an end blast (boom × dmg in explode) · bk < 0 = an implosion that pulls everything to the middle
+function zxEnd(z){ if(!z.boom) return; const R=z.explode||z.r*1.4, c=z.src&&z.src.def.c||'#ffae4a';
+  aoe(z.x,z.y,R,z.dmg*z.boom,z.src,{knock:z.bk});
+  G.fx.push({k:'boom',x:z.x,y:z.y,r:R*.8,t:0,dur:.4,c,dead:false}); G.fx.push({k:'ring',x:z.x,y:z.y,r0:z.bk<0?R:R*.3,r1:z.bk<0?R*.2:R*1.1,t:0,dur:.32,c:'#ffffff',w:6,dead:false});
+  burst(z.x,z.y,qLv()?14:5,c,R*2.4,.5,3); G.shake=Math.max(G.shake,Math.min(6,R/20)); sfx('boom'); }
+// shooter zones: `shoot` bolts at the nearest enemy in reach, aimed once, straight (they carry the skill: tree effects work)
+function zxShoot(z){ const t=nearestTo(z.x,z.y,z.reach); if(!t) return; const s=z.src, n=z.shoot, a0=Math.atan2(t.y-z.y,t.x-z.x), sp=640, life=z.reach/sp*1.1, arrow=z.kind==='turret';
+  for(let i=0;i<n;i++){ const a=a0+(i-(n-1)/2)*.16;
+    G.projs.push({x:z.x,y:z.y-(arrow?14:4),vx:Math.cos(a)*sp,vy:Math.sin(a)*sp,r:5,dmg:z.dmg,pierce:z.pierce,life,max:life,knock:40,explode:0,homing:0,crit:0,shape:arrow?'arrow':'star',c:s.def.c,src:s,burn:0,hit:null,tg:null,dead:false,t:0}); }
+  z.fl=.15; if(!G.auto) sfx('shoot'); }
+// volcano: a lava bomb on a random enemy in reach (a 'lava' strike: falls, bursts, leaves a small fire)
+function zxLob(z){ const e=randomNear(z.x,z.y,z.reach); if(!e) return; const q=mkStrike(e.x+rand(-10,10),e.y+rand(-10,10),z.r*.75,.5,z.dmg,z.src,'lava',{knock:140}); q.ox=z.x; q.oy=z.y-10; G.strikes.push(q); z.fl=.2; }
+function zxLava(s){ explode(s.x,s.y,s.r,s.dmg,s.src,{knock:s.knock,c:'#ff7a2a'}); addZone({x:s.x,y:s.y,r:s.r*.6,dur:1.2*P.durMul,tick:.3,dmg:s.dmg*.05,kind:'fire',src:s.src}); }
 
 /* ---- dev (#dev only, through RG.skx) · balance runs: skills at ★lv, mastery L on each one's main stat, a 10M-HP hero (being hit
    still counts, nothing dies), no level-up cards, from wave `wave` · solo = one skill for `sec` s → the damage it did ---- */
