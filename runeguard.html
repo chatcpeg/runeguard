@@ -373,7 +373,51 @@ button.hb-st{padding:0;border:0;background:none;text-decoration:underline dotted
 .hd-sk-m{font-size:12px;color:#f3ead2}
 .hd-sk-ms{font-size:12px;color:#ffd36a;line-height:1.5}
 .hd-sk-soon{font-size:12px;color:#c9a7ff;line-height:1.5}
-/* 51-auth.css · lane N · M0 stub (empty) */
+/* 51-auth.css · lane N · scrAuth / scrAccount / conflict + link sheets (shown only when AUTH_ON) */
+.ua-panel{max-width:440px;gap:14px;position:relative}
+.ua-logo{font-size:clamp(40px,12vw,64px)}
+.ua-view{display:flex;flex-direction:column;gap:12px}
+.ua-wide{width:100%}
+.ua-go{border-color:var(--spirit);color:var(--spirit)}
+.ua-go:hover{background:rgba(95,211,195,.08)}
+.ua-g{display:inline-grid;place-items:center;width:24px;height:24px;margin-right:10px;border-radius:50%;background:#fff;color:#3a2a08;font-weight:700;font-size:14px;vertical-align:middle}
+.ua-or{display:flex;align-items:center;gap:10px;color:var(--ash);font-size:13px}
+.ua-or::before,.ua-or::after{content:'';flex:1;height:1px;background:var(--line)}
+.ua-seg{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr)}
+.ua-seg button{min-height:44px;font-size:15px}
+.ua-field{display:flex;flex-direction:column;gap:6px;font-size:14px;color:var(--ash)}
+.ua-field input{box-sizing:border-box;width:100%;min-height:46px;padding:0 14px;border-radius:12px;border:1px solid var(--line-hi);background:var(--well);color:var(--bone);font:inherit;font-size:16px;-webkit-user-select:text;user-select:text}
+.ua-field input:focus{border-color:var(--spirit);outline:none}
+.ua-pw{position:relative;display:block}
+.ua-pw input{padding-right:52px}
+.ua-eye{position:absolute;right:2px;top:50%;transform:translateY(-50%);min-width:44px;min-height:44px;border:0;border-radius:10px;background:transparent;cursor:pointer;font-size:18px}
+.ua-eye[aria-pressed="true"]{background:var(--line)}
+.ua-link{align-self:center;min-height:44px;padding:0 12px;border:0;background:transparent;color:var(--spirit);text-decoration:underline;cursor:pointer;font-size:14px}
+.ua-sep{height:1px;background:var(--line);margin:4px 0}
+.ua-h{font-family:var(--f-display);font-size:24px;color:var(--rune);text-align:center}
+.ua-text{margin:0;line-height:1.6;overflow-wrap:anywhere}
+.ua-warn{margin:0;padding:10px 12px;border-radius:10px;border:1px solid var(--rune-deep);background:rgba(240,181,69,.08);color:var(--rune);font-size:14px;line-height:1.5}
+.ua-err{margin:0;text-align:center;color:#ff9aa0;font-size:14px;line-height:1.5;overflow-wrap:anywhere}
+.ua-err:empty{min-height:0}
+.ua-note{font-size:12.5px;color:var(--ash);line-height:1.6}
+.ua-note summary{min-height:44px;display:flex;align-items:center;justify-content:center;cursor:pointer;text-align:center}
+.ua-note ul{margin:0;padding-left:20px}
+.ua-busy{position:fixed;inset:0;z-index:5;display:grid;place-items:center;background:rgba(8,10,7,.55)}
+.ua-spin{width:40px;height:40px;border-radius:50%;border:4px solid var(--line);border-top-color:var(--rune);animation:ua-spin .9s linear infinite}
+@keyframes ua-spin{to{transform:rotate(360deg)}}
+.ua-title{font-size:clamp(30px,8vw,44px)}
+.ua-panel .box p{margin:0}
+.ua-row{margin:0;display:flex;flex-wrap:wrap;gap:8px;align-items:baseline;line-height:1.5}
+.ua-mail{font-weight:700;overflow-wrap:anywhere}
+.ua-danger{border-color:var(--blood);color:#ff9aa0}
+.ua-danger:disabled{border-color:var(--line)}
+.ua-sheet{display:flex;flex-direction:column;gap:12px}
+.ua-card{display:flex;flex-direction:column;gap:8px;padding:14px;border:1px solid var(--line-hi);border-radius:14px;background:var(--card)}
+.ua-card h3{font-family:var(--f-display);font-size:18px;color:var(--rune)}
+.ua-card p{margin:0;font-size:14px;color:var(--ash);line-height:1.5;overflow-wrap:anywhere}
+.ua-card ul{margin:0;padding-left:20px;font-size:14px;line-height:1.6;overflow-wrap:anywhere}
+.ua-btns{display:flex;flex-direction:column;gap:10px}
+@media (prefers-reduced-motion:reduce){.ua-spin{animation-duration:2.4s}}
 /* 53-char.css · lane E · equipment / bag tabs, item sheet, smith (refine), rune scribe, shop, stash · phone first (360 px, 44 px targets) */
 .uc{display:flex;flex-direction:column;gap:10px;min-width:0}
 .uc p{margin:0}
@@ -859,7 +903,85 @@ button.pjb-card{cursor:pointer}
 <div class="sh-toasts" id="shToasts"></div>
 <div class="sh-log" id="shLog" aria-live="polite"></div>
 <div class="hd" id="hdBox" hidden><span class="hd-bag" id="hdBag" hidden></span><div class="hd-bars" id="hdBars" hidden></div><button class="hd-card" id="hdCard" type="button" hidden>⬆ เลือกการ์ด</button><div class="hd-pots" id="hdPots" hidden></div></div>
-<!-- 51-auth.html · lane N · M0 stub (empty) -->
+<!-- 51-auth.html · lane N · scrAuth (sign in / sign up) and scrAccount · registered when AUTH_ON, opened only when CLOUD_OK
+     forms are method="dialog": outside a <dialog> they never navigate, so an email or password can never land in a URL or a request -->
+<section class="screen" id="scrAuth" hidden aria-label="บัญชีผู้เล่น">
+  <div class="panel ua-panel">
+    <header class="brand"><h1 class="logo ua-logo">Runeguard<small>ศึกคลื่นอันเดด</small></h1></header>
+    <form class="ua-view" id="uaMain" method="dialog" novalidate>
+      <button class="btn primary ua-wide" id="uaGoogle" type="button"><span class="ua-g" aria-hidden="true">G</span>เข้าสู่ระบบด้วย Google</button>
+      <div class="ua-or" role="separator"><span>หรือ</span></div>
+      <div class="seg ua-seg" role="group" aria-label="เข้าสู่ระบบหรือสมัครสมาชิก">
+        <button type="button" id="uaTabIn" aria-pressed="true">เข้าสู่ระบบ</button>
+        <button type="button" id="uaTabUp" aria-pressed="false">สมัครสมาชิก</button>
+      </div>
+      <label class="ua-field"><span>อีเมล</span><input id="uaEmail" type="email" autocomplete="email" inputmode="email" autocapitalize="off" spellcheck="false" maxlength="254"></label>
+      <div class="ua-field"><label for="uaPw">รหัสผ่าน</label><span class="ua-pw"><input id="uaPw" type="password" autocomplete="current-password" maxlength="72"><button class="ua-eye" id="uaEye" type="button" aria-label="แสดงรหัสผ่าน" aria-pressed="false">👁</button></span></div>
+      <label class="ua-field" id="uaPw2Row" hidden><span>ยืนยันรหัสผ่าน</span><input id="uaPw2" type="password" autocomplete="new-password" maxlength="72"></label>
+      <button class="btn ua-go ua-wide" id="uaSubmit" type="submit">ดำเนินการ</button>
+      <button class="btn ghost ua-wide" id="uaNC" type="button" hidden>ส่งลิงก์ยืนยันอีกครั้ง</button>
+      <button class="ua-link" id="uaForgot" type="button">ลืมรหัสผ่าน?</button>
+      <div class="ua-sep" role="separator"></div>
+      <button class="btn ghost ua-wide" id="uaGuest" type="button">เล่นแบบผู้เยี่ยมชม</button>
+      <p class="hint">เซฟในเครื่อง · ผูกบัญชีทีหลังได้</p>
+    </form>
+    <div class="ua-view" id="uaSent" hidden>
+      <h2 class="ua-h">ตรวจกล่องจดหมาย</h2>
+      <p class="ua-text" id="uaSentMsg"></p>
+      <button class="btn ua-go ua-wide" id="uaSentAgain" type="button">ส่งอีกครั้ง</button>
+      <button class="btn ghost ua-wide" id="uaSentBack" type="button">กลับ</button>
+    </div>
+    <form class="ua-view" id="uaReset" method="dialog" novalidate hidden>
+      <h2 class="ua-h">ตั้งรหัสผ่านใหม่</h2>
+      <p class="ua-warn">รหัสใหม่ใช้กับทุกแอปในบัญชีนี้</p>
+      <input id="uaUser" type="text" autocomplete="username" hidden tabindex="-1" aria-hidden="true">
+      <label class="ua-field"><span>รหัสผ่านใหม่ (อย่างน้อย 8 ตัว)</span><input id="uaNewPw" type="password" autocomplete="new-password" maxlength="72"></label>
+      <label class="ua-field"><span>ยืนยันรหัสผ่านใหม่</span><input id="uaNewPw2" type="password" autocomplete="new-password" maxlength="72"></label>
+      <button class="btn primary ua-wide" id="uaSetPw" type="submit">บันทึกรหัสผ่านใหม่</button>
+      <button class="btn ghost ua-wide" id="uaResetSkip" type="button">ข้ามไปก่อน</button>
+    </form>
+    <p class="ua-err" id="uaErr" role="status" aria-live="polite"></p>
+    <details class="ua-note">
+      <summary>ⓘ บัญชีใช้ระบบเดียวกับแอปอื่นของผู้พัฒนา</summary>
+      <ul>
+        <li>อีเมลยืนยันและอีเมลรีเซ็ตรหัสผ่านมาในชื่อของแอปอื่นของผู้พัฒนา</li>
+        <li>หน้าขออนุญาตของ Google จะขึ้นชื่อแอปเดิมของผู้พัฒนา</li>
+        <li>โควตาส่งอีเมลมีน้อยและใช้ร่วมกัน ถ้าได้ใช้ปุ่ม Google จะสะดวกกว่า</li>
+        <li>การตั้งรหัสผ่านใหม่มีผลกับทุกแอปที่ใช้บัญชีเดียวกันนี้</li>
+      </ul>
+    </details>
+    <div class="ua-busy" id="uaBusy" hidden><span class="ua-spin" role="progressbar" aria-label="กำลังดำเนินการ"></span></div>
+  </div>
+</section>
+
+<section class="screen" id="scrAccount" hidden aria-label="บัญชี">
+  <div class="panel small-panel ua-panel">
+    <h2 class="end-title ua-title">บัญชี</h2>
+    <div class="box">
+      <p class="ua-row"><span class="qlabel">บัญชี</span><b class="ua-mail" id="uaAcctMail"></b></p>
+      <p class="ua-row" id="uaAcctStatus" role="status" aria-live="polite"></p>
+      <p class="ua-row" id="uaEnt"></p>
+      <button class="btn primary ua-wide" id="uaSyncNow" type="button">ซิงก์ตอนนี้</button>
+    </div>
+    <div class="box">
+      <p class="qlabel">ข้อมูลสำรอง:</p>
+      <p class="ua-text" id="uaBakSum">ยังไม่มีข้อมูลสำรอง</p>
+      <button class="btn ghost ua-wide" id="uaRestore" type="button" disabled>กู้คืน</button>
+    </div>
+    <div class="box">
+      <button class="btn ghost ua-wide" id="uaExport" type="button">ส่งออกเซฟ .json</button>
+      <button class="btn ghost ua-wide" id="uaSignOut" type="button">ออกจากระบบ (เครื่องนี้)</button>
+      <button class="btn ghost ua-wide ua-danger" id="uaDelGuest" type="button">ลบเซฟผู้เยี่ยมชมในเครื่อง</button>
+    </div>
+    <div class="box">
+      <label class="ua-field"><span>ลบข้อมูล Runeguard บนคลาวด์: พิมพ์คำว่า "ลบ" แล้วกดค้างที่ปุ่ม</span><input id="uaWipeTxt" type="text" autocomplete="off" maxlength="8"></label>
+      <button class="btn ua-wide ua-danger" id="uaWipe" type="button" disabled>ลบข้อมูล Runeguard บนคลาวด์</button>
+      <p class="hint">บัญชีผู้ใช้จะไม่ถูกลบ เพราะใช้ร่วมกับแอปอื่น</p>
+    </div>
+    <button class="btn ghost" id="uaAcctBack" type="button">กลับ</button>
+    <div class="ua-busy" id="uaAcctBusy" hidden><span class="ua-spin" role="progressbar" aria-label="กำลังดำเนินการ"></span></div>
+  </div>
+</section>
 <!-- 53-char.html · lane E · no markup of its own: the equipment / bag tabs draw into the character window (lane B #cwBody) and every item sheet uses the shared sheet (#shSheet) -->
 <!-- 54-progress.html · lane P · scrSkills (§8.9) and scrJob (§8.10) · the stats tab (§8.8) is drawn by CHARTABS.stats into the character window -->
 <section class="screen prg-scr" id="scrSkills" hidden aria-label="สกิล"><div class="panel prg-panel" id="pksRoot"></div></section>
@@ -3116,10 +3238,11 @@ function tfFork(s,from,hit,dmg,jump){ const F=s.fx.fork;
       for(const e of query(cur.x,cur.y,jump+60)){ if(e.dead||hit.indexOf(e.id)>=0) continue; const d=(e.x-cur.x)**2+(e.y-cur.y)**2; if(d<bd){ bd=d; nx=e; } }
       if(!nx) break; hit.push(nx.id); pts.push([nx.x,nx.y-nx.r*.4]); damageEnemy(nx,dmg*.7,s,{knock:40,stun:.05}); cur=nx; }
     if(pts.length>1) G.fx.push({k:'chain',pts,t:0,dur:.22,c:s.def.c,paths:null,jt:-1,dead:false}); } }
-/* ================= 28-shop.js · lane B · shop rules (docs/PROPOSAL-shop.md) · pure: no DOM ================= */
-// Supporter pack (30 days) + rune packs. What the player owns (ENT) comes from the server later (rg_purchases, step ค.);
-// until then only the #dev test switch (RG.shop.grant) fills it · never stored in the save, so a save can't grant it.
-// Bought runes sit in the account wallet: ENT.runes bought − acct.ru moved to characters (ch.rb, part of tfTotal in 27).
+/* ================= 28-shop.js · lane B · shop rules (docs/PROPOSAL-shop.md) · no DOM ================= */
+// What the player owns (ENT) = their own rows of public.rg_purchases (RLS · written only by api/stripe-webhook.js), held for this
+// session only (never in the save / localStorage) · none (guest, offline, artifact) = empty · #dev grant: local dev server only.
+// Wallet = ENT.runes − acct.ru (moved onto characters as ch.rb) · loaded list → shopClamp: Σ ch.rb ≤ acct.ru ≤ runes bought.
+// RSHOP must equal api/_shop.js PRODUCTS (the server's table is the one that counts · test/45-pay checks).
 const RSHOP={
   products:[
     {id:'sup30', n:'แพคสนับสนุน 30 วัน', i:'💎', thb:35, days:30, d:'สุ่มการ์ดใหม่ไม่จำกัด · เลือกการ์ดเลเวลอัปได้ทั้ง 5 ใบ · ซื้อซ้ำ = ต่อเวลาอีก 30 วัน (ไม่ต่ออัตโนมัติ)'},
@@ -3130,10 +3253,16 @@ const RSHOP={
   cards:5, freeCards:3, freeRerolls:2,
   slCost:[0,0,10,15,20,25,30,35,40]};       // rune cost to raise a skill's starting Lv to n (from n−1)
 let ENT={sup:0, runes:0, src:'none'}, entOk=false;   // sup = supporter until (ms) · runes = bought in total · read lazily (nothing at load)
+// the list last loaded: owner uid · n rows · sids = Checkout Session ids (59a: "has my purchase landed?")
+const ENTS_NONE={uid:'', sup:0, runes:0, n:0, sids:[], at:0};
+let ENTS=Object.assign({},ENTS_NONE), entBusy=null;
 function entGet(){ if(!entOk){ entOk=true; try{ entLoad(); }catch(e){} } return ENT; }
 // test entitlements only on a local dev server (never on the live site, even with #dev typed in: tester r2 F2)
 function shopDevHost(){ return typeof location!=='undefined'&&location.hash==='#dev'&&/^(localhost|127\.0\.0\.1|\[::1\])$/.test(location.hostname); }
+function entUid(){ return typeof AUTH!=='undefined'&&AUTH.s&&AUTH.s.user&&typeof AUTH.s.user.id==='string'?AUTH.s.user.id:''; }
+function entSigned(){ return typeof CLOUD_OK!=='undefined'&&CLOUD_OK&&typeof AUTH!=='undefined'&&AUTH.state==='in'&&!!entUid(); }
 function entLoad(){ ENT={sup:0, runes:0, src:'none'};
+  const u=entUid(); if(u&&ENTS.uid===u){ ENT={sup:ENTS.sup, runes:ENTS.runes, src:'server'}; return ENT; }   // the server's list wins
   if(!shopDevHost()||typeof localStorage==='undefined') return ENT;
   try{ const o=JSON.parse(localStorage.getItem('runeguard.devEnt')||'null'); if(o&&typeof o==='object'){
     ENT={sup:Math.max(0,+o.sup||0), runes:Math.max(0,Math.min(1e7,o.runes|0)), src:'dev'}; } }catch(e){}
@@ -3144,6 +3273,52 @@ function shopWallet(){ const A=SAVE&&SAVE.acct; return Math.max(0,(entGet().rune
 // move `need` bought runes from the account wallet onto character ch (only when the wallet has them all)
 function shopFund(ch,need){ need=Math.ceil(need); if(!(need>0)) return true; const A=SAVE&&SAVE.acct; if(!A||shopWallet()<need) return false;
   A.ru=(A.ru|0)+need; ch.rb=(ch.rb|0)+need; return true; }
+/* ---- step ค.: rg_purchases → ENT ---- */
+// rows → {sup, runes, n, sids} · supporter days chain from the current end (ต่อจากวันหมดเดิม) or the purchase time if lapsed ·
+// created_at = server clock · runes / days as the webhook stored them · unknown product skipped
+function entFromRows(rows){
+  const ok=(Array.isArray(rows)?rows:[]).filter(r=>r&&typeof r==='object'&&RSHOP.products.some(p=>p.id===r.product)&&Number.isFinite(Date.parse(r.created_at)))
+    .map(r=>({t:Date.parse(r.created_at), runes:Math.max(0,Math.min(1e5,r.runes|0)), days:Math.max(0,Math.min(366,r.days|0)), sid:typeof r.session_id==='string'?r.session_id.slice(0,200):''}))
+    .sort((a,b)=>a.t-b.t);
+  let sup=0, runes=0;
+  for(const r of ok){ runes+=r.runes; if(r.days) sup=Math.max(sup,r.t)+r.days*864e5; }
+  return {sup, runes:Math.min(1e7,runes), n:ok.length, sids:ok.map(r=>r.sid).filter(Boolean)}; }
+// Σ ch.rb ≤ acct.ru ≤ bought → {ru, rb} taken back (last character first; tfSanitize drops what it can no longer pay)
+function shopClamp(S,bought){
+  const out={ru:0, rb:0}; if(!S||!S.acct||!Array.isArray(S.chars)) return out; const A=S.acct; bought=Math.max(0,bought|0);
+  if((A.ru|0)>bought){ out.ru=(A.ru|0)-bought; A.ru=bought; }
+  let sum=S.chars.reduce((n,c)=>n+Math.max(0,(c&&c.rb)|0),0);
+  for(let i=S.chars.length-1;i>=0&&sum>(A.ru|0);i--){ const c=S.chars[i], take=Math.min(Math.max(0,c.rb|0),sum-(A.ru|0));
+    if(take>0){ c.rb=(c.rb|0)-take; sum-=take; out.rb+=take; if(typeof tfSanitize==='function') tfSanitize(c); } }
+  return out; }
+// GET own rows (signed in only · one at a time)
+function entRefresh(){
+  if(!entSigned()||typeof authFetch!=='function') return Promise.resolve(false);
+  if(entBusy) return entBusy; const u=entUid();
+  entBusy=authFetch('/rest/v1/rg_purchases?select=session_id,product,runes,days,created_at&user_id=eq.'+u+'&order=created_at.asc,id.asc&limit=5000',{method:'GET'})
+    .then(r=>r.ok?r.json():Promise.reject(new Error('http '+r.status)))
+    .then(rows=>{ if(entUid()!==u||!Array.isArray(rows)) return false;
+      const e=entFromRows(rows); ENTS={uid:u, sup:e.sup, runes:e.runes, n:e.n, sids:e.sids, at:Date.now()}; entOk=false;
+      shopClampLater(); BUS.emit('ent',ENTS); return true; })
+    .catch(e=>{ console.warn('rg_purchases',e&&e.message); return false; })
+    .finally(()=>{ entBusy=null; });
+  return entBusy; }
+// clamp the owner's save (not mid-run: runEnd runs it again) · saved + said only when it changed
+function shopClampLater(){ setTimeout(()=>{ try{
+  const u=entUid(); if(!u||ENTS.uid!==u||!SAVE||SAVE.owner!==u||SAVE.ro) return;
+  if(typeof G!=='undefined'&&G&&G.char&&!G.over) return;
+  const r=shopClamp(SAVE,ENTS.runes); if(!r.ru&&!r.rb) return;
+  saveNow('ent');
+  if(r.rb&&typeof toast==='function') toast('ปรับรูนที่ซื้อให้ตรงกับรายการซื้อของบัญชี (−'+r.rb+' รูน)','info');
+}catch(e){ console.error(e); } },0); }
+function entSummaryTh(){   // account page line
+  const u=entUid(); if(!u) return ''; if(ENTS.uid!==u) return 'สิทธิ์ที่ซื้อ: ยังโหลดไม่ได้ (ต้องออนไลน์)';
+  if(!ENTS.n) return 'สิทธิ์ที่ซื้อ: ยังไม่มีรายการซื้อ';
+  const d=new Date(ENTS.sup), sup=ENTS.sup>Date.now()?'ผู้สนับสนุนถึง '+d.toLocaleDateString('th-TH',{day:'numeric', month:'short', year:'numeric'}):ENTS.sup?'แพคสนับสนุนหมดอายุแล้ว':'';
+  return 'ซื้อแล้ว '+ENTS.n+' รายการ · รูนที่ซื้อรวม '+ENTS.runes.toLocaleString('en-US')+(sup?' · '+sup:''); }
+BUS.on('auth',ev=>{ if(ev==='out'){ ENTS=Object.assign({},ENTS_NONE); entOk=false; BUS.emit('ent',ENTS); } else if(ev==='in') entRefresh(); });
+BUS.on('char',()=>{ if(ENTS.uid) shopClampLater(); });
+BUS.on('runEnd',()=>{ if(ENTS.uid) setTimeout(shopClampLater,1600); });
 // level-up cards of a character run: 5 shown · free players pick from the first 3 (classic keeps its 3 cards)
 function cardCount(){ return G&&G.char&&G.mode&&G.mode.cards!==false?RSHOP.cards:3; }
 function cardLocked(i){ return !!(G&&G.char)&&i>=RSHOP.freeCards&&!isSupporter(); }
@@ -4445,7 +4620,8 @@ function svlNote(text,kind){ try{ if(typeof toast==='function') toast(text,kind)
 function svlMergeBest(s,best){ const imp=svImportBest(best); if(!imp) return; const c=s.acct.records.classic;
   for(const k in imp) if(!c[k]||imp[k].score>c[k].score) c[k]=imp[k]; }
 function loadSaveFor(owner){
-  owner=svOwner(owner); clearTimeout(svlTimer); svlTimer=0; svlOwner=owner;
+  owner=svOwner(owner); if(svlTimer&&SAVE&&owner!==svlOwner) saveNow('switch');   // M3 sign-in / out: a pending write goes to its own key first
+  clearTimeout(svlTimer); svlTimer=0; svlOwner=owner;
   if(svlSandbox){ if(!SAVE){ SAVE=migrateSave(null,null); SAVE.owner=owner; } svlMark(); return SAVE; }
   svlHook();
   const key=svlKeyFor(owner), best=svlBest(), raw=STORE.get(key);
@@ -4666,6 +4842,22 @@ function importSave(json){
   if(SAVE!==n) return {ok:false, err:SVL_RACE};                            // the write found another tab's save and reloaded instead
   svlMark(); BUS.emit('char',curChar());
   return {ok:true, err:'', warn:stored||svlSandbox?'':'บันทึกลงเครื่องไม่ได้ · เซฟที่นำเข้าอยู่ในหน่วยความจำเท่านั้น ปิดหน้านี้แล้วจะหาย'}; }
+// M3 F12: a cloud copy (adopt / restore / conflict pick) or a guest save moved up becomes owner's save by the import rules: new
+// lineage wb after the one it replaces (wp), one stamped svlWrite → no tab takes it for a stale copy (svlStaleP) · true = stored
+function svlFromCloud(owner,obj){
+  owner=svOwner(owner); if(!owner||svlSandbox||!svObj(obj)||!Number.isInteger(obj.v)||obj.v<1||obj.v>SCHEMA_V) return false;
+  let n; try{ n=migrateSave(JSON.parse(JSON.stringify(obj)),null); }catch(e){ console.error(e); return false; }
+  if(svlTimer&&SAVE&&svlOwner!==owner) saveNow('switch');
+  clearTimeout(svlTimer); svlTimer=0; svlHook();
+  const key=svlKeyFor(owner), cur=STORE.get(key), sc=svlParse(cur), mine=svlOwner===owner&&SAVE&&!SAVE.ro?SAVE:null;
+  const par=sc.k==='ok'&&sc.o.v<=SCHEMA_V&&typeof sc.o.wb==='string'&&Number.isInteger(sc.o.wc)?sc.o:mine;
+  const okWp=p=>svObj(p)&&typeof p.wb==='string'&&/^w_[a-z0-9_]{1,24}$/.test(p.wb)&&Number.isInteger(p.wc)&&p.wc>=0;
+  n.wp=par?[{wb:par.wb, wc:Math.max(svlWcOf(par),mine&&par.wb===mine.wb?svlWcOf(mine):0)}].concat(Array.isArray(par.wp)?par.wp:[]).filter(okWp).slice(0,4).map(p=>({wb:p.wb, wc:Math.min(SV_WCMAX,p.wc)})):[];
+  n.wb=uid('w_'); n.wc=Math.max(svlWcOf(mine),par?svlWcOf(par):0); n.owner=owner;
+  svlOwner=owner; SAVE=n; svlLast=cur; svlSeen=null; svlMine=''; svlFrom='cloud'; svlRaw=null;
+  const stored=svlWrite('cloud',false);
+  if(SAVE!==n) return false;
+  svlMark(); BUS.emit('char',curChar()); return stored; }
 function saveReadOnly(){ return !!(SAVE&&SAVE.ro); }
 // what the shell can show: owner, sandbox, read only, whether the last write reached localStorage, where the save came from,
 // persist = storage holds a save a reload would bring back (false: blocked storage, memory only — nothing to roll back to)
@@ -5036,39 +5228,722 @@ function pgStashPut(A,id,n,d){   // stack n of id into the stash (open stacks fi
 function pgUidHeld(u){ if(!SAVE) return false; const has=l=>Array.isArray(l)&&l.some(x=>x&&x.u===u);
   return has(SAVE.acct&&SAVE.acct.stash)||(Array.isArray(SAVE.chars)&&SAVE.chars.some(c=>c&&has(c.inv))); }
 /* ================= 43-auth.js · lane N · GoTrue raw fetch + PKCE (§6.7) · the only file with the Supabase URL/key ================= */
-/* M0 stub: frozen signatures from DESIGN §7.8, neutral values — classic never calls these. Lane N writes the real body. */
+/* Gate: CLOUD_OK (AUTH_ON + a CLOUD_HOSTS host · false in the claude.ai artifact). athRaw() = the only fetch( (28 / 59a use
+   authFetch / authApi) and rejects when !CLOUD_OK. athInit() (session, listeners, refresh timer, cloudInit) returns first when
+   !CLOUD_OK. Signed out nothing is sent except the sign-in / sign-up forms. At load: declarations + DEV.auth only. */
 const SUPA={ url:'https://edmwctmnasggdtdbcxkb.supabase.co', key:'sb_publishable_uSbGPoK1lGd6PMUUGpu4uw_N_HfOIbF' };
-const AUTH_ON=false;                                   // เปิดหลังเจ้าของอนุมัติ (M3)
+const AUTH_ON=true;                                    // M3 เปิดแล้ว (rg_001 อยู่ในฐานข้อมูล · ทดสอบ RLS ผ่าน 2026-11-10)
 const CLOUD_HOSTS=['runeguard-lac.vercel.app','localhost','127.0.0.1'];
 const CLOUD_OK=AUTH_ON&&CLOUD_HOSTS.includes(location.hostname)
   &&(location.protocol==='https:'||location.hostname!=='runeguard-lac.vercel.app')
   &&!!(self.crypto&&crypto.subtle)&&typeof fetch==='function';
 const RURL=location.origin+'/';                        // ห้ามอ่าน redirect จาก query (กัน open redirect)
 const AUTH={state:'off', s:null};                      // state: 'off'|'guest'|'busy'|'in'|'expired' · s = session
-function authSignUp(email,pw){ return Promise.resolve({ok:false, msg:'ระบบบัญชียังไม่เปิดใช้'}); }
-function authSignIn(email,pw){ return Promise.resolve({ok:false, msg:'ระบบบัญชียังไม่เปิดใช้', code:'off'}); }
-function authGoogle(){}
-function authHandleRedirect(){ return Promise.resolve(null); }
-function authResend(email){}
-function authRecover(email){}
-function authSetPassword(pw){}
-function authSignOut(){}
-function authToken(){ return Promise.resolve(null); }
-function authFetch(path,opts){ return Promise.reject(new Error('AUTH_ON=false')); }
-function authEmailMasked(){ return ''; }
 
+const ATH_TIMEOUT=4000, ATH_REDIRECT_MS=3000, ATH_SKEW=60000, ATH_LOCK_MS=5000, ATH_RESEND_MS=60000, ATH_PW_MIN=8;
+// PKCE: a slot per flow (F10) · e-mail links 24 h (GoTrue ends the flow in ~5 min; the kind still picks the message)
+const ATH_PKCE_TTL={google:600000, signup:864e5, recovery:864e5}, ATH_KINDS=['google','signup','recovery'];
+const ATH_K={s:'runeguard.auth', pkce:'runeguard.auth.pkce', guest:'runeguard.guestOK'};   // keys of §6.2
+const ATH_UUID=/^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+const ATH_B64='ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789-_';
+// one text for sign-up, recover and resend, whatever GoTrue answers (no guessing which email has an account)
+const ATH_NEUTRAL='ถ้าอีเมลนี้ใช้ได้ เราส่งลิงก์ไปแล้ว ตรวจกล่องจดหมาย (รวมถึงสแปม) · ถ้ามีบัญชีอยู่แล้ว ลองเข้าสู่ระบบ';
+const ATH_LINK_BAD='ลิงก์หมดอายุหรือใช้ไปแล้ว ขอลิงก์ใหม่', ATH_OFFLINE='เชื่อมต่อไม่ได้ · เล่นต่อแบบออฟไลน์ได้',
+      ATH_EXPIRED='เซสชันหมดอายุ · เข้าสู่ระบบใหม่', ATH_BAD_EMAIL='รูปแบบอีเมลไม่ถูกต้อง', ATH_SHORT_PW='รหัสผ่านสั้นเกินไป (อย่างน้อย 8 ตัว)';
+const ATH_MSG={   // GoTrue error_code (and our own client codes) → Thai · shown with textContent only
+  invalid_credentials:'อีเมลหรือรหัสผ่านไม่ถูกต้อง',
+  email_not_confirmed:'ยังไม่ได้ยืนยันอีเมล',
+  over_email_send_rate_limit:'ส่งอีเมลถี่เกินไป รอสักครู่ หรือเข้าด้วย Google',
+  over_request_rate_limit:'ลองใหม่อีกครั้งในอีกสักครู่',
+  weak_password:ATH_SHORT_PW,
+  email_address_invalid:ATH_BAD_EMAIL, validation_failed:ATH_BAD_EMAIL,
+  flow_state_expired:ATH_LINK_BAD, flow_state_not_found:ATH_LINK_BAD, bad_code_verifier:ATH_LINK_BAD, otp_expired:ATH_LINK_BAD,
+  timeout:ATH_OFFLINE, network:ATH_OFFLINE,
+  server:'ระบบบัญชีขัดข้องชั่วคราว',
+  same_password:'รหัสผ่านใหม่ต้องไม่ซ้ำกับรหัสเดิม',
+  session_expired:ATH_EXPIRED, session_not_found:ATH_EXPIRED, refresh_token_not_found:ATH_EXPIRED,
+  refresh_token_already_used:ATH_EXPIRED, bad_jwt:ATH_EXPIRED, noauth:ATH_EXPIRED,
+  access_denied:'ยกเลิกการเข้าสู่ระบบแล้ว',
+  email_bad:ATH_BAD_EMAIL, pw_short:ATH_SHORT_PW, pw_mismatch:'รหัสผ่านสองช่องไม่ตรงกัน',
+  resend_wait:'รอสักครู่ก่อนขอลิงก์อีกครั้ง (ทุก 60 วิ)',
+  off:'ระบบบัญชียังไม่เปิดใช้',
+  unknown:'เกิดข้อผิดพลาด ลองใหม่อีกครั้ง'
+};
+const ATH_NOVER={   // ?code= arrived but this browser has no (fresh) verifier: other device, other browser, iOS PWA → Safari
+  signup:'ยืนยันอีเมลสำเร็จ · เข้าสู่ระบบด้วยรหัสผ่านได้เลย',
+  google:'เข้าสู่ระบบในหน้าต่างนี้ไม่สำเร็จ ลองอีกครั้ง หรือใช้อีเมล',
+  recovery:'ลิงก์ตั้งรหัสผ่านใหม่หมดอายุ หรือเปิดคนละเบราว์เซอร์กับที่ขอ · ขอลิงก์ใหม่ได้ที่ "ลืมรหัสผ่าน?"',
+  any:'ถ้าเพิ่งยืนยันอีเมล เข้าสู่ระบบด้วยรหัสผ่านได้เลย · ถ้าเข้าด้วย Google ไม่สำเร็จ ลองอีกครั้ง หรือใช้อีเมล · ลิงก์ตั้งรหัสผ่านใหม่ขอใหม่ได้ที่ "ลืมรหัสผ่าน?"'
+};
+const ATH={inited:false, refreshP:null, timer:0, resendAt:0, outLater:false};
+
+/* ---------- PKCE (RFC 7636 S256) ---------- */
+function athB64url(bytes){   // bytes → base64url without padding (no btoa: works the same in node tests)
+  let s='', i=0; const b=bytes, n=b.length;
+  for(;i+2<n;i+=3){ const v=b[i]<<16|b[i+1]<<8|b[i+2]; s+=ATH_B64[v>>18&63]+ATH_B64[v>>12&63]+ATH_B64[v>>6&63]+ATH_B64[v&63]; }
+  if(n-i===1){ const v=b[i]<<16; s+=ATH_B64[v>>18&63]+ATH_B64[v>>12&63]; }
+  else if(n-i===2){ const v=b[i]<<16|b[i+1]<<8; s+=ATH_B64[v>>18&63]+ATH_B64[v>>12&63]+ATH_B64[v>>6&63]; }
+  return s;
+}
+function athVerifier(){ const a=new Uint8Array(32); crypto.getRandomValues(a); return athB64url(a); }   // 43 chars
+function athChallenge(v){ return crypto.subtle.digest('SHA-256',new TextEncoder().encode(v)).then(d=>athB64url(new Uint8Array(d))); }
+// runeguard.auth.pkce = {google:{v,ts}, signup:{v,ts}, recovery:{v,ts}} · one pending flow per kind (F10)
+function athPkceAll(){ let o=null; try{ o=JSON.parse(STORE.get(ATH_K.pkce)||'null'); }catch(e){}
+  const out={}; if(!o||typeof o!=='object'||Array.isArray(o)) return out;
+  for(const k of ATH_KINDS){ const s=o[k]; if(s&&typeof s==='object'&&typeof s.v==='string'&&/^[A-Za-z0-9_-]{43,128}$/.test(s.v)) out[k]={v:s.v, ts:+s.ts||0}; }
+  return out; }
+function athPkcePut(all){ if(Object.keys(all).length) STORE.set(ATH_K.pkce,JSON.stringify(all)); else STORE.del(ATH_K.pkce); }
+function athPkceNew(kind){   // store {v, ts} in this kind's slot (the other kinds stay) and give the S256 challenge
+  const v=athVerifier(), all=athPkceAll(); all[kind]={v, ts:Date.now()}; athPkcePut(all); return athChallenge(v);
+}
+// for a ?code= → {kinds (newest first), live:[{kind, v} within TTL]} · expired slots go · a used one goes in athPkceDrop
+function athPkceTake(now){
+  const t=now||Date.now(), all=athPkceAll(), kinds=Object.keys(all).sort((a,b)=>all[b].ts-all[a].ts), live=[];
+  for(const k of kinds){ const s=all[k]; if(t-s.ts<=ATH_PKCE_TTL[k]&&s.ts<=t+ATH_SKEW) live.push({kind:k, v:s.v}); else delete all[k]; }
+  athPkcePut(all); return {kinds, live};
+}
+function athPkceDrop(kind){ const all=athPkceAll(); delete all[kind]; athPkcePut(all); }
+
+/* ---------- request builders (pure) · authFetch adds apikey, Bearer and the 4 s timeout ---------- */
+function athQ(p){ return Object.keys(p).map(k=>k+'='+encodeURIComponent(p[k])).join('&'); }
+function athReq(op,a){   // → {path, opts} · emails and passwords only ever go in the JSON body, never in the URL
+  a=a||{}; const rt=athQ({redirect_to:RURL}), J=json=>({method:'POST', auth:false, json});
+  switch(op){
+    case 'signup':   return {path:'/auth/v1/signup?'+rt, opts:J({email:a.email, password:a.pw, code_challenge:a.ch, code_challenge_method:'s256'})};
+    case 'resend':   return {path:'/auth/v1/resend?'+rt, opts:J({type:'signup', email:a.email})};
+    case 'password': return {path:'/auth/v1/token?grant_type=password', opts:J({email:a.email, password:a.pw})};
+    case 'pkce':     return {path:'/auth/v1/token?grant_type=pkce', opts:J({auth_code:a.code, code_verifier:a.v})};
+    case 'refresh':  return {path:'/auth/v1/token?grant_type=refresh_token', opts:J({refresh_token:a.rt})};
+    case 'recover':  return {path:'/auth/v1/recover?'+rt, opts:J({email:a.email, code_challenge:a.ch, code_challenge_method:'s256'})};
+    case 'setpw':    return {path:'/auth/v1/user', opts:{method:'PUT', json:{password:a.pw}}};
+    case 'user':     return {path:'/auth/v1/user', opts:{method:'GET', token:a.token}};   // token: check an implicit-flow token first
+    case 'logout':   return {path:'/auth/v1/logout?scope=local', opts:{method:'POST'}};   // never the default global scope (all BAZI apps)
+  }
+  return null;
+}
+function athGoogleUrl(ch){ return SUPA.url+'/auth/v1/authorize?'+athQ({provider:'google', redirect_to:RURL, code_challenge:ch, code_challenge_method:'s256'}); }
+
+/* ---------- transport ---------- */
+function athErr(code){ const e=new Error(code); e.code=code; return e; }
+function athRaw(url,init){   // the only fetch( of lane N · one AbortController covers headers + body · 4 s
+  if(!CLOUD_OK) return Promise.reject(athErr('off'));
+  const ac=new AbortController(), t=setTimeout(()=>ac.abort(),ATH_TIMEOUT);
+  return fetch(url,Object.assign({},init,{signal:ac.signal, cache:'no-store', credentials:'omit', referrerPolicy:'no-referrer'}))
+    .then(r=>r.text().then(tx=>new Response([101,204,205,304].includes(r.status)?null:tx,{status:r.status, headers:r.headers})))
+    .catch(()=>{ throw athErr(ac.signal.aborted?'timeout':'network'); })
+    .finally(()=>clearTimeout(t));
+}
+async function authFetch(path,opts){   // path = '/auth/v1/…' | '/rest/v1/rg_…' · opts {method, headers, json|body, auth:false, token, keepalive}
+  if(!CLOUD_OK) throw athErr('off');
+  if(typeof path!=='string'||!/^\/(auth\/v1\/|rest\/v1\/rg_)/.test(path)) throw athErr('path');
+  const o=opts||{}, jwt=o.auth!==false;
+  for(let tries=0;;tries++){
+    const h=Object.assign({},o.headers||{}); delete h.Authorization; delete h.authorization; h.apikey=SUPA.key;   // publishable key never in Authorization
+    if(jwt){ const tk=o.token||await authToken(); if(!tk) throw athErr(AUTH.state==='in'?'network':'noauth'); h.Authorization='Bearer '+tk; }
+    const body=o.json!==undefined?JSON.stringify(o.json):o.body, m=o.method||'GET';
+    if(body!==undefined) h['Content-Type']='application/json';
+    if(path.startsWith('/rest/')) h[m==='GET'||m==='HEAD'?'Accept-Profile':'Content-Profile']='public';   // F11: never another schema of the shared project
+    const r=await athRaw(SUPA.url+path,{method:m, headers:h, body, keepalive:!!o.keepalive});
+    if(r.status===401&&jwt&&!o.token&&tries===0&&await athRefresh(true)==='ok') continue;   // 401 → refresh → retry once
+    return r;
+  }
+}
+// this site's own Vercel functions (/api/checkout) with the user's access token · never another origin (location.origin only)
+async function authApi(path,opts){
+  if(!CLOUD_OK) throw athErr('off');
+  if(typeof path!=='string'||!/^\/api\/[a-z][a-z-]{0,30}$/.test(path)) throw athErr('path');
+  const o=opts||{}, h={};
+  if(o.auth!==false){ const tk=await authToken(); if(!tk) throw athErr(AUTH.state==='in'?'network':'noauth'); h.Authorization='Bearer '+tk; }
+  const body=o.json!==undefined?JSON.stringify(o.json):undefined; if(body!==undefined) h['Content-Type']='application/json';
+  return athRaw(location.origin+path,{method:o.method||'GET', headers:h, body});
+}
+function athJson(r){ return r.text().then(t=>{ try{ return t?JSON.parse(t):null; }catch(e){ return null; } },()=>null); }
+async function athCall(op,a){   // → {ok, status, data, code}
+  const q=athReq(op,a);
+  try{ const r=await authFetch(q.path,q.opts), data=await athJson(r); return {ok:r.ok, status:r.status, data, code:r.ok?'':athCode(r.status,data)}; }
+  catch(e){ return {ok:false, status:0, data:null, code:(e&&e.code)||'network'}; }
+}
+function athCode(status,d){   // GoTrue body → error code (new API: error_code · old API: error + description)
+  d=d&&typeof d==='object'?d:{};
+  let c=typeof d.error_code==='string'?d.error_code:typeof d.code==='string'?d.code:typeof d.error==='string'?d.error:'';
+  if(c==='invalid_grant'){ const t=String(d.error_description||d.msg||'').toLowerCase();
+    c=t.includes('not confirmed')?'email_not_confirmed':t.includes('invalid login')?'invalid_credentials'
+      :(t.includes('verifier')||t.includes('flow state'))?'flow_state_not_found':t.includes('refresh token')?'refresh_token_not_found':''; }
+  if(!c) c=status===429?'over_request_rate_limit':status>=500?'server':status===401?'bad_jwt':status===0?'network':'unknown';
+  return c;
+}
+function athErrTh(code,status){   // never shows server text (error_description in a URL is attacker-controlled)
+  if(code&&code!=='unknown'&&Object.prototype.hasOwnProperty.call(ATH_MSG,code)) return ATH_MSG[code];
+  if(status>=500) return ATH_MSG.server;
+  if(status===429) return ATH_MSG.over_request_rate_limit;
+  return ATH_MSG.unknown;
+}
+function athEmailOk(e){ return typeof e==='string'&&e.length<=254&&/^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/.test(e); }
+function athCheck(email,pw){ return !athEmailOk(email)?'email_bad':(pw!==undefined&&String(pw).length<ATH_PW_MIN)?'pw_short':''; }
+
+/* ---------- session ---------- */
+function athSessionFrom(d,prevUser){   // GoTrue token answer → {access_token, refresh_token, expires_at(ms), user:{id,email}} | null
+  if(!d||typeof d!=='object'||typeof d.access_token!=='string'||!d.access_token||typeof d.refresh_token!=='string') return null;
+  const u=d.user&&typeof d.user==='object'?d.user:prevUser;
+  if(!u||!ATH_UUID.test(String(u.id||''))) return null;
+  const exp=+d.expires_in>0?Date.now()+d.expires_in*1000:+d.expires_at>0?d.expires_at*1000:Date.now()+3600000;
+  return {access_token:d.access_token, refresh_token:d.refresh_token, expires_at:Math.round(exp),
+          user:{id:String(u.id).toLowerCase(), email:typeof u.email==='string'?u.email:''}};
+}
+function athStoreRead(){
+  let o=null; try{ o=JSON.parse(STORE.get(ATH_K.s)||'null'); }catch(e){}
+  return o&&typeof o==='object'&&typeof o.access_token==='string'&&typeof o.refresh_token==='string'&&o.user&&ATH_UUID.test(String(o.user.id||''))?o:null;
+}
+function athAccept(s,ev){ AUTH.s=s; STORE.set(ATH_K.s,JSON.stringify(s)); AUTH.state='in'; athSchedule(); BUS.emit('auth',ev||'in'); }
+function athSchedule(){
+  clearTimeout(ATH.timer); ATH.timer=0;
+  if(!CLOUD_OK||!AUTH.s||AUTH.state!=='in') return;
+  const ms=Math.min(2147483000,Math.max(1000,AUTH.s.expires_at-ATH_SKEW-Date.now()));
+  ATH.timer=setTimeout(()=>athRefresh(false),ms);
+}
+function athRefresh(force){   // single flight: one per tab (refreshP) and one across tabs (navigator.locks, else a 5 s lock in runeguard.auth)
+  if(!CLOUD_OK||!AUTH.s) return Promise.resolve('none');
+  if(ATH.refreshP) return ATH.refreshP;
+  const run=()=>athRefreshLocked(force);
+  const p=(typeof navigator!=='undefined'&&navigator.locks&&navigator.locks.request)?navigator.locks.request('runeguard-auth',run):athLockFallback(run);
+  ATH.refreshP=Promise.resolve(p).catch(()=>'offline').finally(()=>{ ATH.refreshP=null; });
+  return ATH.refreshP;
+}
+async function athRefreshLocked(force){
+  const mine=AUTH.s; if(!mine) return 'none';
+  const st=athStoreRead();
+  if(st&&st.user.id!==mine.user.id){ AUTH.state='expired'; clearTimeout(ATH.timer); BUS.emit('auth','expired'); return 'expired'; }   // other tab = other user: never overwrite it
+  if(st&&st.refresh_token!==mine.refresh_token&&st.expires_at-ATH_SKEW>Date.now()){ AUTH.s=st; AUTH.state='in'; athSchedule(); return 'ok'; }   // other tab rotated already
+  if(!force&&mine.expires_at-ATH_SKEW>Date.now()) return 'ok';
+  const r=await athCall('refresh',{rt:mine.refresh_token});
+  if(r.ok){ const s=athSessionFrom(r.data,mine.user); if(s){ athAccept(s,'refresh'); return 'ok'; } }
+  if(r.status===400||r.status===401){ AUTH.state='expired'; clearTimeout(ATH.timer); BUS.emit('auth','expired'); return 'expired'; }   // owner stays the same uid
+  return 'offline';
+}
+async function athLockFallback(run){   // no navigator.locks: field lk (ms) inside runeguard.auth, held at most 5 s
+  const t0=Date.now();
+  for(;;){ const o=athStoreRead(); if(!o||!o.lk||Date.now()-o.lk>ATH_LOCK_MS||Date.now()-t0>ATH_LOCK_MS) break; await new Promise(r=>setTimeout(r,250)); }
+  athLockSet(Date.now());
+  try{ return await run(); } finally{ athLockSet(0); }
+}
+function athLockSet(ms){ const o=athStoreRead(); if(!o) return; if(ms) o.lk=ms; else delete o.lk; STORE.set(ATH_K.s,JSON.stringify(o)); }
+function athOnStorage(){   // another tab refreshed, signed in or signed out
+  const st=athStoreRead();
+  if(!st){ if(AUTH.s){ AUTH.s=null; clearTimeout(ATH.timer); AUTH.state='guest'; BUS.emit('auth','out'); athGuestSave(); } return; }
+  if(AUTH.s&&st.user.id===AUTH.s.user.id){ const was=AUTH.state; AUTH.s=st; if(st.expires_at>Date.now()) AUTH.state='in'; athSchedule(); BUS.emit('auth',was==='in'?'refresh':'in'); }
+  else if(AUTH.s){ AUTH.state='expired'; clearTimeout(ATH.timer); BUS.emit('auth','expired'); }
+}
+// signed out (here / another tab) → guest save · mid-run after the run's end (its reward lands on the account save first)
+function athGuestSave(){
+  if(typeof G!=='undefined'&&G&&G.char&&!G.over){ ATH.outLater=true; return; }
+  ATH.outLater=false; if(SAVE&&SAVE.owner!=null) loadSaveFor(null);
+}
+function athInit(){   // once, and only when CLOUD_OK: restore the session, listen, start cloud sync
+  if(!CLOUD_OK) return false;
+  if(ATH.inited) return true; ATH.inited=true;
+  const s=athStoreRead();
+  if(s){ AUTH.s=s; AUTH.state='in'; athSchedule(); } else AUTH.state='guest';
+  BUS.on('runEnd',()=>{ if(ATH.outLater&&!AUTH.s) setTimeout(athGuestSave,1200); });   // after onRunEnd + its save
+  addEventListener('storage',e=>{ if(e.key===ATH_K.s||e.key===null) athOnStorage(); });
+  document.addEventListener('visibilitychange',()=>{
+    if(document.visibilityState==='visible'&&AUTH.s&&AUTH.state==='in'&&AUTH.s.expires_at-ATH_SKEW<=Date.now()) athRefresh(false); });
+  cloudInit();
+  return true;
+}
+
+/* ---------- boot: ?code= / #access_token= / ?error= (§6.7) ---------- */
+function authHandleRedirect(){   // never blocks the first frame: boot gets a result within 3 s (the exchange may finish later)
+  if(!athInit()) return Promise.resolve(null);
+  const job=athRedirect().then(r=>{ if(r) BUS.emit('auth','redirect',r); return r; },e=>{ console.error('auth redirect',e&&e.code); return null; });
+  return new Promise(res=>{ const t=setTimeout(()=>res({kind:'slow', msg:'กำลังเข้าสู่ระบบ…'}),ATH_REDIRECT_MS); job.then(r=>{ clearTimeout(t); res(r); }); });
+}
+function athUrlAuth(){   // what the address carries for auth: ?code= / ?error= / #access_token= / #error=
+  const q=new URLSearchParams(location.search), hs=location.hash.slice(1), h=new URLSearchParams(hs.includes('=')?hs:'');
+  return {q, h, code:q.get('code')||'', err:q.get('error_code')||q.get('error')||h.get('error_code')||h.get('error')||'', at:h.get('access_token')||''};
+}
+async function athRedirect(){
+  const {q, h, code, err, at}=athUrlAuth();
+  if(!code&&!err&&!at){ if(AUTH.s) cloudOnLogin(); return null; }   // F1: a kept session plays (and syncs) its account save
+  const tokenHash=['access_token','refresh_token','expires_in','type','error','error_code','error_description'].some(k=>h.has(k));
+  q.delete('code'); q.delete('error'); q.delete('error_code'); q.delete('error_description');   // other query keys (?paid=) stay for 59a
+  history.replaceState(history.state,'',location.pathname+(q.toString()?'?'+q:'')+(tokenHash?'':location.hash));   // code / tokens leave the address bar first (#dev stays)
+  if(err) return {kind:'error', msg:athErrTh(err,0)};
+  if(code){
+    const pk=athPkceTake(), one=pk.kinds.length===1?pk.kinds[0]:'';
+    if(!pk.live.length) return {kind:'nover', msg:ATH_NOVER[one||'any']};
+    let r=null, kind='';
+    for(const c of pk.live){   // newest first · a wrong verifier (another pending flow) leaves the code usable: try the next one
+      r=await athCall('pkce',{code, v:c.v}); kind=c.kind;
+      if(r.ok||r.code!=='bad_code_verifier') break; }
+    if(!r.ok){   // sign-up / reset links are verified by GoTrue before ?code= comes back: the e-mail IS confirmed (F10)
+      const k1=pk.live.length===1?kind:'';
+      if(!['flow_state_expired','flow_state_not_found','bad_code_verifier'].includes(r.code)) return {kind:'error', msg:athErrTh(r.code,r.status)};
+      if(k1) athPkceDrop(k1);
+      return {kind:'nover', msg:ATH_NOVER[k1||'any']}; }
+    athPkceDrop(kind);
+    const s=athSessionFrom(r.data); if(!s) return {kind:'error', msg:ATH_MSG.unknown};
+    athAccept(s,'in'); cloudOnLogin();
+    return {kind, msg:kind==='signup'?'ยืนยันอีเมลสำเร็จ':kind==='recovery'?'ตั้งรหัสผ่านใหม่ได้เลย':'เข้าสู่ระบบเรียบร้อย'};
+  }
+  const u=await athCall('user',{token:at});   // implicit link (resend): ask GoTrue whose token this is before keeping it
+  if(!u.ok) return {kind:'error', msg:athErrTh(u.code,u.status)};
+  const s=athSessionFrom({access_token:at, refresh_token:h.get('refresh_token')||'', expires_in:+h.get('expires_in')||3600, user:u.data});
+  if(!s) return {kind:'error', msg:ATH_MSG.unknown};
+  athAccept(s,'in'); cloudOnLogin();
+  const ty=h.get('type'), kind=ty==='recovery'?'recovery':ty==='signup'?'signup':'implicit';
+  return {kind, msg:kind==='signup'?'ยืนยันอีเมลสำเร็จ':kind==='recovery'?'ตั้งรหัสผ่านใหม่ได้เลย':'เข้าสู่ระบบเรียบร้อย'};
+}
+function authWantsScreen(){   // boot (§8.1): show scrAuth? (CLOUD_OK, not signed in, guest not chosen, no sign-in coming back in the URL)
+  if(!athInit()||AUTH.state==='in'||AUTH.state==='expired'||STORE.get(ATH_K.guest)==='1') return false;
+  const u=athUrlAuth(); return !u.code&&!u.at&&!u.err;
+}
+// boot (99): a kept session (in / expired) plays its account cache at once (F1) · no cache yet → guest, then the link flow
+function authBootOwner(){
+  if(!athInit()||!AUTH.s) return null;
+  const id=AUTH.s.user.id; return STORE.get('runeguard.save.u.'+id)!==null?id:null;
+}
+function authChooseGuest(){ if(!athInit()) return false; STORE.set(ATH_K.guest,'1'); if(!AUTH.s) AUTH.state='guest'; BUS.emit('auth','guest'); return true; }
+
+/* ---------- actions (§6.7 table) ---------- */
+async function authSignUp(email,pw){
+  if(!athInit()) return {ok:false, msg:ATH_MSG.off};
+  const bad=athCheck(email,pw); if(bad) return {ok:false, msg:athErrTh(bad)};
+  const ch=await athPkceNew('signup');
+  const r=await athCall('signup',{email, pw, ch});
+  if(r.ok){ const s=athSessionFrom(r.data); if(s){ athAccept(s,'in'); cloudOnLogin(); return {ok:true, msg:'สมัครและเข้าสู่ระบบแล้ว', in:true}; } return {ok:true, msg:ATH_NEUTRAL}; }
+  if(r.code==='user_already_exists'||r.code==='email_exists') return {ok:true, msg:ATH_NEUTRAL};
+  return {ok:false, msg:athErrTh(r.code,r.status)};
+}
+async function authSignIn(email,pw){
+  if(!athInit()) return {ok:false, msg:ATH_MSG.off, code:'off'};
+  const bad=athCheck(email); if(bad) return {ok:false, msg:athErrTh(bad), code:bad};
+  if(!pw) return {ok:false, msg:ATH_MSG.invalid_credentials, code:'invalid_credentials'};
+  AUTH.state='busy';
+  const r=await athCall('password',{email, pw});
+  const s=r.ok&&athSessionFrom(r.data);
+  if(s){ athAccept(s,'in'); cloudOnLogin(); return {ok:true, msg:'', code:''}; }
+  AUTH.state=AUTH.s?'expired':'guest';
+  const code=r.ok?'unknown':r.code; return {ok:false, msg:athErrTh(code,r.status), code};
+}
+async function authGoogle(){
+  if(!athInit()) return false;
+  const ch=await athPkceNew('google');
+  location.assign(athGoogleUrl(ch)); return true;
+}
+async function authResend(email){
+  if(!athInit()) return {ok:false, msg:ATH_MSG.off};
+  if(!athEmailOk(email)) return {ok:false, msg:ATH_BAD_EMAIL};
+  if(Date.now()-ATH.resendAt<ATH_RESEND_MS) return {ok:false, msg:ATH_MSG.resend_wait};
+  ATH.resendAt=Date.now();
+  return athNeutral(await athCall('resend',{email}));
+}
+async function authRecover(email){
+  if(!athInit()) return {ok:false, msg:ATH_MSG.off};
+  if(!athEmailOk(email)) return {ok:false, msg:ATH_BAD_EMAIL};
+  const ch=await athPkceNew('recovery');
+  return athNeutral(await athCall('recover',{email, ch}));
+}
+function athNeutral(r){   // resend / recover: only errors that say nothing about the account are shown, the rest = neutral text
+  const shown=['over_email_send_rate_limit','over_request_rate_limit','timeout','network','server','email_address_invalid','validation_failed'];
+  return r.ok||(!shown.includes(r.code)&&r.status<500)?{ok:true, msg:ATH_NEUTRAL}:{ok:false, msg:athErrTh(r.code,r.status)};
+}
+async function authSetPassword(pw){
+  if(!athInit()) return {ok:false, msg:ATH_MSG.off};
+  if(typeof pw!=='string'||pw.length<ATH_PW_MIN) return {ok:false, msg:ATH_SHORT_PW};
+  if(!AUTH.s) return {ok:false, msg:ATH_EXPIRED};
+  const r=await athCall('setpw',{pw});
+  return r.ok?{ok:true, msg:'ตั้งรหัสผ่านใหม่แล้ว'}:{ok:false, msg:athErrTh(r.code,r.status)};
+}
+async function authSignOut(){   // this device only: logout?scope=local, then local sign-out even when offline
+  if(!athInit()||!AUTH.s) return {ok:false};
+  if(AUTH.state==='in') await athCall('logout');
+  AUTH.s=null; STORE.del(ATH_K.s); clearTimeout(ATH.timer); AUTH.state='guest'; STORE.set(ATH_K.guest,'1');
+  BUS.emit('auth','out');
+  athGuestSave();   // back to the guest save · runeguard.save.u.<uid> stays as this account's offline cache
+  return {ok:true};
+}
+async function authToken(){
+  if(!CLOUD_OK||!AUTH.s||AUTH.state==='expired') return null;
+  if(AUTH.s.expires_at-ATH_SKEW<=Date.now()){
+    const r=await athRefresh(false);
+    if(r!=='ok') return r==='offline'&&AUTH.s&&AUTH.s.expires_at>Date.now()?AUTH.s.access_token:null;
+  }
+  return AUTH.s?AUTH.s.access_token:null;
+}
+function authEmailMasked(){   // 'lu***@gmail.com' · account page only
+  const e=AUTH.s&&AUTH.s.user&&AUTH.s.user.email;
+  if(typeof e!=='string'||e.lastIndexOf('@')<1) return '';
+  const at=e.lastIndexOf('@'), loc=Array.from(e.slice(0,at));
+  return loc.slice(0,loc.length>2?2:1).join('')+'***@'+e.slice(at+1);
+}
+
+DEV.auth={
+  state(){ return AUTH.state; },
+  useSession(o){   // localhost + a test token only (§7.9)
+    if(!CLOUD_OK||!['localhost','127.0.0.1'].includes(location.hostname)||!athInit()) return false;
+    const s=athSessionFrom(o); if(!s) return false; athAccept(s,'in'); return true;
+  }
+};
 /* ================= 44-cloud-sync.js · lane N · PostgREST CAS · sync decisions (pure) ================= */
-/* M0 stub: frozen signatures from DESIGN §7.8, neutral values — classic never calls these. Lane N writes the real body. */
-function cloudStatus(){ return {k:'off', text:'เล่นในเครื่องเท่านั้น'}; }
-function cloudPull(){ return Promise.resolve('none'); }
-function cloudPush(reason){ return Promise.resolve('offline'); }
-function cloudOnLogin(){}
-function cloudResolve(choice){}                        // 'local'|'cloud'
-function cloudRestoreBackup(){}
-function cloudWipe(){}
-function syncDecide(localState,srvHead){ return 'noop'; }   // 'adopt'|'push'|'conflict'|'create'|'noop'
-function linkDecide(guestSave,srvHead){ return 'noop'; }    // 'adopt'|'askMove'|'choose'|'noop'
+/* Gate: all requests go through authFetch (43, throws 'off' when !CLOUD_OK); public entries return first when !CLOUD_OK or signed
+   out; listeners/timers only from cloudInit (athInit, CLOUD_OK). Pure: syncDecide linkDecide synSafeSummary synReq (test/43-sync).
+   CRs of DESIGN §6.6: F1 boot plays the account save · F2 a row that is an older copy of our own lineage (wb, wc ≤ ours) = our write
+   landed unseen → fast-forward · F3 409 23505 row exists / 23503 account gone · F4 failures shown, bounded retry · F6 a synced row
+   now gone = deleted elsewhere, never re-created alone · F7 restore keeps unpushed progress · F8 empty never-synced ≠ dirty ·
+   F12 cloud copies enter through svlFromCloud (41). */
+const SYN_BASE='/rest/v1/rg_saves';
+const SYN_HEAD='select=slot,schema_v,rev,device,summary,updated_at,wb:data->>wb,wc:data->wc';   // + device: the conflict card names it · wb/wc: F2
+const SYN_BACKOFF=[5000,15000,60000,300000], SYN_ERR_TRIES=3;
+const SYN_MAX=256*1024, SYN_KEEPALIVE=60*1024, SYN_TICK=300000, SYN_AWAY=300000;
+const SYN_NAME=/^[\p{L}\p{M}\p{N} ]{2,16}$/u, SYN_ID=/^[a-z][a-z0-9_]{0,23}$/, SYN_VER=/^[\w.+-]{0,24}$/;
+const SYN_UUID=/^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/;
+const SYN_ERR_TH={big:'⚠ เซฟใหญ่เกิน 256 KB · ซิงก์ไม่ได้', private:'⚠ ไม่ซิงก์: เซฟมีข้อมูลส่วนตัว', server:'⚠ ซิงก์ไม่สำเร็จ · แตะเพื่อลองใหม่'};
+const SYN={inited:false, busy:0, net:'', gen:0, q:Promise.resolve(), pushQ:null, retryI:0, retryT:0, errN:0, err:'', dead:false,
+           hiddenAt:0, conflict:null, link:null, readOnly:false, pendingLink:false, hubAt:0};
 
+/* ---------- pure ---------- */
+function synHasProgress(s){ return !!(s&&Array.isArray(s.chars)&&s.chars.some(c=>c&&(+c.lv||0)>=3)); }   // §6.9: a character Lv ≥ 3
+// l = {dirty, baseRev, progress, wb, wc} · h = server head of slot 0 {rev, schema_v, wb, wc} | null
+// → adopt push conflict create noop · ff (F2: baseRev = h.rev, push if ours is newer) · gone (F6)
+function syncDecide(l,h){
+  l=l||{};
+  if(h&&(+h.schema_v||0)>SCHEMA_V) return 'noop';          // server written by a newer app: never push or adopt (read-only, §6.3)
+  const base=+l.baseRev||0;
+  if(!h) return base?'gone':l.progress?'create':'noop';     // a row this device had synced is gone: deleted on another device
+  const rev=+h.rev||0;
+  if(rev===base) return l.dirty?'push':'noop';
+  if(synSameLine(l,h)) return 'ff';                         // an older (or the same) copy of this very save: our write landed
+  return l.dirty?'conflict':'adopt';                         // rev > base: someone else pushed · rev < base: row replaced (wipe/restore elsewhere)
+}
+function synSameLine(l,h){ const wc=Number(h&&h.wc); return typeof l.wb==='string'&&/^w_[a-z0-9_]{1,24}$/.test(l.wb)&&h.wb===l.wb&&Number.isInteger(wc)&&wc>=0&&wc<=(+l.wc||0); }
+function linkDecide(g,h){   // first sign-in on a device that has a guest save · g = guest save · h = server head of slot 0 | null
+  if(h&&(+h.schema_v||0)>SCHEMA_V) return 'noop';
+  if(!synHasProgress(g)) return h?'adopt':'noop';
+  return h?'choose':'askMove';
+}
+function synInt(v,a,b){ v=Math.round(+v); return Number.isFinite(v)?Math.min(b,Math.max(a,v)):a; }
+function synId(v){ return typeof v==='string'&&SYN_ID.test(v)?v:null; }
+function synSafeSummary(o){   // whitelist {chars:[{n,cls,job,lv}], play, mt, appVer} · names must pass the save's name rule → no email
+  o=o&&typeof o==='object'?o:{};
+  const chars=(Array.isArray(o.chars)?o.chars:[]).slice(0,3).map(c=>{
+    c=c&&typeof c==='object'?c:{};
+    return {n:typeof c.n==='string'&&SYN_NAME.test(c.n)?c.n:'?', cls:synId(c.cls), job:synId(c.job), lv:synInt(c.lv,1,60)}; });
+  return {chars, play:synInt(o.play,0,1e10), mt:synInt(o.mt,0,1e14), appVer:typeof o.appVer==='string'&&SYN_VER.test(o.appVer)?o.appVer:''};
+}
+function synSummary(s){   // lane C's saveSummary when it gives a summary, else built from the save · always through the whitelist
+  let o=null; try{ o=saveSummary(s); }catch(e){}
+  if(!o||!Array.isArray(o.chars)||(!o.chars.length&&s&&Array.isArray(s.chars)&&s.chars.length))
+    o={chars:(s&&Array.isArray(s.chars)?s.chars:[]).map(c=>({n:c&&c.name, cls:c&&c.cls, job:c&&c.job, lv:c&&c.lv})), play:s&&s.play, mt:s&&s.mt, appVer:o&&o.appVer};
+  return synSafeSummary(o);
+}
+function synReq(op,a){   // PostgREST request for op → {path, opts} (§6.8) · a.uid is checked by the caller (synUid)
+  const u='user_id=eq.'+a.uid, json={'Content-Type':'application/json'};
+  switch(op){
+    case 'head':   return {path:SYN_BASE+'?'+SYN_HEAD+'&'+u, opts:{method:'GET'}};
+    case 'pull':   return {path:SYN_BASE+'?select=slot,schema_v,rev,data,updated_at&'+u+'&slot=eq.'+(a.slot===1?1:0), opts:{method:'GET'}};
+    case 'create': return {path:SYN_BASE+'?select=rev,updated_at', opts:{method:'POST', headers:Object.assign({Prefer:'return=representation'},json), body:synBody(0,a.body)}};
+    case 'cas':    return {path:SYN_BASE+'?'+u+'&slot=eq.0&rev=eq.'+synInt(a.rev,0,9e15)+'&select=rev,updated_at',
+                           opts:{method:'PATCH', headers:Object.assign({Prefer:'return=representation'},json), body:a.body, keepalive:!!a.keepalive}};
+    case 'backup': return {path:SYN_BASE+'?on_conflict=user_id,slot', opts:{method:'POST', headers:Object.assign({Prefer:'resolution=merge-duplicates,return=minimal'},json), body:synBody(1,a.body)}};
+    case 'wipe':   return {path:SYN_BASE+'?'+u, opts:{method:'DELETE'}};   // slot 0 and 1 · never the auth user (shared with BAZI)
+  }
+  return null;
+}
+function synBody(slot,body){ return '{"slot":'+slot+','+body.slice(1); }   // body = JSON text of {schema_v, device, summary, data}
+
+/* ---------- local state: runeguard.cloud.u.<uid> = {baseRev, dirty, lastPushAt, lastPullAt, srvSchema, mt, wiped} ---------- */
+function synUid(){ const id=AUTH.s&&AUTH.s.user&&AUTH.s.user.id; return typeof id==='string'&&SYN_UUID.test(id)?id:''; }
+function synGet(uid){
+  let o=null; if(uid) try{ o=JSON.parse(STORE.get('runeguard.cloud.u.'+uid)||'null'); }catch(e){}
+  o=o&&typeof o==='object'?o:{};
+  return {baseRev:+o.baseRev||0, dirty:!!o.dirty, lastPushAt:+o.lastPushAt||0, lastPullAt:+o.lastPullAt||0, srvSchema:+o.srvSchema||0, mt:+o.mt||0, wiped:!!o.wiped};
+}
+function synPut(uid,patch){ const o=Object.assign(synGet(uid),patch); if(uid) STORE.set('runeguard.cloud.u.'+uid,JSON.stringify(o)); return o; }
+function synMine(uid){ return !!(uid&&SAVE&&SAVE.owner===uid&&!SAVE.ro); }
+function synEmpty(st){ return !st.baseRev&&typeof isTrivialSave==='function'&&isTrivialSave(SAVE); }   // F8: nothing to keep, never synced
+function synDirty(uid){ if(!synMine(uid)) return false; const st=synGet(uid); return !synEmpty(st)&&(st.dirty||(+SAVE.mt||0)>st.mt); }
+function synLocal(uid){ const m=synMine(uid); return {dirty:synDirty(uid), baseRev:synGet(uid).baseRev, progress:synHasProgress(SAVE), wb:m?SAVE.wb:'', wc:m?+SAVE.wc||0:0}; }
+function synCalm(){ return typeof G==='undefined'||!G||!!G.over||!!G.ui||G.modeId==='field'; }   // no push in a survival/boss fight frame
+function synDevice(){   // 'd_xxxxxx iPhone' (≤ 40 chars) · id made once in runeguard.device
+  let id=STORE.get('runeguard.device');
+  if(!/^d_[a-z0-9]{6}$/.test(id||'')){ const a=new Uint8Array(6); crypto.getRandomValues(a); id='d_'+Array.from(a,b=>'abcdefghijklmnopqrstuvwxyz0123456789'[b%36]).join(''); STORE.set('runeguard.device',id); }
+  const ua=(typeof navigator!=='undefined'&&navigator.userAgent)||'';
+  const p=/iPhone/.test(ua)?'iPhone':/iPad/.test(ua)?'iPad':/Android/.test(ua)?'Android':/Windows/.test(ua)?'Windows':/Mac OS X|Macintosh/.test(ua)?'Mac':/CrOS|Linux/.test(ua)?'Linux':'';
+  return (id+(p?' '+p:'')).slice(0,40);
+}
+function synPayload(s){   // → {ok, body, size, why} · data = the whole save without owner · refuses > 256 KB and any email / token
+  if(!s||typeof s!=='object') return {ok:false, why:'nosave'};
+  const data=Object.assign({},s); delete data.owner;
+  let body; try{ body=JSON.stringify({schema_v:synInt(s.v||SCHEMA_V,1,1000), device:synDevice(), summary:synSummary(s), data}); }catch(e){ return {ok:false, why:'json'}; }
+  const size=new TextEncoder().encode(body).length;
+  if(size>SYN_MAX) return {ok:false, why:'big', size};
+  if(synLeaks(body)) return {ok:false, why:'private', size};
+  return {ok:true, body, size};
+}
+function synLeaks(body){
+  const s=AUTH.s; if(!s) return false; const low=body.toLowerCase();
+  return [s.user&&s.user.email, s.access_token, s.refresh_token].some(x=>typeof x==='string'&&x.length>=6&&low.includes(x.toLowerCase()));
+}
+function synSide(sum,at,dev){ return {sum:synSafeSummary(sum), at:synInt(typeof at==='string'?Date.parse(at):at,0,1e14), dev:typeof dev==='string'?dev.slice(0,40):''}; }
+function synFail(why){ SYN.err=SYN_ERR_TH[why]?why:'server'; if(why==='big'||why==='private') SYN.errN=SYN_ERR_TRIES; BUS.emit('sync','status'); return 'error'; }
+function synOk(r){ if(r==='ok'||r==='none'){ SYN.err=''; SYN.errN=0; } return r; }
+
+/* ---------- transport ---------- */
+async function synCall(op,a){   // → {st:'ok'|'offline'|'auth'|'conflict'|'nouser'|'error', status, data}
+  let r; const q=synReq(op,a);
+  try{ r=await authFetch(q.path,q.opts); }
+  catch(e){ const c=e&&e.code; if(c==='timeout'||c==='network') SYN.net='offline'; return {st:c==='noauth'||c==='off'?'auth':'offline', status:0, data:null}; }
+  SYN.net='';
+  const data=await athJson(r), code=data&&typeof data==='object'&&typeof data.code==='string'?data.code:'';
+  if(r.ok) return {st:'ok', status:r.status, data};
+  if(r.status===401) return {st:'auth', status:401, data};
+  if(r.status===409) return {st:code==='23505'?'conflict':code==='23503'?'nouser':'error', status:409, data};   // F3
+  if(r.status>=500||r.status===429) return {st:'server', status:r.status, data};                             // shown, tried again later
+  return {st:'error', status:r.status, data};                                                               // 400 / 403 / PGRST…: F4
+}
+// a failed step → the flow result · F4: a failure other than "no network" shows in cloudStatus until a sync works
+function synRes(st){ if(st==='nouser') return synGone(); if(st==='error') return synFail('server');
+  if(st==='server'){ SYN.err='server'; BUS.emit('sync','status'); } return 'offline'; }
+function synGone(){ SYN.dead=true; clearTimeout(SYN.retryT); BUS.emit('sync','status'); return 'error'; }   // F3: the account was deleted
+async function synHeads(uid){ const r=await synCall('head',{uid}); return {st:r.st, rows:r.st==='ok'&&Array.isArray(r.data)?r.data:[]}; }
+function synQueue(kind,fn){   // one sync request chain at a time · pushes asked while one is waiting share it
+  if(kind==='push'&&SYN.pushQ) return SYN.pushQ;
+  const p=SYN.q.then(()=>{ if(kind==='push') SYN.pushQ=null; SYN.busy++; BUS.emit('sync','status');
+      return Promise.resolve().then(fn).finally(()=>{ SYN.busy--; }); })
+    .catch(e=>{ console.error('sync',e&&e.message); return 'error'; })
+    .then(r=>{ BUS.emit('sync','status'); return synOk(r); });
+  SYN.q=p.then(()=>{},()=>{});
+  if(kind==='push') SYN.pushQ=p;
+  return p;
+}
+function synRetry(res){   // offline: 5 s → 15 s → 60 s → 5 min (until it works) · error: 3 tries, then only on the next event (F4)
+  clearTimeout(SYN.retryT); SYN.retryT=0;
+  if(res!=='offline'&&res!=='error'||SYN.dead||!CLOUD_OK){ SYN.retryI=0; return; }
+  if(res==='error'&&++SYN.errN>SYN_ERR_TRIES) return;
+  const ms=SYN_BACKOFF[Math.min(SYN.retryI++,SYN_BACKOFF.length-1)];
+  SYN.retryT=setTimeout(()=>{ SYN.retryT=0; if(synDirty(synUid())) cloudPush('retry'); },ms);
+}
+
+/* ---------- flows ---------- */
+async function synAdopt(uid){   // server slot 0 → this account's save (never mixed with the local one) · F12: through svlFromCloud
+  const p=await synCall('pull',{uid, slot:0}); if(p.st!=='ok') return synRes(p.st);
+  const row=Array.isArray(p.data)&&p.data[0];
+  if(!row||!row.data||typeof row.data!=='object'||Array.isArray(row.data)) return 'none';
+  if((+row.schema_v||0)>SCHEMA_V){ synPut(uid,{srvSchema:+row.schema_v}); SYN.readOnly=true; BUS.emit('sync','newer'); return 'ok'; }
+  if(!svlFromCloud(uid,row.data)) return synFail('server');   // not stored on this device: baseRev stays, the next pull adopts again
+  synPut(uid,{baseRev:+row.rev||0, dirty:false, mt:+SAVE.mt||0, lastPullAt:Date.now(), srvSchema:+row.schema_v||0, wiped:false});
+  BUS.emit('sync','adopt'); return 'ok';
+}
+async function synCreate(uid,depth){
+  if(!synMine(uid)) return 'error';
+  const pl=synPayload(SAVE); if(!pl.ok) return synFail(pl.why);
+  const gen=SYN.gen, r=await synCall('create',{uid, body:pl.body});
+  if(r.st==='ok'&&Array.isArray(r.data)&&r.data[0]){ synPut(uid,{baseRev:+r.data[0].rev||1, dirty:SYN.gen!==gen, mt:+SAVE.mt||0, lastPushAt:Date.now(), wiped:false}); return 'ok'; }
+  if(r.st==='conflict') return synConflict(uid,depth);   // 409 23505: slot 0 exists
+  return synRes(r.st);
+}
+// CAS [] / 409: fast-forward our own copy (F2), else ask · depth 1 = no second try
+async function synConflict(uid,depth){
+  const h=await synHeads(uid); if(h.st!=='ok') return synRes(h.st);
+  const row=h.rows.find(x=>+x.slot===0), st=synGet(uid);
+  if(!row){ if(st.baseRev){ synPut(uid,{baseRev:0, wiped:true}); BUS.emit('sync','status'); return 'none'; } return depth?synFail('server'):synCreate(uid,1); }   // F6
+  if(!depth&&synSameLine(synLocal(uid),row)){ synPut(uid,{baseRev:+row.rev||0, dirty:true}); return synPush(uid,1); }
+  SYN.conflict={kind:'conflict', local:synSide(synSummary(SAVE),SAVE&&SAVE.mt,synDevice()), srv:synSide(row.summary,row.updated_at,row.device)};
+  BUS.emit('sync','conflict'); return 'conflict';
+}
+async function synPull(uid){
+  if(SYN.pendingLink) return synLink(uid);
+  const h=await synHeads(uid); if(h.st!=='ok') return synRes(h.st);
+  const row=h.rows.find(x=>+x.slot===0)||null, st=synPut(uid,{srvSchema:row?+row.schema_v||0:0, lastPullAt:Date.now()});
+  if(row&&(+row.schema_v||0)>SCHEMA_V){ SYN.readOnly=true; BUS.emit('sync','newer'); return 'ok'; }
+  if(!synMine(uid)) return 'none';
+  const l=synLocal(uid); let d=syncDecide(l,row);
+  if(d==='create'&&st.wiped) d='noop';   // after "delete cloud data" only a manual sync uploads again
+  if(d==='gone'){ synPut(uid,{baseRev:0, wiped:true}); BUS.emit('sync','status'); return 'none'; }   // F6: deleted on another device
+  if(d==='ff'){ synPut(uid,{baseRev:+row.rev||0}); return l.dirty||Number(row.wc)<l.wc?((await synPush(uid,1))==='ok'?'ok':'offline'):'ok'; }
+  if(d==='adopt') return synAdopt(uid);
+  if(d==='push') return (await synPush(uid))==='ok'?'ok':'offline';
+  if(d==='conflict') return synConflict(uid,1);
+  if(d==='create'){ const r=await synCreate(uid); return r==='error'?'offline':r; }
+  return row?'ok':'none';
+}
+async function synPush(uid,depth){
+  if(cloudNewerSchema()||saveReadOnly()) return 'readonly';
+  if(!synMine(uid)) return 'error';
+  const st=synGet(uid);
+  if(!st.baseRev){ if(depth) return 'error'; const r=await synPull(uid); return r==='none'?'ok':r==='conflict'?'conflict':r==='ok'?'ok':'offline'; }   // never synced: pull decides
+  const pl=synPayload(SAVE); if(!pl.ok){ console.warn('sync: ไม่ส่งเซฟ ('+pl.why+')'); return synFail(pl.why); }
+  const gen=SYN.gen, mt=+SAVE.mt||0, r=await synCall('cas',{uid, rev:st.baseRev, body:pl.body});
+  if(r.st==='ok'){
+    if(Array.isArray(r.data)&&r.data[0]&&+r.data[0].rev){ synPut(uid,{baseRev:+r.data[0].rev, dirty:SYN.gen!==gen, mt, lastPushAt:Date.now(), wiped:false}); return 'ok'; }
+    return synConflict(uid,depth);   // [] = the CAS lost (F2 checks)
+  }
+  return r.st==='auth'?'offline':synRes(r.st);
+}
+async function synLink(uid){   // §6.9 first sign-in on this device (no account cache yet)
+  const guest=SAVE&&SAVE.owner==null?SAVE:null;
+  const h=await synHeads(uid); if(h.st!=='ok'){ SYN.pendingLink=true; return synRes(h.st); }
+  SYN.pendingLink=false;
+  const row=h.rows.find(x=>+x.slot===0)||null, d=linkDecide(guest,row);
+  synPut(uid,{srvSchema:row?+row.schema_v||0:0, lastPullAt:Date.now()});
+  if(d==='adopt') return synAdopt(uid);
+  if(d==='noop'){ if(row&&(+row.schema_v||0)>SCHEMA_V){ SYN.readOnly=true; BUS.emit('sync','newer'); } else loadSaveFor(uid); return row?'ok':'none'; }
+  SYN.link={kind:d, guest, local:synSide(synSummary(guest),guest&&guest.mt,synDevice()), srv:row?synSide(row.summary,row.updated_at,row.device):null};
+  BUS.emit('sync',d); return d==='choose'?'conflict':'none';
+}
+async function synBackup(uid,saveObj){   // whole save → slot 1 (upsert)
+  const pl=synPayload(saveObj); if(!pl.ok) return synFail(pl.why);
+  const r=await synCall('backup',{uid, body:pl.body}); return r.st==='ok'?'ok':synRes(r.st);
+}
+async function synKeepLocal(uid){   // "this device" wins: server copy → slot 1, then CAS slot 0 on the server's current rev
+  const p=await synCall('pull',{uid, slot:0}); if(p.st!=='ok') return synRes(p.st);
+  const row=Array.isArray(p.data)&&p.data[0];
+  if(!row){ synPut(uid,{baseRev:0, wiped:false}); return synCreate(uid); }
+  if((+row.schema_v||0)>SCHEMA_V){ SYN.readOnly=true; return 'readonly'; }
+  const b=await synBackup(uid,row.data); if(b!=='ok') return b;
+  synPut(uid,{baseRev:+row.rev||0, dirty:true});
+  return synPush(uid,1);
+}
+
+/* ---------- public (§7.8) ---------- */
+function cloudInit(){   // called by athInit() only (CLOUD_OK): listeners + 5 min timer + UI hooks
+  if(!CLOUD_OK||SYN.inited) return; SYN.inited=true;
+  BUS.on('save',()=>{ SYN.gen++; const uid=synUid(); if(!synMine(uid)) return; const st=synGet(uid);   // every write = a change (mt may not move: same ms / clock set back)
+    if(!st.dirty&&!synEmpty(st)) synPut(uid,{dirty:true}); });
+  BUS.on('auth',ev=>{ if(ev==='out'){ SYN.conflict=null; SYN.link=null; SYN.readOnly=false; SYN.pendingLink=false; SYN.dead=false; SYN.err=''; SYN.errN=0; clearTimeout(SYN.retryT); } });
+  // §6.8 push at the end of a run (after its reward) and back at the fort
+  BUS.on('runEnd',()=>setTimeout(()=>{ if(synDirty(synUid())) cloudPush('runEnd'); },1500));
+  BUS.on('screen',id=>{ if(id==='scrHub'&&Date.now()-SYN.hubAt>20000&&synDirty(synUid())){ SYN.hubAt=Date.now(); cloudPush('hub'); } });
+  document.addEventListener('visibilitychange',()=>{
+    if(document.visibilityState==='hidden'){ SYN.hiddenAt=Date.now(); synKeepalive(); }
+    else if(SYN.hiddenAt&&Date.now()-SYN.hiddenAt>SYN_AWAY){ SYN.hiddenAt=0; cloudPull(); } else SYN.hiddenAt=0; });
+  addEventListener('online',()=>{ SYN.net=''; if(synDirty(synUid())) cloudPush('online'); BUS.emit('sync','status'); });
+  addEventListener('offline',()=>{ SYN.net='offline'; BUS.emit('sync','status'); });
+  setInterval(()=>{ if(AUTH.state==='in'&&!SYN.dead&&synDirty(synUid())&&synCalm()) cloudPush('timer'); },SYN_TICK);
+  if(typeof uiaInit==='function') uiaInit();
+}
+function synKeepalive(){   // page hidden: one keepalive CAS when the body is < 60 KB, else it waits for the next push
+  const uid=synUid(); if(!CLOUD_OK||!uid||AUTH.state!=='in'||SYN.dead||!synDirty(uid)||cloudNewerSchema()||saveReadOnly()) return false;
+  const st=synGet(uid); if(!st.baseRev) return false;
+  const pl=synPayload(SAVE); if(!pl.ok||pl.size>=SYN_KEEPALIVE) return false;
+  const gen=SYN.gen, mt=+SAVE.mt||0;
+  synCall('cas',{uid, rev:st.baseRev, body:pl.body, keepalive:true}).then(r=>{   // a lost answer here is F2: the next push fast-forwards
+    if(r.st==='ok'&&Array.isArray(r.data)&&r.data[0]&&+r.data[0].rev) synPut(uid,{baseRev:+r.data[0].rev, dirty:SYN.gen!==gen, mt, lastPushAt:Date.now()}); });
+  return true;
+}
+function cloudStatus(){   // §6.11
+  if(!AUTH_ON) return {k:'off', text:'เล่นในเครื่องเท่านั้น'};
+  if(!CLOUD_OK) return {k:'artifact', text:'บัญชีออนไลน์ใช้ได้ที่ runeguard-lac.vercel.app'};
+  if(cloudNewerSchema()) return {k:'newer', text:'⛔ ข้อมูลเป็นเวอร์ชันใหม่กว่าแอป · แตะเพื่ออัปเดต'};
+  if(AUTH.state==='expired') return {k:'expired', text:'⚠ เซสชันหมดอายุ · แตะเพื่อเข้าสู่ระบบ'};
+  if(AUTH.state!=='in'||!synUid()) return {k:'guest', text:'👤 ผู้เยี่ยมชม · แตะเพื่อสร้างบัญชี'};
+  if(SYN.dead) return {k:'dead', text:'⚠ บัญชีนี้ซิงก์ไม่ได้แล้ว · ออกจากระบบแล้วเข้าใหม่'};
+  if(SYN.conflict||(SYN.link&&SYN.link.kind==='choose')) return {k:'conflict', text:'⚠ พบความคืบหน้าสองชุด · แตะเพื่อเลือก'};
+  if(SYN.busy) return {k:'busy', text:'⟳ กำลังซิงก์…'};
+  if(SYN.net==='offline'||(typeof navigator!=='undefined'&&navigator.onLine===false)) return {k:'offline', text:'⚠ ออฟไลน์ · บันทึกในเครื่อง'};
+  if(SYN.err) return {k:'err', text:SYN_ERR_TH[SYN.err]||SYN_ERR_TH.server};
+  const st=synGet(synUid()), t=Math.max(st.lastPushAt,st.lastPullAt);
+  if(st.wiped&&!st.baseRev) return {k:'wiped', text:'☁ ไม่มีข้อมูลบนคลาวด์ · แตะเพื่ออัปโหลด'};
+  if(!t) return {k:'busy', text:'⟳ กำลังซิงก์…'};
+  return {k:'ok', text:'☁ ซิงก์แล้ว '+new Date(t).toLocaleTimeString('th-TH',{hour:'2-digit', minute:'2-digit', hour12:false})};
+}
+function cloudNewerSchema(){ if(!CLOUD_OK) return false; const uid=synUid(); return SYN.readOnly||(!!uid&&synGet(uid).srvSchema>SCHEMA_V); }
+function cloudPull(){
+  if(!CLOUD_OK) return Promise.resolve('none');
+  const uid=synUid(); if(!uid||AUTH.state!=='in'||SYN.dead) return Promise.resolve('none');
+  return synQueue('pull',()=>synPull(uid));
+}
+function cloudPush(reason){
+  if(!CLOUD_OK) return Promise.resolve('offline');
+  const uid=synUid(); if(!uid||AUTH.state!=='in'||SYN.dead) return Promise.resolve('offline');
+  if(!synCalm()){ synRetry('offline'); return Promise.resolve('offline'); }   // mid-fight: keep it dirty, retry later
+  return synQueue('push',()=>synPush(uid)).then(r=>{ synRetry(r); return r; });
+}
+function cloudSyncNow(){   // account page: also lifts the "deleted" hold and a stopped retry
+  if(!CLOUD_OK) return Promise.resolve('offline');
+  const uid=synUid(); if(!uid||AUTH.state!=='in') return Promise.resolve('offline');
+  if(SYN.dead) return Promise.resolve('error');
+  SYN.err=''; SYN.errN=0;
+  if(synGet(uid).wiped) synPut(uid,{wiped:false, dirty:true});
+  return cloudPull().then(r=>r==='ok'&&synDirty(uid)?cloudPush('manual'):r);
+}
+function cloudOnLogin(){   // sign-in / boot with a session: own cache → pull · first time here → link (§6.9)
+  if(!CLOUD_OK) return Promise.resolve('none');
+  const uid=synUid(); if(!uid) return Promise.resolve('none');
+  SYN.conflict=null; SYN.link=null; SYN.readOnly=false; SYN.dead=false; SYN.err=''; SYN.errN=0;
+  if(STORE.get('runeguard.save.u.'+uid)!==null){ if(!synMine(uid)) loadSaveFor(uid); return AUTH.state==='in'?cloudPull():Promise.resolve('none'); }
+  SYN.pendingLink=true;
+  return AUTH.state==='in'?synQueue('pull',()=>synLink(uid)):Promise.resolve('none');
+}
+function cloudResolve(choice){   // 'local' | 'cloud' · the side not chosen goes to slot 1 · never mixes the two saves
+  if(!CLOUD_OK) return Promise.resolve('offline');
+  const uid=synUid(), c=SYN.conflict||SYN.link; if(!uid||!c||(choice!=='local'&&choice!=='cloud')) return Promise.resolve('none');
+  return synQueue('pull',async()=>{
+    let r;
+    if(c.kind==='askMove'){   // 'local' = [ย้าย] guest progress up · 'cloud' = [เริ่มใหม่] with an empty account save
+      if(choice==='local'){ if(!svlFromCloud(uid,c.guest)) return synFail('server'); synPut(uid,{baseRev:0, wiped:false}); r=await synCreate(uid); }
+      else { loadSaveFor(uid); r='ok'; }
+    } else if(c.kind==='choose'){   // [ใช้ของในเครื่อง] / [ใช้ของบัญชี] · the guest save itself is never deleted
+      if(choice==='local'){ if(!svlFromCloud(uid,c.guest)) return synFail('server'); r=await synKeepLocal(uid); }
+      else { r=await synBackup(uid,c.guest); if(r==='ok') r=await synAdopt(uid); }
+    } else {
+      if(choice==='local') r=await synKeepLocal(uid);
+      else { r=await synBackup(uid,SAVE); if(r==='ok') r=await synAdopt(uid); }
+    }
+    if(r==='ok'||r==='none'){ if(SYN.conflict===c) SYN.conflict=null; if(SYN.link===c) SYN.link=null; }
+    return r;
+  });
+}
+function cloudRestoreBackup(){   // swap slot 0 ⇄ slot 1 (two writes), then play the restored save
+  if(!CLOUD_OK) return Promise.resolve('offline');
+  const uid=synUid(); if(!uid||AUTH.state!=='in') return Promise.resolve('offline');
+  return synQueue('pull',async()=>{
+    const b=await synCall('pull',{uid, slot:1}); if(b.st!=='ok') return synRes(b.st);
+    const bak=Array.isArray(b.data)&&b.data[0]; if(!bak||!bak.data) return 'none';
+    if((+bak.schema_v||0)>SCHEMA_V) return 'readonly';
+    const a=await synCall('pull',{uid, slot:0}); if(a.st!=='ok') return synRes(a.st);
+    const cur=Array.isArray(a.data)&&a.data[0];
+    const keep=synDirty(uid)?JSON.parse(JSON.stringify(SAVE)):cur&&cur.data;   // F7: progress not pushed yet is the newest: it goes to slot 1
+    const pl=synPayload(bak.data); if(!pl.ok) return synFail(pl.why);
+    let rev=0, res='ok';
+    if(cur){
+      const w=await synCall('cas',{uid, rev:+cur.rev, body:pl.body});
+      if(w.st!=='ok'||!Array.isArray(w.data)||!w.data[0]) return w.st==='ok'?'conflict':synRes(w.st);
+      rev=+w.data[0].rev;
+    } else {
+      const w=await synCall('create',{uid, body:pl.body}); if(w.st!=='ok'||!Array.isArray(w.data)||!w.data[0]) return synRes(w.st);
+      rev=+w.data[0].rev;
+    }
+    if(keep&&await synBackup(uid,keep)!=='ok'&&await synBackup(uid,keep)!=='ok') res='error';   // slot 0 is restored either way; the local copy goes to .bak below
+    if(!svlFromCloud(uid,bak.data)) return synFail('server');
+    synPut(uid,{baseRev:rev, dirty:false, mt:+SAVE.mt||0, lastPushAt:Date.now(), wiped:false});
+    BUS.emit('sync','adopt'); return res;
+  });
+}
+function cloudWipe(){   // DELETE both slots of this user · the account itself stays (shared with BAZI)
+  if(!CLOUD_OK) return Promise.resolve('offline');
+  const uid=synUid(); if(!uid||AUTH.state!=='in') return Promise.resolve('offline');
+  return synQueue('pull',async()=>{
+    const r=await synCall('wipe',{uid}); if(r.st!=='ok') return synRes(r.st);
+    synPut(uid,{baseRev:0, dirty:false, wiped:true, srvSchema:0}); SYN.conflict=null; SYN.readOnly=false; return 'ok';
+  });
+}
+function cloudBackupInfo(){   // account page: summary of slot 1 → {sum, at, dev} | null
+  if(!CLOUD_OK) return Promise.resolve(null);
+  const uid=synUid(); if(!uid||AUTH.state!=='in') return Promise.resolve(null);
+  return synHeads(uid).then(h=>{ const b=h.rows.find(x=>+x.slot===1); return b?synSide(b.summary,b.updated_at,b.device):null; });
+}
+function cloudConflictInfo(){   // for the sheets in 51 · {kind, local, srv} | null (no save data, no email)
+  if(!CLOUD_OK) return null;
+  const c=SYN.conflict||SYN.link; return c?{kind:c.kind, local:c.local, srv:c.srv}:null;
+}
+
+DEV.sync={
+  peek(){ const uid=synUid(); return {status:cloudStatus(), state:uid?synGet(uid):null, busy:SYN.busy, conflict:cloudConflictInfo(), readOnly:cloudNewerSchema(), err:SYN.err, dead:SYN.dead}; },
+  push(){ return cloudPush('dev'); },
+  pull(){ return cloudPull(); },
+  decide(l,s){ return syncDecide(l,s); }
+};
 /* ================= 50-ui-shell.js · lane B · UI router, sheet, toast, confirmBox, sysLog, character window frame ================= */
 // UI.go(id,args) pushes a screen and shows it (core show) · every change emits BUS 'screen' (id, args): the owner lane renders then.
 // Back: confirm → sheet → screen · in a run pause (again = resume) · end screen → home. Android back (§8.0): history entries {rg,d}
@@ -5276,9 +6151,222 @@ function shWire(){
   ok.addEventListener('keyup',e=>{ if(e.key==='Enter'||e.key===' ') shHoldOff(); });
   ok.addEventListener('contextmenu',e=>e.preventDefault()); }
 /* ================= 51-ui-auth.js · lane N · scrAuth, scrAccount, conflict / link sheets ================= */
-/* M0 stub: frozen signatures from DESIGN §7.8, neutral values — classic never calls these. Lane N writes the real body. */
-// M0: nothing yet (screens register with regScreen when they exist)
+/* Unreachable when CLOUD_OK is false (claude.ai artifact): the screens are registered only when AUTH_ON, every entry point
+   returns false before it touches the DOM when CLOUD_OK is false, buttons are wired on first open (uiaWire) and the BUS
+   listeners come from uiaInit(), which only cloudInit() calls. User text (names from a save, server summaries) goes in with
+   textContent only. uiaOpenAuth(view, msg, after): after = what to do once signed in (59a: back to the shop) instead of home. */
+if(AUTH_ON){ regScreen('scrAuth'); regScreen('scrAccount'); }
+const UIA={inited:false, wired:false, mode:'in', email:'', sentKind:'signup', resendAt:0, tick:0, bak:null, after:null};
+const UIA_HOLD=1000;
 
+function uiaInit(){   // cloudInit() → here (CLOUD_OK only)
+  if(!CLOUD_OK||UIA.inited) return; UIA.inited=true;
+  BUS.on('sync',ev=>{ if((ev==='conflict'||ev==='choose'||ev==='askMove')&&uiaCalm()) uiaChoiceSheet(); uiaAcctRender(); });
+  BUS.on('auth',(ev,r)=>{ if(ev==='redirect') uiaRedirectResult(r); uiaAcctRender(); });
+}
+function uiaCalm(){ return typeof G==='undefined'||!G||!!G.over; }   // sheets wait while a run is on (the hub chip says "แตะเพื่อเลือก")
+function uiaEl(id){ return $('#'+id); }
+function uiaOn(id,ev,f){ const n=uiaEl(id); if(n) n.addEventListener(ev,f); }
+function uiaMk(tag,cls,text){ const n=document.createElement(tag); if(cls) n.className=cls; if(text!==undefined) n.textContent=text; return n; }
+function uiaBtn(text,cls,fn){ const b=uiaMk('button','btn ua-wide '+(cls||'ghost'),text); b.type='button'; b.addEventListener('click',fn); return b; }
+function uiaErr(msg){ const n=uiaEl('uaErr'); if(n) n.textContent=msg||''; }
+function uiaBusy(on,root){
+  const r=uiaEl(root||'scrAuth'); if(!r) return;
+  r.setAttribute('aria-busy',String(!!on));
+  for(const n of r.querySelectorAll('button,input')) n.disabled=!!on;
+  uiaEl(root==='scrAccount'?'uaAcctBusy':'uaBusy').hidden=!on;
+  if(!on){ uiaTick(); uiaWipeArm(); uiaAcctRender(); }
+}
+
+/* ---------- scrAuth ---------- */
+function uiaOpenAuth(view,msg,after){   // view: 'in' | 'up' | 'sent' | 'reset'
+  if(!CLOUD_OK) return false;
+  UIA.after=typeof after==='function'?after:null;
+  uiaWire(); uiaView(view||'in'); uiaErr(msg||''); UI.go('scrAuth'); return true;
+}
+function uiaDone(){ const f=UIA.after; UIA.after=null; UI.home(); if(f) try{ f(); }catch(e){ console.error(e); } }   // signed in
+function uiaView(v){
+  if(v==='in'||v==='up') UIA.mode=v;
+  const main=v==='in'||v==='up';
+  uiaEl('uaMain').hidden=!main; uiaEl('uaSent').hidden=v!=='sent'; uiaEl('uaReset').hidden=v!=='reset';
+  uiaEl('uaTabIn').setAttribute('aria-pressed',String(UIA.mode==='in'));
+  uiaEl('uaTabUp').setAttribute('aria-pressed',String(UIA.mode==='up'));
+  uiaEl('uaPw2Row').hidden=UIA.mode!=='up'; uiaEl('uaForgot').hidden=UIA.mode==='up'; uiaEl('uaNC').hidden=true;
+  uiaEl('uaPw').setAttribute('autocomplete',UIA.mode==='up'?'new-password':'current-password');
+  clearInterval(UIA.tick); UIA.tick=0;
+  if(v==='sent'){ UIA.tick=setInterval(uiaTick,1000); uiaTick(); }
+}
+function uiaTick(){   // [ส่งอีกครั้ง (60 วิ)] countdown while the "sent" view is open
+  const b=uiaEl('uaSentAgain'); if(!b) return;
+  const left=Math.ceil((UIA.resendAt+ATH_RESEND_MS-Date.now())/1000);
+  b.disabled=left>0; b.textContent=left>0?'ส่งอีกครั้ง ('+left+' วิ)':'ส่งอีกครั้ง';
+  if(left<=0&&UIA.tick){ clearInterval(UIA.tick); UIA.tick=0; }
+}
+function uiaSent(kind,msg){ UIA.sentKind=kind; UIA.resendAt=Date.now(); uiaEl('uaSentMsg').textContent=msg; uiaErr(''); uiaView('sent'); }
+async function uiaSubmit(){
+  const email=uiaEl('uaEmail').value.trim(), pw=uiaEl('uaPw').value;
+  if(!athEmailOk(email)) return uiaErr(ATH_MSG.email_bad);
+  if(UIA.mode==='up'){
+    if(pw.length<ATH_PW_MIN) return uiaErr(ATH_MSG.pw_short);
+    if(pw!==uiaEl('uaPw2').value) return uiaErr(ATH_MSG.pw_mismatch);
+  } else if(!pw) return uiaErr(ATH_MSG.invalid_credentials);
+  uiaErr(''); uiaBusy(true);
+  const r=UIA.mode==='up'?await authSignUp(email,pw):await authSignIn(email,pw);
+  uiaBusy(false);
+  if(r.ok) uiaEl('uaPw').value=uiaEl('uaPw2').value='';
+  UIA.email=email;
+  if(UIA.mode==='up'){ if(!r.ok) return uiaErr(r.msg); if(r.in){ toast(r.msg,'good'); uiaDone(); return; } return uiaSent('signup',r.msg); }
+  if(r.ok){ toast('เข้าสู่ระบบแล้ว','good'); uiaDone(); return; }
+  uiaErr(r.msg); uiaEl('uaNC').hidden=r.code!=='email_not_confirmed';
+}
+async function uiaForgot(){
+  const email=uiaEl('uaEmail').value.trim();
+  if(!athEmailOk(email)) return uiaErr('ใส่อีเมลก่อน แล้วกด "ลืมรหัสผ่าน?" อีกครั้ง');
+  uiaBusy(true); const r=await authRecover(email); uiaBusy(false);
+  UIA.email=email; if(r.ok) uiaSent('recovery',r.msg); else uiaErr(r.msg);
+}
+async function uiaResend(){
+  if(!UIA.email) return uiaView('in');
+  uiaBusy(true);
+  const r=UIA.sentKind==='recovery'?await authRecover(UIA.email):await authResend(UIA.email);
+  uiaBusy(false);
+  if(r.ok) uiaSent(UIA.sentKind,r.msg); else uiaErr(r.msg);
+}
+async function uiaSetPw(){
+  const a=uiaEl('uaNewPw').value, b=uiaEl('uaNewPw2').value;
+  if(a.length<ATH_PW_MIN) return uiaErr(ATH_MSG.pw_short);
+  if(a!==b) return uiaErr(ATH_MSG.pw_mismatch);
+  uiaBusy(true); const r=await authSetPassword(a); uiaBusy(false);
+  if(!r.ok) return uiaErr(r.msg);
+  uiaEl('uaNewPw').value=uiaEl('uaNewPw2').value=''; toast(r.msg,'good'); UI.home();
+}
+function uiaRedirectResult(r){   // authHandleRedirect() → BUS 'auth' 'redirect'
+  if(!r||!CLOUD_OK) return;
+  if(r.kind==='recovery') uiaOpenAuth('reset');
+  else if(r.kind==='signup'||r.kind==='google'||r.kind==='implicit'){ if(r.msg) toast(r.msg,'good'); if(curScreen()==='scrAuth') UI.home(); }
+  else if(r.kind==='nover'||r.kind==='error') uiaOpenAuth('in',r.msg);
+}
+
+/* ---------- scrAccount ---------- */
+function uiaOpenAccount(){
+  if(!CLOUD_OK) return false;
+  if(AUTH.state!=='in'&&AUTH.state!=='expired') return uiaOpenAuth('in');
+  uiaWire(); UIA.bak=null; uiaEl('uaWipeTxt').value=''; uiaWipeArm(); uiaAcctRender(); UI.go('scrAccount');
+  cloudBackupInfo().then(b=>{ UIA.bak=b; uiaAcctRender(); });
+  return true;
+}
+function uiaAcctRender(){
+  if(!CLOUD_OK) return;
+  const m=uiaEl('uaAcctMail'); if(!m||uiaEl('scrAccount').hidden) return;
+  m.textContent=authEmailMasked()||'—';
+  uiaEl('uaAcctStatus').textContent=cloudStatus().text;
+  const en=uiaEl('uaEnt'); if(en) en.textContent=typeof entSummaryTh==='function'?entSummaryTh():'';   // purchases (28 · rg_purchases)
+  uiaEl('uaBakSum').textContent=UIA.bak?uiaSumLine(UIA.bak):'ยังไม่มีข้อมูลสำรอง';
+  uiaEl('uaRestore').disabled=!UIA.bak||AUTH.state!=='in';
+  uiaEl('uaSyncNow').disabled=AUTH.state!=='in';
+  uiaEl('uaSyncNow').textContent=AUTH.state==='expired'?'เข้าสู่ระบบอีกครั้ง':'ซิงก์ตอนนี้';
+  if(AUTH.state==='expired') uiaEl('uaSyncNow').disabled=false;
+}
+function uiaWipeArm(){ const t=uiaEl('uaWipeTxt'), b=uiaEl('uaWipe'); if(t&&b) b.disabled=t.value.trim()!=='ลบ'||AUTH.state!=='in'; }
+const UIA_RES={ok:'ซิงก์แล้ว', none:'ซิงก์แล้ว', offline:ATH_OFFLINE, conflict:'พบความคืบหน้าสองชุด · เลือกชุดที่จะใช้', readonly:'ข้อมูลเป็นเวอร์ชันใหม่กว่าแอป · อัปเดตแอปก่อน', error:'ซิงก์ไม่สำเร็จ ลองใหม่อีกครั้ง'};
+async function uiaAcctRun(fn,okText){
+  uiaBusy(true,'scrAccount'); let r='error';
+  try{ r=await fn(); }catch(e){ console.error('account',e&&e.message); }
+  uiaBusy(false,'scrAccount');
+  toast(r==='ok'&&okText?okText:(UIA_RES[r]||UIA_RES.error),r==='ok'||r==='none'?'good':r==='conflict'?'info':'bad');
+  if(r==='conflict'&&uiaCalm()) uiaChoiceSheet();
+  UIA.bak=await cloudBackupInfo(); uiaAcctRender(); return r;
+}
+
+/* ---------- sheets: conflict (§6.9 / §8.12) and first sign-in link ---------- */
+function uiaSumLine(side){   // "2 ตัวละคร · Lv สูงสุด 23 · 6 ชม. · แก้ 6 พ.ย. 12:01 · iPhone"
+  const s=side.sum||{chars:[]}, n=s.chars.length, top=n?Math.max(...s.chars.map(c=>c.lv)):0, h=(s.play||0)/3600;
+  const parts=[n+' ตัวละคร'];
+  if(n) parts.push('Lv สูงสุด '+top);
+  parts.push(h>=1?Math.round(h)+' ชม.':Math.round(h*60)+' นาที');
+  if(side.at){ const d=new Date(side.at); parts.push('แก้ '+d.toLocaleDateString('th-TH',{day:'numeric', month:'short'})+' '+d.toLocaleTimeString('th-TH',{hour:'2-digit', minute:'2-digit', hour12:false})); }
+  const dev=String(side.dev||'').split(' ')[1]; if(dev) parts.push(dev);
+  return parts.join(' · ');
+}
+function uiaCard(title,side,btnText,fn){
+  const c=uiaMk('div','ua-card');
+  c.append(uiaMk('h3','',title), uiaMk('p','',side?uiaSumLine(side):'ยังไม่มีความคืบหน้า'));
+  if(side&&side.sum&&side.sum.chars.length){
+    const ul=uiaMk('ul');
+    for(const ch of side.sum.chars){ const cls=ch.cls&&Object.prototype.hasOwnProperty.call(CLS,ch.cls)?CLS[ch.cls].n:''; ul.append(uiaMk('li','',ch.n+' · Lv '+ch.lv+(cls?' · '+cls:''))); }
+    c.append(ul);
+  }
+  if(btnText) c.append(uiaBtn(btnText,'primary',fn));
+  return c;
+}
+function uiaChoiceSheet(){
+  if(!CLOUD_OK) return false;
+  const c=cloudConflictInfo(); if(!c) return false;
+  const box=uiaMk('div','ua-sheet');
+  if(c.kind==='askMove'){
+    box.append(uiaCard('ความคืบหน้าในเครื่องนี้',c.local),
+      uiaBtn('ย้าย','primary',()=>uiaResolve('local')), uiaBtn('เริ่มใหม่','ghost',()=>uiaResolve('cloud')),
+      uiaMk('p','hint','เซฟผู้เยี่ยมชมในเครื่องยังอยู่เหมือนเดิม ลบเองได้ที่หน้าบัญชี'));
+    sheet(box,{title:'ย้ายความคืบหน้าในเครื่องขึ้นบัญชีนี้?'});
+  } else {
+    const link=c.kind==='choose';
+    box.append(uiaCard(link?'ในเครื่อง (ผู้เยี่ยมชม)':'เครื่องนี้',c.local,link?'ใช้ของในเครื่อง':'ใช้ชุดนี้',()=>uiaResolve('local')),
+      uiaCard(link?'ของบัญชี':'บนคลาวด์',c.srv,link?'ใช้ของบัญชี':'ใช้ชุดนี้',()=>uiaResolve('cloud')),
+      uiaMk('p','hint','ชุดที่ไม่ได้เลือกจะเก็บเป็นข้อมูลสำรอง 1 ชุด กู้คืนได้ที่หน้าบัญชี'));
+    sheet(box,{title:'พบความคืบหน้าสองชุด'});
+  }
+  return true;
+}
+async function uiaResolve(choice){
+  closeSheet(); toast('⟳ กำลังซิงก์…','info');
+  const r=await cloudResolve(choice);
+  toast(r==='ok'||r==='none'?'เรียบร้อย':UIA_RES[r]||UIA_RES.error,r==='ok'||r==='none'?'good':'bad');
+  if(r==='conflict'&&uiaCalm()) uiaChoiceSheet();
+}
+function uiaStatusTap(){   // hub chip (lane B): what a tap on cloudStatus() does
+  if(!CLOUD_OK) return false;
+  const k=cloudStatus().k;
+  if(k==='guest'||k==='expired') return uiaOpenAuth('in');
+  if(k==='conflict') return uiaChoiceSheet();
+  if(k==='newer'){ if(typeof shUpdateApp==='function') shUpdateApp(); return true; }   // 50: new worker → skipWaiting → reload
+  return uiaOpenAccount();
+}
+
+/* ---------- wiring (first open only) ---------- */
+function uiaWire(){
+  if(UIA.wired||!CLOUD_OK) return; UIA.wired=true;
+  uiaOn('uaGoogle','click',async()=>{ uiaBusy(true); try{ await authGoogle(); }catch(e){ uiaBusy(false); uiaErr(ATH_OFFLINE); } setTimeout(()=>uiaBusy(false),6000); });
+  uiaOn('uaTabIn','click',()=>{ uiaErr(''); uiaView('in'); });
+  uiaOn('uaTabUp','click',()=>{ uiaErr(''); uiaView('up'); });
+  uiaOn('uaEye','click',()=>{ const p=uiaEl('uaPw'), show=p.type==='password'; p.type=show?'text':'password';
+    uiaEl('uaEye').setAttribute('aria-pressed',String(show)); uiaEl('uaEye').setAttribute('aria-label',show?'ซ่อนรหัสผ่าน':'แสดงรหัสผ่าน'); });
+  uiaOn('uaMain','submit',e=>{ e.preventDefault(); uiaSubmit(); });   // button or Enter · method="dialog" never navigates anyway
+  uiaOn('uaNC','click',async()=>{ UIA.sentKind='signup'; await uiaResend(); });
+  uiaOn('uaForgot','click',uiaForgot);
+  uiaOn('uaGuest','click',()=>{ UIA.after=null; authChooseGuest(); UI.home(); });
+  uiaOn('uaSentAgain','click',uiaResend);
+  uiaOn('uaSentBack','click',()=>{ uiaErr(''); uiaView('in'); });
+  uiaOn('uaReset','submit',e=>{ e.preventDefault(); uiaSetPw(); });
+  uiaOn('uaResetSkip','click',()=>UI.home());
+  uiaOn('uaSyncNow','click',()=>AUTH.state==='expired'?uiaOpenAuth('in'):uiaAcctRun(cloudSyncNow));
+  uiaOn('uaRestore','click',async()=>{
+    if(!UIA.bak) return;
+    const ok=await confirmBox('กู้คืนข้อมูลสำรอง ('+uiaSumLine(UIA.bak)+')? ข้อมูลบนคลาวด์ตอนนี้จะสลับไปเป็นข้อมูลสำรองแทน',{hold:UIA_HOLD, okText:'กดค้างเพื่อกู้คืน'});
+    if(ok) uiaAcctRun(cloudRestoreBackup,'กู้คืนแล้ว'); });
+  uiaOn('uaExport','click',()=>{ const j=exportSave(); if(!j) return toast('ยังไม่มีเซฟให้ส่งออก','bad'); if(typeof hbDownload==='function') hbDownload(j); });   // 52
+  uiaOn('uaSignOut','click',async()=>{ uiaBusy(true,'scrAccount'); await authSignOut(); uiaBusy(false,'scrAccount'); toast('ออกจากระบบแล้ว (เครื่องนี้)','info'); UI.home(); });
+  uiaOn('uaDelGuest','click',async()=>{
+    if(!SAVE||SAVE.owner==null) return toast('ตอนนี้กำลังเล่นเซฟผู้เยี่ยมชมอยู่ จึงลบไม่ได้','bad');
+    if(STORE.get('runeguard.save.guest')===null) return toast('ไม่มีเซฟผู้เยี่ยมชมในเครื่องนี้','info');
+    if(!await confirmBox('ลบเซฟผู้เยี่ยมชมในเครื่องนี้? ย้อนกลับไม่ได้',{hold:UIA_HOLD, okText:'กดค้างเพื่อลบ'})) return;
+    STORE.del('runeguard.save.guest'); STORE.del('runeguard.save.guest.bak'); toast('ลบเซฟผู้เยี่ยมชมแล้ว','good'); });
+  uiaOn('uaWipeTxt','input',uiaWipeArm);
+  uiaOn('uaWipe','click',async()=>{
+    if(uiaEl('uaWipeTxt').value.trim()!=='ลบ') return;
+    if(!await confirmBox('ลบข้อมูล Runeguard บนคลาวด์ทั้งหมด (รวมข้อมูลสำรอง)? บัญชีผู้ใช้จะไม่ถูกลบ เพราะใช้ร่วมกับแอปอื่น',{hold:UIA_HOLD, okText:'กดค้างเพื่อลบ'})) return;
+    uiaEl('uaWipeTxt').value=''; uiaAcctRun(cloudWipe,'ลบข้อมูลบนคลาวด์แล้ว · เซฟในเครื่องยังอยู่'); });
+  uiaOn('uaAcctBack','click',()=>UI.back());
+}
 /* ================= 52-ui-hub.js · lane B · scrHub, scrChars, scrNew (create), scrSurv, scrSettings ================= */
 // Screens render on BUS 'screen'. Data: SAVE via lane C's API (gold is account-wide: Q7). Player names → textContent only.
 const HB={tier:0, picked:false, top:-1, cls:'swordsman', t:0, sig:'', csig:''};
@@ -5493,7 +6581,7 @@ function hbSet(){
     row('ใช้ยาอัตโนมัติเมื่อ HP ต่ำกว่า',p);
     row('เปิดการ์ดทันทีในทุ่ง',hbTog(s.cardAuto,()=>{ saveSettings({cardAuto:!s.cardAuto}); hbSet(); })); }
   row('เซฟในเครื่อง',shBtn('ส่งออก','btn ghost',hbExport),shBtn('นำเข้า','btn ghost',hbImport));
-  if(typeof AUTH_ON!=='undefined'&&AUTH_ON&&typeof uiaOpenAccount==='function') row('บัญชีออนไลน์',shBtn('เปิด ›','btn ghost',()=>uiaOpenAccount()));
+  if(typeof CLOUD_OK!=='undefined'&&CLOUD_OK&&typeof uiaOpenAccount==='function') row('บัญชีออนไลน์',shBtn('เปิด ›','btn ghost',()=>uiaOpenAccount()));
   L.append(shMk('p','st-ver','Runeguard '+(typeof SV_APP==='string'?SV_APP:'')+' · ข้อมูลเก็บในเครื่องนี้')); }
 function hbTog(on,fn){ const b=shBtn(on?'เปิด':'ปิด','st-tg',fn); b.setAttribute('aria-pressed',String(!!on)); return b; }
 function hbExport(){
@@ -6756,36 +7844,86 @@ function tfCardQ(c,o){
 DEV.tree={ buy(id,n){ const ch=curChar(); return tfBuy(ch,id,n)||tfWhy(ch,id,n); }, info(){ const ch=curChar(); return ch&&{free:tfFree(ch), spent:tfSpent(ch), tr:ch.tr}; },
   open(id){ tfOpen(id); return !!TFW.box; }, fx(){ return P?{tf:!!P.tf, tfg:P.tfg||null, skills:P.skills.map(s=>({id:s.id, lv:s.lv, fx:s.fx||null, mod:s.mod||null}))}:null; } };
 /* ================= 59a-ui-shop.js · lane P · shop sheet + starting-Lv sheet (docs/PROPOSAL-shop.md) ================= */
-// shopOpen(reason): the shop (supporter pack + rune packs) · from a locked level-up card, the 🔒 reroll, the skills page and the fort.
-// Real payment = step ค. (Stripe through a Vercel function) · until then "ซื้อ" says so; #dev has a test grant (RG.shop).
-// slOpen(): starting Lv of every loadout skill, bought with rune points (28 slBuy).
+// shopOpen(reason): the shop · from a locked card, the 🔒 reroll, the skills page and the fort. Buy: signed in (else sign-in, then
+// back here) → confirm → POST /api/checkout {product} (token) → Stripe (card / PromptPay) → /?paid=1&sid= → shopReturn reloads
+// rg_purchases (28) until that session is there. Prices / grants are the server's (api/). SHOP_PAY = GET /api/checkout
+// {configured}, asked only when signed in · #dev grant (local dev server) while payment is off. slOpen(): starting Lv (28 slBuy).
 const SHOP_WHY={cards:'การ์ดใบที่ 4–5 เลือกได้เฉพาะผู้สนับสนุน', reroll:'สุ่มใหม่ครบ 2 ครั้งแล้วในรอบนี้ · ผู้สนับสนุนสุ่มได้ไม่จำกัด', rune:'รูนไม่พอ · เติมรูนเพื่ออัปได้เร็วขึ้น'};
-const SHOP_PAY_ON=false;                                                   // step ค. turns this on (checkout through /api/checkout)
-let SHW={box:null, reason:''};
+const SHOP_ERR={off:'ระบบชำระเงินยังไม่เปิด · เร็ว ๆ นี้', auth:'เซสชันหมดอายุ · เข้าสู่ระบบใหม่แล้วลองอีกครั้ง', net:'เชื่อมต่อไม่ได้ · ลองใหม่เมื่อออนไลน์',
+  fail:'สร้างรายการชำระเงินไม่ได้ · ยังไม่มีการตัดเงิน ลองใหม่อีกครั้ง', site:'ซื้อได้ที่ runeguard-lac.vercel.app (หน้านี้เล่นได้แต่ซื้อไม่ได้)'};
+const SHOP_WAIT=[1500,2500,4000,6000,10000,15000];                        // ms between rg_purchases reloads after ?paid=1 (≈ 40 s)
+let SHOP_PAY=null, SHW={box:null, reason:'', busy:false, probe:null};
+function shopCanPay(){ return SHOP_PAY===true; }
 function shopBaht(n){ return n.toLocaleString('en-US')+' บาท'; }
 function shopOpen(reason){ SHW.reason=reason||''; const box=shMk('div','sp-win'); SHW.box=box;
-  box.addEventListener('click',shopClick); sheet(box,{title:'💎 ร้านรูน', onClose:()=>{ if(SHW.box===box) SHW.box=null; }}); shopRender(); }
+  box.addEventListener('click',shopClick); sheet(box,{title:'💎 ร้านรูน', onClose:()=>{ if(SHW.box===box) SHW.box=null; }}); shopRender();
+  if(entSigned()){ shopProbe(); if(Date.now()-ENTS.at>120000) entRefresh().then(ok=>{ if(ok) shopAfter(); }); } }
+function shopNote(){   // the line under the products: how buying works from here
+  if(typeof CLOUD_OK==='undefined'||!CLOUD_OK) return SHOP_ERR.site;
+  if(!entSigned()) return 'ต้องเข้าสู่ระบบก่อนซื้อ · สิทธิ์จะติดบัญชีและใช้ได้ทุกเครื่อง';
+  if(SHOP_PAY===null) return 'กำลังตรวจระบบชำระเงิน…';
+  if(!shopCanPay()) return SHOP_ERR.off;
+  return 'จ่ายผ่าน Stripe (บัตร / พร้อมเพย์) · สิทธิ์ติดบัญชี '+(typeof authEmailMasked==='function'?authEmailMasked():'')+(ENTS.uid===entUid()?'':' · กำลังโหลดรายการซื้อ…'); }
 function shopRender(){
-  const box=SHW.box; if(!box) return; const sup=isSupporter(), w=shopWallet(), dev=shopDevHost();
+  const box=SHW.box; if(!box) return; const sup=isSupporter(), w=shopWallet(), dev=shopDevHost()&&!shopCanPay();
   let h=SHW.reason&&SHOP_WHY[SHW.reason]?`<p class="sp-why">${tfE(SHOP_WHY[SHW.reason])}</p>`:'';
   h+=`<div class="sp-stat"><div><b>${sup?'💎 ผู้สนับสนุน':'ยังไม่เป็นผู้สนับสนุน'}</b><small>${sup?'เหลือ '+supDaysLeft()+' วัน':'การ์ด 3 จาก 5 ใบ · สุ่มใหม่ 2 ครั้งต่อรอบ'}</small></div>`
     +`<div><b>🔷 ${w.toLocaleString('en-US')}</b><small>รูนในกระเป๋าบัญชี</small></div><button type="button" class="tf-q" data-help="shop" aria-label="อธิบายร้านรูน">?</button></div>`;
   h+='<ul class="sp-list">'+RSHOP.products.map(p=>`<li class="sp-item${p.days?' sup':''}"><span class="sp-ic" aria-hidden="true">${p.i}</span><div class="sp-m"><b>${tfE(p.n)}</b><small>${tfE(p.d)}</small></div>`
-    +`<button type="button" class="btn${p.days?'':' ghost'}" data-buy="${p.id}">${shopBaht(p.thb)}</button></li>`).join('')+'</ul>';
-  h+=`<p class="sp-note">${SHOP_PAY_ON?'จ่ายผ่าน Stripe (บัตร / พร้อมเพย์) · ต้องล็อกอินก่อนเพื่อให้สิทธิ์ติดบัญชี':'ระบบชำระเงินกำลังเปิดเร็ว ๆ นี้ (ต้องล็อกอินเพื่อให้สิทธิ์ติดบัญชี)'}</p>`;
+    +`<button type="button" class="btn${p.days?'':' ghost'}" data-buy="${p.id}"${SHW.busy?' disabled':''}>${shopBaht(p.thb)}</button></li>`).join('')+'</ul>';
+  h+=`<p class="sp-note">${tfE(SHW.busy?'กำลังเปิดหน้าชำระเงิน…':shopNote())} <button type="button" class="tf-q" data-help="pay" aria-label="อธิบายการชำระเงิน">?</button></p>`;
   if(dev) h+='<p class="sp-dev">#dev: ปุ่มซื้อ = มอบสิทธิ์ทดสอบในเครื่องนี้ · <button type="button" class="btn ghost" data-a="devclear">ล้างสิทธิ์ทดสอบ</button></p>';
   box.innerHTML=h; const f=box.querySelector('[data-buy]'); if(f) try{ f.focus({preventScroll:true}); }catch(_){} }   // focus into the sheet (tester r2 F8)
 function shopClick(e){
   const q=e.target.closest('[data-help]'); if(q){ tfHelp(q.dataset.help); return; }
-  const b=e.target.closest('[data-buy],[data-a]'); if(!b) return;
+  const b=e.target.closest('[data-buy],[data-a]'); if(!b||b.disabled) return;
   if(b.dataset.a==='devclear'){ DEV.shop.clear(); toast('ล้างสิทธิ์ทดสอบแล้ว','info'); shopAfter(); return; }
   const p=RSHOP.products.find(x=>x.id===b.dataset.buy); if(!p) return;
-  if(SHOP_PAY_ON&&typeof shopCheckout==='function'){ shopCheckout(p.id); return; }   // real payment first, always
+  if(shopCanPay()){ shopBuy(p); return; }                                   // real payment first, always
   if(shopDevHost()){ DEV.shop.grant(p.id); toast('ทดสอบ: ได้ '+p.n,'good'); shopAfter(); return; }
-  toast('ระบบชำระเงินยังไม่เปิด · เร็ว ๆ นี้','info'); }
+  if(typeof CLOUD_OK==='undefined'||!CLOUD_OK){ toast(SHOP_ERR.site,'info'); return; }
+  if(!entSigned()){ const r=SHW.reason; closeSheet();
+    if(typeof uiaOpenAuth!=='function'||!uiaOpenAuth('in','เข้าสู่ระบบก่อนซื้อ · สิทธิ์จะติดบัญชีและใช้ได้ทุกเครื่อง',()=>shopOpen(r))) toast(SHOP_ERR.site,'info');
+    return; }
+  if(SHOP_PAY===null){ toast('กำลังตรวจระบบชำระเงิน…','info'); shopProbe().then(()=>{ if(shopCanPay()) shopBuy(p); else toast(SHOP_ERR.off,'info'); }); return; }
+  toast(SHOP_ERR.off,'info'); }
+// GET /api/checkout → {configured} · signed in only (a guest sends nothing) · a failure leaves it unknown (asked again next time)
+function shopProbe(){ if(!entSigned()||SHOP_PAY!==null) return Promise.resolve(SHOP_PAY); if(SHW.probe) return SHW.probe;
+  SHW.probe=authApi('/api/checkout',{auth:false}).then(r=>r.json()).then(o=>{ SHOP_PAY=!!(o&&o.configured===true); },()=>{})
+    .then(()=>{ SHW.probe=null; shopRender(); return SHOP_PAY; });
+  return SHW.probe; }
+async function shopBuy(p){
+  if(SHW.busy) return; if(!entSigned()){ toast(SHOP_ERR.auth,'bad'); return; }
+  const mid=typeof G!=='undefined'&&G&&!G.over;
+  if(!await confirmBox('ซื้อ '+p.n+' ราคา '+shopBaht(p.thb)+'? ระบบจะพาไปหน้าชำระเงินของ Stripe (บัตร / พร้อมเพย์) แล้วกลับมาที่เกม'
+    +(mid?' · ⚠ รอบที่เล่นอยู่จะจบลงโดยไม่ได้รางวัล (แนะนำให้ซื้อหลังจบรอบ)':''),{okText:'ไปหน้าชำระเงิน'})) return;
+  SHW.busy=true; shopRender(); let url='', err='fail';
+  try{ const r=await authApi('/api/checkout',{method:'POST', json:{product:p.id}}), o=await r.json().catch(()=>null);
+    if(r.ok&&o&&typeof o.url==='string'&&/^https:\/\/checkout\.stripe\.com\/[\w\-./#%?=&]+$/.test(o.url)) url=o.url;
+    else err=r.status===503?'off':r.status===401?'auth':'fail'; }
+  catch(e){ err=e&&e.code==='noauth'?'auth':'net'; }
+  if(url){ try{ saveNow('pay'); }catch(e){} location.assign(url); return; }   // the page goes away: busy stays on
+  SHW.busy=false; if(err==='off') SHOP_PAY=false; toast(SHOP_ERR[err],'bad'); shopRender(); }
+// boot (99): a kept session loads its purchases · ?paid=1&sid=cs_… (Stripe success) / ?paid=0 (cancel) leave the address at once
+function shopReturn(){
+  if(entSigned()) entRefresh();                                            // (a sign-in coming back in the URL loads them on 'auth' 'in')
+  let q; try{ q=new URLSearchParams(location.search); }catch(e){ return; } const paid=q.get('paid'); if(paid!=='1'&&paid!=='0') return;
+  const sid=q.get('sid')||''; q.delete('paid'); q.delete('sid');
+  try{ history.replaceState(history.state,'',location.pathname+(q.toString()?'?'+q:'')+location.hash); }catch(e){}
+  if(paid==='0'){ toast('ยกเลิกการชำระเงินแล้ว · ไม่มีการตัดเงิน','info'); return; }
+  shopWait(/^cs_(test|live)_[A-Za-z0-9]{1,200}$/.test(sid)?sid:'',0); }
+// the webhook writes rg_purchases a moment after Stripe sends the player back: reload until this session's row is there
+function shopWait(sid,i){
+  if(!entSigned()){ if(i<SHOP_WAIT.length) setTimeout(()=>shopWait(sid,i+1),SHOP_WAIT[i]); else toast('เข้าสู่ระบบบัญชีที่ใช้ซื้อเพื่อรับสิทธิ์','info'); return; }
+  if(!i) toast('ชำระเงินแล้ว · กำลังรับสิทธิ์…','info');
+  entRefresh().then(()=>{ const got=sid?ENTS.sids.includes(sid):ENTS.n>0;
+    if(got){ toast('ได้รับสิทธิ์แล้ว · ขอบคุณที่สนับสนุน 💎','good'); shopAfter(); return; }
+    if(i<SHOP_WAIT.length) setTimeout(()=>shopWait(sid,i+1),SHOP_WAIT[i]);
+    else toast('ยังไม่พบรายการซื้อ · ถ้าตัดเงินแล้ว สิทธิ์จะขึ้นภายในไม่กี่นาที เปิดร้านอีกครั้งเพื่อตรวจ','info'); }); }
 // after a purchase: the sheet, the level-up cards (locks / reroll button) and the open tree all redraw
 function shopAfter(){ shopRender(); try{ if(G&&G.ui==='level'){ if(G.char&&G.rerolls<=RSHOP.freeRerolls&&isSupporter()) G.rerolls=1e9; renderCards(); HD.info=null; } }catch(e){ console.error(e); }
   if(typeof tfRender==='function'&&TFW.box) tfRender(); if(typeof pksRender==='function'&&prgVis('scrSkills')) pksRender(); }
+BUS.on('ent',()=>{ if(SHW.box) shopRender(); });
 
 /* ---- starting Lv ---- */
 let SLW={box:null};
@@ -6810,7 +7948,11 @@ function slClick(e){ const q=e.target.closest('[data-help]'); if(q){ tfHelp(q.da
 TF_HELP.shop=['ร้านรูน',()=>`<h4>💎 แพคสนับสนุน 30 วัน · 35 บาท</h4><p>ระหว่างที่เป็นผู้สนับสนุน: สุ่มการ์ดใหม่ได้ไม่จำกัดทุกรอบ · เลือกการ์ดเลเวลอัปได้ทั้ง 5 ใบ (คนทั่วไปเลือกได้ใบ 1–3 และสุ่มใหม่ 2 ครั้งต่อรอบ) · จ่ายครั้งเดียว ไม่ต่ออัตโนมัติ · ซื้อซ้ำ = ต่อเวลาอีก 30 วัน</p>
   <h4>🔷 รูน</h4><p>รูนที่ซื้อเข้ากระเป๋าบัญชี ใช้กับตัวละครไหนก็ได้ · ตอนฝึกโหนดหรือซื้อระดับเริ่มต้นแล้วรูนของตัวละครไม่พอ เกมหยิบจากกระเป๋าให้ แล้วรูนนั้นเป็นของตัวละครนั้น (รีเซ็ตต้นไม้ = คืนเข้าตัวละครเดิม)</p>
   <table>${tfRow('รูน 60','35 บาท')}${tfRow('รูน 200','99 บาท')}${tfRow('รูน 700','299 บาท')}${tfRow('รูน 2500','899 บาท')}</table>
-  <h4>การจ่ายเงิน</h4><p>ผ่าน Stripe (บัตร / พร้อมเพย์) · ต้องล็อกอินก่อน สิทธิ์จึงติดบัญชีและใช้ได้ทุกเครื่อง</p>`];
+  <h4>การจ่ายเงิน</h4><p>ผ่าน Stripe (บัตร / พร้อมเพย์) · ต้องล็อกอินก่อน สิทธิ์จึงติดบัญชีและใช้ได้ทุกเครื่อง · <button type="button" class="btn ghost" data-help="pay">ขั้นตอนการซื้อ</button></p>`];
+TF_HELP.pay=['การชำระเงิน',()=>`<h4>ขั้นตอน</h4><table>${tfRow('1','เข้าสู่ระบบ (อีเมล หรือ Google) · สิทธิ์ผูกกับบัญชี ไม่ใช่เครื่อง')}${tfRow('2','แตะราคา → ยืนยัน → เกมพาไปหน้าชำระเงินของ Stripe')}${tfRow('3','จ่ายด้วยบัตร หรือสแกน QR พร้อมเพย์ด้วยแอปธนาคาร')}${tfRow('4','Stripe ส่งกลับมาที่เกม · สิทธิ์ขึ้นเองภายในไม่กี่วินาที')}</table>
+  <h4>ปลอดภัยอย่างไร</h4><p>เกมไม่เห็นและไม่เก็บเลขบัตร · ราคาและสิทธิ์ที่ได้กำหนดที่เซิร์ฟเวอร์ เกมส่งแค่ว่าเลือกสินค้าไหน · สิทธิ์นับจากรายการที่ Stripe ยืนยันว่าจ่ายแล้วเท่านั้น (แก้เซฟเองก็ไม่ได้รูนเพิ่ม)</p>
+  <h4>ถ้าจ่ายแล้วสิทธิ์ยังไม่ขึ้น</h4><p>รอสักครู่แล้วเปิดร้านอีกครั้ง (เกมโหลดรายการซื้อใหม่) · ตรวจว่าเข้าสู่ระบบบัญชีเดียวกับตอนซื้อ · พร้อมเพย์บางธนาคารยืนยันช้ากว่าบัตร</p>
+  <h4>ยกเลิก</h4><p>กดย้อนกลับในหน้า Stripe = ยกเลิก ไม่มีการตัดเงิน · แพคสนับสนุนจ่ายครั้งเดียว ไม่ต่ออายุอัตโนมัติ</p>`];
 TF_HELP.startlv=['ระดับเริ่มต้นของสกิล',()=>`<p>ตั้งว่าสกิลจะเริ่มที่ Lv เท่าไรตอนได้มาในรอบ (รวมสกิลที่ถือเริ่มรอบ) · ไม่เกิน ★ ที่ฝึกไว้ · ใช้ทุกโหมดยกเว้นคลาสสิก</p>
   <table>${[2,3,4,5,6,7,8].map(l=>tfRow('Lv '+l,RSHOP.slCost[l]+' รูน (รวม '+slSpentTo(l)+')')).join('')}</table>
   <p>ใช้แต้มรูนเดียวกับต้นไม้สกิล · ราคาสูงตั้งใจให้เป็นที่ใช้รูนก้อนใหญ่ ผู้ที่เติมรูนจะไปได้เร็วกว่า · รีเซ็ตต้นไม้ของสกิลไหน ระดับเริ่มต้นของสกิลนั้นรีเซ็ตด้วย (ได้รูนคืนครบ)</p>`];
@@ -6821,7 +7963,7 @@ DEV.shop={ grant(id){ if(!shopDevHost()) return 'local dev only'; const p=RSHOP.
     const o={sup:p.days?Math.max(e.sup,now)+p.days*864e5:e.sup, runes:(e.runes|0)+(p.runes|0)};
     try{ localStorage.setItem('runeguard.devEnt',JSON.stringify(o)); }catch(_){} entOk=false; return entGet(); },
   clear(){ try{ localStorage.removeItem('runeguard.devEnt'); }catch(_){} entOk=false; return entGet(); },
-  info(){ return {ent:entGet(), sup:isSupporter(), wallet:shopWallet()}; }, open(r){ shopOpen(r); return !!SHW.box; }, start(){ slOpen(); return !!SLW.box; } };
+  info(){ return {ent:entGet(), sup:isSupporter(), wallet:shopWallet(), server:ENTS.uid?{n:ENTS.n, runes:ENTS.runes, sup:ENTS.sup}:null, pay:SHOP_PAY}; }, open(r){ shopOpen(r); return !!SHW.box; }, start(){ slOpen(); return !!SLW.box; } };
 /* ================= 60-zones-data.js · lane F · pure · zones and mobs (merged into EN on load) ================= */
 /* M0 stub: frozen signatures from DESIGN §7.8, neutral values — classic never calls these. Lane F writes the real body. */
 const ZONES={};
@@ -7075,7 +8217,8 @@ if(location.hash==='#dev'){ const RG=Object.assign({
 // → lane B shell → hub (scrHub). The classic title (scrTitle) is still rendered here and stays one tap away in the hub;
 // it is also the fallback when the shell is missing or throws, so the original game always starts.
 // Artifact (claude.ai): no service worker is registered by this page (only dist/index.html adds one), history is left to
-// the host page (lane B), and a blocked localStorage plays from memory (STORE). No network here (AUTH_ON=false, M3).
+// the host page (lane B), and a blocked localStorage plays from memory (STORE). No network there (CLOUD_OK=false).
+// M3: a kept session loads its account save first (authBootOwner) · then the address: sign-in (?code=) · Stripe (?paid=).
 function boot(data){
   resize(); groundPat=ctx.createPattern(makeGround(),'repeat'); buildNum();
   for(const t in EN) if(!EN[t].boss&&!EN[t].lazy) getSpr(t);   // zone mobs set lazy:1 and are built on entry
@@ -7084,10 +8227,11 @@ function boot(data){
   let hub=false;
   try{
     if(loadSettings().mute&&AU.on) toggleMute();               // runeguard.settings · lane B keeps it in sync afterwards
-    loadSaveFor(null);                                         // guest save (accounts come in M3) · emits BUS 'char'
+    loadSaveFor(typeof authBootOwner==='function'?authBootOwner():null);   // guest save, or a kept session's account save · emits BUS 'char'
     if(data&&typeof data.char==='string'&&SAVE&&SAVE.active!==data.char) setActiveChar(data.char);   // hot reload keeps the pick
     if(typeof shBoot==='function'){ shBoot(); hub=!!curScreen(); }
   }catch(e){ console.error(e); }
+  try{ if(typeof authHandleRedirect==='function') authHandleRedirect(); if(typeof shopReturn==='function') shopReturn(); }catch(e){ console.error(e); }
   if(!hub) show('scrTitle');                                   // the original boot screen
   if(document.fonts&&document.fonts.load){ document.fonts.load('700 16px Mali').then(()=>{ buildNum(); TXT.clear(); renderTitle(); }).catch(()=>{}); }
   requestAnimationFrame(frame);

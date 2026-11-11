@@ -1,1 +1,79 @@
-<!-- 51-auth.html · lane N · M0 stub (empty) -->
+<!-- 51-auth.html · lane N · scrAuth (sign in / sign up) and scrAccount · registered when AUTH_ON, opened only when CLOUD_OK
+     forms are method="dialog": outside a <dialog> they never navigate, so an email or password can never land in a URL or a request -->
+<section class="screen" id="scrAuth" hidden aria-label="บัญชีผู้เล่น">
+  <div class="panel ua-panel">
+    <header class="brand"><h1 class="logo ua-logo">Runeguard<small>ศึกคลื่นอันเดด</small></h1></header>
+    <form class="ua-view" id="uaMain" method="dialog" novalidate>
+      <button class="btn primary ua-wide" id="uaGoogle" type="button"><span class="ua-g" aria-hidden="true">G</span>เข้าสู่ระบบด้วย Google</button>
+      <div class="ua-or" role="separator"><span>หรือ</span></div>
+      <div class="seg ua-seg" role="group" aria-label="เข้าสู่ระบบหรือสมัครสมาชิก">
+        <button type="button" id="uaTabIn" aria-pressed="true">เข้าสู่ระบบ</button>
+        <button type="button" id="uaTabUp" aria-pressed="false">สมัครสมาชิก</button>
+      </div>
+      <label class="ua-field"><span>อีเมล</span><input id="uaEmail" type="email" autocomplete="email" inputmode="email" autocapitalize="off" spellcheck="false" maxlength="254"></label>
+      <div class="ua-field"><label for="uaPw">รหัสผ่าน</label><span class="ua-pw"><input id="uaPw" type="password" autocomplete="current-password" maxlength="72"><button class="ua-eye" id="uaEye" type="button" aria-label="แสดงรหัสผ่าน" aria-pressed="false">👁</button></span></div>
+      <label class="ua-field" id="uaPw2Row" hidden><span>ยืนยันรหัสผ่าน</span><input id="uaPw2" type="password" autocomplete="new-password" maxlength="72"></label>
+      <button class="btn ua-go ua-wide" id="uaSubmit" type="submit">ดำเนินการ</button>
+      <button class="btn ghost ua-wide" id="uaNC" type="button" hidden>ส่งลิงก์ยืนยันอีกครั้ง</button>
+      <button class="ua-link" id="uaForgot" type="button">ลืมรหัสผ่าน?</button>
+      <div class="ua-sep" role="separator"></div>
+      <button class="btn ghost ua-wide" id="uaGuest" type="button">เล่นแบบผู้เยี่ยมชม</button>
+      <p class="hint">เซฟในเครื่อง · ผูกบัญชีทีหลังได้</p>
+    </form>
+    <div class="ua-view" id="uaSent" hidden>
+      <h2 class="ua-h">ตรวจกล่องจดหมาย</h2>
+      <p class="ua-text" id="uaSentMsg"></p>
+      <button class="btn ua-go ua-wide" id="uaSentAgain" type="button">ส่งอีกครั้ง</button>
+      <button class="btn ghost ua-wide" id="uaSentBack" type="button">กลับ</button>
+    </div>
+    <form class="ua-view" id="uaReset" method="dialog" novalidate hidden>
+      <h2 class="ua-h">ตั้งรหัสผ่านใหม่</h2>
+      <p class="ua-warn">รหัสใหม่ใช้กับทุกแอปในบัญชีนี้</p>
+      <input id="uaUser" type="text" autocomplete="username" hidden tabindex="-1" aria-hidden="true">
+      <label class="ua-field"><span>รหัสผ่านใหม่ (อย่างน้อย 8 ตัว)</span><input id="uaNewPw" type="password" autocomplete="new-password" maxlength="72"></label>
+      <label class="ua-field"><span>ยืนยันรหัสผ่านใหม่</span><input id="uaNewPw2" type="password" autocomplete="new-password" maxlength="72"></label>
+      <button class="btn primary ua-wide" id="uaSetPw" type="submit">บันทึกรหัสผ่านใหม่</button>
+      <button class="btn ghost ua-wide" id="uaResetSkip" type="button">ข้ามไปก่อน</button>
+    </form>
+    <p class="ua-err" id="uaErr" role="status" aria-live="polite"></p>
+    <details class="ua-note">
+      <summary>ⓘ บัญชีใช้ระบบเดียวกับแอปอื่นของผู้พัฒนา</summary>
+      <ul>
+        <li>อีเมลยืนยันและอีเมลรีเซ็ตรหัสผ่านมาในชื่อของแอปอื่นของผู้พัฒนา</li>
+        <li>หน้าขออนุญาตของ Google จะขึ้นชื่อแอปเดิมของผู้พัฒนา</li>
+        <li>โควตาส่งอีเมลมีน้อยและใช้ร่วมกัน ถ้าได้ใช้ปุ่ม Google จะสะดวกกว่า</li>
+        <li>การตั้งรหัสผ่านใหม่มีผลกับทุกแอปที่ใช้บัญชีเดียวกันนี้</li>
+      </ul>
+    </details>
+    <div class="ua-busy" id="uaBusy" hidden><span class="ua-spin" role="progressbar" aria-label="กำลังดำเนินการ"></span></div>
+  </div>
+</section>
+
+<section class="screen" id="scrAccount" hidden aria-label="บัญชี">
+  <div class="panel small-panel ua-panel">
+    <h2 class="end-title ua-title">บัญชี</h2>
+    <div class="box">
+      <p class="ua-row"><span class="qlabel">บัญชี</span><b class="ua-mail" id="uaAcctMail"></b></p>
+      <p class="ua-row" id="uaAcctStatus" role="status" aria-live="polite"></p>
+      <p class="ua-row" id="uaEnt"></p>
+      <button class="btn primary ua-wide" id="uaSyncNow" type="button">ซิงก์ตอนนี้</button>
+    </div>
+    <div class="box">
+      <p class="qlabel">ข้อมูลสำรอง:</p>
+      <p class="ua-text" id="uaBakSum">ยังไม่มีข้อมูลสำรอง</p>
+      <button class="btn ghost ua-wide" id="uaRestore" type="button" disabled>กู้คืน</button>
+    </div>
+    <div class="box">
+      <button class="btn ghost ua-wide" id="uaExport" type="button">ส่งออกเซฟ .json</button>
+      <button class="btn ghost ua-wide" id="uaSignOut" type="button">ออกจากระบบ (เครื่องนี้)</button>
+      <button class="btn ghost ua-wide ua-danger" id="uaDelGuest" type="button">ลบเซฟผู้เยี่ยมชมในเครื่อง</button>
+    </div>
+    <div class="box">
+      <label class="ua-field"><span>ลบข้อมูล Runeguard บนคลาวด์: พิมพ์คำว่า "ลบ" แล้วกดค้างที่ปุ่ม</span><input id="uaWipeTxt" type="text" autocomplete="off" maxlength="8"></label>
+      <button class="btn ua-wide ua-danger" id="uaWipe" type="button" disabled>ลบข้อมูล Runeguard บนคลาวด์</button>
+      <p class="hint">บัญชีผู้ใช้จะไม่ถูกลบ เพราะใช้ร่วมกับแอปอื่น</p>
+    </div>
+    <button class="btn ghost" id="uaAcctBack" type="button">กลับ</button>
+    <div class="ua-busy" id="uaAcctBusy" hidden><span class="ua-spin" role="progressbar" aria-label="กำลังดำเนินการ"></span></div>
+  </div>
+</section>

@@ -36,7 +36,8 @@ function svlNote(text,kind){ try{ if(typeof toast==='function') toast(text,kind)
 function svlMergeBest(s,best){ const imp=svImportBest(best); if(!imp) return; const c=s.acct.records.classic;
   for(const k in imp) if(!c[k]||imp[k].score>c[k].score) c[k]=imp[k]; }
 function loadSaveFor(owner){
-  owner=svOwner(owner); clearTimeout(svlTimer); svlTimer=0; svlOwner=owner;
+  owner=svOwner(owner); if(svlTimer&&SAVE&&owner!==svlOwner) saveNow('switch');   // M3 sign-in / out: a pending write goes to its own key first
+  clearTimeout(svlTimer); svlTimer=0; svlOwner=owner;
   if(svlSandbox){ if(!SAVE){ SAVE=migrateSave(null,null); SAVE.owner=owner; } svlMark(); return SAVE; }
   svlHook();
   const key=svlKeyFor(owner), best=svlBest(), raw=STORE.get(key);
@@ -257,6 +258,22 @@ function importSave(json){
   if(SAVE!==n) return {ok:false, err:SVL_RACE};                            // the write found another tab's save and reloaded instead
   svlMark(); BUS.emit('char',curChar());
   return {ok:true, err:'', warn:stored||svlSandbox?'':'บันทึกลงเครื่องไม่ได้ · เซฟที่นำเข้าอยู่ในหน่วยความจำเท่านั้น ปิดหน้านี้แล้วจะหาย'}; }
+// M3 F12: a cloud copy (adopt / restore / conflict pick) or a guest save moved up becomes owner's save by the import rules: new
+// lineage wb after the one it replaces (wp), one stamped svlWrite → no tab takes it for a stale copy (svlStaleP) · true = stored
+function svlFromCloud(owner,obj){
+  owner=svOwner(owner); if(!owner||svlSandbox||!svObj(obj)||!Number.isInteger(obj.v)||obj.v<1||obj.v>SCHEMA_V) return false;
+  let n; try{ n=migrateSave(JSON.parse(JSON.stringify(obj)),null); }catch(e){ console.error(e); return false; }
+  if(svlTimer&&SAVE&&svlOwner!==owner) saveNow('switch');
+  clearTimeout(svlTimer); svlTimer=0; svlHook();
+  const key=svlKeyFor(owner), cur=STORE.get(key), sc=svlParse(cur), mine=svlOwner===owner&&SAVE&&!SAVE.ro?SAVE:null;
+  const par=sc.k==='ok'&&sc.o.v<=SCHEMA_V&&typeof sc.o.wb==='string'&&Number.isInteger(sc.o.wc)?sc.o:mine;
+  const okWp=p=>svObj(p)&&typeof p.wb==='string'&&/^w_[a-z0-9_]{1,24}$/.test(p.wb)&&Number.isInteger(p.wc)&&p.wc>=0;
+  n.wp=par?[{wb:par.wb, wc:Math.max(svlWcOf(par),mine&&par.wb===mine.wb?svlWcOf(mine):0)}].concat(Array.isArray(par.wp)?par.wp:[]).filter(okWp).slice(0,4).map(p=>({wb:p.wb, wc:Math.min(SV_WCMAX,p.wc)})):[];
+  n.wb=uid('w_'); n.wc=Math.max(svlWcOf(mine),par?svlWcOf(par):0); n.owner=owner;
+  svlOwner=owner; SAVE=n; svlLast=cur; svlSeen=null; svlMine=''; svlFrom='cloud'; svlRaw=null;
+  const stored=svlWrite('cloud',false);
+  if(SAVE!==n) return false;
+  svlMark(); BUS.emit('char',curChar()); return stored; }
 function saveReadOnly(){ return !!(SAVE&&SAVE.ro); }
 // what the shell can show: owner, sandbox, read only, whether the last write reached localStorage, where the save came from,
 // persist = storage holds a save a reload would bring back (false: blocked storage, memory only — nothing to roll back to)
