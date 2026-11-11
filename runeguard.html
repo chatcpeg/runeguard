@@ -1042,6 +1042,21 @@ fists:{n:'หมัดศักดิ์สิทธิ์',i:'👊',type:'swing
   p:{cd:[.38,.34,.3,.26,.22],dmg:[9,11,13,16,19],range:[62,65,68,72,78],arc:1.6,knock:90,count:1}},
 spheres:{n:'ดวงไฟสุริยะ',i:'💠',type:'orbit',os:'orb',c:'#ffe066',d:'ดวงไฟสุริยะหมุนรอบตัวกระแทกศัตรู',
   p:{count:[2,3,3,4,5],r:[60,64,68,72,78],dmg:[14,17,21,26,32],spin:[4,4.2,4.4,4.7,5],size:10,knock:200}},
+/* cleric · character modes only (CLASSES skx) */
+prayer:{n:'ลานภาวนา',i:'🕯️',type:'zone',fx:'prayer',place:'self',zx:1,wake:300,c:'#ffe9a0',d:'วาดลานภาวนาใต้เท้า ยืนในวงแล้วฟื้น HP ต่อเนื่อง ศัตรูที่เหยียบโดนแสงเผาและช้าลง',
+  p:{cd:[9,8.5,8,7.5,7],count:1,r:[70,75,80,88,96],dmg:[5,6,8,10,12],tick:.5,dur:[4,4.3,4.6,5,5.5],slow:[.2,.22,.24,.27,.3],heal:[2,2.5,3,3.6,4.3]},
+  evo:{s:'INT',n:'ลานสวรรค์ติดตัว',d:'ลานกว้าง ฟื้นแรง และเดินตามตัวไปด้วย',set:{r:140,heal:7,dmg:20,dur:6,follow:1}}},
+lantern:{n:'โคมวิญญาณ',i:'🏮',type:'summon',mode:'lantern',c:'#fff1a8',d:'โคมวิญญาณลอยเหนือไหล่ ยิงลำแสงทะลุใส่ศัตรูที่ใกล้โคมที่สุด',
+  p:{cd:[1.3,1.2,1.1,1,.9],count:[1,1,1,2,2],dmg:[16,20,25,31,38],speed:900,life:.5,pierce:[2,2,3,3,4]},
+  evo:{s:'LUK',n:'โคมทองสามดวง',d:'โคม 3 ดวง ยิงถี่ ทะลุทุกตัว',set:{count:3,cd:.7,dmg:44,pierce:99}}},
+seal:{n:'ตราประทับแสง',i:'🔯',type:'seal',c:'#fff6c8',d:'ประทับตราแสงบนศัตรูหลายตัวรอบเป้าที่เล็ง ครู่หนึ่งตราระเบิดเป็นเสาแสง โดนตัวข้าง ๆ ด้วย',
+  p:{cd:[4,3.7,3.4,3.1,2.8],targets:[3,4,5,6,7],dmg:[45,56,70,86,105],r:[45,48,52,56,62],delay:[1.2,1.15,1.1,1.05,1],range:380}},
+veil:{n:'ม่านอรุณ',i:'🌅',type:'ward',c:'#ffd7a0',d:'แผ่ม่านแสงอรุณรอบตัว ลบกระสุนศัตรูในวง ฟื้น HP ตามจำนวนที่ลบได้ แล้วผลักและชะลอศัตรู',
+  p:{cd:[6,5.6,5.2,4.8,4.4],r:[130,140,150,160,175],dmg:[20,26,33,41,50],knock:260,heal:[2,2.4,2.8,3.3,4],slow:.3}},
+palm:{n:'ฝ่ามือคลื่นสุริยะ',i:'🖐️',type:'proj',shape:'palm',ifx:{shock:{ch:.2,t:.4}},c:'#ffcf5a',d:'ผลักฝ่ามือปล่อยคลื่นสุริยะแนวโค้งกว้างไปทางที่เล็ง ทะลุทุกตัว ผลักกระเด็นและมีโอกาสทำให้มึน',
+  p:{cd:[1.8,1.66,1.52,1.38,1.25],dmg:[22,28,35,43,52],speed:520,life:.42,pierce:99,size:[14,15,16,17,19],count:1,knock:300}},
+combo:{n:'ห้าหมัดสุริยัน',i:'🥊',type:'combo',c:'#ff9a3a',d:'ต่อยหมัดหนักรัวเป็นจังหวะ ทุกหมัดที่ 5 ปลดพลังสุริยะระเบิดตรงหน้า ศัตรูมึน',
+  p:{cd:[.7,.66,.62,.58,.54],dmg:[16,20,24,29,35],range:[70,73,76,80,85],arc:1.5,knock:120,fin:5,boom:[2.4,2.5,2.6,2.8,3],r:[80,85,90,96,104],stun:[.4,.45,.5,.55,.6]}},
 /* --- Thief --- */
 dagger:{n:'ปามีด',i:'🗡️',type:'proj',shape:'dagger',c:'#e6e6f0',d:'ปามีดความเร็วสูง คริติคอลง่าย',
   p:{cd:[.38,.35,.32,.29,.26],dmg:[9,11,14,17,21],speed:640,life:.55,pierce:[1,1,2,2,2],size:5,count:[1,1,2,2,3],spread:.12,knock:40,crit:.1},
@@ -1089,11 +1104,11 @@ const CLASSES=[
   {id:'sharpshooter',n:'มือธนูเจาะดาว',e:'Starpiercer',d:'ยิงนัดเดียวจอด เน้นคริติคอลและลูกระเบิด',bonus:{crit:.15,critMult:.5},bt:'คริติคอล +15% · แรงคริ +50%',skills:['deadeye','blast'],skx:['mark','starshard'],
    look:{body:'#5a4a3a',trim:'#ff5d73',hatC:'#2b2b33',orn:'feather',ornC:'#ff5d73',weapon:'longbow',wc:'#4a4a56'}}]},
 {id:'cleric',n:'นักบวช',e:'Cleric',d:'ผู้ใช้แสงศักดิ์สิทธิ์ ฟื้นฟูตัวเองและแผดเผาอันเดด',hp:115,speed:168,armor:2,crit:.05,regen:.8,
- rating:{hp:4,atk:3,spd:2,rng:3},skills:['holy','heal','sacred','cross'],
+ rating:{hp:4,atk:3,spd:2,rng:3},skills:['holy','heal','sacred','cross'],skx:['prayer','lantern'],
  look:{body:'#ece4d2',trim:'#c99a2e',pants:'#6b5e4a',hair:'#a35a2a',hat:'hood',hatC:'#f6f1e6',weapon:'rod',wc:'#f0c75a'},
- adv:[{id:'highcleric',n:'ผู้เฝ้าแสงอรุณ',e:'Dawnkeeper',d:'เรียกเสาแสงพิพากษาและเกราะเทวา',bonus:{hp:30,regen:1},bt:'HP +30 · ฟื้น HP +1 ต่อวินาที',skills:['judgment','aegis'],
+ adv:[{id:'highcleric',n:'ผู้เฝ้าแสงอรุณ',e:'Dawnkeeper',d:'เรียกเสาแสงพิพากษาและเกราะเทวา',bonus:{hp:30,regen:1},bt:'HP +30 · ฟื้น HP +1 ต่อวินาที',skills:['judgment','aegis'],skx:['seal','veil'],
    look:{body:'#f7f2e6',trim:'#3a6fd8',hatC:'#ffffff',orn:'mitre',ornC:'#f0c75a',wc:'#fff1a8',cape:'#3a6fd8'}},
-  {id:'templar',n:'นักพรตหมัดสุริยะ',e:'Sunfist Ascetic',d:'นักรบศักดิ์สิทธิ์ ชกรัวพร้อมดวงไฟสุริยะ',bonus:{speed:.12,armor:2},bt:'ความเร็ว +12% · เกราะ +2',skills:['fists','spheres'],
+  {id:'templar',n:'นักพรตหมัดสุริยะ',e:'Sunfist Ascetic',d:'นักรบศักดิ์สิทธิ์ ชกรัวพร้อมดวงไฟสุริยะ',bonus:{speed:.12,armor:2},bt:'ความเร็ว +12% · เกราะ +2',skills:['fists','spheres'],skx:['palm','combo'],
    look:{body:'#c9b48a',trim:'#8a2b2b',hat:'helm',hatC:'#d8c9a3',orn:'cross',ornC:'#8a2b2b',weapon:'fist',wc:'#ffd27a'}}]},
 {id:'thief',n:'โจร',e:'Thief',d:'เร็วที่สุด คริติคอลสูง และหลบหลีกได้',hp:92,speed:205,armor:0,crit:.12,regen:.2,
  rating:{hp:1,atk:4,spd:5,rng:3},skills:['dagger','fan','venom','shadow'],
@@ -2655,7 +2670,7 @@ function render(){
 /* ================= 22a-render-skx.js · lane B · how the 30 character-only skills look (25a · CLASSES skx) ================= */
 // Called from the shared draw passes only for what these skills create (projectile shapes in SKX_SHAPE, zones with x2, the
 // summon modes / orbit styles they add) → classic frames draw exactly as before. Canvas only, no RNG, no game state changes.
-const SKX_SHAPE={gsword:1, axe:1, comet:1, leaf:1, star:1, net:1, gale:1};
+const SKX_SHAPE={gsword:1, axe:1, comet:1, leaf:1, star:1, net:1, gale:1, palm:1};
 // drawProjs (22, 'lighter' pass) → true = drawn here
 function sk2DrawProj(p,sp,a){ if(!SKX_SHAPE[p.shape]) return false; const r=p.r;
   switch(p.shape){
@@ -2663,6 +2678,10 @@ function sk2DrawProj(p,sp,a){ if(!SKX_SHAPE[p.shape]) return false; const r=p.r;
       ctx.globalCompositeOperation='source-over'; circ(ctx,'#fff6d8',p.x,p.y,r*.75); circ(ctx,p.c,p.x+Math.cos(a)*r*.2,p.y+Math.sin(a)*r*.2,r*.45); ctx.globalCompositeOperation='lighter'; return true; }
     case 'star':{ glow(p.x,p.y,r*2.6,p.c,.8); ctx.save(); ctx.translate(p.x,p.y); ctx.rotate(p.t*9); ctx.fillStyle='#ffffff'; ctx.beginPath();
       for(let i=0;i<8;i++){ const rr=i%2?r*.35:r*1.4, b=i*PI/4; ctx.lineTo(Math.cos(b)*rr,Math.sin(b)*rr); } ctx.closePath(); ctx.fill(); ctx.restore(); return true; }
+    case 'palm':{ const f=Math.min(1,p.life/p.max*2.5), R=r*1.5;                 // a golden palm wave: bright crescent, sun glow, finger streaks
+      glow(p.x,p.y,R*1.6,'#ffb347',.45*f); ctx.save(); ctx.translate(p.x,p.y); ctx.rotate(a); ctx.globalAlpha=f; ctx.lineCap='round';
+      ctx.strokeStyle=p.c; ctx.lineWidth=11; ctx.beginPath(); ctx.arc(-R*.55,0,R,-.95,.95); ctx.stroke(); ctx.strokeStyle='#fff6d8'; ctx.lineWidth=3; ctx.beginPath(); ctx.arc(-R*.5,0,R,-.8,.8); ctx.stroke();
+      ctx.strokeStyle='rgba(255,215,140,.55)'; ctx.lineWidth=3; for(let i=-2;i<=2;i++){ const y=i*R*.28; ctx.beginPath(); ctx.moveTo(-R*.3,y); ctx.lineTo(-R*.95,y*1.1); ctx.stroke(); } ctx.restore(); ctx.globalAlpha=1; return true; }
     case 'gale':{ const f=Math.min(1,p.life/p.max*2.5), R=r*1.6;                // a wide wind crescent with streaks behind it
       streak(p.x,p.y,a,70,R*1.6,p.c,.35*f); ctx.save(); ctx.translate(p.x,p.y); ctx.rotate(a); ctx.globalAlpha=f; ctx.lineCap='round';
       ctx.strokeStyle=p.c; ctx.lineWidth=9; ctx.beginPath(); ctx.arc(-R*.5,0,R,-1.05,1.05); ctx.stroke(); ctx.strokeStyle='#ffffff'; ctx.lineWidth=2.5; ctx.beginPath(); ctx.arc(-R*.45,0,R,-.9,.9); ctx.stroke();
@@ -2710,6 +2729,10 @@ function sk2DrawZone(z,fade){ const t=G.t, sd=z.seed||0;
       ctx.fillStyle='#5a3a24'; ctx.beginPath(); ctx.moveTo(z.x-B*.55,z.y+2); ctx.lineTo(z.x-B*.22,z.y-H); ctx.lineTo(z.x,z.y-H); ctx.lineTo(z.x-B*.1,z.y+2); ctx.closePath(); ctx.fill();
       ctx.fillStyle=fl>0?'#fff0a0':'#ff8a2a'; ctx.beginPath(); ctx.ellipse(z.x,z.y-H,B*.3,B*.1,0,0,TAU); ctx.fill(); ctx.globalAlpha=1;
       if(fl>0){ ctx.globalCompositeOperation='lighter'; glow(z.x,z.y-H,R*.9,'#ffb050',fl*fade); ctx.globalCompositeOperation='source-over'; } break; }
+    case 'prayer':{ const R=z.r;                                              // a slowly turning circle of runes on the ground
+      ctx.globalCompositeOperation='lighter'; glow(z.x,z.y,R*1.1,'#ffe9a0',.22*fade);
+      ctx.save(); ctx.translate(z.x,z.y); ctx.scale(1,.78); ctx.rotate(G.t*.5+sd); ctx.globalAlpha=.55*fade; ctx.drawImage(runeTex(z.src.def.c),-R,-R,R*2,R*2); ctx.restore(); ctx.globalAlpha=1;
+      ctx.globalCompositeOperation='source-over'; ctx.strokeStyle=`rgba(255,240,190,${.6*fade})`; ctx.lineWidth=2; ctx.beginPath(); ctx.ellipse(z.x,z.y,R,R*.78,0,0,TAU); ctx.stroke(); break; }
     case 'turret':{ const a=z.aa||0, fl=z.fl>0?z.fl/.15:0;                 // a little crossbow on a tripod, turned at its last target
       ctx.globalAlpha=fade; ctx.strokeStyle='#4a3424'; ctx.lineWidth=3; ctx.beginPath(); for(const k of [-1,0,1]){ ctx.moveTo(z.x,z.y-12); ctx.lineTo(z.x+k*10,z.y+6-(k?0:2)); } ctx.stroke();
       ctx.save(); ctx.translate(z.x,z.y-14); ctx.rotate(a); ctx.fillStyle='#7a5432'; ctx.fillRect(-10,-3,22,6); ctx.strokeStyle='#c9a66b'; ctx.lineWidth=2.5; ctx.beginPath(); ctx.arc(4,0,11,-1.25,1.25); ctx.stroke();
@@ -2733,7 +2756,12 @@ function sk2DrawUnit(s,u){
     ctx.beginPath(); ctx.moveTo(-8,0); ctx.lineTo(-9+run,9); ctx.moveTo(-3,0); ctx.lineTo(-3-run,9); ctx.moveTo(5,0); ctx.lineTo(5+run,9); ctx.moveTo(9,-1); ctx.lineTo(10-run,8); ctx.stroke();
     ctx.fillStyle='#cfdcff'; ctx.beginPath(); ctx.ellipse(0,-3,12,6,0,0,TAU); ctx.fill(); ctx.beginPath(); ctx.moveTo(-11,-5); ctx.quadraticCurveTo(-20,-9-run,-22,-2); ctx.lineTo(-11,-2); ctx.fill();
     ctx.beginPath(); ctx.ellipse(13+bt*3,-7,6,5,-.2,0,TAU); ctx.fill(); ctx.beginPath(); ctx.moveTo(15+bt*3,-9); ctx.lineTo(22+bt*4,-7+bt*2); ctx.lineTo(15+bt*3,-4); ctx.fill();
-    ctx.beginPath(); ctx.moveTo(10,-10); ctx.lineTo(11,-16); ctx.lineTo(14,-11); ctx.fill(); circ(ctx,'#2a3a6a',15+bt*3,-8,1.3); ctx.restore(); ctx.globalAlpha=1; } }
+    ctx.beginPath(); ctx.moveTo(10,-10); ctx.lineTo(11,-16); ctx.lineTo(14,-11); ctx.fill(); circ(ctx,'#2a3a6a',15+bt*3,-8,1.3); ctx.restore(); ctx.globalAlpha=1; }
+  else if(s.def.mode==='lantern'){ const fl=u.fl>0?u.fl/.15:0, sw=Math.sin(G.t*3+(u.a||0))*.12;   // a paper lantern bobbing over the shoulder
+    ctx.globalCompositeOperation='lighter'; glow(u.x,u.y,18+fl*10,s.def.c,.55+fl*.4); ctx.globalCompositeOperation='source-over';
+    ctx.save(); ctx.translate(u.x,u.y); ctx.rotate(sw); ctx.strokeStyle='#6a4a2a'; ctx.lineWidth=1.5; ctx.beginPath(); ctx.moveTo(0,-14); ctx.lineTo(0,-9); ctx.stroke();
+    ctx.fillStyle='#c0392b'; ctx.beginPath(); ctx.ellipse(0,0,7,9,0,0,TAU); ctx.fill(); ctx.fillStyle=fl?'#fffbe0':'#ffd27a'; ctx.beginPath(); ctx.ellipse(0,0,4.5,7,0,0,TAU); ctx.fill();
+    ctx.fillStyle='#3a2a1a'; ctx.fillRect(-4,-10,8,2); ctx.fillRect(-4,8,8,2); ctx.restore(); } }
 // after the units (22 render, character runs only): marks on enemies (ศรหมายหัว) · nets (ศรตาข่าย)
 function sk2DrawOver(){
   if(G.mk){ let any=false; ctx.lineWidth=2;
@@ -2744,6 +2772,10 @@ function sk2DrawOver(){
   for(const f of G.fx){ if(f.k!=='netx') continue; const k=f.t/f.dur, a=k<.8?1:(1-k)/.2, r=f.r*(k<.12?k/.12:1);   // a net spread over the caught ones
     ctx.save(); ctx.translate(f.x,f.y); ctx.scale(1,.8); ctx.globalAlpha=.75*a; ctx.strokeStyle=f.c; ctx.lineWidth=1.4; ctx.beginPath(); ctx.arc(0,0,r,0,TAU);
     for(let i=-3;i<=3;i++){ const d=i*r/3.5, h=Math.sqrt(Math.max(0,r*r-d*d)); ctx.moveTo(d,-h); ctx.lineTo(d,h); ctx.moveTo(-h,d); ctx.lineTo(h,d); } ctx.stroke(); ctx.restore(); }
+  for(const s of P.skills){ if(s.def.type!=='seal'||!s.st.q||!s.st.q.length) continue;   // seals: a turning hexagram that closes before it bursts
+    for(const m of s.st.q){ const k=Math.min(1,(G.t-m.t0)/Math.max(.05,m.at-m.t0)), y=m.y-(m.e.dead?0:m.e.r*.4), R=16-6*k, a=G.t*3;
+      ctx.strokeStyle=hexA(s.def.c,.5+.5*k); ctx.lineWidth=2; for(const o of [0,PI]){ ctx.beginPath(); for(let i=0;i<3;i++){ const b=a+o+i*TAU/3; ctx.lineTo(m.x+Math.cos(b)*R,y+Math.sin(b)*R); } ctx.closePath(); ctx.stroke(); }
+      ctx.strokeStyle=`rgba(255,246,200,${.8*k})`; ctx.beginPath(); ctx.arc(m.x,y,R+5,-PI/2,-PI/2+TAU*k); ctx.stroke(); } }
   ctx.globalAlpha=1; }
 /* ================= loop + input ================= */
 let last=performance.now();
@@ -2946,6 +2978,38 @@ BEH.rite=(s,dt)=>{ s.cdT-=dt; if(s.cdT>0) return; const r=pv(s,'r')*P.area;
   G.fx.push({k:'ring',x:P.x,y:P.y,r0:14,r1:r,t:0,dur:.42,c:s.def.c,w:14,follow:true,dead:false}); G.fx.push({k:'boom',x:P.x,y:P.y,r:r*.7,t:0,dur:.35,c:'#ff2a2a',dead:false});
   burst(P.x,P.y-4,qLv()?16:6,'#c41a1a',r*2.4,.5,3.5); if(!G.auto&&qLv()>=1) addDecal(splatTex('#6a0d0d',1),P.x,P.y+6,r*.55,4,.5);
   G.shake=Math.max(G.shake,5); P.atkT=.12; sfx('boom'); };
+// seal (ตราประทับแสง): stamps up to `targets` enemies round the aimed one · each stamp follows its enemy and bursts after `delay`
+// (a pillar of light, r round it) · a stamp whose enemy already died bursts where it fell
+BEH.seal=(s,dt)=>{ const st=s.st, Q=st.q||(st.q=[]);
+  if(Q.length){ for(const m of Q){ if(!m.e.dead){ m.x=m.e.x; m.y=m.e.y; } if(G.t>=m.at){ m.done=1; sealBoom(s,m); if(G.over) return; } } st.q=Q.filter(m=>!m.done); }
+  s.cdT-=dt; if(s.cdT>0) return;
+  const R=Math.min((pv(s,'range')||380)*(P.rangeMul||1),aimReach()), t=G.near&&G.nearD<R?G.near:null; if(!t){ s.cdT=.2; return; }
+  s.cdT=cdOf(s); const n=Math.max(1,Math.round(pv(s,'targets')||3)), dl=pv(s,'delay')||1, L=[];
+  for(const e of query(t.x,t.y,240)) if(!e.dead&&!st.q.some(m=>m.e===e)) L.push(e);
+  L.sort((a,b)=>((a.x-t.x)**2+(a.y-t.y)**2)-((b.x-t.x)**2+(b.y-t.y)**2));
+  for(const e of L.slice(0,n)) st.q.push({e, x:e.x, y:e.y, at:G.t+dl, t0:G.t});
+  G.fx.push({k:'ring',x:t.x,y:t.y,r0:10,r1:60,t:0,dur:.3,c:s.def.c,w:4,dead:false}); P.atkT=.12; if(!G.auto) sfx('shield'); };
+function sealBoom(s,m){ const r=pv(s,'r')*P.area; aoe(m.x,m.y,r,pv(s,'dmg'),s,{knock:120});
+  G.fx.push({k:'pillar',x:m.x,y:m.y,r:Math.min(40,r*.6),t:0,dur:.45,c:s.def.c,dead:false}); G.fx.push({k:'ring',x:m.x,y:m.y,r0:r*.3,r1:r,t:0,dur:.3,c:'#fff6c8',w:5,dead:false}); if(!G.auto) sfx('boom'); }
+// ward (ม่านอรุณ): erases every enemy shot inside r (heal per shot), then a light wave that pushes and slows · wakes for shots too
+BEH.ward=(s,dt)=>{ s.cdT-=dt; if(s.cdT>0) return; const r=pv(s,'r')*P.area, r2=r*r;
+  let shots=0; for(const b of G.eprojs) if(!b.dead&&(b.x-P.x)**2+(b.y-P.y)**2<r2) shots++;
+  if(!shots&&(!G.near||G.nearD>r*.9)){ s.cdT=.15; return; }
+  s.cdT=cdOf(s); let n=0;
+  for(const b of G.eprojs){ if(b.dead||(b.x-P.x)**2+(b.y-P.y)**2>=r2) continue; b.dead=true; b.life=-1; n++; if(!G.auto&&n<14) burst(b.x,b.y,3,'#ffe9b0',70,.3,2); }   // life −1: gone before it can hit this frame
+  if(n) healP(n*(pv(s,'heal')||2));
+  aoe(P.x,P.y,r,pv(s,'dmg'),s,{knock:pv(s,'knock'),slow:pv(s,'slow'),slowDur:1.5});
+  G.fx.push({k:'ring',x:P.x,y:P.y,r0:20,r1:r,t:0,dur:.45,c:s.def.c,w:10,follow:true,dead:false}); G.fx.push({k:'ring',x:P.x,y:P.y,r0:r*.6,r1:r*1.08,t:0,dur:.5,c:'#ffffff',w:3,follow:true,dead:false});
+  P.atkT=.12; if(!G.auto) sfx('shield'); };
+// combo (ห้าหมัดสุริยัน): quick punches (the swing of 19) · every `fin`-th cast a sun blast in front instead (boom × dmg, stun)
+BEH.combo=(s,dt)=>{ s.cdT-=dt; if(s.cdT>0) return; const range=pv(s,'range')*P.area;
+  if(!G.near||G.nearD>range*1.6+G.near.r){ s.cdT=.1; return; }
+  s.cdT=cdOf(s); s.st.n=(s.st.n|0)+1; const fin=Math.max(2,Math.round(pv(s,'fin')||5));
+  if(s.st.n%fin){ doSwing(s,s.st.n); return; }
+  const a=Math.atan2(G.near.y-P.y,G.near.x-P.x), x=P.x+Math.cos(a)*range*.7, y=P.y+Math.sin(a)*range*.7, r=pv(s,'r')*P.area;
+  aoe(x,y,r,pv(s,'dmg')*(pv(s,'boom')||3),s,{knock:(pv(s,'knock')||100)*2,stun:pv(s,'stun')});
+  G.fx.push({k:'boom',x,y,r,t:0,dur:.4,c:s.def.c,dead:false}); G.fx.push({k:'ring',x,y,r0:r*.2,r1:r*1.1,t:0,dur:.3,c:'#fff2c0',w:7,dead:false});
+  burst(x,y,qLv()?16:6,'#ffb347',r*2.6,.45,3.5); G.shake=Math.max(G.shake,6); P.atkT=.16; sfx('boom'); };
 
 /* ---- projectiles (fireProj → pxFire when SK[id].px) ---- */
 // ret: boomerang (out to its range, then back to the hand, hitting everything again) · hook: knock < 0 = pulled to the hero ·
@@ -2982,7 +3046,14 @@ function pxRet(p,dt){
   const k=Math.min(1,dt*7); p.vx+=(dx/d*sp-p.vx)*k; p.vy+=(dy/d*sp-p.vy)*k; return false; }
 
 /* ---- summons (BEH.summon: modes other than hawk / clone) ---- */
-function skxUnit(s,u,dt,i,n){ if(s.def.mode==='wolf') wolfUpdate(s,u,dt,i,n); }
+function skxUnit(s,u,dt,i,n){ if(s.def.mode==='wolf') wolfUpdate(s,u,dt,i,n); else if(s.def.mode==='lantern') lanternUpdate(s,u,dt,i,n); }
+// lantern: floats over the shoulder, a light ray (pierce) at the enemy nearest to it, aimed once, straight
+function lanternUpdate(s,u,dt,i,n){ const fa=G.t*1.1+i*TAU/n, fx=P.x+Math.cos(fa)*30, fy=P.y-46+Math.sin(fa)*8, k=Math.min(1,dt*6);
+  u.x+=(fx-u.x)*k; u.y+=(fy-u.y)*k; u.cd-=dt; if(u.fl>0) u.fl-=dt; if(u.cd>0) return;
+  const reach=430*(P.rangeMul||1), t=nearestTo(u.x,u.y,reach); if(!t){ u.cd=.2; return; }
+  u.cd=cdOf(s); u.fl=.15; const a=Math.atan2(t.y-u.y,t.x-u.x), sp=pv(s,'speed')||900, life=(pv(s,'life')||.5)*(P.rangeMul||1);
+  G.projs.push({x:u.x,y:u.y,vx:Math.cos(a)*sp,vy:Math.sin(a)*sp,r:5,dmg:pv(s,'dmg'),pierce:pv(s,'pierce')||1,life,max:life,knock:50,explode:0,homing:0,crit:0,shape:'beam',c:s.def.c,src:s,burn:0,hit:null,tg:null,dead:false,t:0});
+  G.fx.push({k:'beamline',x:u.x,y:u.y,a,len:sp*life,t:0,dur:.18,c:s.def.c,dead:false}); if(!G.auto) sfx('shoot'); }
 // wolf: runs at the nearest enemy (within 420 of the hero), bites on its cooldown (slow · the skill's bleed), else trots at heel
 function wolfUpdate(s,u,dt,i,n){
   if((u.x-P.x)**2+(u.y-P.y)**2>700*700){ u.x=P.x; u.y=P.y; u.tg=null; }
@@ -3009,7 +3080,7 @@ function zxCast(s){
     else if(pl==='aim'){ const b=a+(i-(n-1)/2)*.35, sp=v('speed')||200; x+=Math.cos(b)*36; y+=Math.sin(b)*36; o.aim={vx:Math.cos(b)*sp, vy:Math.sin(b)*sp}; }
     else if(pl==='enemy'){ const q=aimCluster(t,i,r*2); x=q[0]; y=q[1]; }
     addZone(Object.assign({x,y,r,dur:(v('dur')||4)*P.durMul,tick:(v('tick')||.4)*(s.def.cdTick?P.cdMul:1),dmg:v('dmg')||0,slow:v('slow')||0,kind:s.def.fx,src:s,x2:1,
-      rep:v('rep')||0,stun:v('stun')||0,pull:v('pull')||0,boom:v('boom')||0,explode:(v('explode')||0)*P.area,bk:s.def.bk==null?220:s.def.bk,
+      rep:v('rep')||0,stun:v('stun')||0,heal:v('heal')||0,pull:v('pull')||0,boom:v('boom')||0,explode:(v('explode')||0)*P.area,bk:s.def.bk==null?220:s.def.bk,
       shoot:s.def.shoot?(v('shots')||1):0,lob:s.def.lob?1:0,reach:(v('reach')||300)*(P.rangeMul||1),pierce:v('pierce')||1,tt:s.def.shoot||s.def.lob?.2:0},o)); }
   if(s.def.fx==='palisade'){ G.fx.push({k:'ring',x:P.x,y:P.y,r0:r*.3,r1:r,t:0,dur:.3,c:s.def.c,w:6,follow:true,dead:false}); sfx('shield'); } }
 // one frame of an x2 zone: movement, push / pull, its own ticks → always true (the classic zone code never sees it)
@@ -3023,7 +3094,8 @@ function zxTick(z,dt){
   z.tt-=dt; if(z.tt<=0){ z.tt=z.tick;
     if(z.shoot) zxShoot(z); else if(z.lob) zxLob(z);
     else if(z.dmg) for(const e of query(z.x,z.y,z.r+60)){ if(e.dead) continue; const rr=z.r+e.r*.5; if((e.x-z.x)**2+(e.y-z.y)**2>rr*rr) continue;
-      damageEnemy(e,z.dmg,z.src,{slow:z.slow,slowDur:.5,stun:z.stun,quiet:true,fxd:z.fxd}); } }
+      damageEnemy(e,z.dmg,z.src,{slow:z.slow,slowDur:.5,stun:z.stun,quiet:true,fxd:z.fxd}); }
+    if(z.heal&&(P.x-z.x)**2+(P.y-z.y)**2<(z.r+P.r)**2&&P.hp<P.maxHp){ healP(z.heal,true); if(!G.auto) part({x:P.x+rand(-12,12),y:P.y+rand(-8,8),vx:0,vy:rand(-70,-40),life:.6,s:3,c:'#9dffb8',g:0,drag:1,k:'plus',add:true}); } }   // standing inside: heal
   if(z.fl>0) z.fl-=dt;
   if(!G.auto&&qLv()&&Math.random()<dt*10){ const k=z.kind;
     if(k==='grav'){ const b=rand(0,TAU), d=z.r*rand(1.2,2); part({x:z.x+Math.cos(b)*d,y:z.y+Math.sin(b)*d*.8,vx:-Math.cos(b)*d*2,vy:-Math.sin(b)*d*1.6,life:.45,s:2,c:'#c8b4ff',g:0,drag:0,k:'streak',add:true}); }
@@ -3077,7 +3149,8 @@ const SX={ base:.005, over:.5, cap:{speed:.6, area:2, dur:2, crit:.75, cdMin:.45
     // the 30 character-only skills (CLASSES skx)
     flyblade:'STR', riposte:'VIT', palisade:'VIT', thrust:'STR', bloodrite:'STR', chainaxe:'STR',
     gravorb:'INT', aquaring:'INT', comet:'INT', rift:'INT', volcano:'INT', leafblade:'INT',
-    ballista:'DEX', netshot:'INT', wolf:'AGI', gale:'DEX', mark:'LUK', starshard:'DEX' },
+    ballista:'DEX', netshot:'INT', wolf:'AGI', gale:'DEX', mark:'LUK', starshard:'DEX',
+    prayer:'VIT', lantern:'DEX', seal:'INT', veil:'VIT', palm:'AGI', combo:'STR' },
   // milestones: [stat, param, op ('+' add per step · '*' multiply per step · '=' set once reached), value, Thai text, every]
   ms:{
     slash:[['STR','arc','+',.26,'มุมฟันกว้าง +15°'], ['AGI','count','+',1,'ฟันเพิ่ม 1 ครั้ง',10]],
@@ -3660,7 +3733,55 @@ starshard:[
   [20,'+1 ศร',{add:{count:1}}],
   [25,'ทะลุ +1 ก่อนแตก',{add:{pierce:1}}],
   [30,'แรง +25%',{mul:{dmg:1.25}}],
-  [35,'ร่างสุดท้าย ฝนดาวแตก · สะเก็ด +3 ฆ่าแล้วแตกซ้ำ',{add:{split:3}, fx:{shards:{on:'kill', ch:1, n:3, pct:.3}}}]]});
+  [35,'ร่างสุดท้าย ฝนดาวแตก · สะเก็ด +3 ฆ่าแล้วแตกซ้ำ',{add:{split:3}, fx:{shards:{on:'kill', ch:1, n:3, pct:.3}}}]],
+prayer:[
+  [6,'ลานกว้าง +10%',{mul:{r:1.1}}],
+  [10,'ฟื้น +20%',{mul:{heal:1.2}}],
+  [15,'ลานอยู่นานขึ้น 20%',{mul:{dur:1.2}}],
+  [20,'ศัตรูในลานติดไฟศักดิ์สิทธิ์',{fx:{ignite:{ch:.15, pct:.3, t:3}}}],
+  [25,'ชะลอ +10%',{add:{slow:.1}}],
+  [30,'ฟื้น +30%',{mul:{heal:1.3}}],
+  [35,'ร่างสุดท้าย ลานสวรรค์ · แรง ×1.4 ศัตรูตายในลาน ฟื้น HP 2',{mul:{dmg:1.4}, fx:{feast:{amt:2}}}]],
+lantern:[
+  [6,'ลำแสงไกล +15%',{mul:{life:1.15}}],
+  [10,'ยิงถี่ +10%',{mul:{cd:.9}}],
+  [15,'ทะลุ +1',{add:{pierce:1}}],
+  [20,'+1 โคม',{add:{count:1}}],
+  [25,'แสงทำให้มึนบางครั้ง',{fx:{shock:{ch:.12, t:.3}}}],
+  [30,'แรง +25%',{mul:{dmg:1.25}}],
+  [35,'ร่างสุดท้าย โคมสุริยา · แสงระเบิดเมื่อโดน',{fx:{hitboom:{r:36, pct:.3}}}]],
+seal:[
+  [6,'+1 ตรา',{add:{targets:1}}],
+  [10,'ระเบิดเร็วขึ้น 15%',{mul:{delay:.85}}],
+  [15,'วงระเบิด +15%',{mul:{r:1.15}}],
+  [20,'+2 ตรา',{add:{targets:2}}],
+  [25,'ตรามึนศัตรูข้าง ๆ',{fx:{shock:{ch:.3, t:.4}}}],
+  [30,'แรง +25%',{mul:{dmg:1.25}}],
+  [35,'ร่างสุดท้าย ตราสวรรค์ · ประทับซ้ำทุก 2 ครั้ง',{fx:{echo:{every:2}}}]],
+veil:[
+  [6,'ม่านกว้าง +10%',{mul:{r:1.1}}],
+  [10,'ฟื้นต่อกระสุน +25%',{mul:{heal:1.25}}],
+  [15,'คูลดาวน์ -10%',{mul:{cd:.9}}],
+  [20,'ม่านทำให้มึน',{fx:{shock:{ch:.35, t:.4}}}],
+  [25,'ชะลอ +10%',{add:{slow:.1}}],
+  [30,'ตั้งม่านแล้วฟื้น HP 3%',{fx:{mend:{pct:.03}}}],
+  [35,'ร่างสุดท้าย ม่านรุ่งอรุณ · แรง ×1.5 วง ×1.15',{mul:{dmg:1.5, r:1.15}}]],
+palm:[
+  [6,'คลื่นกว้าง +15%',{mul:{size:1.15}}],
+  [10,'ไกลขึ้น 15%',{mul:{life:1.15}}],
+  [15,'แรง +20%',{mul:{dmg:1.2}}],
+  [20,'ฝ่ามือไฟ ติดไฟ',{fx:{ignite:{ch:.25, pct:.2, t:3}}}],
+  [25,'คูลดาวน์ -15%',{mul:{cd:.85}}],
+  [30,'+1 คลื่น',{add:{count:1}}],
+  [35,'ร่างสุดท้าย ฝ่ามือพระอาทิตย์ · ผลักซ้ำทุก 2 ครั้ง',{fx:{echo:{every:2}}}]],
+combo:[
+  [6,'หมัดไกล +10%',{mul:{range:1.1}}],
+  [10,'ระเบิดปิดท้ายกว้าง +15%',{mul:{r:1.15}}],
+  [15,'ต่อยเร็วขึ้น 10%',{mul:{cd:.9}}],
+  [20,'หมัดปิดท้ายแรง +25%',{mul:{boom:1.25}}],
+  [25,'หมัดไฟ ติดไฟ',{fx:{ignite:{ch:.2, pct:.2, t:2.5}}}],
+  [30,'เป้าที่มึนโดนแรง ×1.4',{fx:{vsStun:{m:1.4}}}],
+  [35,'ร่างสุดท้าย สี่หมัดสุริยเทพ · ปิดท้ายทุก 4 หมัด',{add:{fin:-1}}]]});
 // called from sxMods after the tree (27) → power + growth + the tiers reached
 function mxApply(p,s,add,mul){
   const L=mxLv(p,s); delete s.mxLook; if(!L){ delete s.mxL; return; } s.mxL=L;
@@ -3771,14 +3892,14 @@ const TF_KN={dmg:'ดาเมจ', cd:'คูลดาวน์', count:'จำ
   heal:'ฟื้น HP', healPct:'ฟื้น HP ตาม % HP สูงสุด', targets:'เป้าต่อครั้ง', rage:'โทสะ', steal:'ฟื้นต่อการสังหาร', dodge:'หลบหลีก',
   // keys of the character-only skills (25a)
   life:'ระยะพุ่ง', hook:'แรงกระชาก', rep:'แรงผลัก', cost:'สละ HP', drain:'ดูดเลือดกลับ', boom:'แรงระเบิดท้าย', drip:'หางไฟ', shots:'ลูกต่อชุด', wave:'คลื่นวง',
-  hold:'ตรึง', split:'สะเก็ด', shard:'แรงสะเก็ด', amp:'ดาเมจที่ตัวถูกหมายได้รับ'};
+  hold:'ตรึง', split:'สะเก็ด', shard:'แรงสะเก็ด', amp:'ดาเมจที่ตัวถูกหมายได้รับ', delay:'หน่วงก่อนระเบิด', fin:'หมัดปิดท้ายทุก'};
 // the same keys on the level-up cards / skills page (core 21 PL · PCT · SEC: only new keys are added, classic labels stay)
 if(typeof PL!=='undefined') Object.assign(PL,{life:'ระยะพุ่ง', hook:'แรงกระชาก', rep:'แรงผลัก', cost:'สละ HP', drain:'ดูดเลือดกลับ', size:'ขนาด',
   boom:'แรงระเบิดท้าย ×', drip:'หางไฟ', shots:'ลูกต่อชุด', wave:'คลื่นวง', pull:'แรงดูด', tick:'ช่วงห่าง', dur:'ระยะเวลา',
-  hold:'ตรึง', split:'สะเก็ด', shard:'แรงสะเก็ด', amp:'หมายหัว: ดาเมจเพิ่ม'});
+  hold:'ตรึง', split:'สะเก็ด', shard:'แรงสะเก็ด', amp:'หมายหัว: ดาเมจเพิ่ม', delay:'หน่วง', fin:'ปิดท้ายทุก (หมัด)'});
 if(typeof PCT!=='undefined') Object.assign(PCT,{cost:1, drain:1, wave:1, shard:1, amp:1});
-if(typeof SEC!=='undefined') Object.assign(SEC,{tick:1, dur:1, drip:1, hold:1});
-const TF_PCTK={slow:1, dodge:1, crit:1, healPct:1, cost:1, drain:1, amp:1}, TF_SECK={stun:1, freeze:1, drip:1, hold:1}, TF_REL={rage:1, steal:1};
+if(typeof SEC!=='undefined') Object.assign(SEC,{tick:1, dur:1, drip:1, hold:1, delay:1});
+const TF_PCTK={slow:1, dodge:1, crit:1, healPct:1, cost:1, drain:1, amp:1}, TF_SECK={stun:1, freeze:1, drip:1, hold:1, delay:1}, TF_REL={rage:1, steal:1};
 const tfPc=v=>(Math.round(v*1000)/10)+'%', tfM=r=>(Math.round(r)/10)+' ม.', tfN=v=>String(+(+v).toFixed(2));
 const TF_ZK={fire:'เปลวไฟ', ice:'น้ำแข็ง', poison:'พิษ', wind:'ลมคม'};
 // special effects: n = node name when used as a proc node · d(p) = text · glob = also allowed on passive skills (hit by any skill)
@@ -4045,7 +4166,31 @@ mark:[['ตราลึก','🎯',['amp','+',.03,3],['dur','*',.15,2],{fx:'exec
 starshard:[['ดาวหนัก','🌟',['dmg','*',.08,3],['shard','*',.1,2],{fx:'burst',nm:'ดาวระเบิด',i:'💥',r:45,pct:.4}],
   ['สะเก็ดเพิ่ม','✨',['split','+',1,3],['pierce','+',1,1],{fx:'shards',nm:'สะเก็ดซ้อนสะเก็ด',i:'🌠',on:'kill',ch:1,n:3,pct:.3}],
   ['ยิงไว','⏱️',['cd','c',.05,3],['speed','*',.1,2],{fx:'execute',nm:'ดาวปลิดวิญญาณ',i:'💀',hp:.3,m:1.6}],
-  {fx:'radial',nm:'ดาราแตกรอบทิศ',i:'👑',every:4,n:8,pct:.5}]});
+  {fx:'radial',nm:'ดาราแตกรอบทิศ',i:'👑',every:4,n:8,pct:.5}],
+prayer:[['พรฟื้นฟู','💚',['heal','*',.1,3],['dur','*',.1,2],{fx:'mend',nm:'สวดแล้วฟื้นกาย',i:'🙏',pct:.03}],
+  ['แสงลงทัณฑ์','☀️',['dmg','*',.1,3],['slow','+',.04,2],{fx:'ignite',nm:'แสงแผดเผา',i:'🔥',ch:.15,pct:.3,t:3}],
+  ['ลานกว้าง','⭕',['r','*',.06,3],['cd','c',.06,2],{fx:'feast',nm:'วิญญาณคืนพลัง',i:'🍖',amt:1}],
+  {fx:'chill',nm:'ลานตรึงวิญญาณ',i:'👑',ch:.08,t:1}],
+lantern:[['แสงจ้า','🏮',['dmg','*',.08,3],['pierce','+',1,2],{fx:'execute',nm:'แสงชำระ',i:'⚖️',hp:.3,m:1.6}],
+  ['โคมเพิ่ม','➕',['count','+',1,1],['cd','c',.06,2],{fx:'shock',nm:'แสงแยงตา',i:'⚡',ch:.15,t:.5}],
+  ['ลำแสงไกล','📏',['life','*',.1,3],['@leech',.004,2],{fx:'feast',nm:'โคมเก็บวิญญาณ',i:'💚',amt:1}],
+  {fx:'radial',nm:'โคมสาดแสง',i:'👑',every:5,n:8,pct:.5}],
+seal:[['ตราแรง','🔯',['dmg','*',.08,3],['r','*',.06,2],{fx:'shock',nm:'ตราตรึง',i:'⚡',ch:.3,t:.5}],
+  ['ตราเพิ่ม','➕',['targets','+',1,3],['delay','*',-.08,2],{fx:'burst',nm:'ตราลามระเบิด',i:'💥',r:50,pct:.45}],
+  ['ประทับไว','⏱️',['cd','c',.05,3],['@ignite',.1,2],{fx:'vsStun',nm:'ลงทัณฑ์ซ้ำ',i:'💢',m:1.5}],
+  {fx:'echo',nm:'ตราสวรรค์ซ้อน',i:'👑',every:3}],
+veil:[['ม่านหนา','🌅',['r','*',.06,3],['heal','*',.15,2],{fx:'mend',nm:'อรุณฟื้นกาย',i:'💚',pct:.04}],
+  ['แสงผลัก','💥',['dmg','*',.1,3],['knock','*',.15,2],{fx:'shock',nm:'ม่านสะท้าน',i:'⚡',ch:.5,t:.5}],
+  ['ตั้งม่านไว','⏱️',['cd','c',.06,3],['slow','+',.05,2],{fx:'chill',nm:'ม่านเยือก',i:'❄️',ch:.3,t:.8}],
+  {fx:'radial',nm:'แสงอรุณสาดรอบทิศ',i:'👑',every:1,n:10,pct:.6}],
+palm:[['ฝ่ามือหนัก','🖐️',['dmg','*',.08,3],['knock','*',.15,2],{fx:'vsStun',nm:'ฝ่ามือซ้ำแผล',i:'💢',m:1.5}],
+  ['คลื่นกว้าง','⭕',['size','*',.1,3],['life','*',.1,2],{fx:'shards',nm:'คลื่นแตกกระจาย',i:'✨',on:'hit',ch:.12,n:2,pct:.4}],
+  ['ลมปราณไว','⏱️',['cd','c',.05,3],['@leech',.005,2],{fx:'ignite',nm:'ฝ่ามือเพลิง',i:'🔥',ch:.25,pct:.3,t:3}],
+  {fx:'echo',nm:'ฝ่ามือคู่',i:'👑',every:3}],
+combo:[['หมัดหนัก','👊',['dmg','*',.08,3],['boom','*',.1,2],{fx:'vsStun',nm:'ปิดท้ายซ้ำแผล',i:'💢',m:1.5}],
+  ['ระเบิดหมัด','💥',['r','*',.06,3],['stun','+',.1,2],{fx:'burst',nm:'หมัดระเบิดศพ',i:'🎆',r:50,pct:.45}],
+  ['ต่อยไว','⏱️',['cd','c',.05,3],['range','*',.06,2],{fx:'ignite',nm:'หมัดเปลวสุริยะ',i:'🔥',ch:.2,pct:.3,t:3}],
+  {fx:'mod',nm:'สี่หมัดสุริยัน',i:'👑',add:{fin:-1}}]});
 const TF_COST=[0,1,2,4], TF_CROWN=6;
 
 /* ---- node list of a tree (cached) ---- */
@@ -4197,7 +4342,7 @@ function tfCast(s){ const F=s.fx; if(!F) return; s.tfC=(s.tfC|0)+1;
     G.fx.push({k:'ring',x:P.x,y:P.y,r0:10,r1:70,t:0,dur:.25,c:s.def.c,w:5,follow:true,dead:false}); }
   if(F.echo&&s.tfC%F.echo.every===0&&TF_ECHO[s.def.type]) later(.3,()=>{ if(!P||!G||G.over||P.skills.indexOf(s)<0) return;
     const c=s.cdT; s.cdT=0; try{ BEH[s.def.type](s,0); } finally{ s.cdT=c; } }); }
-const TF_ECHO={proj:1, swing:1, nova:1, strike:1, zone:1, chain:1, heal:1, multi:1, spikes:1, thrust:1, rite:1};   // + skx types (25a)
+const TF_ECHO={proj:1, swing:1, nova:1, strike:1, zone:1, chain:1, heal:1, multi:1, spikes:1, thrust:1, rite:1, seal:1, ward:1, combo:1};   // + skx types (25a)
 // the skill loop of world update when the run has tree effects: casts are seen as a cooldown restart · burns tick here
 function tfRun(dt){
   G.tfN=0;
@@ -4279,7 +4424,7 @@ const SK_EL={flame:'fire', meteor:'fire', trap:'fire', blast:'fire', spheres:'fi
   holy:'light', sacred:'light', cross:'light', judgment:'light', fists:'light', blades:'light',
   venom:'dark', shadow:'dark', phantom:'dark', clones:'dark', deadeye:'dark',
   bloodrite:'dark', gravorb:'dark', aquaring:'water', comet:'fire', rift:'light', volcano:'fire', leafblade:'wind',
-  gale:'wind', starshard:'light'};   // + character-only skills (07 skx) that carry an element
+  gale:'wind', starshard:'light', prayer:'light', lantern:'light', seal:'light', veil:'light', palm:'light', combo:'fire'};   // + character-only skills (07 skx) that carry an element
 const SK_EVO_EL={mbolt:'light'};                                         // ศรดวงดาว: the evolution turns light (§1.3)
 for(const id in SK_EL) if(SK[id]) SK[id].el=SK_EL[id];
 function skEl(s){ if(!s||!s.def) return null; if(s.evolved&&SK_EVO_EL[s.id]) return SK_EVO_EL[s.id]; return s.def.el||null; }
@@ -4586,6 +4731,8 @@ const SKILL_REQ={
   volcano:{need:'vortex', r:3, jlv:5}, leafblade:{need:'spikes', r:3, jlv:10},
   ballista:{lv:8}, netshot:{lv:15}, wolf:{need:'hawk', r:3, jlv:5}, gale:{need:'arrownova', r:3, jlv:10},
   mark:{need:'deadeye', r:3, jlv:5}, starshard:{need:'blast', r:3, jlv:10},
+  prayer:{lv:8}, lantern:{lv:15}, seal:{need:'judgment', r:3, jlv:5}, veil:{need:'aegis', r:3, jlv:10},
+  palm:{need:'fists', r:3, jlv:5}, combo:{need:'spheres', r:3, jlv:10},
   lance:{need:'slash', r:3}, valor:{need:'lance', r:2},
   cyclone:{need:'blades', r:3}, frenzy:{need:'cyclone', r:2},
   meteor:{need:'flame', r:3}, blizzard:{need:'meteor', r:2},

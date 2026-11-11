@@ -1,7 +1,7 @@
 /* ================= 22a-render-skx.js · lane B · how the 30 character-only skills look (25a · CLASSES skx) ================= */
 // Called from the shared draw passes only for what these skills create (projectile shapes in SKX_SHAPE, zones with x2, the
 // summon modes / orbit styles they add) → classic frames draw exactly as before. Canvas only, no RNG, no game state changes.
-const SKX_SHAPE={gsword:1, axe:1, comet:1, leaf:1, star:1, net:1, gale:1};
+const SKX_SHAPE={gsword:1, axe:1, comet:1, leaf:1, star:1, net:1, gale:1, palm:1};
 // drawProjs (22, 'lighter' pass) → true = drawn here
 function sk2DrawProj(p,sp,a){ if(!SKX_SHAPE[p.shape]) return false; const r=p.r;
   switch(p.shape){
@@ -9,6 +9,10 @@ function sk2DrawProj(p,sp,a){ if(!SKX_SHAPE[p.shape]) return false; const r=p.r;
       ctx.globalCompositeOperation='source-over'; circ(ctx,'#fff6d8',p.x,p.y,r*.75); circ(ctx,p.c,p.x+Math.cos(a)*r*.2,p.y+Math.sin(a)*r*.2,r*.45); ctx.globalCompositeOperation='lighter'; return true; }
     case 'star':{ glow(p.x,p.y,r*2.6,p.c,.8); ctx.save(); ctx.translate(p.x,p.y); ctx.rotate(p.t*9); ctx.fillStyle='#ffffff'; ctx.beginPath();
       for(let i=0;i<8;i++){ const rr=i%2?r*.35:r*1.4, b=i*PI/4; ctx.lineTo(Math.cos(b)*rr,Math.sin(b)*rr); } ctx.closePath(); ctx.fill(); ctx.restore(); return true; }
+    case 'palm':{ const f=Math.min(1,p.life/p.max*2.5), R=r*1.5;                 // a golden palm wave: bright crescent, sun glow, finger streaks
+      glow(p.x,p.y,R*1.6,'#ffb347',.45*f); ctx.save(); ctx.translate(p.x,p.y); ctx.rotate(a); ctx.globalAlpha=f; ctx.lineCap='round';
+      ctx.strokeStyle=p.c; ctx.lineWidth=11; ctx.beginPath(); ctx.arc(-R*.55,0,R,-.95,.95); ctx.stroke(); ctx.strokeStyle='#fff6d8'; ctx.lineWidth=3; ctx.beginPath(); ctx.arc(-R*.5,0,R,-.8,.8); ctx.stroke();
+      ctx.strokeStyle='rgba(255,215,140,.55)'; ctx.lineWidth=3; for(let i=-2;i<=2;i++){ const y=i*R*.28; ctx.beginPath(); ctx.moveTo(-R*.3,y); ctx.lineTo(-R*.95,y*1.1); ctx.stroke(); } ctx.restore(); ctx.globalAlpha=1; return true; }
     case 'gale':{ const f=Math.min(1,p.life/p.max*2.5), R=r*1.6;                // a wide wind crescent with streaks behind it
       streak(p.x,p.y,a,70,R*1.6,p.c,.35*f); ctx.save(); ctx.translate(p.x,p.y); ctx.rotate(a); ctx.globalAlpha=f; ctx.lineCap='round';
       ctx.strokeStyle=p.c; ctx.lineWidth=9; ctx.beginPath(); ctx.arc(-R*.5,0,R,-1.05,1.05); ctx.stroke(); ctx.strokeStyle='#ffffff'; ctx.lineWidth=2.5; ctx.beginPath(); ctx.arc(-R*.45,0,R,-.9,.9); ctx.stroke();
@@ -56,6 +60,10 @@ function sk2DrawZone(z,fade){ const t=G.t, sd=z.seed||0;
       ctx.fillStyle='#5a3a24'; ctx.beginPath(); ctx.moveTo(z.x-B*.55,z.y+2); ctx.lineTo(z.x-B*.22,z.y-H); ctx.lineTo(z.x,z.y-H); ctx.lineTo(z.x-B*.1,z.y+2); ctx.closePath(); ctx.fill();
       ctx.fillStyle=fl>0?'#fff0a0':'#ff8a2a'; ctx.beginPath(); ctx.ellipse(z.x,z.y-H,B*.3,B*.1,0,0,TAU); ctx.fill(); ctx.globalAlpha=1;
       if(fl>0){ ctx.globalCompositeOperation='lighter'; glow(z.x,z.y-H,R*.9,'#ffb050',fl*fade); ctx.globalCompositeOperation='source-over'; } break; }
+    case 'prayer':{ const R=z.r;                                              // a slowly turning circle of runes on the ground
+      ctx.globalCompositeOperation='lighter'; glow(z.x,z.y,R*1.1,'#ffe9a0',.22*fade);
+      ctx.save(); ctx.translate(z.x,z.y); ctx.scale(1,.78); ctx.rotate(G.t*.5+sd); ctx.globalAlpha=.55*fade; ctx.drawImage(runeTex(z.src.def.c),-R,-R,R*2,R*2); ctx.restore(); ctx.globalAlpha=1;
+      ctx.globalCompositeOperation='source-over'; ctx.strokeStyle=`rgba(255,240,190,${.6*fade})`; ctx.lineWidth=2; ctx.beginPath(); ctx.ellipse(z.x,z.y,R,R*.78,0,0,TAU); ctx.stroke(); break; }
     case 'turret':{ const a=z.aa||0, fl=z.fl>0?z.fl/.15:0;                 // a little crossbow on a tripod, turned at its last target
       ctx.globalAlpha=fade; ctx.strokeStyle='#4a3424'; ctx.lineWidth=3; ctx.beginPath(); for(const k of [-1,0,1]){ ctx.moveTo(z.x,z.y-12); ctx.lineTo(z.x+k*10,z.y+6-(k?0:2)); } ctx.stroke();
       ctx.save(); ctx.translate(z.x,z.y-14); ctx.rotate(a); ctx.fillStyle='#7a5432'; ctx.fillRect(-10,-3,22,6); ctx.strokeStyle='#c9a66b'; ctx.lineWidth=2.5; ctx.beginPath(); ctx.arc(4,0,11,-1.25,1.25); ctx.stroke();
@@ -79,7 +87,12 @@ function sk2DrawUnit(s,u){
     ctx.beginPath(); ctx.moveTo(-8,0); ctx.lineTo(-9+run,9); ctx.moveTo(-3,0); ctx.lineTo(-3-run,9); ctx.moveTo(5,0); ctx.lineTo(5+run,9); ctx.moveTo(9,-1); ctx.lineTo(10-run,8); ctx.stroke();
     ctx.fillStyle='#cfdcff'; ctx.beginPath(); ctx.ellipse(0,-3,12,6,0,0,TAU); ctx.fill(); ctx.beginPath(); ctx.moveTo(-11,-5); ctx.quadraticCurveTo(-20,-9-run,-22,-2); ctx.lineTo(-11,-2); ctx.fill();
     ctx.beginPath(); ctx.ellipse(13+bt*3,-7,6,5,-.2,0,TAU); ctx.fill(); ctx.beginPath(); ctx.moveTo(15+bt*3,-9); ctx.lineTo(22+bt*4,-7+bt*2); ctx.lineTo(15+bt*3,-4); ctx.fill();
-    ctx.beginPath(); ctx.moveTo(10,-10); ctx.lineTo(11,-16); ctx.lineTo(14,-11); ctx.fill(); circ(ctx,'#2a3a6a',15+bt*3,-8,1.3); ctx.restore(); ctx.globalAlpha=1; } }
+    ctx.beginPath(); ctx.moveTo(10,-10); ctx.lineTo(11,-16); ctx.lineTo(14,-11); ctx.fill(); circ(ctx,'#2a3a6a',15+bt*3,-8,1.3); ctx.restore(); ctx.globalAlpha=1; }
+  else if(s.def.mode==='lantern'){ const fl=u.fl>0?u.fl/.15:0, sw=Math.sin(G.t*3+(u.a||0))*.12;   // a paper lantern bobbing over the shoulder
+    ctx.globalCompositeOperation='lighter'; glow(u.x,u.y,18+fl*10,s.def.c,.55+fl*.4); ctx.globalCompositeOperation='source-over';
+    ctx.save(); ctx.translate(u.x,u.y); ctx.rotate(sw); ctx.strokeStyle='#6a4a2a'; ctx.lineWidth=1.5; ctx.beginPath(); ctx.moveTo(0,-14); ctx.lineTo(0,-9); ctx.stroke();
+    ctx.fillStyle='#c0392b'; ctx.beginPath(); ctx.ellipse(0,0,7,9,0,0,TAU); ctx.fill(); ctx.fillStyle=fl?'#fffbe0':'#ffd27a'; ctx.beginPath(); ctx.ellipse(0,0,4.5,7,0,0,TAU); ctx.fill();
+    ctx.fillStyle='#3a2a1a'; ctx.fillRect(-4,-10,8,2); ctx.fillRect(-4,8,8,2); ctx.restore(); } }
 // after the units (22 render, character runs only): marks on enemies (ศรหมายหัว) · nets (ศรตาข่าย)
 function sk2DrawOver(){
   if(G.mk){ let any=false; ctx.lineWidth=2;
@@ -90,4 +103,8 @@ function sk2DrawOver(){
   for(const f of G.fx){ if(f.k!=='netx') continue; const k=f.t/f.dur, a=k<.8?1:(1-k)/.2, r=f.r*(k<.12?k/.12:1);   // a net spread over the caught ones
     ctx.save(); ctx.translate(f.x,f.y); ctx.scale(1,.8); ctx.globalAlpha=.75*a; ctx.strokeStyle=f.c; ctx.lineWidth=1.4; ctx.beginPath(); ctx.arc(0,0,r,0,TAU);
     for(let i=-3;i<=3;i++){ const d=i*r/3.5, h=Math.sqrt(Math.max(0,r*r-d*d)); ctx.moveTo(d,-h); ctx.lineTo(d,h); ctx.moveTo(-h,d); ctx.lineTo(h,d); } ctx.stroke(); ctx.restore(); }
+  for(const s of P.skills){ if(s.def.type!=='seal'||!s.st.q||!s.st.q.length) continue;   // seals: a turning hexagram that closes before it bursts
+    for(const m of s.st.q){ const k=Math.min(1,(G.t-m.t0)/Math.max(.05,m.at-m.t0)), y=m.y-(m.e.dead?0:m.e.r*.4), R=16-6*k, a=G.t*3;
+      ctx.strokeStyle=hexA(s.def.c,.5+.5*k); ctx.lineWidth=2; for(const o of [0,PI]){ ctx.beginPath(); for(let i=0;i<3;i++){ const b=a+o+i*TAU/3; ctx.lineTo(m.x+Math.cos(b)*R,y+Math.sin(b)*R); } ctx.closePath(); ctx.stroke(); }
+      ctx.strokeStyle=`rgba(255,246,200,${.8*k})`; ctx.beginPath(); ctx.arc(m.x,y,R+5,-PI/2,-PI/2+TAU*k); ctx.stroke(); } }
   ctx.globalAlpha=1; }

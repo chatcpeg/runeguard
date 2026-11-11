@@ -16,7 +16,7 @@ const SK_EL={flame:'fire', meteor:'fire', trap:'fire', blast:'fire', spheres:'fi
   holy:'light', sacred:'light', cross:'light', judgment:'light', fists:'light', blades:'light',
   venom:'dark', shadow:'dark', phantom:'dark', clones:'dark', deadeye:'dark',
   bloodrite:'dark', gravorb:'dark', aquaring:'water', comet:'fire', rift:'light', volcano:'fire', leafblade:'wind',
-  gale:'wind', starshard:'light'};   // + character-only skills (07 skx) that carry an element
+  gale:'wind', starshard:'light', prayer:'light', lantern:'light', seal:'light', veil:'light', palm:'light', combo:'fire'};   // + character-only skills (07 skx) that carry an element
 const SK_EVO_EL={mbolt:'light'};                                         // ศรดวงดาว: the evolution turns light (§1.3)
 for(const id in SK_EL) if(SK[id]) SK[id].el=SK_EL[id];
 function skEl(s){ if(!s||!s.def) return null; if(s.evolved&&SK_EVO_EL[s.id]) return SK_EVO_EL[s.id]; return s.def.el||null; }

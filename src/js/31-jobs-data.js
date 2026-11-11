@@ -39,6 +39,8 @@ const SKILL_REQ={
   volcano:{need:'vortex', r:3, jlv:5}, leafblade:{need:'spikes', r:3, jlv:10},
   ballista:{lv:8}, netshot:{lv:15}, wolf:{need:'hawk', r:3, jlv:5}, gale:{need:'arrownova', r:3, jlv:10},
   mark:{need:'deadeye', r:3, jlv:5}, starshard:{need:'blast', r:3, jlv:10},
+  prayer:{lv:8}, lantern:{lv:15}, seal:{need:'judgment', r:3, jlv:5}, veil:{need:'aegis', r:3, jlv:10},
+  palm:{need:'fists', r:3, jlv:5}, combo:{need:'spheres', r:3, jlv:10},
   lance:{need:'slash', r:3}, valor:{need:'lance', r:2},
   cyclone:{need:'blades', r:3}, frenzy:{need:'cyclone', r:2},
   meteor:{need:'flame', r:3}, blizzard:{need:'meteor', r:2},

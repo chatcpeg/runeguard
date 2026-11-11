@@ -26,14 +26,14 @@ const TF_KN={dmg:'ดาเมจ', cd:'คูลดาวน์', count:'จำ
   heal:'ฟื้น HP', healPct:'ฟื้น HP ตาม % HP สูงสุด', targets:'เป้าต่อครั้ง', rage:'โทสะ', steal:'ฟื้นต่อการสังหาร', dodge:'หลบหลีก',
   // keys of the character-only skills (25a)
   life:'ระยะพุ่ง', hook:'แรงกระชาก', rep:'แรงผลัก', cost:'สละ HP', drain:'ดูดเลือดกลับ', boom:'แรงระเบิดท้าย', drip:'หางไฟ', shots:'ลูกต่อชุด', wave:'คลื่นวง',
-  hold:'ตรึง', split:'สะเก็ด', shard:'แรงสะเก็ด', amp:'ดาเมจที่ตัวถูกหมายได้รับ'};
+  hold:'ตรึง', split:'สะเก็ด', shard:'แรงสะเก็ด', amp:'ดาเมจที่ตัวถูกหมายได้รับ', delay:'หน่วงก่อนระเบิด', fin:'หมัดปิดท้ายทุก'};
 // the same keys on the level-up cards / skills page (core 21 PL · PCT · SEC: only new keys are added, classic labels stay)
 if(typeof PL!=='undefined') Object.assign(PL,{life:'ระยะพุ่ง', hook:'แรงกระชาก', rep:'แรงผลัก', cost:'สละ HP', drain:'ดูดเลือดกลับ', size:'ขนาด',
   boom:'แรงระเบิดท้าย ×', drip:'หางไฟ', shots:'ลูกต่อชุด', wave:'คลื่นวง', pull:'แรงดูด', tick:'ช่วงห่าง', dur:'ระยะเวลา',
-  hold:'ตรึง', split:'สะเก็ด', shard:'แรงสะเก็ด', amp:'หมายหัว: ดาเมจเพิ่ม'});
+  hold:'ตรึง', split:'สะเก็ด', shard:'แรงสะเก็ด', amp:'หมายหัว: ดาเมจเพิ่ม', delay:'หน่วง', fin:'ปิดท้ายทุก (หมัด)'});
 if(typeof PCT!=='undefined') Object.assign(PCT,{cost:1, drain:1, wave:1, shard:1, amp:1});
-if(typeof SEC!=='undefined') Object.assign(SEC,{tick:1, dur:1, drip:1, hold:1});
-const TF_PCTK={slow:1, dodge:1, crit:1, healPct:1, cost:1, drain:1, amp:1}, TF_SECK={stun:1, freeze:1, drip:1, hold:1}, TF_REL={rage:1, steal:1};
+if(typeof SEC!=='undefined') Object.assign(SEC,{tick:1, dur:1, drip:1, hold:1, delay:1});
+const TF_PCTK={slow:1, dodge:1, crit:1, healPct:1, cost:1, drain:1, amp:1}, TF_SECK={stun:1, freeze:1, drip:1, hold:1, delay:1}, TF_REL={rage:1, steal:1};
 const tfPc=v=>(Math.round(v*1000)/10)+'%', tfM=r=>(Math.round(r)/10)+' ม.', tfN=v=>String(+(+v).toFixed(2));
 const TF_ZK={fire:'เปลวไฟ', ice:'น้ำแข็ง', poison:'พิษ', wind:'ลมคม'};
 // special effects: n = node name when used as a proc node · d(p) = text · glob = also allowed on passive skills (hit by any skill)
@@ -300,7 +300,31 @@ mark:[['ตราลึก','🎯',['amp','+',.03,3],['dur','*',.15,2],{fx:'exec
 starshard:[['ดาวหนัก','🌟',['dmg','*',.08,3],['shard','*',.1,2],{fx:'burst',nm:'ดาวระเบิด',i:'💥',r:45,pct:.4}],
   ['สะเก็ดเพิ่ม','✨',['split','+',1,3],['pierce','+',1,1],{fx:'shards',nm:'สะเก็ดซ้อนสะเก็ด',i:'🌠',on:'kill',ch:1,n:3,pct:.3}],
   ['ยิงไว','⏱️',['cd','c',.05,3],['speed','*',.1,2],{fx:'execute',nm:'ดาวปลิดวิญญาณ',i:'💀',hp:.3,m:1.6}],
-  {fx:'radial',nm:'ดาราแตกรอบทิศ',i:'👑',every:4,n:8,pct:.5}]});
+  {fx:'radial',nm:'ดาราแตกรอบทิศ',i:'👑',every:4,n:8,pct:.5}],
+prayer:[['พรฟื้นฟู','💚',['heal','*',.1,3],['dur','*',.1,2],{fx:'mend',nm:'สวดแล้วฟื้นกาย',i:'🙏',pct:.03}],
+  ['แสงลงทัณฑ์','☀️',['dmg','*',.1,3],['slow','+',.04,2],{fx:'ignite',nm:'แสงแผดเผา',i:'🔥',ch:.15,pct:.3,t:3}],
+  ['ลานกว้าง','⭕',['r','*',.06,3],['cd','c',.06,2],{fx:'feast',nm:'วิญญาณคืนพลัง',i:'🍖',amt:1}],
+  {fx:'chill',nm:'ลานตรึงวิญญาณ',i:'👑',ch:.08,t:1}],
+lantern:[['แสงจ้า','🏮',['dmg','*',.08,3],['pierce','+',1,2],{fx:'execute',nm:'แสงชำระ',i:'⚖️',hp:.3,m:1.6}],
+  ['โคมเพิ่ม','➕',['count','+',1,1],['cd','c',.06,2],{fx:'shock',nm:'แสงแยงตา',i:'⚡',ch:.15,t:.5}],
+  ['ลำแสงไกล','📏',['life','*',.1,3],['@leech',.004,2],{fx:'feast',nm:'โคมเก็บวิญญาณ',i:'💚',amt:1}],
+  {fx:'radial',nm:'โคมสาดแสง',i:'👑',every:5,n:8,pct:.5}],
+seal:[['ตราแรง','🔯',['dmg','*',.08,3],['r','*',.06,2],{fx:'shock',nm:'ตราตรึง',i:'⚡',ch:.3,t:.5}],
+  ['ตราเพิ่ม','➕',['targets','+',1,3],['delay','*',-.08,2],{fx:'burst',nm:'ตราลามระเบิด',i:'💥',r:50,pct:.45}],
+  ['ประทับไว','⏱️',['cd','c',.05,3],['@ignite',.1,2],{fx:'vsStun',nm:'ลงทัณฑ์ซ้ำ',i:'💢',m:1.5}],
+  {fx:'echo',nm:'ตราสวรรค์ซ้อน',i:'👑',every:3}],
+veil:[['ม่านหนา','🌅',['r','*',.06,3],['heal','*',.15,2],{fx:'mend',nm:'อรุณฟื้นกาย',i:'💚',pct:.04}],
+  ['แสงผลัก','💥',['dmg','*',.1,3],['knock','*',.15,2],{fx:'shock',nm:'ม่านสะท้าน',i:'⚡',ch:.5,t:.5}],
+  ['ตั้งม่านไว','⏱️',['cd','c',.06,3],['slow','+',.05,2],{fx:'chill',nm:'ม่านเยือก',i:'❄️',ch:.3,t:.8}],
+  {fx:'radial',nm:'แสงอรุณสาดรอบทิศ',i:'👑',every:1,n:10,pct:.6}],
+palm:[['ฝ่ามือหนัก','🖐️',['dmg','*',.08,3],['knock','*',.15,2],{fx:'vsStun',nm:'ฝ่ามือซ้ำแผล',i:'💢',m:1.5}],
+  ['คลื่นกว้าง','⭕',['size','*',.1,3],['life','*',.1,2],{fx:'shards',nm:'คลื่นแตกกระจาย',i:'✨',on:'hit',ch:.12,n:2,pct:.4}],
+  ['ลมปราณไว','⏱️',['cd','c',.05,3],['@leech',.005,2],{fx:'ignite',nm:'ฝ่ามือเพลิง',i:'🔥',ch:.25,pct:.3,t:3}],
+  {fx:'echo',nm:'ฝ่ามือคู่',i:'👑',every:3}],
+combo:[['หมัดหนัก','👊',['dmg','*',.08,3],['boom','*',.1,2],{fx:'vsStun',nm:'ปิดท้ายซ้ำแผล',i:'💢',m:1.5}],
+  ['ระเบิดหมัด','💥',['r','*',.06,3],['stun','+',.1,2],{fx:'burst',nm:'หมัดระเบิดศพ',i:'🎆',r:50,pct:.45}],
+  ['ต่อยไว','⏱️',['cd','c',.05,3],['range','*',.06,2],{fx:'ignite',nm:'หมัดเปลวสุริยะ',i:'🔥',ch:.2,pct:.3,t:3}],
+  {fx:'mod',nm:'สี่หมัดสุริยัน',i:'👑',add:{fin:-1}}]});
 const TF_COST=[0,1,2,4], TF_CROWN=6;
 
 /* ---- node list of a tree (cached) ---- */
@@ -452,7 +476,7 @@ function tfCast(s){ const F=s.fx; if(!F) return; s.tfC=(s.tfC|0)+1;
     G.fx.push({k:'ring',x:P.x,y:P.y,r0:10,r1:70,t:0,dur:.25,c:s.def.c,w:5,follow:true,dead:false}); }
   if(F.echo&&s.tfC%F.echo.every===0&&TF_ECHO[s.def.type]) later(.3,()=>{ if(!P||!G||G.over||P.skills.indexOf(s)<0) return;
     const c=s.cdT; s.cdT=0; try{ BEH[s.def.type](s,0); } finally{ s.cdT=c; } }); }
-const TF_ECHO={proj:1, swing:1, nova:1, strike:1, zone:1, chain:1, heal:1, multi:1, spikes:1, thrust:1, rite:1};   // + skx types (25a)
+const TF_ECHO={proj:1, swing:1, nova:1, strike:1, zone:1, chain:1, heal:1, multi:1, spikes:1, thrust:1, rite:1, seal:1, ward:1, combo:1};   // + skx types (25a)
 // the skill loop of world update when the run has tree effects: casts are seen as a cooldown restart · burns tick here
 function tfRun(dt){
   G.tfN=0;

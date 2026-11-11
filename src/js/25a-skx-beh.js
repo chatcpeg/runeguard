@@ -36,6 +36,38 @@ BEH.rite=(s,dt)=>{ s.cdT-=dt; if(s.cdT>0) return; const r=pv(s,'r')*P.area;
   G.fx.push({k:'ring',x:P.x,y:P.y,r0:14,r1:r,t:0,dur:.42,c:s.def.c,w:14,follow:true,dead:false}); G.fx.push({k:'boom',x:P.x,y:P.y,r:r*.7,t:0,dur:.35,c:'#ff2a2a',dead:false});
   burst(P.x,P.y-4,qLv()?16:6,'#c41a1a',r*2.4,.5,3.5); if(!G.auto&&qLv()>=1) addDecal(splatTex('#6a0d0d',1),P.x,P.y+6,r*.55,4,.5);
   G.shake=Math.max(G.shake,5); P.atkT=.12; sfx('boom'); };
+// seal (ตราประทับแสง): stamps up to `targets` enemies round the aimed one · each stamp follows its enemy and bursts after `delay`
+// (a pillar of light, r round it) · a stamp whose enemy already died bursts where it fell
+BEH.seal=(s,dt)=>{ const st=s.st, Q=st.q||(st.q=[]);
+  if(Q.length){ for(const m of Q){ if(!m.e.dead){ m.x=m.e.x; m.y=m.e.y; } if(G.t>=m.at){ m.done=1; sealBoom(s,m); if(G.over) return; } } st.q=Q.filter(m=>!m.done); }
+  s.cdT-=dt; if(s.cdT>0) return;
+  const R=Math.min((pv(s,'range')||380)*(P.rangeMul||1),aimReach()), t=G.near&&G.nearD<R?G.near:null; if(!t){ s.cdT=.2; return; }
+  s.cdT=cdOf(s); const n=Math.max(1,Math.round(pv(s,'targets')||3)), dl=pv(s,'delay')||1, L=[];
+  for(const e of query(t.x,t.y,240)) if(!e.dead&&!st.q.some(m=>m.e===e)) L.push(e);
+  L.sort((a,b)=>((a.x-t.x)**2+(a.y-t.y)**2)-((b.x-t.x)**2+(b.y-t.y)**2));
+  for(const e of L.slice(0,n)) st.q.push({e, x:e.x, y:e.y, at:G.t+dl, t0:G.t});
+  G.fx.push({k:'ring',x:t.x,y:t.y,r0:10,r1:60,t:0,dur:.3,c:s.def.c,w:4,dead:false}); P.atkT=.12; if(!G.auto) sfx('shield'); };
+function sealBoom(s,m){ const r=pv(s,'r')*P.area; aoe(m.x,m.y,r,pv(s,'dmg'),s,{knock:120});
+  G.fx.push({k:'pillar',x:m.x,y:m.y,r:Math.min(40,r*.6),t:0,dur:.45,c:s.def.c,dead:false}); G.fx.push({k:'ring',x:m.x,y:m.y,r0:r*.3,r1:r,t:0,dur:.3,c:'#fff6c8',w:5,dead:false}); if(!G.auto) sfx('boom'); }
+// ward (ม่านอรุณ): erases every enemy shot inside r (heal per shot), then a light wave that pushes and slows · wakes for shots too
+BEH.ward=(s,dt)=>{ s.cdT-=dt; if(s.cdT>0) return; const r=pv(s,'r')*P.area, r2=r*r;
+  let shots=0; for(const b of G.eprojs) if(!b.dead&&(b.x-P.x)**2+(b.y-P.y)**2<r2) shots++;
+  if(!shots&&(!G.near||G.nearD>r*.9)){ s.cdT=.15; return; }
+  s.cdT=cdOf(s); let n=0;
+  for(const b of G.eprojs){ if(b.dead||(b.x-P.x)**2+(b.y-P.y)**2>=r2) continue; b.dead=true; b.life=-1; n++; if(!G.auto&&n<14) burst(b.x,b.y,3,'#ffe9b0',70,.3,2); }   // life −1: gone before it can hit this frame
+  if(n) healP(n*(pv(s,'heal')||2));
+  aoe(P.x,P.y,r,pv(s,'dmg'),s,{knock:pv(s,'knock'),slow:pv(s,'slow'),slowDur:1.5});
+  G.fx.push({k:'ring',x:P.x,y:P.y,r0:20,r1:r,t:0,dur:.45,c:s.def.c,w:10,follow:true,dead:false}); G.fx.push({k:'ring',x:P.x,y:P.y,r0:r*.6,r1:r*1.08,t:0,dur:.5,c:'#ffffff',w:3,follow:true,dead:false});
+  P.atkT=.12; if(!G.auto) sfx('shield'); };
+// combo (ห้าหมัดสุริยัน): quick punches (the swing of 19) · every `fin`-th cast a sun blast in front instead (boom × dmg, stun)
+BEH.combo=(s,dt)=>{ s.cdT-=dt; if(s.cdT>0) return; const range=pv(s,'range')*P.area;
+  if(!G.near||G.nearD>range*1.6+G.near.r){ s.cdT=.1; return; }
+  s.cdT=cdOf(s); s.st.n=(s.st.n|0)+1; const fin=Math.max(2,Math.round(pv(s,'fin')||5));
+  if(s.st.n%fin){ doSwing(s,s.st.n); return; }
+  const a=Math.atan2(G.near.y-P.y,G.near.x-P.x), x=P.x+Math.cos(a)*range*.7, y=P.y+Math.sin(a)*range*.7, r=pv(s,'r')*P.area;
+  aoe(x,y,r,pv(s,'dmg')*(pv(s,'boom')||3),s,{knock:(pv(s,'knock')||100)*2,stun:pv(s,'stun')});
+  G.fx.push({k:'boom',x,y,r,t:0,dur:.4,c:s.def.c,dead:false}); G.fx.push({k:'ring',x,y,r0:r*.2,r1:r*1.1,t:0,dur:.3,c:'#fff2c0',w:7,dead:false});
+  burst(x,y,qLv()?16:6,'#ffb347',r*2.6,.45,3.5); G.shake=Math.max(G.shake,6); P.atkT=.16; sfx('boom'); };
 
 /* ---- projectiles (fireProj → pxFire when SK[id].px) ---- */
 // ret: boomerang (out to its range, then back to the hand, hitting everything again) · hook: knock < 0 = pulled to the hero ·
@@ -72,7 +104,14 @@ function pxRet(p,dt){
   const k=Math.min(1,dt*7); p.vx+=(dx/d*sp-p.vx)*k; p.vy+=(dy/d*sp-p.vy)*k; return false; }
 
 /* ---- summons (BEH.summon: modes other than hawk / clone) ---- */
-function skxUnit(s,u,dt,i,n){ if(s.def.mode==='wolf') wolfUpdate(s,u,dt,i,n); }
+function skxUnit(s,u,dt,i,n){ if(s.def.mode==='wolf') wolfUpdate(s,u,dt,i,n); else if(s.def.mode==='lantern') lanternUpdate(s,u,dt,i,n); }
+// lantern: floats over the shoulder, a light ray (pierce) at the enemy nearest to it, aimed once, straight
+function lanternUpdate(s,u,dt,i,n){ const fa=G.t*1.1+i*TAU/n, fx=P.x+Math.cos(fa)*30, fy=P.y-46+Math.sin(fa)*8, k=Math.min(1,dt*6);
+  u.x+=(fx-u.x)*k; u.y+=(fy-u.y)*k; u.cd-=dt; if(u.fl>0) u.fl-=dt; if(u.cd>0) return;
+  const reach=430*(P.rangeMul||1), t=nearestTo(u.x,u.y,reach); if(!t){ u.cd=.2; return; }
+  u.cd=cdOf(s); u.fl=.15; const a=Math.atan2(t.y-u.y,t.x-u.x), sp=pv(s,'speed')||900, life=(pv(s,'life')||.5)*(P.rangeMul||1);
+  G.projs.push({x:u.x,y:u.y,vx:Math.cos(a)*sp,vy:Math.sin(a)*sp,r:5,dmg:pv(s,'dmg'),pierce:pv(s,'pierce')||1,life,max:life,knock:50,explode:0,homing:0,crit:0,shape:'beam',c:s.def.c,src:s,burn:0,hit:null,tg:null,dead:false,t:0});
+  G.fx.push({k:'beamline',x:u.x,y:u.y,a,len:sp*life,t:0,dur:.18,c:s.def.c,dead:false}); if(!G.auto) sfx('shoot'); }
 // wolf: runs at the nearest enemy (within 420 of the hero), bites on its cooldown (slow · the skill's bleed), else trots at heel
 function wolfUpdate(s,u,dt,i,n){
   if((u.x-P.x)**2+(u.y-P.y)**2>700*700){ u.x=P.x; u.y=P.y; u.tg=null; }
@@ -99,7 +138,7 @@ function zxCast(s){
     else if(pl==='aim'){ const b=a+(i-(n-1)/2)*.35, sp=v('speed')||200; x+=Math.cos(b)*36; y+=Math.sin(b)*36; o.aim={vx:Math.cos(b)*sp, vy:Math.sin(b)*sp}; }
     else if(pl==='enemy'){ const q=aimCluster(t,i,r*2); x=q[0]; y=q[1]; }
     addZone(Object.assign({x,y,r,dur:(v('dur')||4)*P.durMul,tick:(v('tick')||.4)*(s.def.cdTick?P.cdMul:1),dmg:v('dmg')||0,slow:v('slow')||0,kind:s.def.fx,src:s,x2:1,
-      rep:v('rep')||0,stun:v('stun')||0,pull:v('pull')||0,boom:v('boom')||0,explode:(v('explode')||0)*P.area,bk:s.def.bk==null?220:s.def.bk,
+      rep:v('rep')||0,stun:v('stun')||0,heal:v('heal')||0,pull:v('pull')||0,boom:v('boom')||0,explode:(v('explode')||0)*P.area,bk:s.def.bk==null?220:s.def.bk,
       shoot:s.def.shoot?(v('shots')||1):0,lob:s.def.lob?1:0,reach:(v('reach')||300)*(P.rangeMul||1),pierce:v('pierce')||1,tt:s.def.shoot||s.def.lob?.2:0},o)); }
   if(s.def.fx==='palisade'){ G.fx.push({k:'ring',x:P.x,y:P.y,r0:r*.3,r1:r,t:0,dur:.3,c:s.def.c,w:6,follow:true,dead:false}); sfx('shield'); } }
 // one frame of an x2 zone: movement, push / pull, its own ticks → always true (the classic zone code never sees it)
@@ -113,7 +152,8 @@ function zxTick(z,dt){
   z.tt-=dt; if(z.tt<=0){ z.tt=z.tick;
     if(z.shoot) zxShoot(z); else if(z.lob) zxLob(z);
     else if(z.dmg) for(const e of query(z.x,z.y,z.r+60)){ if(e.dead) continue; const rr=z.r+e.r*.5; if((e.x-z.x)**2+(e.y-z.y)**2>rr*rr) continue;
-      damageEnemy(e,z.dmg,z.src,{slow:z.slow,slowDur:.5,stun:z.stun,quiet:true,fxd:z.fxd}); } }
+      damageEnemy(e,z.dmg,z.src,{slow:z.slow,slowDur:.5,stun:z.stun,quiet:true,fxd:z.fxd}); }
+    if(z.heal&&(P.x-z.x)**2+(P.y-z.y)**2<(z.r+P.r)**2&&P.hp<P.maxHp){ healP(z.heal,true); if(!G.auto) part({x:P.x+rand(-12,12),y:P.y+rand(-8,8),vx:0,vy:rand(-70,-40),life:.6,s:3,c:'#9dffb8',g:0,drag:1,k:'plus',add:true}); } }   // standing inside: heal
   if(z.fl>0) z.fl-=dt;
   if(!G.auto&&qLv()&&Math.random()<dt*10){ const k=z.kind;
     if(k==='grav'){ const b=rand(0,TAU), d=z.r*rand(1.2,2); part({x:z.x+Math.cos(b)*d,y:z.y+Math.sin(b)*d*.8,vx:-Math.cos(b)*d*2,vy:-Math.sin(b)*d*1.6,life:.45,s:2,c:'#c8b4ff',g:0,drag:0,k:'streak',add:true}); }
