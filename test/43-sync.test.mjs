@@ -560,13 +560,13 @@ async function player(c, name, cls, lv) {   // a real character through 41 (crea
   d1.authWantsScreen(); X(d1, 'loadSaveFor(authBootOwner())');
   await player(d1, 'ลูน่า', 'mage', 12);
   const guestWb = X(d1, 'SAVE.wb');
-  ok('ผู้เยี่ยมชม: เซฟจริง v6 · ตัวละคร Lv 12', X(d1, 'SAVE.v') === 6 && X(d1, 'SAVE.chars[0].lv') === 12 && X(d1, 'SAVE.owner') === null);
+  ok('ผู้เยี่ยมชม: เซฟจริงเวอร์ชันล่าสุด (SCHEMA_V) · ตัวละคร Lv 12', X(d1, 'SAVE.v') === X(d1, 'SCHEMA_V') && X(d1, 'SAVE.chars[0].lv') === 12 && X(d1, 'SAVE.owner') === null);
   await d1.authSignIn(EMAIL, 'password123'); await d1.settle();
   ok('ล็อกอินครั้งแรกบนเครื่องนี้ + ไม่มีแถว → askMove', d1.cloudConflictInfo() && d1.cloudConflictInfo().kind === 'askMove');
   eq('[ย้าย] → ok', await d1.cloudResolve('local'), 'ok');
   const r0 = S.rows.find(x => x.slot === 0);
-  ok('F12: เซฟบัญชีได้สายเซฟใหม่ (wb ≠ ของผู้เยี่ยมชม) · owner = uid · ผ่าน migrate/validate · schema_v 6 บน server', X(d1, 'SAVE.owner') === UID_A && X(d1, 'SAVE.wb') !== guestWb
-    && X(d1, 'svlState().from') === 'cloud' && r0 && r0.schema_v === 6 && r0.data.v === 6 && r0.data.wb === X(d1, 'SAVE.wb') && !('owner' in r0.data), [X(d1, 'SAVE.wb'), guestWb, r0 && r0.schema_v]);
+  ok('F12: เซฟบัญชีได้สายเซฟใหม่ (wb ≠ ของผู้เยี่ยมชม) · owner = uid · ผ่าน migrate/validate · schema_v ล่าสุดบน server', X(d1, 'SAVE.owner') === UID_A && X(d1, 'SAVE.wb') !== guestWb
+    && X(d1, 'svlState().from') === 'cloud' && r0 && r0.schema_v === X(d1, 'SCHEMA_V') && r0.data.v === X(d1, 'SCHEMA_V') && r0.data.wb === X(d1, 'SAVE.wb') && !('owner' in r0.data), [X(d1, 'SAVE.wb'), guestWb, r0 && r0.schema_v]);
   ok('summary บน server: appVer ของแอป · ไม่มีอีเมล', r0.summary.appVer === X(d1, 'SV_APP') && !JSON.stringify(r0).includes('@'));
   ok('เซฟผู้เยี่ยมชมยังอยู่ไม่ถูกแตะ', JSON.parse(ls1.getItem('runeguard.save.guest')).wb === guestWb);
 

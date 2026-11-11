@@ -7,7 +7,7 @@ function damageEnemy(e,base,s,o){
   let dmg=base*P.might*(crit?P.critMult:1);
   if(P.rage) dmg*=1+P.rage*(1-P.hp/P.maxHp);
   dmg*=rand(.92,1.08);
-  if(e.def) dmg*=1-e.def; if(e.boss&&P.bossDmg) dmg*=1+P.bossDmg; if(P.fam&&e.d.fam){ const f=P.fam[e.d.fam]; if(f) dmg*=1+f; }
+  if(e.def&&!(e.shArc&&!fdFront(e,o))) dmg*=1-e.def; if(e.boss&&P.bossDmg) dmg*=1+P.bossDmg; if(P.fam&&e.d.fam){ const f=P.fam[e.d.fam]; if(f) dmg*=1+f; }
   e.hp-=dmg; e.flash=.09; e.hitT=.12; e.ai.hurtT=G.t; if(s) s.dealt+=dmg; G.totalDmg+=dmg;
   if((!o.quiet||crit)&&(G.texts.length<110||crit)) addNum(e.x+rand(-6,6),e.y-e.r-6,Math.round(dmg),crit?'c':'w');
   let nx=o.nx,ny=o.ny;

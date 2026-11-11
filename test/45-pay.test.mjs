@@ -235,7 +235,7 @@ const FILES = ['04', '05', '06', '07', '08', '15', '16', '24', '25', '26', '27',
   ok('ไม่มีแถว → 0', JSON.stringify(E([])) === JSON.stringify({ sup: 0, runes: 0, n: 0, sids: [] }));
 
   X(`createChar('ลูน่า','mage'); DEV.profile.char({lv:40}); createChar('ผาง','swordsman'); DEV.profile.char({lv:30})`);
-  ok('เซฟ v6 · ตัวละคร 2 ตัว', X('SAVE.v') === 6 && X('SAVE.chars.length') === 2);
+  ok('เซฟเวอร์ชันล่าสุด (SCHEMA_V) · ตัวละคร 2 ตัว', X('SAVE.v') === X('SCHEMA_V') && X('SAVE.chars.length') === 2);
   // character 2 bought 50 runes and spent everything on its tree; character 1 got 30 · then the save is edited by hand
   X(`SAVE.acct.ru=80; SAVE.chars[0].rb=30; SAVE.chars[1].rb=50`);
   const id = X(`SAVE.chars[1].load[0]`);

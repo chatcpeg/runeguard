@@ -8,7 +8,10 @@ const TER_BIOME={
   haunted:{n:'ป่าหลอน', rock:[1,2], tree:[2,4], bush:[1,2], water:[0,1], wet:'mud', rk:['tomb','boulder'], tk:'dead', bk:'thorn', mount:.45, mk:['t_mount_haunt0','t_mount_rock0'], gr:'gr_haunted'},
   meadow:{n:'ทุ่งดอกไม้', rock:[0,1], tree:[1,3], bush:[2,4], water:[0,1], wet:'water', rk:['boulder'], tk:'round', bk:'flower', mount:.35, mk:['t_mount_rock0','t_mount_rock1'], gr:'gr_meadow'},
   forest:{n:'ป่าหนามก็อบลิน', rock:[1,2], tree:[3,5], bush:[1,2], water:[0,1], wet:'water', rk:['boulder'], tk:'pine', bk:'thorn', mount:.4, mk:['t_mount_rock0','t_mount_rock1'], gr:'gr_forest'},
-  ruins:{n:'ซากวิหารรูน', rock:[2,3], tree:[0,1], bush:[1,2], water:[0,1], wet:'water', rk:['pillar','boulder'], tk:'round', bk:'thorn', mount:.35, mk:['t_mount_crystal0','t_mount_rock1'], gr:'gr_ruins'}};
+  ruins:{n:'ซากวิหารรูน', rock:[2,3], tree:[0,1], bush:[1,2], water:[0,1], wet:'water', rk:['pillar','boulder'], tk:'round', bk:'thorn', mount:.35, mk:['t_mount_crystal0','t_mount_rock1'], gr:'gr_ruins'},
+  // the maps of ท่องแดนรูน (62/63 build them once per map from its seed; these are the scatter densities + looks)
+  swamp:{n:'บึงวุ้นหกสี', rock:[0,1], tree:[1,2], bush:[1,3], water:[2,4], wet:'water', rk:['boulder'], tk:'round', bk:'flower', mount:.25, mk:['t_mount_crystal0'], gr:'gr_swamp'},
+  canyon:{n:'ค่ายออร์คผาเหล็ก', rock:[2,3], tree:[0,1], bush:[1,2], water:[0,1], wet:'mud', rk:['boulder'], tk:'dead', bk:'thorn', mount:.5, mk:['t_mount_red0'], gr:'gr_canyon'}};
 // mount: chance of one mountain (a big hard rock mass, r 80–115) per chunk · mk: its painted looks · gr: the painted ground (12b)
 // tiny seeded PRNG (mulberry32) · chunk seed = hash(run seed, cx, cy)
 function terRng(a){ return function(){ a|=0; a=a+0x6D2B79F5|0; let t=Math.imul(a^a>>>15,1|a); t=t+Math.imul(t^t>>>7,61|t)^t; return ((t^t>>>14)>>>0)/4294967296; }; }
@@ -89,23 +92,27 @@ function terWetSpr(k,v){ return terSpr('wet_'+k+v,220,140,g=>{ const water=k==='
   g.fillStyle=water?'#3a7aa0':'#5e4a30'; g.beginPath(); g.ellipse(-6,-4,88,48,v*.2,0,TAU); g.fill();
   g.strokeStyle=water?'rgba(200,236,255,.45)':'rgba(120,96,64,.6)'; g.lineWidth=2.5; for(let i=0;i<3;i++){ g.beginPath(); g.ellipse(-20+i*22,-10+i*8,22-i*4,6,0,0,PI); g.stroke(); }
   g.strokeStyle=water?'#1a3a50':'#2e2416'; g.lineWidth=3; g.beginPath(); g.ellipse(0,0,104,62,v*.2,0,TAU); g.stroke(); }); }
-function terVisible(L,T,R,B,f){ const g=G.terrain; if(!g) return; for(const C of g.chunks.values()) for(const o of C.list){ const m=(o.cr||o.r)*2+90; if(o.x<L-m||o.x>R+m||o.y<T-m||o.y>B+m) continue; f(o); } }
+function terVisible(L,T,R,B,f){ const g=G.terrain; if(!g) return;
+  const vis=C=>{ for(const o of C.list){ const m=(o.cr||o.r)*2+90; if(o.x<L-m||o.x>R+m||o.y<T-m||o.y>B+m) continue; f(o); } };
+  if(g.fixed){ const CH=TER.CH, x1=Math.floor((R+CH)/CH), y1=Math.floor((B+CH)/CH);   // a whole map (62/63) keeps every chunk: visit only those around the view
+    for(let cx=Math.floor((L-CH)/CH);cx<=x1;cx++) for(let cy=Math.floor((T-CH)/CH);cy<=y1;cy++){ const C=g.chunks.get(cx+','+cy); if(C) vis(C); } return; }
+  for(const C of g.chunks.values()) vis(C); }
 // ground pass (core 22: mode.drawWorld, before the actors): water/mud → bushes → rocks → tree trunks
 function terDrawGround(L,T,R,B){ if(!G.terrain) return; const S=SPR_SS, dr=(img,x,y,sc)=>{ const w=img.width/S*sc, h=img.height/S*sc; ctx.drawImage(img,x-w/2,y-h/2,w,h); };
   const art=(o,im)=>{ const b=terArtBox(o,im); ctx.drawImage(im,o.x-b.w/2,b.fy-b.h,b.w,b.h); };
-  terVisible(L,T,R,B,o=>{ if(o.k!=='water'&&o.k!=='mud') return; const im=terArt(o); if(im) art(o,im); else dr(terWetSpr(o.k,o.v),o.x,o.y,o.r/96); });
+  terVisible(L,T,R,B,o=>{ if(o.k!=='water'&&o.k!=='mud'&&o.k!=='flat') return; const im=terArt(o); if(im) art(o,im); else if(o.k==='flat'){ if(typeof fdVecFlat==='function') fdVecFlat(o); } else dr(terWetSpr(o.k,o.v),o.x,o.y,o.r/96); });
   terVisible(L,T,R,B,o=>{ if(o.k!=='bush') return; const im=terArt(o); if(im) art(o,im); else dr(terBushSpr(o.bk,o.v),o.x,o.y,o.r/40); });
   terVisible(L,T,R,B,o=>{ if(TER_YK[o.k]&&terArt(o)) return;                  // painted: drawn with the actors (terYList)
     if(o.k==='rock') dr(terRockSpr(o.rk,o.v),o.x,o.y-(o.rk==='boulder'?0:o.r*.4),o.rk==='boulder'?o.r/44:o.r/24); else if(o.k==='tree') dr(terTrunkSpr(o.tk,o.v),o.x,o.y-o.r*.9,o.r/14);
-    else if(o.k==='mount') dr(terRockSpr('boulder',o.v),o.x,o.y,o.r/44); }); }
+    else if(o.k==='mount') dr(terRockSpr('boulder',o.v),o.x,o.y,o.r/44); else if(o.k==='prop'&&typeof fdVecProp==='function') fdVecProp(o); }); }
 // canopy pass (mode.drawOver, after the actors): a canopy over the player fades so the hero stays visible
 function terDrawOver(L,T,R,B){ if(!G.terrain) return; const S=SPR_SS;
   terVisible(L,T,R,B,o=>{ if(o.k!=='tree'||terArt(o)) return; const img=terCanopySpr(o.tk,o.v), sc=o.cr/58, w=img.width/S*sc, h=img.height/S*sc, cy=o.y-o.r*2.2-o.cr*.55;
     const near=Math.hypot(P.x-o.x,P.y-cy)<o.cr*1.05; ctx.globalAlpha=near?.42:.96; ctx.drawImage(img,o.x-w/2,cy-h/2,w,h); ctx.globalAlpha=1; }); }
 
 /* ---- painted scenery (12b) · trees, rocks and mountains stand in depth order with the actors (core 22: drawActors) ---- */
-const TER_YK={tree:1, rock:1, mount:1};
-function terArtKey(o){ const v=o.v|0; switch(o.k){
+const TER_YK={tree:1, rock:1, mount:1, prop:1};                         // prop = upright landmark of a map (fence, tent, portal …) · flat = lies on the ground
+function terArtKey(o){ if(o.ak0) return o.ak0; const v=o.v|0; switch(o.k){
   case 'tree': return 't_tree_'+o.tk+v; case 'rock': return 't_rock_'+o.rk+v; case 'mount': return o.mk;
   case 'bush': return 't_bush_'+o.bk+(o.bk==='thorn'?v%2:v); case 'water': case 'mud': return 't_wet_'+o.k+(v%2); }
   return null; }
@@ -113,8 +120,8 @@ function terArtKeys(b){ const B=TER_BIOME[b], ks=[B.gr].concat(B.mk||[]); for(le
   return [...new Set(ks)]; }
 function terArt(o){ if(typeof artImg!=='function') return null; if(o.ak===undefined) o.ak=terArtKey(o)||null; return o.ak?artImg(o.ak):null; }
 // size (world px) and the foot line the picture stands on · water/mud lie flat, centred on the feature
-function terArtBox(o,im){ const k=o.k, w=k==='tree'?o.cr*2.3:k==='mount'?o.r*2.5:k==='rock'?o.r*(o.rk==='boulder'?2.3:2.4):k==='bush'?o.r*2.5:o.r*2.15,
-  h=w*im.naturalHeight/im.naturalWidth, fy=k==='water'||k==='mud'?o.y+h/2:o.y+o.r*(k==='tree'?.55:k==='bush'?.7:.6); return {w,h,fy}; }
+function terArtBox(o,im){ const k=o.k, w=o.aw||(k==='tree'?o.cr*2.3:k==='mount'?o.r*2.5:k==='rock'?o.r*(o.rk==='boulder'?2.3:2.4):k==='bush'?o.r*2.5:o.r*2.15),
+  h=w*im.naturalHeight/im.naturalWidth, fy=k==='water'||k==='mud'||k==='flat'?o.y+h/2:o.y+o.r*(k==='tree'?.55:k==='bush'?.7:k==='prop'?(o.fy==null?.6:o.fy):.6); return {w,h,fy}; }
 function terYList(L,T,R,B){ if(!G.terrain) return null; const out=[];
   terVisible(L,T,R,B,o=>{ if(!TER_YK[o.k]) return; const im=terArt(o); if(!im) return; const b=terArtBox(o,im); out.push({o,im,w:b.w,h:b.h,fy:b.fy}); });
   out.sort((a,b)=>a.fy-b.fy); return out; }
