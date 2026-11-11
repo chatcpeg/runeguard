@@ -1,1 +1,27 @@
-/* 60-field.css · lane F · M0 stub (empty) */
+/* 60-field.css · lane F · scrWorld (แผนที่โลก) + field HUD buttons + pause extras */
+.wm-q{width:44px;height:44px;min-height:44px;font-size:18px}
+.wm-map{display:flex;flex-direction:column;align-items:stretch;gap:0}
+.wm-fort{align-self:center;padding:8px 16px;border-radius:999px;border:1px solid var(--rune-deep);background:rgba(240,181,69,.1);color:var(--rune);font-family:var(--f-display);font-size:15px}
+.wm-link{display:block;align-self:center;width:4px;height:16px;border-radius:2px;background:repeating-linear-gradient(var(--rune-deep) 0 4px,transparent 4px 7px)}
+.wm-node{display:grid;grid-template-columns:44px minmax(0,1fr) auto;gap:10px;align-items:center;min-height:64px;padding:8px 14px;border-radius:14px;border:1px solid var(--line);background:var(--card);color:var(--bone);text-align:left;cursor:pointer}
+.wm-node.on{border-color:var(--rune);box-shadow:inset 0 0 0 1px var(--rune);background:linear-gradient(135deg,rgba(240,181,69,.16),rgba(240,181,69,.02)),var(--card)}
+.wm-node.lk{border-style:dashed;opacity:.82}
+.wm-ni{font-size:26px;text-align:center}
+.wm-nt{display:flex;flex-direction:column;min-width:0}
+.wm-nt b{font-family:var(--f-display);font-weight:400;font-size:18px;overflow-wrap:anywhere}
+.wm-nt small{color:var(--ash);font-size:12.5px}
+.wm-st{font-size:13px;font-weight:700;color:var(--rune);white-space:nowrap;font-variant-numeric:tabular-nums}
+.wm-body{display:flex;flex-direction:column;gap:10px}
+.wm-d{margin:0;color:var(--ash);font-size:13.5px;line-height:1.5}
+.wm-mobs{display:flex;flex-wrap:wrap;gap:6px}
+.wm-mobs h3{flex:0 0 100%;margin:4px 0 0;font-family:var(--f-display);font-weight:400;font-size:16px;color:var(--rune)}
+.wm-mob{display:flex;flex-direction:column;align-items:flex-start;min-height:44px;padding:5px 10px;border-radius:10px;border:1px solid var(--line);background:var(--well);color:var(--bone);font-size:13px;line-height:1.3;cursor:pointer;text-align:left}
+.wm-mob small{color:var(--ash);font-size:11.5px}
+.wm-mob.calm{border-style:dashed}
+.fd-btns{display:flex;gap:8px;pointer-events:none}
+.fd-btns[hidden]{display:none}
+.fd-q,.fd-rc{pointer-events:auto;min-height:48px;border-radius:12px;border:1px solid var(--line-hi);background:var(--glass);color:var(--bone);font-weight:700;cursor:pointer}
+.fd-q{width:48px;font-size:18px;color:var(--spirit);border-color:var(--spirit-deep)}
+.fd-rc{padding:0 14px;font-size:14.5px;white-space:nowrap;font-variant-numeric:tabular-nums}
+.fd-rc.on{border-color:var(--rune);color:var(--rune);background:rgba(40,30,8,.85)}
+.fd-pz{display:grid;gap:8px;margin-bottom:10px;text-align:left}

@@ -1,5 +1,156 @@
-/* ================= 60-zones-data.js · lane F · pure · zones and mobs (merged into EN on load) ================= */
-/* M0 stub: frozen signatures from DESIGN §7.8, neutral values — classic never calls these. Lane F writes the real body. */
-const ZONES={};
-const MOBS={};
+/* ================= 60-zones-data.js · lane F · pure · the 3 maps of ท่องแดนรูน (docs/PROPOSAL-maps-daily.md §3–5) ================= */
+// ZONES = map layouts (size, landmarks, regions of monster nests, portals, field boss, rampage) · MOBS = every field monster.
+// MOBS are merged into EN at load (lazy:1 = their sprites are built when a map opens, never at boot). Stats are the archetype
+// (DESIGN §5.3): HP × hpByLv(lv) and damage × dmgByLv(lv) at spawn, then the colour rank (29 RANK). Behaviour = `kit`, a set
+// of reusable behaviour blocks run by 62a-field-kits.js (ranged, charge, split, boom, heal, buff, trap, shield, summon, steal,
+// hide, swap, trail, phase …). Painted art = `art` (12b ART_DIM · may not exist yet: the vector painter `pv` of 61 is used).
+// Pure: no DOM, no G, no other lane's data at load (names.test loads this file with the core data only).
+const FD_ORDER=['g1','s1','o1'];
+const ZONES={
+  g1:{id:'g1', k:{hp:1, dmg:1}, n:'ป่าหนามก็อบลิน', i:'🌲', lv:[1,12], biome:'forest', el:['earth','dark','fire'], w:3600, h:2800, seed:0x6b1a5101, gearT:[1,2], zn:1,
+    tone:'rgba(14,40,14,.12)', mini:'#24401f', prev:null, next:'s1', open:1,
+    d:'ป่าเขาทึบ ลำธารตัดกลางแผนที่ (สะพานไม้ 2 จุด) · ค่ายก็อบลินรั้วไม้แหลม 3 ค่าย',
+    entry:{x:330, y:2380},
+    portals:[{id:'fort', to:'fort', x:180, y:2480, n:'ประตูป้อม'}, {id:'e', to:'s1', via:'w', x:3480, y:1420, n:'ไปบึงวุ้นหกสี'}],
+    boss:{id:'gb_king', every:360, x:2790, y:770, place:'ลานกลางค่ายใหญ่'},
+    rampage:{n:'บุกค่าย!', sub:'ฆ่ามือกลองก่อน ฝูงจะช้าลง', list:[['g_sprout',7],['g_grunt',6],['g_spear',2],['g_thrower',3]], lead:'g_drummer'},
+    stream:{x:1850, amp:120, per:430, bridges:[820,1980]},
+    camps:[
+      {x:860, y:720, r:190, tents:1, gate:.6, guards:[['g_grunt',3],['g_thrower',2],['g_shaman',1]]},
+      {x:2650, y:2150, r:190, tents:2, gate:3.6, guards:[['g_grunt',2],['g_spear',2],['g_trapper',1],['g_shaman',1]]},
+      {x:2790, y:770, r:270, tents:3, gate:2.4, big:1, guards:[['g_hob',2],['g_drummer',1],['g_spear',2],['g_grunt',2],['g_shaman',1]]}],
+    regions:[
+      {x0:120, y0:1700, x1:1600, y1:2700, n:9, mix:[['g_sprout',5],['m_strawbeetle',3],['g_grunt',3],['g_boar',1]]},
+      {x0:120, y0:200, x1:1650, y1:1650, n:10, mix:[['g_sprout',3],['g_grunt',3],['g_thrower',2],['m_gustcrow',2],['g_thief',1.5],['g_boar',1]]},
+      {x0:2050, y0:1250, x1:3450, y1:2650, n:10, mix:[['g_spear',2],['g_thief',2],['g_boarrider',2],['g_trapper',1.5],['g_grunt',2],['m_gustcrow',1]]},
+      {x0:2050, y0:150, x1:3450, y1:1250, n:7, mix:[['g_boarrider',2],['g_spear',2],['g_hob',1],['g_trapper',1],['g_shaman',1]]}]},
+  s1:{id:'s1', k:{hp:.85, dmg:.9}, n:'บึงวุ้นหกสี', i:'💧', lv:[10,22], biome:'swamp', el:['fire','water','wind','earth','light','dark'], w:3600, h:3000, seed:0x5a1e2202, gearT:[2,3], zn:2,
+    tone:'rgba(10,40,48,.12)', mini:'#1d3a40', prev:'g1', next:'o1', open:10,
+    d:'บึงน้ำตื้น เกาะหญ้า · 4 มุมธาตุ (บ่อน้ำพุร้อน ไฟ · บึงลึก น้ำ · ทุ่งหญ้าสูง ลม · หินผลึก ดิน) · แท่นรูนเก่ากลางแผนที่',
+    entry:{x:240, y:1500},
+    portals:[{id:'w', to:'g1', via:'e', x:110, y:1500, n:'กลับป่าหนามก็อบลิน'}, {id:'n', to:'o1', via:'s', x:1800, y:110, n:'ไปค่ายออร์คผาเหล็ก'}],
+    boss:{id:'sb_queen', every:480, x:1800, y:1520, place:'แท่นรูนกลางบึง'},
+    rampage:{n:'น้ำในบึงเอ่อ!', sub:'วุ้นธาตุเดียวล้วน · เลือกสกิลที่ชนะธาตุ', slimes:20},
+    corners:[{el:'wind', x0:120, y0:220, x1:1150, y1:1150, deco:'grass'}, {el:'fire', x0:2450, y0:220, x1:3480, y1:1150, deco:'spring'},
+      {el:'water', x0:120, y0:1850, x1:1150, y1:2880, deco:'bog'}, {el:'earth', x0:2450, y0:1850, x1:3480, y1:2880, deco:'crystal'}],
+    altar:{x:1800, y:1520, r:150},
+    regions:[
+      {x0:150, y0:250, x1:1100, y1:1100, n:7, el:'wind', mix:[['s_breeze',3],['s_moss',3],['m_amberbee',2],['s_big',.6],['s_merge',.8]]},
+      {x0:2500, y0:250, x1:3450, y1:1100, n:7, el:'fire', mix:[['s_ember',4],['s_twin',2],['s_big',.6],['s_merge',.8]]},
+      {x0:150, y0:1900, x1:1100, y1:2850, n:7, el:'water', mix:[['s_drop',4],['m_mooneel',2],['m_mistcrab',2],['s_big',.6]]},
+      {x0:2500, y0:1900, x1:3450, y1:2850, n:7, el:'earth', mix:[['s_pebble',4],['m_mistcrab',1],['s_big',.6],['s_merge',1]]},
+      {x0:1250, y0:1050, x1:2350, y1:2000, n:6, mix:[['s_glow',2],['s_shade',2],['s_merge',1],['s_drop',1]]},
+      {x0:1150, y0:300, x1:2400, y1:1000, n:5, mix:[['s_drop',2],['s_breeze',1],['s_ember',1],['s_twin',1]]},
+      {x0:1150, y0:2050, x1:2400, y1:2850, n:5, mix:[['s_drop',2],['s_pebble',1],['s_shade',1],['m_mooneel',1]]}]},
+  o1:{id:'o1', k:{hp:.6, dmg:.8}, n:'ค่ายออร์คผาเหล็ก', i:'🔥', lv:[20,34], biome:'canyon', el:['fire','earth','wind'], w:4000, h:3000, seed:0x0c3a3403, gearT:[3,4], zn:3,
+    tone:'rgba(60,20,8,.12)', mini:'#45261a', prev:'s1', next:null, open:20,
+    d:'หุบผาหินแดง ทางเดินแคบระหว่างหน้าผา · ค่ายใหญ่กำแพงไม้ซุง ประตู 2 บาน · หอธนู 4 หอ (ทำลายได้)',
+    entry:{x:2000, y:2760},
+    portals:[{id:'s', to:'s1', via:'n', x:2000, y:2890, n:'กลับบึงวุ้นหกสี'}],
+    boss:{id:'ob_warlord', every:600, x:2000, y:960, place:'ลานประลองกลางค่าย'},
+    rampage:{n:'กองทัพบุก!', sub:'ออร์คโล่กำแพง 2 แถว · นักธนูอยู่หลังแถว · อ้อมหลังหรือใช้วงกว้าง', rows:2},
+    fort:{x0:1300, y0:450, x1:2700, y1:1450, gates:[{side:'s', at:2000, w:220}, {side:'w', at:950, w:220}],
+      towers:[[1440,590],[2560,590],[1440,1310],[2560,1310]], tents:[[1620,700],[2380,700],[1620,1200],[2380,1200]]},
+    canyon:[[1480,1750,2650],[2520,1750,2650]],
+    regions:[
+      {x0:200, y0:1650, x1:1350, y1:2850, n:8, mix:[['o_grunt',3],['m_embersquirrel',2],['m_rootmole',2],['o_berserk',1.5],['o_bomber',1]]},
+      {x0:2650, y0:1650, x1:3800, y1:2850, n:8, mix:[['o_grunt',3],['o_rhino',1.5],['m_gourdlamp',1.5],['o_berserk',1.5],['o_shaman',1]]},
+      {x0:1650, y0:1600, x1:2350, y1:2550, n:4, mix:[['o_grunt',2],['o_shield',1.5],['o_archer',1],['m_rootmole',1]]},
+      {x0:200, y0:200, x1:1150, y1:1550, n:7, mix:[['o_rhino',1.5],['o_bomber',2],['o_horn',1],['o_berserk',2],['o_brute',.8]]},
+      {x0:2850, y0:200, x1:3800, y1:1550, n:7, mix:[['o_rhino',1.5],['o_bomber',2],['o_shaman',1.5],['o_brute',.8],['o_horn',1]]},
+      {x0:1450, y0:600, x1:2550, y1:1300, n:7, inner:1, mix:[['o_grunt',2],['o_shield',2],['o_cook',1],['o_shaman',1],['o_horn',1],['o_brute',.6]]}]}};
 
+// colour rank weights of a map (29 RANK_W × boost) · a little stronger further in
+const FD_RANKBOOST={g1:.8, s1:1, o1:1.2};
+
+// ---- monsters (stats = archetype before level scaling · kit = behaviour blocks · pv = vector painter spec of 61) ----
+// fam: who heals / buffs whom · pack: how many share one nest · aggro: sight radius (0 = passive: never attacks first)
+const MOBS={
+  // g1 · ป่าหนามก็อบลิน
+  g_sprout:{n:'ก็อบลินจิ๋ว', lv:1, hp:10, speed:92, r:9, dmg:4, mass:.5, xp:1, goo:'#7fae5a', fam:'goblin', pack:[3,4], aggro:250, pv:['gob','leaf'], d:'วิ่งเข้าหาเป็นกลุ่ม ตัวบาง'},
+  g_grunt:{n:'ก็อบลินถือกระบอง', lv:2, hp:22, speed:72, r:12, dmg:7, mass:1, xp:1, goo:'#7fae5a', fam:'goblin', pack:[1,3], pv:['gob','club'], d:'ประชิดธรรมดา'},
+  g_thrower:{n:'ก็อบลินปาหิน', lv:3, el:'earth', hp:16, speed:66, r:11, dmg:5, mass:.8, xp:2, goo:'#7fae5a', fam:'goblin', pack:[1,2], pv:['gob','sling'],
+    kit:{ranged:{keep:220, cd:2.4, dmg:7, kind:'lob', r:34, t:1}}, d:'ปาหินโค้ง มีเงาบอกจุดตก · รักษาระยะ'},
+  g_spear:{n:'ก็อบลินถือหอก', lv:5, hp:26, speed:64, r:12, dmg:8, mass:1, xp:2, goo:'#7fae5a', fam:'goblin', pack:[1,2], pv:['gob','spear'],
+    kit:{charge:{aim:.6, sp:540, dur:.45, cd:4, range:280, dmg:1.4}}, d:'ยืนเล็ง 0.6 วิ แล้วพุ่งเป็นเส้นตรง'},
+  g_thief:{n:'ก็อบลินโจรขโมยทอง', lv:6, el:'dark', hp:24, speed:104, r:11, dmg:5, mass:.8, xp:3, goo:'#7fae5a', fam:'goblin', pack:[1,1], pv:['gob','sack'],
+    kit:{steal:{pct:.12, min:6, run:7}}, d:'ตีโดนแล้วขโมยทองในรอบแล้ววิ่งหนี · ฆ่าทันได้คืน ×2'},
+  g_boarrider:{n:'ก็อบลินขี่หมูป่า', lv:7, el:'earth', hp:44, speed:140, r:15, dmg:9, mass:2, xp:4, goo:'#7fae5a', fam:'goblin', pack:[1,2], accel:2.6, pv:['rider'],
+    kit:{ram:{knock:560}, dismount:{at:.5, foot:'g_grunt', mount:'g_boar'}}, d:'เร็วมาก ชนแล้วกระเด็น · ตกหลังหมูเมื่อ HP ต่ำกว่าครึ่ง (ได้ 2 ตัว)'},
+  g_boar:{n:'หมูป่าเขี้ยวหัก', lv:4, el:'earth', hp:30, speed:110, r:13, dmg:7, mass:1.6, xp:2, goo:'#a87a5a', fam:'beast', pack:[1,2], aggro:0, pv:['boar'],
+    kit:{charge:{aim:.4, sp:470, dur:.5, cd:3, range:240, dmg:1.3}}, d:'สัตว์ป่า ไม่ตีก่อน · โดนตีแล้วพุ่งชน'},
+  g_shaman:{n:'หมอผีก็อบลินไฟ', lv:8, el:'fire', hp:28, speed:58, r:12, dmg:5, mass:.9, xp:4, goo:'#ff8a3a', fam:'goblin', pack:[1,1], pv:['gob','staff'],
+    kit:{ranged:{keep:240, cd:2.2, dmg:8, kind:'fire', sp:240}, heal:{r:190, cd:6, pct:.25}}, d:'ยิงลูกไฟ · ฮีลก็อบลินรอบตัวทุก 6 วิ (ฆ่าก่อน!)'},
+  g_drummer:{n:'มือกลองก็อบลิน', lv:9, hp:34, speed:60, r:12, dmg:0, mass:1, xp:4, goo:'#7fae5a', fam:'goblin', pack:[1,1], pv:['gob','drum'],
+    kit:{buff:{r:250, spd:.25}, keep:{d:200}}, d:'ไม่ตีเอง · ตีกลองให้ก็อบลินในรัศมี 250 เร็วขึ้น 25%'},
+  g_trapper:{n:'ก็อบลินวางกับดัก', lv:10, el:'earth', hp:30, speed:78, r:11, dmg:5, mass:.9, xp:4, goo:'#7fae5a', fam:'goblin', pack:[1,1], pv:['gob','trap'],
+    kit:{trap:{cd:4.5, dmg:14, max:4}, keep:{d:190}}, d:'วางกับดักหนามบนพื้น (มองเห็นได้) แล้วถอย'},
+  g_hob:{n:'ไฮก็อบลินโล่ไม้', lv:11, hp:92, speed:50, r:19, dmg:14, mass:4, xp:7, goo:'#5a8a3a', fam:'goblin', pack:[1,1], pv:['gob','hob'],
+    kit:{shield:{red:.5, turn:1.7}}, d:'ตัวใหญ่ · โล่บังด้านหน้า ลดดาเมจจากด้านหน้า 50%'},
+  m_strawbeetle:{n:'ด้วงฟาง', lv:1, hp:14, speed:40, r:11, dmg:5, mass:.9, xp:1, goo:'#c8b060', fam:'beast', pack:[1,2], aggro:0, pv:['beetle'], d:'สัตว์ป่า ไม่ตีก่อน'},
+  m_gustcrow:{n:'อีกาจอมฉก', lv:3, el:'wind', hp:10, speed:124, r:9, dmg:4, mass:.4, xp:1, goo:'#5a5a6a', fam:'beast', pack:[3,3], aggro:220, fly:1, erratic:1, accel:8, pv:['crow'], d:'บินเป็นฝูง ส่ายไปมา'},
+  // s1 · บึงวุ้นหกสี (our slime: clear jelly with a rune core inside, coloured by its element)
+  s_drop:{n:'วุ้นหยดน้ำ', lv:10, el:'water', hp:26, speed:70, r:13, dmg:8, mass:1, xp:2, goo:'#5fb8ff', fam:'slime', pack:[2,3], pv:['slime','#5fb8ff','drip'],
+    kit:{hop:{}, split:{into:'s_droplet', n:2}}, d:'กระโดดเข้าหา · ตายแล้วแตกเป็น 2 ตัวเล็ก'},
+  s_droplet:{n:'หยดวุ้นจิ๋ว', lv:10, el:'water', hp:8, speed:92, r:8, dmg:4, mass:.4, xp:1, goo:'#5fb8ff', fam:'slime', pv:['slime','#7fc8ff',''], art:'s_drop', kit:{hop:{}}, child:1, d:'ร่างแตกของวุ้นหยดน้ำ'},
+  s_ember:{n:'วุ้นถ่านแดง', lv:12, el:'fire', hp:30, speed:62, r:13, dmg:9, mass:1, xp:3, goo:'#ff8a3a', fam:'slime', pack:[2,3], pv:['slime','#ff6a2a','flame'],
+    kit:{hop:{}, trail:{every:.32, life:2, dmg:6, r:20}}, d:'ทิ้งรอยไฟบนพื้นที่เดินผ่าน 2 วิ'},
+  s_breeze:{n:'วุ้นฟองลม', lv:13, el:'wind', hp:24, speed:46, r:13, dmg:7, mass:.6, xp:3, goo:'#7fe0b0', fam:'slime', pack:[2,3], fly:1, pv:['slime','#9ff0cc','bubble'],
+    kit:{skitter:{sp:300}, push:{r:160, knock:640}}, d:'ลอยช้า ๆ · ถูกตีแล้วพุ่งหนีแบบสุ่ม · ตายแล้วปล่อยลมผลักทุกอย่างออก'},
+  s_pebble:{n:'วุ้นกรวดหิน', lv:14, el:'earth', hp:50, speed:40, r:15, dmg:11, mass:3, def:.3, xp:4, goo:'#c89a5a', fam:'slime', pack:[1,2], pv:['slime','#b88a4a','shell'],
+    kit:{charge:{aim:.5, sp:380, dur:.75, cd:3.6, range:260, dmg:1.2, roll:1}}, d:'เปลือกหิน กันดาเมจ 30% · ช้า · กลิ้งชน'},
+  s_moss:{n:'วุ้นตะไคร่', lv:15, el:'wind', hp:40, speed:44, r:14, dmg:9, mass:1.2, xp:3, goo:'#6ab04a', fam:'slime', pack:[1,2], aggro:0, pv:['slime','#5aa04a','moss'],
+    kit:{hide:{r:130}}, d:'ไม่ตีก่อน · ซ่อนในพุ่มหญ้า (เห็นแค่ตา)'},
+  s_glow:{n:'วุ้นแสงอรุณ', lv:17, el:'light', hp:34, speed:54, r:13, dmg:0, mass:.9, xp:4, goo:'#ffe27a', fam:'slime', pack:[1,1], pv:['slime','#ffe27a','halo'],
+    kit:{heal:{r:210, cd:4, pct:.2}, keep:{d:230}, gems:{mul:3}}, d:'ไม่ตี · ฮีลวุ้นรอบตัว · ตายแล้วดรอปเพชร XP ×3'},
+  s_shade:{n:'วุ้นเงาราตรี', lv:18, el:'dark', hp:36, speed:66, r:13, dmg:15, mass:.8, xp:4, goo:'#b48cff', fam:'slime', pack:[1,2], phase:1, pv:['slime','#7a4ab8','smoke'],
+    kit:{ghost:{a:.5}}, d:'โปร่งใสครึ่งตัว ทะลุตัวอื่นได้ · ตีแรง'},
+  s_twin:{n:'วุ้นแฝดน้ำไฟ', lv:19, el:'fire', hp:44, speed:60, r:14, dmg:11, mass:1.2, xp:5, goo:'#ff9a7a', fam:'slime', pack:[1,2], pv:['slime','#c86a8a','twin'],
+    kit:{hop:{}, swap:{every:5, els:['fire','water']}}, d:'สลับธาตุไฟ/น้ำทุก 5 วิ (สีเปลี่ยนให้เห็น)'},
+  s_big:{n:'วุ้นยักษ์', lv:20, hp:120, speed:38, r:24, dmg:16, mass:5, xp:8, goo:'#5fd3c3', fam:'slime', pack:[1,1], pv:['slime','#4ab8a8','big'],
+    kit:{hop:{}, split:{into:'s_bigmid', n:3}}, cornerEl:1, d:'ตัวใหญ่ ธาตุตามมุม · ตายแล้วแตก 3 ตัวกลาง → ตัวกลางแตกอีก 2'},
+  s_bigmid:{n:'วุ้นยักษ์แตก', lv:19, hp:36, speed:52, r:15, dmg:9, mass:1.6, xp:2, goo:'#5fd3c3', fam:'slime', pv:['slime','#5ac8b8',''], art:'s_big', kit:{hop:{}, split:{into:'s_bigbit', n:2}}, child:1, d:'ร่างแตกของวุ้นยักษ์'},
+  s_bigbit:{n:'เศษวุ้นยักษ์', lv:18, hp:12, speed:76, r:9, dmg:5, mass:.5, xp:1, goo:'#5fd3c3', fam:'slime', pv:['slime','#7ad8c8',''], art:'s_big', kit:{hop:{}}, child:1, d:'ร่างแตกเล็กสุดของวุ้นยักษ์'},
+  s_merge:{n:'วุ้นรวมร่าง', lv:21, hp:34, speed:58, r:13, dmg:10, mass:1, xp:4, goo:'#c8a0ff', fam:'slime', pack:[3,3], pv:['slime','#b090e0','three'],
+    kit:{hop:{}, merge:{n:3, r:95, t:4}}, cornerEl:1, d:'วุ้นธาตุเดียวกัน 3 ตัวอยู่ใกล้กันนาน 4 วิ จะรวมเป็นตัวหัวหน้าสีม่วง (ฆ่าก่อนรวม)'},
+  m_mistcrab:{n:'ปูเปลือกหมอก', lv:12, el:'water', hp:50, speed:36, r:15, dmg:11, mass:4, def:.25, xp:3, goo:'#9ab8d8', fam:'beast', pack:[1,2], aggro:0, pv:['crab'], d:'สัตว์ป่า ไม่ตีก่อน · เปลือกแข็ง'},
+  m_mooneel:{n:'ปลาไหลแสงจันทร์', lv:16, el:'water', hp:26, speed:116, r:10, dmg:9, mass:.7, xp:2, goo:'#d8e0ff', fam:'beast', pack:[1,2], aggro:280, erratic:1, accel:6, pv:['eel'], d:'ว่องไว ส่ายไปมา'},
+  m_amberbee:{n:'ผึ้งอำพันรูน', lv:14, el:'light', hp:10, speed:130, r:8, dmg:5, mass:.3, xp:1, goo:'#f0c040', fam:'beast', pack:[4,4], aggro:240, fly:1, erratic:1, accel:8, pv:['bee'], d:'บินเป็นฝูง 4 ตัว'},
+  // o1 · ค่ายออร์คผาเหล็ก
+  o_grunt:{n:'ออร์คทหารเกณฑ์', lv:20, hp:62, speed:52, r:17, dmg:11, mass:3, xp:4, goo:'#8aa070', fam:'orc', pack:[2,3], pv:['orc','cleaver'], d:'หนา ตีแรง ช้า'},
+  o_archer:{n:'ออร์คนักธนู', lv:22, el:'wind', hp:46, speed:56, r:14, dmg:6, mass:1.2, xp:4, goo:'#8aa070', fam:'orc', pack:[1,2], pv:['orc','bow'],
+    kit:{ranged:{keep:270, cd:3, dmg:6, kind:'arrow', sp:340, burst:3, gap:.16}}, d:'ยิงธนูเป็นชุด 3 ดอก · ยืนบนหอได้ (หอพังแล้วตกลงมา)'},
+  o_shield:{n:'ออร์คโล่กำแพง', lv:23, el:'earth', hp:80, speed:44, r:17, dmg:10, mass:6, xp:5, goo:'#8aa070', fam:'orc', pack:[3,3], pv:['orc','tshield'],
+    kit:{shield:{red:.7, turn:1.2}, row:{gap:46}}, d:'เดินเป็นแถว 3 ตัว โล่ด้านหน้ากันดาเมจ 70% · อ้อมหลังหรือใช้วงกว้าง'},
+  o_berserk:{n:'ออร์คคลั่งขวานคู่', lv:25, el:'fire', hp:72, speed:64, r:16, dmg:12, mass:3, xp:6, goo:'#c86a4a', fam:'orc', pack:[1,2], pv:['orc','axes'],
+    kit:{berserk:{at:.4, spd:1.6, dmg:1.4}}, d:'HP ต่ำกว่า 40% → ตัวแดง เร็วขึ้น 60% ตีแรงขึ้น'},
+  o_shaman:{n:'หมอผีออร์คกระดูก', lv:26, el:'dark', hp:54, speed:52, r:14, dmg:8, mass:1.2, xp:6, goo:'#b48cff', fam:'orc', pack:[1,1], pv:['orc','bonestaff'],
+    kit:{ranged:{keep:260, cd:4, dmg:5, kind:'curse', sp:220, slow:.3, slowT:3}, summon:{type:'o_wolf', n:2, cd:12, max:4}}, d:'สาปให้เราช้าลง 30% 3 วิ · ปลุกโครงกระดูกหมาป่า 2 ตัว'},
+  o_wolf:{n:'หมาป่ากระดูก', lv:24, el:'dark', hp:28, speed:120, r:12, dmg:7, mass:.9, xp:2, goo:'#d8d0c0', fam:'orc', aggro:320, erratic:1, accel:8, pv:['wolf'], child:1, d:'ร่างที่หมอผีออร์คปลุก · ว่องไว'},
+  o_rhino:{n:'ออร์คขี่แรดหิน', lv:27, el:'earth', hp:115, speed:50, r:22, dmg:15, mass:8, xp:8, goo:'#9a9a8a', fam:'orc', pack:[1,1], pv:['rhino'],
+    kit:{charge:{aim:.9, sp:640, dur:1.15, cd:5, range:520, dmg:1.5, stun:1.5}}, d:'ชาร์จเส้นตรงยาว · ชนหินแล้วมึน 1.5 วิ (ล่อให้ชนได้)'},
+  o_horn:{n:'ออร์คเป่าเขาศึก', lv:28, hp:64, speed:50, r:16, dmg:8, mass:3, xp:6, goo:'#8aa070', fam:'orc', pack:[1,1], pv:['orc','horn'],
+    kit:{summon:{type:'o_grunt', n:4, cd:15, max:8, edge:1}}, d:'เป่าเขาเรียกออร์ค 4 ตัวมาจากขอบจอ ทุก 15 วิ'},
+  o_bomber:{n:'ออร์คแบกถังระเบิด', lv:30, el:'fire', hp:50, speed:80, r:15, dmg:0, mass:2, xp:5, goo:'#c86a4a', fam:'orc', pack:[1,2], pv:['orc','barrel'],
+    kit:{boom:{r:90, dmg:22, fuse:.7}}, d:'วิ่งเข้าหาแล้วระเบิดตัวเอง r 90 · ตีก่อนถึงตัว จะระเบิดใส่พวกเดียวกัน'},
+  o_brute:{n:'ออร์คยักษ์ตีเหล็ก', lv:32, el:'earth', hp:190, speed:40, r:28, dmg:19, mass:12, xp:12, goo:'#8aa070', fam:'orc', pack:[1,1], pv:['orc','hammer'],
+    kit:{quake:{cd:5, len:440, w:46, dmg:1.3, aim:.8}}, d:'ตัวใหญ่มาก · กระแทกพื้นเป็นคลื่นเส้นตรง'},
+  o_cook:{n:'ออร์คพ่อครัวค่าย', lv:24, el:'fire', hp:60, speed:50, r:16, dmg:0, mass:3, xp:5, goo:'#e8c890', fam:'orc', pack:[1,1], aggro:0, pv:['orc','cook'],
+    kit:{heal:{r:260, cd:5, pct:.25, toss:1}, keep:{d:220}, potion:{p:.35}}, d:'ไม่ตีก่อน · โยนเนื้อย่างให้ออร์คอื่นฮีล · ดรอปยาบ่อย'},
+  o_tower:{n:'หอธนูออร์ค', lv:22, hp:420, speed:0, r:30, dmg:0, mass:999, xp:6, goo:'#8a6a4a', fam:'orc', aggro:0, struct:1, pv:['tower'], art:'t_tower_orc', d:'หอไม้มีออร์คนักธนูยืนอยู่ · ทำลายได้'},
+  m_embersquirrel:{n:'กระรอกหางถ่าน', lv:21, el:'fire', hp:20, speed:112, r:9, dmg:6, mass:.5, xp:2, goo:'#ff8a3a', fam:'beast', pack:[2,3], aggro:220, erratic:1, accel:8, pv:['critter','#c8582a'], d:'ว่องไว ส่ายไปมา'},
+  m_rootmole:{n:'ตุ่นขุดราก', lv:23, el:'earth', hp:44, speed:60, r:12, dmg:8, mass:1.2, xp:3, goo:'#8a6a4a', fam:'beast', pack:[1,2], pv:['critter','#7a5a3a'],
+    kit:{ranged:{keep:200, cd:2.8, dmg:6, kind:'lob', r:30, t:.9}}, d:'ปาก้อนดินจากระยะไกล'},
+  m_gourdlamp:{n:'โคมน้ำเต้าเรือง', lv:25, el:'light', hp:48, speed:50, r:13, dmg:9, mass:1.5, xp:3, goo:'#ffd27a', fam:'beast', pack:[1,1], pv:['lamp'], blast:{r:70, dmg:18}, d:'ระเบิดตอนตาย'},
+  // field bosses (§5.5 · 64-boss-patterns.js) · HP here = archetype, × hpByLv(lv) when it appears
+  gb_king:{boss:1, n:'ราชาก็อบลินมงกุฎสนิม', lv:12, el:'earth', ai:'fb_king', hp:1050, speed:66, r:42, dmg:20, mass:70, xp:120, goo:'#7fae5a', fam:'goblin', pv:['gob','king'], d:'ชาร์จด้วยบัลลังก์ล้อไม้ · กระบองยักษ์ r 170 · เรียกลูกน้องที่ HP 60% / 30% · HP ต่ำกว่า 25% ปามงกุฎบูมเมอแรง'},
+  sb_queen:{boss:1, n:'ราชินีวุ้นหกสี', lv:22, el:'fire', ai:'fb_queen', hp:1100, speed:52, r:44, dmg:22, mass:70, xp:180, goo:'#c8a0ff', fam:'slime', pv:['slime','#c8a0ff','queen'], d:'สลับธาตุทุก 12 วิ (เตือนก่อน 2 วิ) · ยิงวุ้นธาตุ 16 ลูก · ที่ 50% แยกเป็น 3 ร่างต่างธาตุ'},
+  sb_shard:{boss:1, n:'ร่างแยกราชินีวุ้น', lv:22, ai:'fb_shard', hp:300, speed:70, r:28, dmg:16, mass:30, xp:40, goo:'#c8a0ff', fam:'slime', pv:['slime','#b8a0f0','crown'], art:'sb_queen', d:'ร่างแยกของราชินี · ธาตุคงที่'},
+  ob_warlord:{boss:1, n:'แม่ทัพออร์คเขี้ยวเหล็ก', lv:34, el:'fire', ai:'fb_warlord', hp:1150, speed:70, r:46, dmg:24, mass:90, xp:260, goo:'#c86a4a', fam:'orc', pv:['orc','warlord'], d:'ชาร์จ 3 ครั้งติด · ขวานคู่ r 200 · เรียกทหารที่ HP 70% / 40% · คลั่งที่ 25% (ทิ้งรอยไฟ)'}};
+for(const id in MOBS){ const m=MOBS[id]; m.lazy=1; if(!m.art&&!m.struct) m.art=id; if(m.aggro==null) m.aggro=260; if(typeof EN!=='undefined') EN[id]=m; }   // EN absent: a pure test load without 08
+// the field boss of each map (one nest, one timer · §5.5) and the drops that only it gives (rollDrops format, 34)
+const FD_BOSSDROP={
+  g1:[{id:'m_dust', n:[4,8]}, {gear:2, n:[1,2]}, {pick:['rn_brute','rn_runner','rn_shambler'], p:.35}, {id:'m_seal', p:.1}, {id:'u_potion_s', n:[1,3]}],
+  s1:[{id:'m_dust', n:[4,8]}, {id:'m_crystal', n:[1,2]}, {gear:3, n:[1,2]}, {pick:['rn_wraith','rn_bat','rn_bloater'], p:.35}, {id:'m_seal', p:.1}, {id:'u_potion_l', n:[1,2]}],
+  o1:[{id:'m_dust', n:[5,9]}, {id:'m_crystal', n:[1,3]}, {gear:4, n:[1,2]}, {pick:['rn_brute','rn_spitter','rn_colossus'], p:.35}, {id:'m_seal', p:.12}, {id:'u_potion_l', n:[1,2]}]};
+const FD_CHESTDROP=[{id:'m_dust', n:[1,2]}, {id:'u_potion_s', p:.5}, {gear:'Z', p:.3}];   // camp chests + gold-rank monsters (Z = the map's gear tier)
