@@ -78,10 +78,12 @@ function artPortrait(c,look,sz,cvs){ const k=artHeroKey(look); if(!k) return fal
 
 /* ---- ground: the biome's painted tile as a world-anchored pattern ---- */
 const ART_PAT={}, ART_GS=.78;
+// how much each painted ground is shaded so the actors stay in front of it (the haunted wood is dark already, the meadow very bright)
+const ART_SHADE={gr_haunted:0, gr_grave:.06, gr_meadow:.3, gr_swamp:.18, gr_forest:.12, gr_canyon:.2, gr_ruins:.2};
 function artPat(k){ if(!ART.on) return null; const p=ART_PAT[k]; if(p) return p; const im=artImg(k); if(!im) return null;
   const pat=ctx.createPattern(im,'repeat'); if(!pat) return null; try{ pat.setTransform(new DOMMatrix().scale(ART_GS)); }catch(e){} return ART_PAT[k]=pat; }
 function artGroundKey(){ const g=typeof G!=='undefined'&&G&&G.terrain; return g&&typeof TER_BIOME!=='undefined'&&TER_BIOME[g.b]&&TER_BIOME[g.b].gr||'gr_grave'; }
 // fills the view with the painted ground (or the old procedural pattern) · a light shade keeps the actors in front of it
-function artGround(L,T,R,B,key){ const p=artPat(key||artGroundKey());
+function artGround(L,T,R,B,key){ key=key||artGroundKey(); const p=artPat(key);
   if(!p){ ctx.fillStyle=groundPat; ctx.fillRect(L,T,R-L,B-T); return false; }
-  ctx.fillStyle=p; ctx.fillRect(L,T,R-L,B-T); ctx.fillStyle='rgba(10,14,8,.22)'; ctx.fillRect(L,T,R-L,B-T); return true; }
+  ctx.fillStyle=p; ctx.fillRect(L,T,R-L,B-T); const a=ART_SHADE[key]!=null?ART_SHADE[key]:.18; if(a>0){ ctx.fillStyle='rgba(10,14,8,'+a+')'; ctx.fillRect(L,T,R-L,B-T); } return true; }
