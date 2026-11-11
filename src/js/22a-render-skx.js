@@ -1,7 +1,7 @@
 /* ================= 22a-render-skx.js · lane B · how the 30 character-only skills look (25a · CLASSES skx) ================= */
 // Called from the shared draw passes only for what these skills create (projectile shapes in SKX_SHAPE, zones with x2, the
 // summon modes / orbit styles they add) → classic frames draw exactly as before. Canvas only, no RNG, no game state changes.
-const SKX_SHAPE={gsword:1, axe:1, comet:1, leaf:1, star:1, net:1, gale:1, palm:1};
+const SKX_SHAPE={gsword:1, axe:1, comet:1, leaf:1, star:1, net:1, gale:1, palm:1, coin:1};
 // drawProjs (22, 'lighter' pass) → true = drawn here
 function sk2DrawProj(p,sp,a){ if(!SKX_SHAPE[p.shape]) return false; const r=p.r;
   switch(p.shape){
@@ -9,6 +9,9 @@ function sk2DrawProj(p,sp,a){ if(!SKX_SHAPE[p.shape]) return false; const r=p.r;
       ctx.globalCompositeOperation='source-over'; circ(ctx,'#fff6d8',p.x,p.y,r*.75); circ(ctx,p.c,p.x+Math.cos(a)*r*.2,p.y+Math.sin(a)*r*.2,r*.45); ctx.globalCompositeOperation='lighter'; return true; }
     case 'star':{ glow(p.x,p.y,r*2.6,p.c,.8); ctx.save(); ctx.translate(p.x,p.y); ctx.rotate(p.t*9); ctx.fillStyle='#ffffff'; ctx.beginPath();
       for(let i=0;i<8;i++){ const rr=i%2?r*.35:r*1.4, b=i*PI/4; ctx.lineTo(Math.cos(b)*rr,Math.sin(b)*rr); } ctx.closePath(); ctx.fill(); ctx.restore(); return true; }
+    case 'coin':{ const w=Math.abs(Math.cos(p.t*16))*r*1.4+1;                  // a gold coin flipping as it flies
+      glow(p.x,p.y,r*2.6,p.c,.55); ctx.globalCompositeOperation='source-over'; ctx.fillStyle='#a8781a'; ctx.beginPath(); ctx.ellipse(p.x,p.y,w+1,r*1.4+1,0,0,TAU); ctx.fill();
+      ctx.fillStyle=p.c; ctx.beginPath(); ctx.ellipse(p.x,p.y,w,r*1.4,0,0,TAU); ctx.fill(); ctx.fillStyle='#fff3b0'; ctx.fillRect(p.x-w*.3,p.y-r*.6,Math.max(1,w*.3),r*.9); ctx.globalCompositeOperation='lighter'; return true; }
     case 'palm':{ const f=Math.min(1,p.life/p.max*2.5), R=r*1.5;                 // a golden palm wave: bright crescent, sun glow, finger streaks
       glow(p.x,p.y,R*1.6,'#ffb347',.45*f); ctx.save(); ctx.translate(p.x,p.y); ctx.rotate(a); ctx.globalAlpha=f; ctx.lineCap='round';
       ctx.strokeStyle=p.c; ctx.lineWidth=11; ctx.beginPath(); ctx.arc(-R*.55,0,R,-.95,.95); ctx.stroke(); ctx.strokeStyle='#fff6d8'; ctx.lineWidth=3; ctx.beginPath(); ctx.arc(-R*.5,0,R,-.8,.8); ctx.stroke();
@@ -64,6 +67,20 @@ function sk2DrawZone(z,fade){ const t=G.t, sd=z.seed||0;
       ctx.globalCompositeOperation='lighter'; glow(z.x,z.y,R*1.1,'#ffe9a0',.22*fade);
       ctx.save(); ctx.translate(z.x,z.y); ctx.scale(1,.78); ctx.rotate(G.t*.5+sd); ctx.globalAlpha=.55*fade; ctx.drawImage(runeTex(z.src.def.c),-R,-R,R*2,R*2); ctx.restore(); ctx.globalAlpha=1;
       ctx.globalCompositeOperation='source-over'; ctx.strokeStyle=`rgba(255,240,190,${.6*fade})`; ctx.lineWidth=2; ctx.beginPath(); ctx.ellipse(z.x,z.y,R,R*.78,0,0,TAU); ctx.stroke(); break; }
+    case 'caltrop':{ const n=5;                                                // a few iron spikes scattered on the ground
+      ctx.globalAlpha=fade; for(let i=0;i<n;i++){ const b=sd*3+i*2.4, d=z.r*(.15+.7*((i*37+((sd*10)|0))%10)/10), x=z.x+Math.cos(b)*d, y=z.y+Math.sin(b)*d*.7;
+        ctx.strokeStyle='#3a3a44'; ctx.lineWidth=3; ctx.beginPath(); for(let k=0;k<3;k++){ const c=b+k*TAU/3; ctx.moveTo(x,y); ctx.lineTo(x+Math.cos(c)*6,y+Math.sin(c)*4); } ctx.stroke();
+        ctx.strokeStyle='#d8d8e8'; ctx.lineWidth=1.3; ctx.beginPath(); for(let k=0;k<3;k++){ const c=b+k*TAU/3; ctx.moveTo(x,y); ctx.lineTo(x+Math.cos(c)*5,y+Math.sin(c)*3.4); } ctx.moveTo(x,y); ctx.lineTo(x,y-5); ctx.stroke(); }
+      ctx.strokeStyle=`rgba(184,184,200,${.18*fade})`; ctx.lineWidth=1; ctx.beginPath(); ctx.ellipse(z.x,z.y,z.r,z.r*.7,0,0,TAU); ctx.stroke(); ctx.globalAlpha=1; break; }
+    case 'bind':{ const R=z.r, up=Math.min(1,z.t*5);                          // shadow chains rising from a dark circle
+      ctx.fillStyle=`rgba(40,20,70,${.35*fade})`; ctx.beginPath(); ctx.ellipse(z.x,z.y,R,R*.75,0,0,TAU); ctx.fill();
+      ctx.strokeStyle=`rgba(154,125,255,${.75*fade})`; ctx.lineWidth=2; ctx.beginPath(); ctx.ellipse(z.x,z.y,R,R*.75,0,0,TAU); ctx.stroke();
+      ctx.strokeStyle=`rgba(200,185,255,${.85*fade})`; ctx.lineWidth=2.5; for(let i=0;i<6;i++){ const b=i*TAU/6+sd+G.t*.6, x=z.x+Math.cos(b)*R*.85, y=z.y+Math.sin(b)*R*.64, h=26*up;
+        for(let k=0;k<3;k++){ ctx.beginPath(); ctx.ellipse(x+Math.sin(G.t*4+i+k)*2,y-h*(k+.5)/3,3,4.5,0,0,TAU); ctx.stroke(); } } break; }
+    case 'decoy':{ const k=Math.min(1,(z.dur-z.t)*2), pu=1+.06*Math.sin(G.t*8);   // a shadow copy of the hero + the reach of its lure
+      ctx.strokeStyle=`rgba(154,125,255,${.22*fade})`; ctx.lineWidth=1.5; ctx.setLineDash([6,8]); ctx.lineDashOffset=-G.t*30; ctx.beginPath(); ctx.ellipse(z.x,z.y,z.lure,z.lure*.75,0,0,TAU); ctx.stroke(); ctx.setLineDash([]);
+      ctx.save(); ctx.globalAlpha=.55*fade; if(!(typeof artDrawHero==='function'&&artDrawHero(ctx,P.look,z.x,z.y,P.face,G.t,false,{}))) heroOutlined(ctx,CLONE_LOOK,z.x,z.y,pu,G.t,P.face,false,0,{outline:'#9a7dff',seed:sd}); ctx.restore();
+      if(k<1){ ctx.globalCompositeOperation='lighter'; glow(z.x,z.y-10,30+(1-k)*40,'#9a7dff',(1-k)*.8); ctx.globalCompositeOperation='source-over'; } ctx.globalAlpha=1; break; }
     case 'turret':{ const a=z.aa||0, fl=z.fl>0?z.fl/.15:0;                 // a little crossbow on a tripod, turned at its last target
       ctx.globalAlpha=fade; ctx.strokeStyle='#4a3424'; ctx.lineWidth=3; ctx.beginPath(); for(const k of [-1,0,1]){ ctx.moveTo(z.x,z.y-12); ctx.lineTo(z.x+k*10,z.y+6-(k?0:2)); } ctx.stroke();
       ctx.save(); ctx.translate(z.x,z.y-14); ctx.rotate(a); ctx.fillStyle='#7a5432'; ctx.fillRect(-10,-3,22,6); ctx.strokeStyle='#c9a66b'; ctx.lineWidth=2.5; ctx.beginPath(); ctx.arc(4,0,11,-1.25,1.25); ctx.stroke();
@@ -74,7 +91,10 @@ function sk2DrawZone(z,fade){ const t=G.t, sd=z.seed||0;
 function sk2DrawOrbit(s,size){ const P2=s.st.pos||[];
   if(s.def.os==='drop'){ ctx.globalCompositeOperation='lighter'; for(const p of P2) if(p) glow(p[0],p[1],size*2.4,s.def.c,.6); ctx.globalCompositeOperation='source-over';
     for(const p of P2){ if(!p) continue; ctx.save(); ctx.translate(p[0],p[1]); ctx.rotate(p[2]+PI/2); ctx.fillStyle='#2a7fd8'; ctx.beginPath(); ctx.moveTo(-size*1.5,0); ctx.quadraticCurveTo(0,-size*1.05,size*.9,0); ctx.quadraticCurveTo(0,size*1.05,-size*1.5,0); ctx.fill();
-      ctx.fillStyle='#bfe6ff'; ctx.beginPath(); ctx.ellipse(size*.2,-size*.25,size*.35,size*.2,0,0,TAU); ctx.fill(); ctx.restore(); } } }
+      ctx.fillStyle='#bfe6ff'; ctx.beginPath(); ctx.ellipse(size*.2,-size*.25,size*.35,size*.2,0,0,TAU); ctx.fill(); ctx.restore(); } }
+  if(s.def.os==='knife'){ ctx.globalCompositeOperation='source-over';      // many small blades, edge out
+    for(const p of P2){ if(!p) continue; ctx.save(); ctx.translate(p[0],p[1]); ctx.rotate(p[2]+PI/2); ctx.fillStyle='#2a2230'; ctx.beginPath(); ctx.moveTo(-size,-2.6); ctx.lineTo(size*1.3,0); ctx.lineTo(-size,2.6); ctx.closePath(); ctx.fill();
+      ctx.fillStyle=s.def.c; ctx.beginPath(); ctx.moveTo(-size*.8,-1.6); ctx.lineTo(size*1.15,0); ctx.lineTo(-size*.8,1.6); ctx.closePath(); ctx.fill(); ctx.restore(); } } }
 // drawStrikesOver (22) → a lava bomb arcing from the volcano to where it lands
 function sk2Lava(s){ if(s.t>=s.delay||s.ox==null) return; const k=s.t/s.delay, x=s.ox+(s.x-s.ox)*k, y=s.oy+(s.y-s.oy)*k-Math.sin(k*PI)*90, rr=Math.max(5,s.r*.22);
   glow(x,y,rr*3,'#ff6a1a',.9); circ(ctx,'#ffb050',x,y,rr); circ(ctx,'#fff2c0',x-rr*.3,y-rr*.3,rr*.45); }

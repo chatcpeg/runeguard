@@ -26,12 +26,14 @@ const TF_KN={dmg:'ดาเมจ', cd:'คูลดาวน์', count:'จำ
   heal:'ฟื้น HP', healPct:'ฟื้น HP ตาม % HP สูงสุด', targets:'เป้าต่อครั้ง', rage:'โทสะ', steal:'ฟื้นต่อการสังหาร', dodge:'หลบหลีก',
   // keys of the character-only skills (25a)
   life:'ระยะพุ่ง', hook:'แรงกระชาก', rep:'แรงผลัก', cost:'สละ HP', drain:'ดูดเลือดกลับ', boom:'แรงระเบิดท้าย', drip:'หางไฟ', shots:'ลูกต่อชุด', wave:'คลื่นวง',
-  hold:'ตรึง', split:'สะเก็ด', shard:'แรงสะเก็ด', amp:'ดาเมจที่ตัวถูกหมายได้รับ', delay:'หน่วงก่อนระเบิด', fin:'หมัดปิดท้ายทุก'};
+  hold:'ตรึง', split:'สะเก็ด', shard:'แรงสะเก็ด', amp:'ดาเมจที่ตัวถูกหมายได้รับ', delay:'หน่วงก่อนระเบิด', fin:'หมัดปิดท้ายทุก',
+  bounce:'กระดอน', rate:'ช่วงเฉือนซ้ำ', lure:'ระยะล่อ'};
 // the same keys on the level-up cards / skills page (core 21 PL · PCT · SEC: only new keys are added, classic labels stay)
 if(typeof PL!=='undefined') Object.assign(PL,{life:'ระยะพุ่ง', hook:'แรงกระชาก', rep:'แรงผลัก', cost:'สละ HP', drain:'ดูดเลือดกลับ', size:'ขนาด',
   boom:'แรงระเบิดท้าย ×', drip:'หางไฟ', shots:'ลูกต่อชุด', wave:'คลื่นวง', pull:'แรงดูด', tick:'ช่วงห่าง', dur:'ระยะเวลา',
-  hold:'ตรึง', split:'สะเก็ด', shard:'แรงสะเก็ด', amp:'หมายหัว: ดาเมจเพิ่ม', delay:'หน่วง', fin:'ปิดท้ายทุก (หมัด)'});
-if(typeof PCT!=='undefined') Object.assign(PCT,{cost:1, drain:1, wave:1, shard:1, amp:1});
+  hold:'ตรึง', split:'สะเก็ด', shard:'แรงสะเก็ด', amp:'หมายหัว: ดาเมจเพิ่ม', delay:'หน่วง', fin:'ปิดท้ายทุก (หมัด)',
+  bounce:'กระดอน', lure:'ระยะล่อ', crit:'คริติคอลเพิ่ม'});
+if(typeof PCT!=='undefined') Object.assign(PCT,{cost:1, drain:1, wave:1, shard:1, amp:1, crit:1});
 if(typeof SEC!=='undefined') Object.assign(SEC,{tick:1, dur:1, drip:1, hold:1, delay:1});
 const TF_PCTK={slow:1, dodge:1, crit:1, healPct:1, cost:1, drain:1, amp:1}, TF_SECK={stun:1, freeze:1, drip:1, hold:1, delay:1}, TF_REL={rage:1, steal:1};
 const tfPc=v=>(Math.round(v*1000)/10)+'%', tfM=r=>(Math.round(r)/10)+' ม.', tfN=v=>String(+(+v).toFixed(2));
@@ -324,7 +326,31 @@ palm:[['ฝ่ามือหนัก','🖐️',['dmg','*',.08,3],['knock','*'
 combo:[['หมัดหนัก','👊',['dmg','*',.08,3],['boom','*',.1,2],{fx:'vsStun',nm:'ปิดท้ายซ้ำแผล',i:'💢',m:1.5}],
   ['ระเบิดหมัด','💥',['r','*',.06,3],['stun','+',.1,2],{fx:'burst',nm:'หมัดระเบิดศพ',i:'🎆',r:50,pct:.45}],
   ['ต่อยไว','⏱️',['cd','c',.05,3],['range','*',.06,2],{fx:'ignite',nm:'หมัดเปลวสุริยะ',i:'🔥',ch:.2,pct:.3,t:3}],
-  {fx:'mod',nm:'สี่หมัดสุริยัน',i:'👑',add:{fin:-1}}]});
+  {fx:'mod',nm:'สี่หมัดสุริยัน',i:'👑',add:{fin:-1}}],
+coin:[['เหรียญหนัก','🪙',['dmg','*',.08,3],['crit','+',.04,2],{fx:'execute',nm:'เหรียญปลิดชีพ',i:'💀',hp:.3,m:1.6}],
+  ['กระดอนไกล','↪️',['bounce','+',1,3],['jump','*',.12,2],{fx:'shards',nm:'เหรียญแตกเศษ',i:'✨',on:'kill',ch:1,n:3,pct:.35}],
+  ['ดีดไว','⏱️',['cd','c',.05,3],['count','+',1,1],{fx:'burst',nm:'แจ็กพอต',i:'🎰',r:50,pct:.5}],
+  {fx:'feast',nm:'โชคใหญ่',i:'👑',amt:2}],
+caltrops:[['เหล็กคม','📌',['dmg','*',.1,3],['tick','*',-.08,2],{fx:'ignite',nm:'เหล็กสนิมพิษ',i:'☠️',ch:.2,pct:.4,t:3}],
+  ['โปรยหนา','➕',['count','+',1,3],['r','*',.06,2],{fx:'execute',nm:'แทงซ้ำตัวอ่อน',i:'💀',hp:.3,m:1.7}],
+  ['ตรึงขา','⛓️',['slow','+',.04,3],['dur','*',.1,2],{fx:'shock',nm:'เหยียบจนชา',i:'⚡',ch:.06,t:.5}],
+  {fx:'burst',nm:'ทุ่งระเบิดเหล็ก',i:'👑',r:50,pct:.5}],
+curtain:[['ใบมีดคม','🔪',['dmg','*',.08,3],['@ignite',.1,2],{fx:'execute',nm:'เฉือนปลิดชีพ',i:'💀',hp:.3,m:1.6}],
+  ['ม่านหนา','➕',['count','+',1,3],['size','*',.1,2],{fx:'shards',nm:'ใบมีดหลุดวง',i:'✨',on:'hit',ch:.06,n:2,pct:.5}],
+  ['หมุนเร็ว','🌀',['spin','*',.08,3],['rate','*',-.08,2],{fx:'leech',nm:'ม่านดูดเลือด',i:'🩸',pct:.02}],
+  {fx:'vsStun',nm:'ม่านมรณะ',i:'👑',m:1.5}],
+reap:[['เคียวคม','🌘',['dmg','*',.08,3],['crit','+',.04,2],{fx:'shards',nm:'วิญญาณแตก',i:'✨',on:'kill',ch:1,n:3,pct:.35}],
+  ['เก็บเกี่ยว','➕',['targets','+',1,3],['range','*',.08,2],{fx:'feast',nm:'กินวิญญาณ',i:'🍖',amt:1}],
+  ['ปลิดไว','⏱️',['cd','c',.05,3],['@shock',.08,2],{fx:'burst',nm:'วิญญาณระเบิด',i:'💥',r:45,pct:.4}],
+  {fx:'echo',nm:'เคียวคู่',i:'👑',every:3}],
+bind:[['โซ่รัด','⛓️',['dmg','*',.1,3],['stun','+',.05,2],{fx:'vsStun',nm:'บีบจนแหลก',i:'💢',m:1.5}],
+  ['คุกเงา','⭕',['r','*',.06,3],['dur','*',.1,2],{fx:'pull',nm:'โซ่ลากเข้าคุก',i:'🧲',r:90}],
+  ['ปล่อยไว','⏱️',['cd','c',.05,3],['count','+',1,1],{fx:'burst',nm:'เงาแตกระเบิด',i:'💥',r:50,pct:.45}],
+  {fx:'ignite',nm:'โซ่กัดกร่อน',i:'👑',ch:.3,pct:.5,t:4}],
+decoy:[['ระเบิดเงา','💥',['dmg','*',.1,3],['explode','*',.08,2],{fx:'shock',nm:'ระเบิดสะท้าน',i:'⚡',ch:.6,t:.6}],
+  ['ล่อเก่ง','🎭',['lure','*',.08,3],['dur','*',.1,2],{fx:'chill',nm:'เงาเยือกแข็ง',i:'❄️',ch:.5,t:1}],
+  ['ทิ้งร่างไว','⏱️',['cd','c',.06,3],['count','+',1,1],{fx:'burst',nm:'ศพลูกโซ่',i:'🎆',r:55,pct:.45}],
+  {fx:'execute',nm:'กับดักมรณะ',i:'👑',hp:.35,m:1.8}]});
 const TF_COST=[0,1,2,4], TF_CROWN=6;
 
 /* ---- node list of a tree (cached) ---- */

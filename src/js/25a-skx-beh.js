@@ -78,6 +78,7 @@ function pxFire(s,p){ const v=k=>pv(s,k);
   if(v('ret')) p.ret=1;
   const ho=v('hold'); if(ho){ p.hold=ho; p.x2=1; }
   const sp=v('split'); if(sp){ p.split=sp; p.shard=v('shard')||.4; p.x2=1; }
+  const bo=v('bounce'); if(bo){ p.bounce=bo; p.jump=(v('jump')||200)*P.area; p.x2=1; }   // ricochet: on a hit, on to the nearest enemy not hit yet
   const hk=v('hook'); if(hk) p.knock=-hk;
   const sl=v('slow'); if(sl){ p.slow=sl; p.x2=1; }
   const dr=v('drip'); if(dr||s.def.pass){ const m=p.mx||(p.mx={lv:0, look:{}, ht:0, dd:0, ph:0}); if(dr) m.drip=Math.max(m.drip||0,dr*P.durMul); if(s.def.pass) m.pass=999; } }
@@ -87,6 +88,9 @@ function orbX(s,R0){ const w=pv(s,'wave'), R=w?R0*(1+w*Math.sin(G.t*2.2)):R0; s.
 function pxHit(p,e){
   if(p.slow&&!e.dead){ const f=1-p.slow*(e.boss?.5:1); if(f<e.slowF) e.slowF=f; e.slowT=Math.max(e.slowT,1.2); }
   if(p.hold){ netBurst(p); p.dead=true; return true; }
+  if(p.bounce>0){ let nx=null, bd=p.jump*p.jump;
+    for(const q of query(e.x,e.y,p.jump+60)){ if(q.dead||q===e||p.hit.indexOf(q.id)>=0) continue; const d=(q.x-e.x)**2+(q.y-e.y)**2; if(d<bd){ bd=d; nx=q; } }
+    if(nx){ p.bounce--; const sp=Math.hypot(p.vx,p.vy)||600, a=Math.atan2(nx.y-e.y,nx.x-e.x); p.x=e.x; p.y=e.y; p.vx=Math.cos(a)*sp; p.vy=Math.sin(a)*sp; p.life=p.max; return true; } }
   if(p.split&&!p.splitDone){ p.splitDone=1; const n=p.split, a0=Math.atan2(p.vy,p.vx), sp=620, life=.34;
     for(let i=0;i<n;i++){ const a=a0+(n>1?(i/(n-1)-.5)*.9:0);
       G.projs.push({x:e.x,y:e.y,vx:Math.cos(a)*sp,vy:Math.sin(a)*sp,r:4,dmg:p.dmg*p.shard,pierce:1,life,max:life,knock:40,explode:0,homing:0,crit:p.crit,shape:'star',c:p.c,src:p.src,burn:0,hit:[e.id],tg:null,dead:false,t:0,fxd:true}); } }
@@ -127,22 +131,33 @@ function wolfUpdate(s,u,dt,i,n){
 
 /* ---- zones (BEH.zone → zxCast when SK[id].zx · updateZones → zxTick every frame, zxEnd when the time is up) ---- */
 // place: 'self' = on the hero (follow: stays on the hero) · 'aim' = rolls straight down the aim, slowing (speed) · 'enemy' = on the
-// aimed target, the rest round it · zone params: rep (push out) · pull · stun · boom × dmg / explode (blast when it ends) ·
+// aimed target, the rest round it · 'feet' = under the feet, a line along the way walked · 'mid' = halfway to the target ·
+// lure: enemies within it walk at this zone instead of the hero (lureAt) · zone params: rep (push out) · pull · stun · boom × dmg / explode (blast when it ends) ·
 // def.shoot: fires shots bolts every tick at the nearest enemy in reach · def.lob: lobs a lava bomb every tick
 function zxCast(s){
-  const v=k=>pv(s,k), pl=s.def.place, far=pl==='aim'||pl==='enemy', wake=far?Math.min(520*(P.rangeMul||1),aimReach()):(s.def.wake||300)*(P.rangeMul||1);
+  const v=k=>pv(s,k), pl=s.def.place, far=pl==='aim'||pl==='enemy'||pl==='mid', wake=far?Math.min(520*(P.rangeMul||1),aimReach()):(s.def.wake||300)*(P.rangeMul||1);
   if(!G.near||G.nearD>wake){ s.cdT=.2; return; }
-  s.cdT=cdOf(s); const n=countOf(s), r=v('r')*P.area, t=G.near, a=Math.atan2(t.y-P.y,t.x-P.x);
+  s.cdT=cdOf(s); const n=countOf(s), r=v('r')*P.area, t=G.near, a=Math.atan2(t.y-P.y,t.x-P.x), mv=Math.hypot(P.vx,P.vy), ba=mv>20?Math.atan2(-P.vy,-P.vx):a+PI;
   for(let i=0;i<n;i++){ let x=P.x, y=P.y; const o={};
     if(pl==='self'){ if(i||s.def.shoot){ const b=s.def.shoot?a+PI+(i-(n-1)/2)*1.2:i*TAU/n, d=s.def.shoot?28:r*.6; x+=Math.cos(b)*d; y+=Math.sin(b)*d*.75; } if(s.def.follow||v('follow')) o.follow=1; }   // a turret stands just behind the hero
     else if(pl==='aim'){ const b=a+(i-(n-1)/2)*.35, sp=v('speed')||200; x+=Math.cos(b)*36; y+=Math.sin(b)*36; o.aim={vx:Math.cos(b)*sp, vy:Math.sin(b)*sp}; }
     else if(pl==='enemy'){ const q=aimCluster(t,i,r*2); x=q[0]; y=q[1]; }
+    else if(pl==='feet'){ x+=Math.cos(ba)*(10+i*r*1.1)+Math.cos(ba+PI/2)*(i%2?r*.5:-r*.5)*(i?1:0); y+=Math.sin(ba)*(10+i*r*1.1)+Math.sin(ba+PI/2)*(i%2?r*.5:-r*.5)*(i?1:0); }
+    else if(pl==='mid'){ const d=Math.min(160,G.nearD*.5), b=a+(i-(n-1)/2)*.6; x+=Math.cos(b)*d; y+=Math.sin(b)*d; }
     addZone(Object.assign({x,y,r,dur:(v('dur')||4)*P.durMul,tick:(v('tick')||.4)*(s.def.cdTick?P.cdMul:1),dmg:v('dmg')||0,slow:v('slow')||0,kind:s.def.fx,src:s,x2:1,
       rep:v('rep')||0,stun:v('stun')||0,heal:v('heal')||0,pull:v('pull')||0,boom:v('boom')||0,explode:(v('explode')||0)*P.area,bk:s.def.bk==null?220:s.def.bk,
-      shoot:s.def.shoot?(v('shots')||1):0,lob:s.def.lob?1:0,reach:(v('reach')||300)*(P.rangeMul||1),pierce:v('pierce')||1,tt:s.def.shoot||s.def.lob?.2:0},o)); }
+      shoot:s.def.shoot?(v('shots')||1):0,lob:s.def.lob?1:0,reach:(v('reach')||300)*(P.rangeMul||1),pierce:v('pierce')||1,tt:s.def.shoot||s.def.lob?.2:0,
+      lure:(v('lure')||0)*P.area,seen:G.t},o));
+    const z=G.zones[G.zones.length-1]; if(z&&z.lure&&z.src===s) (G.lures||(G.lures=[])).push(z); }
   if(s.def.fx==='palisade'){ G.fx.push({k:'ring',x:P.x,y:P.y,r0:r*.3,r1:r,t:0,dur:.3,c:s.def.c,w:6,follow:true,dead:false}); sfx('shield'); } }
+// updateEnemies: the decoy an enemy walks at instead of the hero (null = the hero) · ranged enemies and boss AI are never lured ·
+// G.lures drops zones that ended (or were pushed out of G.zones) once a frame and goes back to null when empty
+function lureAt(e){ const L=G.lures; if(!L) return null;
+  if(G.lureT!==G.t){ G.lureT=G.t; for(let i=L.length-1;i>=0;i--){ const z=L[i]; if(z.dead||z.t>=z.dur||z.seen<G.t-.1) L.splice(i,1); } if(!L.length){ G.lures=null; return null; } }
+  for(const z of L){ const dx=z.x-e.x, dy=z.y-e.y; if(dx*dx+dy*dy<z.lure*z.lure) return z; } return null; }
 // one frame of an x2 zone: movement, push / pull, its own ticks → always true (the classic zone code never sees it)
 function zxTick(z,dt){
+  z.seen=G.t;
   if(z.follow){ z.x=P.x; z.y=P.y; }
   else if(z.aim){ z.x+=z.aim.vx*dt; z.y+=z.aim.vy*dt; const k=Math.exp(-dt*.7); z.aim.vx*=k; z.aim.vy*=k; }
   if(z.rep){ const R=z.r; for(const e of query(z.x,z.y,R+60)){ if(e.dead||e.boss) continue; const dx=e.x-z.x, dy=e.y-z.y, d=Math.hypot(dx,dy)||1, rr=R+e.r*.3;
@@ -151,7 +166,7 @@ function zxTick(z,dt){
       if(d<R&&d>4){ const f=Math.min(d-2,z.pull*dt/Math.max(.6,e.mass)); e.x+=dx/d*f; e.y+=dy/d*f; } } }
   z.tt-=dt; if(z.tt<=0){ z.tt=z.tick;
     if(z.shoot) zxShoot(z); else if(z.lob) zxLob(z);
-    else if(z.dmg) for(const e of query(z.x,z.y,z.r+60)){ if(e.dead) continue; const rr=z.r+e.r*.5; if((e.x-z.x)**2+(e.y-z.y)**2>rr*rr) continue;
+    else if(z.dmg&&!z.lure) for(const e of query(z.x,z.y,z.r+60)){ if(e.dead) continue; const rr=z.r+e.r*.5; if((e.x-z.x)**2+(e.y-z.y)**2>rr*rr) continue;
       damageEnemy(e,z.dmg,z.src,{slow:z.slow,slowDur:.5,stun:z.stun,quiet:true,fxd:z.fxd}); }
     if(z.heal&&(P.x-z.x)**2+(P.y-z.y)**2<(z.r+P.r)**2&&P.hp<P.maxHp){ healP(z.heal,true); if(!G.auto) part({x:P.x+rand(-12,12),y:P.y+rand(-8,8),vx:0,vy:rand(-70,-40),life:.6,s:3,c:'#9dffb8',g:0,drag:1,k:'plus',add:true}); } }   // standing inside: heal
   if(z.fl>0) z.fl-=dt;

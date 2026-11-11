@@ -28,11 +28,11 @@ const CLASSES=[
   {id:'templar',n:'นักพรตหมัดสุริยะ',e:'Sunfist Ascetic',d:'นักรบศักดิ์สิทธิ์ ชกรัวพร้อมดวงไฟสุริยะ',bonus:{speed:.12,armor:2},bt:'ความเร็ว +12% · เกราะ +2',skills:['fists','spheres'],skx:['palm','combo'],
    look:{body:'#c9b48a',trim:'#8a2b2b',hat:'helm',hatC:'#d8c9a3',orn:'cross',ornC:'#8a2b2b',weapon:'fist',wc:'#ffd27a'}}]},
 {id:'thief',n:'โจร',e:'Thief',d:'เร็วที่สุด คริติคอลสูง และหลบหลีกได้',hp:92,speed:205,armor:0,crit:.12,regen:.2,
- rating:{hp:1,atk:4,spd:5,rng:3},skills:['dagger','fan','venom','shadow'],
+ rating:{hp:1,atk:4,spd:5,rng:3},skills:['dagger','fan','venom','shadow'],skx:['coin','caltrops'],
  look:{body:'#3b3346',trim:'#9b3b4a',pants:'#262230',hair:'#2a2a33',hat:'bandana',hatC:'#9b3b4a',orn:'mask',ornC:'#262230',weapon:'dagger',wc:'#e6e6f0'},
- adv:[{id:'assassin',n:'มือมีดจันทร์ดับ',e:'Eclipseblade',d:'พุ่งฟันเป้าหมายแข็งแกร่งในพริบตา',bonus:{crit:.12,speed:.1},bt:'คริติคอล +12% · ความเร็ว +10%',skills:['phantom','whirl'],
+ adv:[{id:'assassin',n:'มือมีดจันทร์ดับ',e:'Eclipseblade',d:'พุ่งฟันเป้าหมายแข็งแกร่งในพริบตา',bonus:{crit:.12,speed:.1},bt:'คริติคอล +12% · ความเร็ว +10%',skills:['phantom','whirl'],skx:['curtain','reap'],
    look:{body:'#232028',trim:'#c23048',hat:'hood',hatC:'#1c1a22',orn:'mask',ornC:'#c23048',weapon:'twinblade',wc:'#e9e9f5',cape:'#c23048'}},
-  {id:'nightblade',n:'ใบมีดราตรี',e:'Nightblade',d:'ใช้ร่างเงาและระเบิดควันคุมฝูง',bonus:{xp:.2,magnet:1.4},bt:'EXP +20% · ระยะดูดของ +40%',skills:['clones','smoke'],
+  {id:'nightblade',n:'ใบมีดราตรี',e:'Nightblade',d:'ใช้ร่างเงาและระเบิดควันคุมฝูง',bonus:{xp:.2,magnet:1.4},bt:'EXP +20% · ระยะดูดของ +40%',skills:['clones','smoke'],skx:['bind','decoy'],
    look:{body:'#3a2d5e',trim:'#9a7dff',hat:'hood',hatC:'#2c2248',orn:'mask',ornC:'#9a7dff',weapon:'dagger',wc:'#c3b0ff'}}]},
 ];
 const CLS={}; for(const c of CLASSES) CLS[c.id]=c;

@@ -163,7 +163,7 @@ BEH.multi=(s,dt)=>{
   for(const e of G.enemies){ if(!e.dead&&(e.x-P.x)**2+(e.y-P.y)**2<R2) list.push(e); }
   if(!list.length){ s.cdT=.15; return; }
   s.cdT=cdOf(s);
-  list.sort((a,b)=>b.hp-a.hp);
+  if(s.def.pick==='weak') list.sort((a,b)=>a.hp/a.maxHp-b.hp/b.maxHp||a.hp-b.hp); else list.sort((a,b)=>b.hp-a.hp);   // pick weak: ปลิดชีพ (25a skx)
   const tg=list.slice(0,n);
   G.fx.push({k:'dash',pts:[[P.x,P.y-6]].concat(tg.map(e=>[e.x,e.y-e.r*.3])),t:0,dur:.35,c:s.def.c,dead:false});
   tg.forEach((e,i)=>{ const go=()=>{ if(e.dead) return; damageEnemy(e,pv(s,'dmg'),s,{crit:pv(s,'crit'),knock:140}); G.fx.push({k:'xcut',x:e.x,y:e.y-e.r*.3,r:e.r+12,t:0,dur:.26,c:s.def.c,dead:false}); sfx('slice'); }; if(i===0) go(); else later(i*.06,go); });

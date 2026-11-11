@@ -40,7 +40,8 @@ function updateEnemies(dt){
     if(e.freezeT>0) e.freezeT-=dt;
     if(e.stunT>0) e.stunT-=dt;
     if(e.slowT>0){ e.slowT-=dt; if(e.slowT<=0) e.slowF=1; }
-    let dx=P.x-e.x,dy=P.y-e.y; const d=Math.hypot(dx,dy)||1; dx/=d; dy/=d;
+    let dx=P.x-e.x,dy=P.y-e.y; if(G.lures&&!e.d.ranged&&!e.ai.home){ const z=lureAt(e); if(z){ dx=z.x-e.x; dy=z.y-e.y; } }   // ร่างล่อ (25a): walk at the decoy
+    const d=Math.hypot(dx,dy)||1; dx/=d; dy/=d;
     if(e.boss){ bossAI(e,dt,d,dx,dy); e.walk+=Math.hypot(e.vx,e.vy)*dt/(e.d.r*.9); if(G.bounds) clampToBounds(e); if(G.obstacles&&!e.d.fly) pushOutObstacles(e); continue; }
     if(d>far){ if(G.mode.relocate){ relocate(e); continue; } if(G.mode.far&&G.mode.far(e,d)) continue; }
     if(e.ai.home&&G.mode.steer&&G.mode.steer(e,dt,d,dx,dy)) continue;
