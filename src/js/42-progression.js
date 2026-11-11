@@ -12,7 +12,13 @@ function pgCls(ch){ return ch&&typeof CLS!=='undefined'&&svHas(CLS,ch.cls)?CLS[c
 function pgAdvOf(ch){ const c=pgCls(ch); return c&&ch.job&&c.adv.find(a=>a.id===ch.job)||null; }
 function pgTier(ch){ return pgAdvOf(ch)?2:1; }
 function pgJobCap(ch){ return pgAdvOf(ch)?BAL.CAP.job2:BAL.CAP.job1; }
-function pgSkillPool(ch){ const c=pgCls(ch), a=pgAdvOf(ch); return c?c.skills.concat(a?a.skills:[]):[]; }   // skills ch may train now
+function pgSkillPool(ch){ const c=pgCls(ch), a=pgAdvOf(ch); return c?clsSkills(c).concat(advSkills(a)):[]; }   // skills ch may train now (+ character-only skx)
+// SKILL_REQ of skill id still missing for ch → its reason ('' = met · no entry = met)
+function pgReqWhy(ch,id){ const q=svHas(SKILL_REQ,id)?SKILL_REQ[id]:null; if(!q||!ch) return '';
+  if(q.lv&&(ch.lv|0)<q.lv) return 'ต้องมีเลเวลตัวละคร '+q.lv+' ก่อน (ตอนนี้ '+(ch.lv|0)+')';
+  if(q.need&&((ch.sk||{})[q.need]|0)<q.r) return 'ต้องฝึก '+SK[q.need].n+' ถึง ★'+q.r+' ก่อน';
+  if(q.jlv&&(ch.jlv|0)<q.jlv) return 'ต้องมีเลเวลอาชีพ '+q.jlv+' ก่อน (ตอนนี้ '+(ch.jlv|0)+')';
+  return ''; }
 function pgPasPool(ch){ const out=[]; if(!ch) return out; for(const id in PASSIVES){ const w=PASSIVES[id].own; if(w===ch.cls||(ch.job&&w===ch.job)) out.push(id); } return out; }
 function pgRO(){ return typeof saveReadOnly==='function'&&saveReadOnly(); }
 function pgSave(ch,reason,now){ if(!SAVE||!Array.isArray(SAVE.chars)) return;
@@ -151,9 +157,9 @@ function canLearn(ch,id){
     if(ch.sp<BAL.PAS_COST) return 'แต้มสกิลไม่พอ (ต้องใช้ '+BAL.PAS_COST+')';
     return ''; }
   if(!svHas(SK,id)) return 'ไม่พบสกิลนี้';
-  if(pgSkillPool(ch).indexOf(id)<0){ const a=c.adv.find(x=>x.skills.indexOf(id)>=0); return a&&!ch.job?'ต้องเลื่อนเป็น'+a.n+'ก่อน':'สกิลนี้ไม่ใช่ของอาชีพนี้'; }
-  const r=(ch.sk||{})[id]|0, rc=rankCap(ch,id); if(r>=rc) return rc<8&&c.skills.indexOf(id)>=0?'ฝึกถึง ★'+rc+' แล้ว · เลื่อนอาชีพเพื่อเปิด ★6–8':'ฝึกถึง ★'+rc+' แล้ว';
-  const q=SKILL_REQ[id]; if(q&&((ch.sk||{})[q.need]|0)<q.r) return 'ต้องฝึก '+SK[q.need].n+' ถึง ★'+q.r+' ก่อน';
+  if(pgSkillPool(ch).indexOf(id)<0){ const a=c.adv.find(x=>advSkills(x).indexOf(id)>=0); return a&&!ch.job?'ต้องเลื่อนเป็น'+a.n+'ก่อน':'สกิลนี้ไม่ใช่ของอาชีพนี้'; }
+  const r=(ch.sk||{})[id]|0, rc=rankCap(ch,id); if(r>=rc) return rc<8&&clsSkills(c).indexOf(id)>=0?'ฝึกถึง ★'+rc+' แล้ว · เลื่อนอาชีพเพื่อเปิด ★6–8':'ฝึกถึง ★'+rc+' แล้ว';
+  const why=pgReqWhy(ch,id); if(why) return why;
   const cost=BAL.RANK_COST[r+1]; if(ch.sp<cost) return 'แต้มสกิลไม่พอ (ต้องใช้ '+cost+')';
   return ''; }
 function learnSkill(ch,id){

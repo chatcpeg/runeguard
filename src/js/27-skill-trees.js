@@ -6,7 +6,7 @@
 
 /* ---- ★ caps and tier 2 ---- */
 const TF_GROW={dmg:.12, heal:.12, absorb:.12, nova:.12, trap:.12, r:.03, range:.03, explode:.04};
-function tfRankCap(cls,job,id){ const c=CLS[cls]; return job&&c&&c.skills.indexOf(id)>=0?8:BAL.CAP.rank; }
+function tfRankCap(cls,job,id){ const c=CLS[cls]; return job&&c&&clsSkills(c).indexOf(id)>=0?8:BAL.CAP.rank; }   // every first-job skill (+ skx)
 function rankCap(ch,id){ return ch?tfRankCap(ch.cls,ch.job,id):BAL.CAP.rank; }
 // Lv 6–8 value from the Lv 5 value v (g = lv − 5) · p2 = explicit steps (never over an evolution's own number)
 function tfTierUp(k,v,g,s){
@@ -23,8 +23,13 @@ Object.assign(SK.slash,{p2:{count:[2,3,3]}});
 const TF_KN={dmg:'ดาเมจ', cd:'คูลดาวน์', count:'จำนวน', pierce:'ทะลุ', speed:'ความเร็วกระสุน', size:'ขนาด', explode:'วงระเบิด', homing:'การเลี้ยวตามเป้า',
   crit:'คริติคอล', knock:'แรงกระแทก', range:'ระยะฟัน', r:'รัศมี', stun:'สตัน', slow:'ชะลอ', freeze:'แช่แข็ง', spin:'ความเร็วหมุน', absorb:'โล่ดูดซับ',
   nova:'ดาเมจระเบิด', tick:'ช่วงห่างแต่ละครั้ง', bounces:'ชิ่ง', jump:'ระยะกระโดด', hits:'จำนวนครั้งที่โดน', dur:'ระยะเวลา', pull:'แรงดูด', trap:'ระเบิดกับดัก',
-  heal:'ฟื้น HP', healPct:'ฟื้น HP ตาม % HP สูงสุด', targets:'เป้าต่อครั้ง', rage:'โทสะ', steal:'ฟื้นต่อการสังหาร', dodge:'หลบหลีก'};
-const TF_PCTK={slow:1, dodge:1, crit:1, healPct:1}, TF_SECK={stun:1, freeze:1}, TF_REL={rage:1, steal:1};
+  heal:'ฟื้น HP', healPct:'ฟื้น HP ตาม % HP สูงสุด', targets:'เป้าต่อครั้ง', rage:'โทสะ', steal:'ฟื้นต่อการสังหาร', dodge:'หลบหลีก',
+  // keys of the character-only skills (25a)
+  life:'ระยะพุ่ง', hook:'แรงกระชาก', rep:'แรงผลัก', cost:'สละ HP', drain:'ดูดเลือดกลับ'};
+// the same keys on the level-up cards / skills page (core 21 PL · PCT · SEC: only new keys are added, classic labels stay)
+if(typeof PL!=='undefined') Object.assign(PL,{life:'ระยะพุ่ง', hook:'แรงกระชาก', rep:'แรงผลัก', cost:'สละ HP', drain:'ดูดเลือดกลับ', size:'ขนาด'});
+if(typeof PCT!=='undefined') Object.assign(PCT,{cost:1, drain:1});
+const TF_PCTK={slow:1, dodge:1, crit:1, healPct:1, cost:1, drain:1}, TF_SECK={stun:1, freeze:1}, TF_REL={rage:1, steal:1};
 const tfPc=v=>(Math.round(v*1000)/10)+'%', tfM=r=>(Math.round(r)/10)+' ม.', tfN=v=>String(+(+v).toFixed(2));
 const TF_ZK={fire:'เปลวไฟ', ice:'น้ำแข็ง', poison:'พิษ', wind:'ลมคม'};
 // special effects: n = node name when used as a proc node · d(p) = text · glob = also allowed on passive skills (hit by any skill)
@@ -218,6 +223,32 @@ smoke:[['ควันพิษ','💨',['dmg','*',.08,3],['stun','+',.1,2],{fx:'
   ['ควันกว้าง','⭕',['r','*',.06,3],['slow','+',.04,2],{fx:'echo',nm:'ควันระลอกสอง',i:'🔁',every:2}],
   ['ควันไว','⏱️',['cd','c',.05,3],['@ignite',.15,2],{fx:'chill',nm:'ควันเยือกแข็ง',i:'❄️',ch:.3,t:.8}],
   {fx:'trail',nm:'ทุ่งควันพิษ',i:'👑',kind:'poison',r:70,pct:.2,dur:4}]};
+// ---- the 30 character-only skills (CLASSES skx · docs/PROPOSAL-skill-trees.md §3): same shape, same rules ----
+Object.assign(TFD,{
+flyblade:[['คมดาบบิน','🗡️',['dmg','*',.08,3],['size','*',.1,2],{fx:'shards',nm:'ดาบแตกคลื่น',i:'🌙',on:'kill',n:3,pct:.35}],
+  ['วงโคจรดาบ','↩️',['life','*',.08,3],['knock','*',.15,2],{fx:'pull',nm:'ดาบดูดฝูง',i:'🧲',r:90}],
+  ['ขว้างไว','⏱️',['cd','c',.05,3],['count','+',1,1],{fx:'execute',nm:'ปลิดคมดาบ',i:'💀',hp:.3,m:1.6}],
+  {fx:'echo',nm:'ดาบคู่ขว้างซ้ำ',i:'👑',every:3}],
+riposte:[['สวนแรง','🤺',['dmg','*',.08,3],['stun','+',.1,2],{fx:'vsStun',nm:'สวนซ้ำแผล',i:'💢',m:1.5}],
+  ['วงสวน','⭕',['range','*',.06,3],['knock','*',.15,2],{fx:'burst',nm:'สวนจนแตก',i:'💥',r:55,pct:.45}],
+  ['ตั้งรับไว','⏱️',['cd','c',.06,3],['@leech',.01,2],{fx:'mend',nm:'สวนแล้วฟื้นกาย',i:'💚',pct:.03}],
+  {fx:'radial',nm:'พายุคมสวน',i:'👑',every:1,n:8,pct:.45}],
+palisade:[['ปลายหอกคม','🔱',['dmg','*',.1,3],['tick','*',-.08,2],{fx:'ignite',nm:'หอกเลือดไหล',i:'🩸',ch:.25,pct:.3,t:3}],
+  ['วงปราการ','⭕',['r','*',.06,3],['rep','*',.15,2],{fx:'shock',nm:'หอกสะท้าน',i:'⚡',ch:.15,t:.4}],
+  ['ตั้งค่ายไว','⏱️',['cd','c',.05,3],['dur','*',.1,2],{fx:'burst',nm:'ศพเสียบหอกระเบิด',i:'💥',r:50,pct:.5}],
+  {fx:'vsStun',nm:'ป้อมพิฆาต',i:'👑',m:1.5}],
+thrust:[['ปลายทวน','🔱',['dmg','*',.08,3],['knock','*',.15,2],{fx:'execute',nm:'แทงทะลุหัวใจ',i:'💀',hp:.3,m:1.6}],
+  ['ทวนยาว','📏',['range','*',.06,3],['size','*',.12,2],{fx:'shards',nm:'ทวนแตกประกาย',i:'✨',on:'hit',ch:.15,n:2,pct:.4}],
+  ['จังหวะแทง','⏱️',['cd','c',.05,3],['count','+',1,1],{fx:'echo',nm:'สามแทงซ้ำ',i:'🔁',every:4}],
+  {fx:'shock',nm:'ทวนตรึงฟ้า',i:'👑',ch:.25,t:.5}],
+bloodrite:[['โลหิตเดือด','🩸',['dmg','*',.08,3],['r','*',.06,2],{fx:'burst',nm:'ศพระเบิดเลือด',i:'💥',r:55,pct:.45}],
+  ['ดื่มเลือด','🍷',['drain','*',.12,3],['knock','*',.15,2],{fx:'feast',nm:'งานเลี้ยงโลหิต',i:'🍖',amt:2}],
+  ['พิธีไว','⏱️',['cd','c',.05,3],['cost','*',-.12,2],{fx:'ignite',nm:'เลือดติดไฟ',i:'🔥',ch:.3,pct:.3,t:3}],
+  {fx:'execute',nm:'สังเวยผู้อ่อนแอ',i:'👑',hp:.3,m:1.7}],
+chainaxe:[['ขวานหนัก','🪓',['dmg','*',.08,3],['pierce','+',1,2],{fx:'execute',nm:'ลากมาประหาร',i:'💀',hp:.3,m:1.6}],
+  ['โซ่ยาว','⛓️',['life','*',.08,3],['hook','*',.15,2],{fx:'pull',nm:'กระชากทั้งฝูง',i:'🧲',r:90}],
+  ['ขว้างไว','⏱️',['cd','c',.05,3],['@shock',.08,2],{fx:'vsStun',nm:'ทุบตัวที่มึน',i:'💢',m:1.4}],
+  {fx:'shards',nm:'ขวานแตกสะเก็ด',i:'👑',on:'kill',ch:1,n:3,pct:.4}]});
 const TF_COST=[0,1,2,4], TF_CROWN=6;
 
 /* ---- node list of a tree (cached) ---- */
@@ -368,7 +399,7 @@ function tfCast(s){ const F=s.fx; if(!F) return; s.tfC=(s.tfC|0)+1;
     G.fx.push({k:'ring',x:P.x,y:P.y,r0:10,r1:70,t:0,dur:.25,c:s.def.c,w:5,follow:true,dead:false}); }
   if(F.echo&&s.tfC%F.echo.every===0&&TF_ECHO[s.def.type]) later(.3,()=>{ if(!P||!G||G.over||P.skills.indexOf(s)<0) return;
     const c=s.cdT; s.cdT=0; try{ BEH[s.def.type](s,0); } finally{ s.cdT=c; } }); }
-const TF_ECHO={proj:1, swing:1, nova:1, strike:1, zone:1, chain:1, heal:1, multi:1, spikes:1};
+const TF_ECHO={proj:1, swing:1, nova:1, strike:1, zone:1, chain:1, heal:1, multi:1, spikes:1, thrust:1, rite:1};   // + skx types (25a)
 // the skill loop of world update when the run has tree effects: casts are seen as a cooldown restart · burns tick here
 function tfRun(dt){
   G.tfN=0;

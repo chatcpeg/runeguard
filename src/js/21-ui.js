@@ -40,7 +40,7 @@ function buildChoices(){
     else if(s.lv<cap(s.id)) pool.push({k:'up',s,w:s.id===P.cls.skills[0]?1.3:1.1});
   }
   const avail=P.loadout||P.cls.skills.concat(P.adv?P.adv.skills:[]);
-  for(const id of avail) if(!owned.has(id)&&cap(id)>0) pool.push({k:'new',id,w:P.adv&&P.adv.skills.indexOf(id)>=0?3:1.4});
+  for(const id of avail) if(!owned.has(id)&&cap(id)>0) pool.push({k:'new',id,w:P.adv&&(P.adv.skills.indexOf(id)>=0||!!P.adv.skx&&P.adv.skx.indexOf(id)>=0)?3:1.4});   // skx: character runs only
   for(const k in STATS) if(P.sx||P.stats[k]<5) pool.push({k:'stat',stat:k,w:.85});   // character runs: stat cards never run out (26)
   const out=[], N=typeof cardCount==='function'?cardCount():3;          // character runs: 5 cards (28 · free players pick from 3)
   while(out.length<N&&pool.length){ let tot=0; for(const o of pool) tot+=o.w; let r=Math.random()*tot,idx=0; for(;idx<pool.length-1;idx++){ r-=pool[idx].w; if(r<=0) break; } out.push(pool[idx]); pool.splice(idx,1); }

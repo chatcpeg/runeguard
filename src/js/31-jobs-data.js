@@ -29,8 +29,12 @@ const PASSIVES={
   p_shadowstep:{own:'nightblade', n:'ย่างก้าวเงา', i:'👣', per:{dodge:.012}},
 };
 for(const k in PASSIVES) PASSIVES[k].id=k;
-// SKILL_REQ[skill] = {need, r}: learning `skill` needs `need` at ★r (adv skill 1 ← base skill ★3 · adv skill 2 ← adv skill 1 ★2)
+// SKILL_REQ[skill] = {need, r, lv, jlv}: learning `skill` needs `need` at ★r (adv skill 1 ← base skill ★3 · adv skill 2 ← adv skill 1 ★2)
+// · lv = Base Lv · jlv = Job Lv of the current job. Character-only skills (CLASSES skx): first job 5th ← Base 8 · 6th ← Base 15 ·
+// advanced 3rd ← adv skill 1 ★3 + Job 5 · 4th ← adv skill 2 ★3 + Job 10 (an old character unlocks them by playing on)
 const SKILL_REQ={
+  flyblade:{lv:8}, riposte:{lv:15}, palisade:{need:'lance', r:3, jlv:5}, thrust:{need:'valor', r:3, jlv:10},
+  bloodrite:{need:'cyclone', r:3, jlv:5}, chainaxe:{need:'frenzy', r:3, jlv:10},
   lance:{need:'slash', r:3}, valor:{need:'lance', r:2},
   cyclone:{need:'blades', r:3}, frenzy:{need:'cyclone', r:2},
   meteor:{need:'flame', r:3}, blizzard:{need:'meteor', r:2},

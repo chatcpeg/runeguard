@@ -5,7 +5,7 @@
 // Forward compatibility inside v1: an item / rune id this app does not know survives validation (item → unk:1, rune id kept in
 // its socket), so a newer client's loot is never destroyed. A new class, job, skill or passive does NOT survive (they are matched
 // against CLS / SK / PASSIVES): adding one needs a SCHEMA_V bump, so older apps open such a save read-only instead.
-const SCHEMA_V=6;                                    // 2: acct.up (gold upgrades) · 3: up.stat · 4: ch.tr (skill trees) + ★6–8 + resets.trFree · 5: ch.rb / ch.sl / acct.ru (bought runes, starting Lv) · 6: acct.daily.dg (daily dungeons used today) · an older app opens a newer save read-only, so it never drops what was paid for
+const SCHEMA_V=7;                                    // 2: acct.up (gold upgrades) · 3: up.stat · 4: ch.tr (skill trees) + ★6–8 + resets.trFree · 5: ch.rb / ch.sl / acct.ru (bought runes, starting Lv) · 6: acct.daily.dg (daily dungeons used today) · 7: the 30 character-only skills (CLASSES skx) in ch.sk / ch.tr / ch.sl / ch.load · an older app opens a newer save read-only, so it never drops what was paid for
 const SV_APP='2.5.0';                                 // app version stamped into every local write (saveSummary.appVer)
 const SV_NAME_RE=/^[\p{L}\p{M}\p{N} ]{2,16}$/u;
 const SV_SLOTS=['weapon','off','head','face','body','cloak','hands','feet','neck','ring'];
@@ -97,7 +97,8 @@ function svMig2(o){ const s=Object.assign({},o); s.v=3; return s; }   // v2 → 
 function svMig3(o){ const s=Object.assign({},o); s.v=4; return s; }   // v3 → v4: only adds ch.tr / ★6–8 / resets.trFree
 function svMig4(o){ const s=Object.assign({},o); s.v=5; return s; }   // v4 → v5: only adds ch.rb / ch.sl / acct.ru
 function svMig5(o){ const s=Object.assign({},o); s.v=6; return s; }   // v5 → v6: only adds acct.daily.dg
-const SV_MIG={0:svMig0, 1:svMig1, 2:svMig2, 3:svMig3, 4:svMig4, 5:svMig5};      // SV_MIG[v](o) → save of version v+1
+function svMig6(o){ const s=Object.assign({},o); s.v=7; return s; }   // v6 → v7: only adds skill ids (CLASSES skx)
+const SV_MIG={0:svMig0, 1:svMig1, 2:svMig2, 3:svMig3, 4:svMig4, 5:svMig5, 6:svMig6};      // SV_MIG[v](o) → save of version v+1
 function migrateSave(o,legacyBest){
   if(!svObj(o)) o=null;
   const v=o?o.v:undefined;
@@ -188,13 +189,14 @@ function svChar(c,seen){
   o.pts=svInt(c.pts,0,Math.max(0,BAL.ptsAt(o.lv)-spentSt),0);
   const tier=adv?2:1, jcap=adv?cap.job2:cap.job1;
   o.jlv=svInt(c.jlv,1,jcap,1); o.jxp=o.jlv>=jcap?0:svInt(c.jxp,0,BAL.jxpNeed(o.jlv,tier)-1,0);
-  const sk=svObj(c.sk)?c.sk:{}; o.sk={};
-  for(const id of cls.skills.concat(adv?adv.skills:[])){ const r=svInt(sk[id],0,tfRankCap(cls.id,o.job,id),0); if(r) o.sk[id]=r; }
+  const sk=svObj(c.sk)?c.sk:{}, pool=clsSkills(cls).concat(advSkills(adv)); o.sk={};   // pool: + the character-only skills (07 skx)
+  for(const id of pool){ const r=svInt(sk[id],0,tfRankCap(cls.id,o.job,id),0); if(r) o.sk[id]=r; }
+  for(const id of pool){ const q=SKILL_REQ[id]; if(q&&(q.lv||q.jlv)&&o.sk[id]&&typeof pgReqWhy==='function'&&pgReqWhy(o,id)) delete o.sk[id]; }   // a Base / Job Lv gate not met = not learned
   const tr=svObj(c.tr)?c.tr:{}; o.tr={};                                // skill trees (27): known nodes only, each 0…max
-  for(const id of cls.skills.concat(adv?adv.skills:[])){ const t=svObj(tr[id])?tr[id]:null; if(!t) continue; const q={};
+  for(const id of pool){ const t=svObj(tr[id])?tr[id]:null; if(!t) continue; const q={};
     for(const nd of tfNodes(id)){ const l=svInt(t[nd.id],0,nd.max,0); if(l) q[nd.id]=l; } if(Object.keys(q).length) o.tr[id]=q; }
   o.rb=svInt(c.rb,0,1e9,0);                                              // bought runes moved onto this character (28)
-  const sl=svObj(c.sl)?c.sl:{}; o.sl={}; for(const id of cls.skills.concat(adv?adv.skills:[])){ const v=svInt(sl[id],0,8,0); if(v>=2) o.sl[id]=v; }
+  const sl=svObj(c.sl)?c.sl:{}; o.sl={}; for(const id of pool){ const v=svInt(sl[id],0,8,0); if(v>=2) o.sl[id]=v; }
   tfSanitize(o);                                                         // requirements + rune points (lv) hold, like sp / pts
   if(!o.sk[first]) o.sk[first]=1;                                   // the free ★1 of the first skill never goes away
   const pas=svObj(c.pas)?c.pas:{}; o.pas={};

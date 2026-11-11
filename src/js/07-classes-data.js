@@ -1,10 +1,10 @@
 const CLASSES=[
 {id:'swordsman',n:'นักดาบ',e:'Swordsman',d:'นักสู้แนวหน้า HP หนา ฟันฝูงซอมบี้ให้กระเด็นกระจาย',hp:150,speed:172,armor:4,crit:.05,regen:.3,
- rating:{hp:5,atk:3,spd:3,rng:1},skills:['slash','slam','blades','bulwark'],
+ rating:{hp:5,atk:3,spd:3,rng:1},skills:['slash','slam','blades','bulwark'],skx:['flyblade','riposte'],
  look:{body:'#3d6db3',trim:'#d9e2ef',pants:'#2d3442',hair:'#7a4a26',hat:'helm',hatC:'#aeb9c7',weapon:'sword',wc:'#e6edf7'},
- adv:[{id:'knight',n:'พลหอกพิทักษ์',e:'Lancewarden',d:'ผู้พิทักษ์หุ้มเกราะ พุ่งหอกทะลวงแนวศัตรู',bonus:{hp:40,armor:3},bt:'HP +40 · เกราะ +3',skills:['lance','valor'],
+ adv:[{id:'knight',n:'พลหอกพิทักษ์',e:'Lancewarden',d:'ผู้พิทักษ์หุ้มเกราะ พุ่งหอกทะลวงแนวศัตรู',bonus:{hp:40,armor:3},bt:'HP +40 · เกราะ +3',skills:['lance','valor'],skx:['palisade','thrust'],
    look:{body:'#2c4a8f',trim:'#f0c75a',hatC:'#d5dde8',orn:'plume',ornC:'#d8444c',weapon:'lance',wc:'#f3d27a',cape:'#7a1f2b'}},
-  {id:'berserker',n:'เบอร์เซิร์กเกอร์',e:'Berserker',d:'นักรบคลั่ง ยิ่งบาดเจ็บยิ่งอันตราย',bonus:{might:.15,speed:.08},bt:'ดาเมจ +15% · ความเร็ว +8%',skills:['cyclone','frenzy'],
+  {id:'berserker',n:'เบอร์เซิร์กเกอร์',e:'Berserker',d:'นักรบคลั่ง ยิ่งบาดเจ็บยิ่งอันตราย',bonus:{might:.15,speed:.08},bt:'ดาเมจ +15% · ความเร็ว +8%',skills:['cyclone','frenzy'],skx:['bloodrite','chainaxe'],
    look:{body:'#8a2f2a',trim:'#2a1a18',hatC:'#6d5c4f',orn:'horns',ornC:'#efe4cc',weapon:'axe',wc:'#cfd3d8'}}]},
 {id:'mage',n:'จอมเวท',e:'Mage',d:'ปล่อยเวทธาตุถล่มฝูงศัตรูจากระยะไกล แต่ตัวบาง',hp:90,speed:165,armor:0,crit:.05,regen:.2,
  rating:{hp:1,atk:5,spd:2,rng:4},skills:['mbolt','flame','frost','thunder'],
@@ -36,5 +36,9 @@ const CLASSES=[
    look:{body:'#3a2d5e',trim:'#9a7dff',hat:'hood',hatC:'#2c2248',orn:'mask',ornC:'#9a7dff',weapon:'dagger',wc:'#c3b0ff'}}]},
 ];
 const CLS={}; for(const c of CLASSES) CLS[c.id]=c;
+// skx = the skills only character modes have (docs/PROPOSAL-skill-trees.md §3: 4 → 6 first-job · 2 → 4 per advanced path).
+// Classic reads `skills` alone (level-up pool, job pick, class card) → its runs and the golden files never see them.
+function clsSkills(c){ return c?c.skills.concat(c.skx||[]):[]; }
+function advSkills(a){ return a?a.skills.concat(a.skx||[]):[]; }
 const CLONE_LOOK={body:'#4b3a86',trim:'#9a7dff',pants:'#2a2248',hair:'#1a1430',hat:'hood',hatC:'#2c2248',orn:'mask',ornC:'#9a7dff',weapon:'dagger',wc:'#c3b0ff',skin:'#9d8fd0'};
 

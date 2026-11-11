@@ -934,6 +934,21 @@ cyclone:{n:'พายุหมุนเหวี่ยง',i:'🌪️',type:'swi
   p:{cd:[1.7,1.5,1.3,1.1,.9],dmg:[24,30,38,47,58],range:[96,104,112,122,134],arc:7,knock:200,count:1}},
 frenzy:{n:'เลือดคลั่ง',i:'🩸',type:'passive',c:'#ff4d4d',d:'ยิ่ง HP น้อยยิ่งตีแรง และฟื้น HP ทุกครั้งที่สังหาร',
   p:{rage:[.4,.55,.7,.85,1],steal:[.5,.7,.9,1.1,1.4]}},
+/* swordsman · character modes only (CLASSES skx · docs/PROPOSAL-skill-trees.md §3) — p = character-run numbers */
+flyblade:{n:'ดาบบินคืนมือ',i:'🪃',type:'proj',shape:'gsword',px:1,c:'#cfe2ff',d:'ขว้างดาบใหญ่หมุนพุ่งตรงไปจนสุดระยะแล้วบินกลับมือ ฟันทุกตัวทั้งขาไปและขากลับ',
+  p:{cd:[2.2,2,1.85,1.7,1.5],dmg:[22,28,35,43,52],speed:420,life:.55,pierce:99,size:15,count:[1,1,1,2,2],spread:.5,knock:160,ret:1},
+  evo:{s:'DEX',n:'ดาบคู่พายุคืนรัง',d:'ขว้างดาบสี่เล่มเป็นพัด ใหญ่ หมุนแรง และกลับมือเร็ว',set:{cd:1.1,dmg:70,count:4,size:21,knock:240}}},
+riposte:{n:'ดาบสวนกลับ',i:'🤺',type:'counter',c:'#ffcf9a',d:'ทุกครั้งที่โดนโจมตี (รวมโล่รับแทน) ฟันสวนรอบตัวทันที ศัตรูกระเด็นและมึน · มีคูลดาวน์',
+  p:{cd:[1.6,1.45,1.3,1.15,1],dmg:[30,38,48,60,75],range:[90,95,100,108,116],knock:300,stun:[.2,.25,.3,.35,.4]},
+  evo:{s:'LUK',n:'สวนกลับพันคม',d:'ฟันสวนวงกว้างทุก 0.7 วิ มึนนาน',set:{cd:.7,dmg:105,range:150,stun:.6}}},
+palisade:{n:'ปราการหอก',i:'🚧',type:'zone',fx:'palisade',place:'self',follow:1,zx:1,wake:230,c:'#e8d9a8',d:'ปักหอกล้อมรอบตัวเป็นวง (ตามตัวไปด้วย) ผลักศัตรูที่เข้าใกล้ออกไปและแทงซ้ำทุกจังหวะ',
+  p:{cd:[8,7.5,7,6.5,6],count:1,r:[70,75,80,88,96],dmg:[12,15,19,23,28],tick:.35,dur:[2.5,2.7,2.9,3.1,3.4],rep:[220,240,260,285,310]}},
+thrust:{n:'ทวนสามแทง',i:'⚜️',type:'thrust',c:'#fff0b0',d:'แทงทวนยาวเป็นแนวตรงสามจังหวะไปทางที่เล็ง ทะลวงทุกตัวในแนวได้ไกลกว่าการฟัน',
+  p:{cd:[1.5,1.38,1.26,1.14,1],dmg:[22,28,35,43,52],range:[150,158,166,176,188],size:14,knock:220,count:3}},
+bloodrite:{n:'สังเวยโลหิต',i:'🫀',type:'rite',c:'#ff3b3b',d:'สละ HP ตัวเอง 4% ระเบิดเลือดรอบตัวรุนแรง แล้วดูดเลือดกลับตามดาเมจที่ทำได้',
+  p:{cd:[3.4,3.2,3,2.8,2.6],dmg:[45,57,71,87,105],r:[100,108,116,126,138],knock:260,cost:.04,drain:[.02,.022,.024,.027,.03]}},
+chainaxe:{n:'ขวานโซ่ลากเลือด',i:'⛓️',type:'proj',shape:'axe',px:1,c:'#d8d0c8',d:'ขว้างขวานติดโซ่ไปทางที่เล็ง ทะลุหลายตัว แล้วกระชากทุกตัวที่โดนเข้ามาหาตัว',
+  p:{cd:[2.6,2.4,2.2,2,1.8],dmg:[34,43,54,66,80],speed:520,life:.5,pierce:[3,3,4,4,5],size:10,count:[1,1,1,2,2],spread:.35,knock:0,hook:[560,590,620,660,700]}},
 /* --- Mage --- */
 mbolt:{n:'ศรเวท',i:'🔹',type:'proj',shape:'bolt',c:'#b48cff',d:'ยิงลูกพลังเวทใส่เป้าหมาย (โหมดตัวละคร: พุ่งตรงไปจุดเล็ง ทะลุ +1)',
   p:{cd:[.58,.54,.5,.46,.42],dmg:[11,14,17,21,26],speed:430,life:1.1,pierce:1,size:6,count:[1,2,2,3,3],spread:.2,homing:3,knock:50},
@@ -1023,11 +1038,11 @@ for(const k in SK) SK[k].id=k;
 
 const CLASSES=[
 {id:'swordsman',n:'นักดาบ',e:'Swordsman',d:'นักสู้แนวหน้า HP หนา ฟันฝูงซอมบี้ให้กระเด็นกระจาย',hp:150,speed:172,armor:4,crit:.05,regen:.3,
- rating:{hp:5,atk:3,spd:3,rng:1},skills:['slash','slam','blades','bulwark'],
+ rating:{hp:5,atk:3,spd:3,rng:1},skills:['slash','slam','blades','bulwark'],skx:['flyblade','riposte'],
  look:{body:'#3d6db3',trim:'#d9e2ef',pants:'#2d3442',hair:'#7a4a26',hat:'helm',hatC:'#aeb9c7',weapon:'sword',wc:'#e6edf7'},
- adv:[{id:'knight',n:'พลหอกพิทักษ์',e:'Lancewarden',d:'ผู้พิทักษ์หุ้มเกราะ พุ่งหอกทะลวงแนวศัตรู',bonus:{hp:40,armor:3},bt:'HP +40 · เกราะ +3',skills:['lance','valor'],
+ adv:[{id:'knight',n:'พลหอกพิทักษ์',e:'Lancewarden',d:'ผู้พิทักษ์หุ้มเกราะ พุ่งหอกทะลวงแนวศัตรู',bonus:{hp:40,armor:3},bt:'HP +40 · เกราะ +3',skills:['lance','valor'],skx:['palisade','thrust'],
    look:{body:'#2c4a8f',trim:'#f0c75a',hatC:'#d5dde8',orn:'plume',ornC:'#d8444c',weapon:'lance',wc:'#f3d27a',cape:'#7a1f2b'}},
-  {id:'berserker',n:'เบอร์เซิร์กเกอร์',e:'Berserker',d:'นักรบคลั่ง ยิ่งบาดเจ็บยิ่งอันตราย',bonus:{might:.15,speed:.08},bt:'ดาเมจ +15% · ความเร็ว +8%',skills:['cyclone','frenzy'],
+  {id:'berserker',n:'เบอร์เซิร์กเกอร์',e:'Berserker',d:'นักรบคลั่ง ยิ่งบาดเจ็บยิ่งอันตราย',bonus:{might:.15,speed:.08},bt:'ดาเมจ +15% · ความเร็ว +8%',skills:['cyclone','frenzy'],skx:['bloodrite','chainaxe'],
    look:{body:'#8a2f2a',trim:'#2a1a18',hatC:'#6d5c4f',orn:'horns',ornC:'#efe4cc',weapon:'axe',wc:'#cfd3d8'}}]},
 {id:'mage',n:'จอมเวท',e:'Mage',d:'ปล่อยเวทธาตุถล่มฝูงศัตรูจากระยะไกล แต่ตัวบาง',hp:90,speed:165,armor:0,crit:.05,regen:.2,
  rating:{hp:1,atk:5,spd:2,rng:4},skills:['mbolt','flame','frost','thunder'],
@@ -1059,6 +1074,10 @@ const CLASSES=[
    look:{body:'#3a2d5e',trim:'#9a7dff',hat:'hood',hatC:'#2c2248',orn:'mask',ornC:'#9a7dff',weapon:'dagger',wc:'#c3b0ff'}}]},
 ];
 const CLS={}; for(const c of CLASSES) CLS[c.id]=c;
+// skx = the skills only character modes have (docs/PROPOSAL-skill-trees.md §3: 4 → 6 first-job · 2 → 4 per advanced path).
+// Classic reads `skills` alone (level-up pool, job pick, class card) → its runs and the golden files never see them.
+function clsSkills(c){ return c?c.skills.concat(c.skx||[]):[]; }
+function advSkills(a){ return a?a.skills.concat(a.skx||[]):[]; }
 const CLONE_LOOK={body:'#4b3a86',trim:'#9a7dff',pants:'#2a2248',hair:'#1a1430',hat:'hood',hatC:'#2c2248',orn:'mask',ornC:'#9a7dff',weapon:'dagger',wc:'#c3b0ff',skin:'#9d8fd0'};
 
 const EN={
@@ -1705,6 +1724,7 @@ function fireProj(s,a){ const sp=pv(s,'speed'),life=(pv(s,'life')||1)*(P.sx&&P.r
     explode:(pv(s,'explode')||0)*P.area,homing:P.sx?0:pv(s,'homing')||0,crit:pv(s,'crit')||0,shape:s.def.shape||'bolt',c:s.def.c,src:s,burn:pv(s,'burn')||0,hit:null,tg:null,dead:false,t:0}; G.projs.push(p0);
   if(P.sx&&(s.def.p.homing||0)>0){ p0.pierce+=1; p0.r*=1.2; }           // ศรเวท / ลูกแสง no longer seek: +1 pierce · 20 % bigger
   if(P.sx&&s.mxLook&&typeof mxProj==='function') mxProj(s,p0);           // mastery tricks of this shot (26a)
+  if(P.sx&&s.def.px) pxFire(s,p0);                                       // boomerang / ricochet / hook … of the character-only skills (25a)
   if(s.def.shape==='beam') G.fx.push({k:'beamline',x:P.x,y:P.y-6,a,len:sp*life,t:0,dur:.2,c:s.def.c,dead:false});
   P.atkT=.12; }
 BEH.proj=(s,dt)=>{
@@ -1812,6 +1832,7 @@ BEH.strike=(s,dt)=>{
 };
 BEH.zone=(s,dt)=>{
   s.cdT-=dt; if(s.cdT>0) return;
+  if(s.def.zx){ zxCast(s); return; }                                     // character-only zones (25a): own placement + effects
   if(P.sx){ const R=Math.min(520*(P.rangeMul||1),aimReach()), t=G.near&&G.nearD<R?G.near:null, trap=s.def.fx==='trap'; if(!t&&!trap){ s.cdT=.2; return; }   // aimed (docs §2)
     if(trap&&!(G.near&&G.nearD<500)){ s.cdT=.2; return; }
     s.cdT=cdOf(s); const n=countOf(s), a=t?Math.atan2(t.y-P.y,t.x-P.x):0, r=pv(s,'r')*P.area, mv=Math.hypot(P.vx,P.vy), ba=mv>20?Math.atan2(-P.vy,-P.vx):rand(0,TAU);
@@ -2020,6 +2041,7 @@ function updateProjs(dt){
   for(const p of G.projs){
     if(p.dead) continue;
     p.t+=dt; p.life-=dt;
+    if(p.ret&&pxRet(p,dt)) continue;                                    // boomerang flight back to the hand (25a)
     if(p.homing){ if(!p.tg||p.tg.dead||(p.hit&&p.hit.indexOf(p.tg.id)>=0)) p.tg=nearestTo(p.x,p.y,360,p.hit);
       if(p.tg){ const a=Math.atan2(p.vy,p.vx),ta=Math.atan2(p.tg.y-p.y,p.tg.x-p.x),na=a+clamp(angDiff(ta,a),-p.homing*dt,p.homing*dt),sp=Math.hypot(p.vx,p.vy); p.vx=Math.cos(na)*sp; p.vy=Math.sin(na)*sp; } }
     const ox=p.x,oy=p.y; p.x+=p.vx*dt; p.y+=p.vy*dt; if(p.mx) mxProjTick(p,dt);   // mastery: heat haze / fire trail (26a)
@@ -2054,7 +2076,8 @@ function updateZones(dt){
   const q=qLv();
   for(const z of G.zones){
     if(z.dead) continue;
-    z.t+=dt; if(z.t>=z.dur){ z.dead=true; continue; }
+    z.t+=dt; if(z.t>=z.dur){ if(z.x2) zxEnd(z); z.dead=true; continue; }
+    if(z.x2&&zxTick(z,dt)) continue;                                      // character-only zones run their own frame (25a)
     if(z.aim){ z.x+=z.aim.vx*dt; z.y+=z.aim.vy*dt; const k=Math.exp(-dt*.7); z.aim.vx*=k; z.aim.vy*=k; }   // aimed vortex (19): straight, slowing
     else if(z.drift){ z.retarget-=dt; if(z.retarget<=0||!z.tg||z.tg.dead){ z.tg=nearestTo(z.x,z.y,520); z.retarget=.8; }
       let tx,ty; if(z.tg){ tx=z.tg.x-z.x; ty=z.tg.y-z.y; } else { tx=Math.cos(z.wa); ty=Math.sin(z.wa); } const l=Math.hypot(tx,ty)||1, k=Math.min(1,dt*2);
@@ -2200,7 +2223,7 @@ function buildChoices(){
     else if(s.lv<cap(s.id)) pool.push({k:'up',s,w:s.id===P.cls.skills[0]?1.3:1.1});
   }
   const avail=P.loadout||P.cls.skills.concat(P.adv?P.adv.skills:[]);
-  for(const id of avail) if(!owned.has(id)&&cap(id)>0) pool.push({k:'new',id,w:P.adv&&P.adv.skills.indexOf(id)>=0?3:1.4});
+  for(const id of avail) if(!owned.has(id)&&cap(id)>0) pool.push({k:'new',id,w:P.adv&&(P.adv.skills.indexOf(id)>=0||!!P.adv.skx&&P.adv.skx.indexOf(id)>=0)?3:1.4});   // skx: character runs only
   for(const k in STATS) if(P.sx||P.stats[k]<5) pool.push({k:'stat',stat:k,w:.85});   // character runs: stat cards never run out (26)
   const out=[], N=typeof cardCount==='function'?cardCount():3;          // character runs: 5 cards (28 · free players pick from 3)
   while(out.length<N&&pool.length){ let tot=0; for(const o of pool) tot+=o.w; let r=Math.random()*tot,idx=0; for(;idx<pool.length-1;idx++){ r-=pool[idx].w; if(r<=0) break; } out.push(pool[idx]); pool.splice(idx,1); }
@@ -2353,6 +2376,7 @@ function drawZones(){
         ctx.strokeStyle='#c9a57a'; ctx.lineWidth=2; ctx.beginPath(); for(let i=0;i<6;i++){ const a=i*TAU/6; ctx.moveTo(z.x+Math.cos(a)*7,z.y+Math.sin(a)*7); ctx.lineTo(z.x+Math.cos(a)*11,z.y+Math.sin(a)*11); } ctx.stroke();
         if(armed&&((G.t*4)|0)%2){ ctx.globalCompositeOperation='lighter'; glow(z.x,z.y,10,'#ff4a3a',.6); ctx.globalCompositeOperation='source-over'; } break; }
     }
+    if(z.x2) sk2DrawZone(z,fade);                                           // zones of the character-only skills (22a)
     if(z.src&&z.src.mxLook&&typeof mxDrawZone==='function') mxDrawZone(z);   // mastery looks (26a)
   }
 }
@@ -2474,6 +2498,7 @@ function drawProjs(){
   for(const p of G.projs){
     const sp=Math.hypot(p.vx,p.vy),a=Math.atan2(p.vy,p.vx);
     if(p.mx&&mxDrawProj(p,sp,a)) continue;                                  // mastery look (26a)
+    if(sk2DrawProj(p,sp,a)) continue;                                       // shapes of the character-only skills (22a)
     switch(p.shape){
       case 'arrow': streak(p.x,p.y,a,Math.min(55,sp*.05),5,p.c,.45); break;
       case 'dagger': streak(p.x,p.y,a,30,5,p.c,.35); break;
@@ -2591,6 +2616,31 @@ function render(){
   drawScreenFx(); if(M.drawScreen) M.drawScreen();
 }
 
+/* ================= 22a-render-skx.js · lane B · how the 30 character-only skills look (25a · CLASSES skx) ================= */
+// Called from the shared draw passes only for what these skills create (projectile shapes in SKX_SHAPE, zones with x2, the
+// summon modes / orbit styles they add) → classic frames draw exactly as before. Canvas only, no RNG, no game state changes.
+const SKX_SHAPE={gsword:1, axe:1};
+// drawProjs (22, 'lighter' pass) → true = drawn here
+function sk2DrawProj(p,sp,a){ if(!SKX_SHAPE[p.shape]) return false; const r=p.r;
+  ctx.globalCompositeOperation='source-over'; ctx.save(); ctx.translate(p.x,p.y);
+  if(p.shape==='gsword'){ ctx.rotate(p.t*15); const L=r*1.9;            // a spinning greatsword: dark edge, bright blade, gold guard
+    ctx.fillStyle='#14202c'; ctx.beginPath(); ctx.moveTo(-L*.45,-4.2); ctx.lineTo(L*.85,-4.2); ctx.lineTo(L*1.12,0); ctx.lineTo(L*.85,4.2); ctx.lineTo(-L*.45,4.2); ctx.closePath(); ctx.fill();
+    ctx.fillStyle=p.c; ctx.beginPath(); ctx.moveTo(-L*.42,-2.8); ctx.lineTo(L*.84,-2.8); ctx.lineTo(L*1.04,0); ctx.lineTo(L*.84,2.8); ctx.lineTo(-L*.42,2.8); ctx.closePath(); ctx.fill();
+    ctx.fillStyle='rgba(255,255,255,.75)'; ctx.fillRect(-L*.3,-1.6,L*1,1); ctx.fillStyle='#c9a24a'; ctx.fillRect(-L*.48,-6,4,12); ctx.fillStyle='#5a3a1e'; ctx.fillRect(-L*.78,-1.8,L*.3,3.6); }
+  else if(p.shape==='axe'){ ctx.restore(); ctx.strokeStyle='rgba(150,140,130,.75)'; ctx.lineWidth=2; ctx.setLineDash([5,4]); ctx.beginPath(); ctx.moveTo(P.x,P.y-8); ctx.lineTo(p.x,p.y); ctx.stroke(); ctx.setLineDash([]);   // the chain back to the hand
+    ctx.save(); ctx.translate(p.x,p.y); ctx.rotate(p.t*18); ctx.fillStyle='#5a3a1e'; ctx.fillRect(-r*1.3,-1.6,r*2.2,3.2);
+    ctx.fillStyle='#2a2622'; ctx.beginPath(); ctx.moveTo(r*.5,-1); ctx.quadraticCurveTo(r*1.6,-r*1.4,r*1.2,-r*.2); ctx.lineTo(r*1.2,r*.2); ctx.quadraticCurveTo(r*1.6,r*1.4,r*.5,1); ctx.closePath(); ctx.fill();
+    ctx.fillStyle=p.c; ctx.beginPath(); ctx.moveTo(r*.6,-1); ctx.quadraticCurveTo(r*1.45,-r*1.15,r*1.1,-r*.15); ctx.lineTo(r*1.1,r*.15); ctx.quadraticCurveTo(r*1.45,r*1.15,r*.6,1); ctx.closePath(); ctx.fill(); }
+  ctx.restore(); ctx.globalCompositeOperation='lighter';
+  glow(p.x,p.y,r*(p.shape==='gsword'?2.6:1.8),p.c,.35); return true; }
+// drawZones (22) → zones with x2
+function sk2DrawZone(z,fade){
+  if(z.kind==='palisade'){ const n=12, up=Math.min(1,z.t*6), R=z.r;          // a ring of spear tips pointing out, popping up at the start
+    ctx.strokeStyle=`rgba(232,217,168,${.35*fade})`; ctx.lineWidth=2; ctx.beginPath(); ctx.ellipse(z.x,z.y,R,R*.8,0,0,TAU); ctx.stroke();
+    for(let i=0;i<n;i++){ const a=i*TAU/n+z.seed, cx=z.x+Math.cos(a)*R, cy=z.y+Math.sin(a)*R*.8, h=(10+6*up)*fade;
+      ctx.save(); ctx.translate(cx,cy); ctx.rotate(a); ctx.globalAlpha=fade; ctx.fillStyle='#6b4a2a'; ctx.fillRect(-8,-1.6,10,3.2);
+      ctx.fillStyle='#e8e2d0'; ctx.beginPath(); ctx.moveTo(2,-4); ctx.lineTo(2+h,0); ctx.lineTo(2,4); ctx.closePath(); ctx.fill(); ctx.restore(); }
+    ctx.globalAlpha=1; } }
 /* ================= loop + input ================= */
 let last=performance.now();
 function frame(now){
@@ -2754,6 +2804,90 @@ MODES.survival.drawOver=function(L,T,R,B){
   if(near.length){ const a=ctx.globalAlpha; ctx.globalAlpha=.8; for(const [,e] of near) svLvDraw(e); ctx.globalAlpha=a; } };
 function svLvDraw(e){ const c=svLvTag(svLvOf(e),e.boss?'boss':e.elite?'elite':'normal'), k=e.boss?1.4:e.elite?1.15:1, w=c.__w*k, h=c.__h*k;
   ctx.drawImage(c,e.x-w/2,e.y-(e.r||12)*(e.boss?1.25:1.15)-h-8,w,h); }
+/* ================= 25a-skx-beh.js · lane B · behaviours of the 30 character-only skills (CLASSES skx · docs/PROPOSAL-skill-trees.md §3) ================= */
+// These skills sit only in CLASSES[].skx / adv.skx, which classic never reads → nothing here runs in classic (golden unchanged).
+// Every cast aims once at the target and goes straight (docs/PROPOSAL-mastery.md §2) · reach grows with DEX (P.rangeMul) like the old
+// skills. Hooks into the shared loops are one guarded line each: fireProj → pxFire · updateProjs → pxRet / pxEnd · projHit → pxHit ·
+// BEH.zone → zxCast · updateZones → zxTick / zxEnd (zones with x2).
+
+/* ---- new skill types ---- */
+// counter (ดาบสวนกลับ): HP + shield dropped since last frame = we were hit → a 360° slash round the hero (on its cooldown)
+BEH.counter=(s,dt)=>{ const st=s.st, cur=P.hp+P.shield; s.cdT-=dt;
+  const hit=st.last!=null&&cur<st.last-.01; st.last=cur;
+  if(!hit||s.cdT>0) return;
+  s.cdT=cdOf(s); const r=pv(s,'range')*P.area*(1+((P.rangeMul||1)-1)*.5);
+  aoe(P.x,P.y,r,pv(s,'dmg'),s,{knock:pv(s,'knock'),stun:pv(s,'stun')});
+  G.fx.push({k:'slash',a:P.aim,arc:TAU,r,t:0,dur:.28,c:s.def.c,flip:false,follow:true,x:P.x,y:P.y,dead:false});
+  G.fx.push({k:'ring',x:P.x,y:P.y,r0:r*.4,r1:r*1.05,t:0,dur:.25,c:'#ffffff',w:4,follow:true,dead:false});
+  burst(P.x,P.y-6,qLv()?10:4,s.def.c,r*2.2,.35,3,'shard'); P.atkT=.12; sfx('swing'); };
+// thrust (ทวนสามแทง): `count` straight thrusts along the aim, each hits everything on the line (width = size)
+BEH.thrust=(s,dt)=>{ s.cdT-=dt; if(s.cdT>0) return;
+  const range=pv(s,'range')*P.area*(1+((P.rangeMul||1)-1)*.5);
+  if(!G.near||G.nearD>range+G.near.r){ s.cdT=.1; return; }
+  s.cdT=cdOf(s); const a=Math.atan2(G.near.y-P.y,G.near.x-P.x), n=pv(s,'count')||1;
+  for(let i=0;i<n;i++){ const go=()=>thrustOnce(s,a,range,i); if(i===0) go(); else later(i*.12,go); } };
+function thrustOnce(s,a,range,i){ if(!P||G.over) return;
+  const w=(pv(s,'size')||14)*(1+(P.area-1)*.5), ca=Math.cos(a), sa=Math.sin(a), x0=P.x, y0=P.y-4, x1=x0+ca*range, y1=y0+sa*range, dmg=pv(s,'dmg'), kn=pv(s,'knock');
+  for(const e of query((x0+x1)/2,(y0+y1)/2,range/2+w+60)){ if(e.dead) continue; const rr=w+e.r; if(segD2(e.x,e.y,x0,y0,x1,y1)>rr*rr) continue;
+    damageEnemy(e,dmg,s,{knock:kn,nx:ca,ny:sa}); }
+  const o=(i%3-1)*.035; G.fx.push({k:'beamline',x:x0,y:y0,a:a+o,len:range,t:0,dur:.16,c:s.def.c,dead:false});
+  if(!G.auto) for(let k=0;k<(qLv()?4:2);k++) part({x:x1,y:y1,vx:ca*rand(60,160)+rand(-40,40),vy:sa*rand(60,160)+rand(-40,40),life:.25,s:2.4,c:'#ffffff',g:0,drag:4,k:'streak',add:true});
+  P.swing={t:0,dur:.12,a0:a-.15,a1:a+.15}; P.atkT=.12; sfx('swing'); }
+// rite (สังเวยโลหิต): pay `cost` of the current HP (never below 1), blast round the hero, heal `drain` of the damage it just did
+BEH.rite=(s,dt)=>{ s.cdT-=dt; if(s.cdT>0) return; const r=pv(s,'r')*P.area;
+  if(!G.near||G.nearD>r*1.1){ s.cdT=.15; return; }
+  s.cdT=cdOf(s); const pay=Math.min(Math.max(0,P.hp-1),P.hp*(pv(s,'cost')||0)); if(pay>0){ P.hp-=pay; if(pay>=2) addNum(P.x+rand(-6,6),P.y-30,Math.round(pay),'h'); }
+  const d0=s.dealt; aoe(P.x,P.y,r,pv(s,'dmg'),s,{knock:pv(s,'knock')});
+  const got=(s.dealt-d0)*(pv(s,'drain')||0); if(got>0) healP(got);
+  G.fx.push({k:'ring',x:P.x,y:P.y,r0:14,r1:r,t:0,dur:.42,c:s.def.c,w:14,follow:true,dead:false}); G.fx.push({k:'boom',x:P.x,y:P.y,r:r*.7,t:0,dur:.35,c:'#ff2a2a',dead:false});
+  burst(P.x,P.y-4,qLv()?16:6,'#c41a1a',r*2.4,.5,3.5); if(!G.auto&&qLv()>=1) addDecal(splatTex('#6a0d0d',1),P.x,P.y+6,r*.55,4,.5);
+  G.shake=Math.max(G.shake,5); P.atkT=.12; sfx('boom'); };
+
+/* ---- projectiles (fireProj → pxFire when SK[id].px) ---- */
+// ret: boomerang (out to its range, then back to the hand, hitting everything again) · hook: knock < 0 = pulled to the hero
+function pxFire(s,p){ const v=k=>pv(s,k);
+  if(v('ret')) p.ret=1;
+  const hk=v('hook'); if(hk) p.knock=-hk; }
+// boomerang flight: when the outward life runs out it turns, hits can repeat, and it homes on the hero until caught (true = gone)
+function pxRet(p,dt){
+  if(!p.back){ if(p.life>0) return false; p.back=true; p.hit=null; p.life=p.max=2; }
+  const dx=P.x-p.x, dy=(P.y-6)-p.y, d=Math.hypot(dx,dy)||1, sp=Math.hypot(p.vx,p.vy)||400;
+  if(d<P.r+14){ p.dead=true; return true; }
+  const k=Math.min(1,dt*7); p.vx+=(dx/d*sp-p.vx)*k; p.vy+=(dy/d*sp-p.vy)*k; return false; }
+
+/* ---- zones (BEH.zone → zxCast when SK[id].zx · updateZones → zxTick every frame, zxEnd when the time is up) ---- */
+// place: 'self' = on the hero (follow: stays on the hero) · more places come with the skills that need them
+function zxCast(s){
+  const v=k=>pv(s,k), pl=s.def.place, wake=(s.def.wake||300)*(P.rangeMul||1);
+  if(!G.near||G.nearD>wake){ s.cdT=.2; return; }
+  s.cdT=cdOf(s); const n=countOf(s), r=v('r')*P.area;
+  for(let i=0;i<n;i++){ let x=P.x, y=P.y; const o={};
+    if(pl==='self'){ if(i){ const a=i*TAU/n; x+=Math.cos(a)*r*.6; y+=Math.sin(a)*r*.45; } if(s.def.follow||v('follow')) o.follow=1; }
+    addZone(Object.assign({x,y,r,dur:(v('dur')||4)*P.durMul,tick:v('tick')||.4,dmg:v('dmg')||0,slow:v('slow')||0,kind:s.def.fx,src:s,x2:1,
+      rep:v('rep')||0,stun:v('stun')||0},o)); }
+  if(s.def.fx==='palisade'){ G.fx.push({k:'ring',x:P.x,y:P.y,r0:r*.3,r1:r,t:0,dur:.3,c:s.def.c,w:6,follow:true,dead:false}); sfx('shield'); } }
+// one frame of an x2 zone: movement, push / pull, its own ticks → always true (the classic zone code never sees it)
+function zxTick(z,dt){
+  if(z.follow){ z.x=P.x; z.y=P.y; }
+  if(z.rep){ const R=z.r; for(const e of query(z.x,z.y,R+60)){ if(e.dead||e.boss) continue; const dx=e.x-z.x, dy=e.y-z.y, d=Math.hypot(dx,dy)||1, rr=R+e.r*.3;
+      if(d<rr){ const f=Math.min(rr-d,z.rep*dt/Math.max(.6,e.mass)); e.x+=dx/d*f; e.y+=dy/d*f; } } }
+  z.tt-=dt; if(z.tt<=0){ z.tt=z.tick;
+    if(z.dmg) for(const e of query(z.x,z.y,z.r+60)){ if(e.dead) continue; const rr=z.r+e.r*.5; if((e.x-z.x)**2+(e.y-z.y)**2>rr*rr) continue;
+      damageEnemy(e,z.dmg,z.src,{slow:z.slow,slowDur:.5,stun:z.stun,quiet:true,fxd:z.fxd}); } }
+  return true; }
+function zxEnd(z){}
+
+/* ---- dev (#dev only, through RG.skx) · balance runs: skills at ★lv, mastery L on each one's main stat, a 10M-HP hero (being hit
+   still counts, nothing dies), no level-up cards, from wave `wave` · solo = one skill for `sec` s → the damage it did ---- */
+DEV.skx={
+  setup(ids,o){ o=Object.assign({lv:5, L:0, wave:6, seed:42, tier:0},o); const ch=typeof curChar==='function'?curChar():null; if(!ch) return 'no char';
+    if(typeof RG!=='undefined'&&RG.seed) RG.seed(o.seed); startRun(ch.cls,'survival',{char:ch, tier:o.tier});
+    P.skills=ids.filter(id=>SK[id]).map(id=>{ const s=makeSkill(id); s.lv=o.lv; return s; }); for(const k of STAT_ORDER) P.stats[k]=0;
+    for(const s of P.skills){ const m=SX.main[s.id]; if(m) P.stats[m]=o.L; } if(o.st) Object.assign(P.stats,o.st);
+    P.need=1e12; recalc(P); P.hp=P.maxHp=1e7; G.god=false; G.wave=o.wave-1; G.waveT=.01; refreshSkillBar(); return P.skills.map(s=>s.id).join(); },
+  solo(id,o){ o=Object.assign({sec:60},o); if(!SK[id]) return 'no skill'; const w=this.setup([id],o); if(w==='no char') return w; const s=P.skills[0]; G.auto=true;
+    const steps=Math.round(o.sec*60); for(let i=0;i<steps&&!G.over;i++){ update(1/60); autoUI(); } G.auto=false;
+    const r={id, L:o.L|0, lv:s.lv, dmg:Math.round(s.dealt), dps:Math.round(s.dealt/o.sec), kills:G.kills, hp:Math.round(P.hp), wave:G.wave}; G.ui='pause'; return r; } };
 /* ================= 26-stat-scaling.js · lane B · in-run stat cards without a cap (character modes only) ================= */
 // docs/PROPOSAL-stat-scaling.md. Classic never sets P.sx, so nothing here runs there (golden unchanged).
 // - Cards 1–5 of a stat keep the old numbers; card 6+ gives SX.over (half) of them, with caps (SX.cap).
@@ -2773,7 +2907,9 @@ const SX={ base:.005, over:.5, cap:{speed:.6, area:2, dur:2, crit:.75, cdMin:.45
     mbolt:'INT', flame:'INT', frost:'INT', thunder:'INT', meteor:'INT', blizzard:'INT', vortex:'INT', spikes:'INT',
     arrow:'DEX', spread:'AGI', rain:'LUK', trap:'INT', hawk:'AGI', arrownova:'DEX', deadeye:'LUK', blast:'DEX',
     holy:'INT', heal:'VIT', sacred:'VIT', cross:'DEX', judgment:'INT', aegis:'VIT', fists:'STR', spheres:'INT',
-    dagger:'LUK', fan:'AGI', venom:'INT', shadow:'AGI', phantom:'LUK', whirl:'AGI', clones:'DEX', smoke:'AGI' },
+    dagger:'LUK', fan:'AGI', venom:'INT', shadow:'AGI', phantom:'LUK', whirl:'AGI', clones:'DEX', smoke:'AGI',
+    // the 30 character-only skills (CLASSES skx)
+    flyblade:'STR', riposte:'VIT', palisade:'VIT', thrust:'STR', bloodrite:'STR', chainaxe:'STR' },
   // milestones: [stat, param, op ('+' add per step · '*' multiply per step · '=' set once reached), value, Thai text, every]
   ms:{
     slash:[['STR','arc','+',.26,'มุมฟันกว้าง +15°'], ['AGI','count','+',1,'ฟันเพิ่ม 1 ครั้ง',10]],
@@ -3211,6 +3347,56 @@ smoke:[
   [25,'ระเบิดควันซ้ำทุก 2 ครั้ง',{fx:{echo:{every:2}}}],
   [30,'เป้าที่มึนโดนแรง ×1.4',{fx:{vsStun:{m:1.4}}}],
   [35,'ร่างสุดท้าย ม่านควันมรณะ · วง ×1.4',{mul:{r:1.4, dmg:1.3}}]]});
+// ---- the 30 character-only skills (CLASSES skx · docs/PROPOSAL-skill-trees.md §3): same 7 tiers, same rules ----
+Object.assign(MX_T,{
+flyblade:[
+  [6,'ดาบใหญ่ขึ้น 15%',{mul:{size:1.15}}],
+  [10,'บินไกลขึ้น 15%',{mul:{life:1.15}}],
+  [15,'ดาบบินแรง +20%',{mul:{dmg:1.2}}],
+  [20,'+1 เล่ม',{add:{count:1}}],
+  [25,'คมดาบเฉือนเลือดไหล',{fx:{ignite:{ch:.3, pct:.2, t:3}}}],
+  [30,'คูลดาวน์ -15%',{mul:{cd:.85}}],
+  [35,'ร่างสุดท้าย ดาบพายุคืนรัง · ฆ่าแล้วแตกคลื่นดาบ',{mul:{dmg:1.15}, fx:{shards:{on:'kill', ch:1, n:3, pct:.35}}}]],
+riposte:[
+  [6,'วงสวนกว้าง +10%',{mul:{range:1.1}}],
+  [10,'มึนนาน +0.15 วิ',{add:{stun:.15}}],
+  [15,'คูลดาวน์ -15%',{mul:{cd:.85}}],
+  [20,'สวนแล้วดูดเลือด 3%',{fx:{leech:{pct:.03}}}],
+  [25,'แรงกระแทก +30%',{mul:{knock:1.3}}],
+  [30,'เป้าที่มึนโดนแรง ×1.5',{fx:{vsStun:{m:1.5}}}],
+  [35,'ร่างสุดท้าย สวนพันคม · คลื่นดาบรอบทิศทุกครั้งที่สวน',{fx:{radial:{every:1, n:8, pct:.5}}}]],
+palisade:[
+  [6,'วงหอกกว้าง +10%',{mul:{r:1.1}}],
+  [10,'แทงถี่ขึ้น 15%',{mul:{tick:.87}}],
+  [15,'ตั้งได้นานขึ้น 20%',{mul:{dur:1.2}}],
+  [20,'แรงผลัก +40%',{mul:{rep:1.4}}],
+  [25,'ปลายหอกมึนบางครั้ง',{fx:{shock:{ch:.15, t:.3}}}],
+  [30,'แทงแรง +30%',{mul:{dmg:1.3}}],
+  [35,'ร่างสุดท้าย ป้อมหอกเทวา · ศัตรูที่ตายระเบิด',{mul:{r:1.15}, fx:{burst:{r:55, pct:.5}}}]],
+thrust:[
+  [6,'แทงไกล +10%',{mul:{range:1.1}}],
+  [10,'ปลายทวนกว้าง +20%',{mul:{size:1.2}}],
+  [15,'แทงทะลวงเกราะ แรง +20%',{mul:{dmg:1.2}}],
+  [20,'+1 จังหวะ',{add:{count:1}}],
+  [25,'มึนบางครั้ง',{fx:{shock:{ch:.2, t:.3}}}],
+  [30,'เป้าเลือดต่ำกว่า 30% แรง ×1.5',{fx:{execute:{hp:.3, m:1.5}}}],
+  [35,'ร่างสุดท้าย ทวนสวรรค์ · แทงซ้ำทุก 2 ครั้ง',{fx:{echo:{every:2}}}]],
+bloodrite:[
+  [6,'วงเลือดกว้าง +10%',{mul:{r:1.1}}],
+  [10,'ดูดเลือดกลับ +20%',{mul:{drain:1.2}}],
+  [15,'แรง +20%',{mul:{dmg:1.2}}],
+  [20,'ศัตรูที่ตายระเบิดเลือด',{fx:{burst:{r:55, pct:.4}}}],
+  [25,'สละ HP น้อยลง 25%',{mul:{cost:.75}}],
+  [30,'เลือดเดือดติดเป้า (เลือดไหล)',{fx:{ignite:{ch:.3, pct:.25, t:3}}}],
+  [35,'ร่างสุดท้าย พิธีโลหิต · ร่ายซ้ำทุก 2 ครั้ง',{fx:{echo:{every:2}}}]],
+chainaxe:[
+  [6,'โซ่ยาวขึ้น 15%',{mul:{life:1.15}}],
+  [10,'กระชากแรง +25%',{mul:{hook:1.25}}],
+  [15,'ทะลุ +1',{add:{pierce:1}}],
+  [20,'ขวานคมเลือดไหล',{fx:{ignite:{ch:.3, pct:.2, t:3}}}],
+  [25,'+1 ขวาน',{add:{count:1}}],
+  [30,'กระชากจนมึน',{fx:{shock:{ch:.2, t:.4}}}],
+  [35,'ร่างสุดท้าย โซ่นรก · แรง ×1.3 ขว้างซ้ำทุก 2 ครั้ง',{mul:{dmg:1.3}, fx:{echo:{every:2}}}]]});
 // called from sxMods after the tree (27) → power + growth + the tiers reached
 function mxApply(p,s,add,mul){
   const L=mxLv(p,s); delete s.mxLook; if(!L){ delete s.mxL; return; } s.mxL=L;
@@ -3301,7 +3487,7 @@ function mxDrawProj(p,sp,a){ const m=p.mx; if(!m||!m.look) return false; const k
 
 /* ---- ★ caps and tier 2 ---- */
 const TF_GROW={dmg:.12, heal:.12, absorb:.12, nova:.12, trap:.12, r:.03, range:.03, explode:.04};
-function tfRankCap(cls,job,id){ const c=CLS[cls]; return job&&c&&c.skills.indexOf(id)>=0?8:BAL.CAP.rank; }
+function tfRankCap(cls,job,id){ const c=CLS[cls]; return job&&c&&clsSkills(c).indexOf(id)>=0?8:BAL.CAP.rank; }   // every first-job skill (+ skx)
 function rankCap(ch,id){ return ch?tfRankCap(ch.cls,ch.job,id):BAL.CAP.rank; }
 // Lv 6–8 value from the Lv 5 value v (g = lv − 5) · p2 = explicit steps (never over an evolution's own number)
 function tfTierUp(k,v,g,s){
@@ -3318,8 +3504,13 @@ Object.assign(SK.slash,{p2:{count:[2,3,3]}});
 const TF_KN={dmg:'ดาเมจ', cd:'คูลดาวน์', count:'จำนวน', pierce:'ทะลุ', speed:'ความเร็วกระสุน', size:'ขนาด', explode:'วงระเบิด', homing:'การเลี้ยวตามเป้า',
   crit:'คริติคอล', knock:'แรงกระแทก', range:'ระยะฟัน', r:'รัศมี', stun:'สตัน', slow:'ชะลอ', freeze:'แช่แข็ง', spin:'ความเร็วหมุน', absorb:'โล่ดูดซับ',
   nova:'ดาเมจระเบิด', tick:'ช่วงห่างแต่ละครั้ง', bounces:'ชิ่ง', jump:'ระยะกระโดด', hits:'จำนวนครั้งที่โดน', dur:'ระยะเวลา', pull:'แรงดูด', trap:'ระเบิดกับดัก',
-  heal:'ฟื้น HP', healPct:'ฟื้น HP ตาม % HP สูงสุด', targets:'เป้าต่อครั้ง', rage:'โทสะ', steal:'ฟื้นต่อการสังหาร', dodge:'หลบหลีก'};
-const TF_PCTK={slow:1, dodge:1, crit:1, healPct:1}, TF_SECK={stun:1, freeze:1}, TF_REL={rage:1, steal:1};
+  heal:'ฟื้น HP', healPct:'ฟื้น HP ตาม % HP สูงสุด', targets:'เป้าต่อครั้ง', rage:'โทสะ', steal:'ฟื้นต่อการสังหาร', dodge:'หลบหลีก',
+  // keys of the character-only skills (25a)
+  life:'ระยะพุ่ง', hook:'แรงกระชาก', rep:'แรงผลัก', cost:'สละ HP', drain:'ดูดเลือดกลับ'};
+// the same keys on the level-up cards / skills page (core 21 PL · PCT · SEC: only new keys are added, classic labels stay)
+if(typeof PL!=='undefined') Object.assign(PL,{life:'ระยะพุ่ง', hook:'แรงกระชาก', rep:'แรงผลัก', cost:'สละ HP', drain:'ดูดเลือดกลับ', size:'ขนาด'});
+if(typeof PCT!=='undefined') Object.assign(PCT,{cost:1, drain:1});
+const TF_PCTK={slow:1, dodge:1, crit:1, healPct:1, cost:1, drain:1}, TF_SECK={stun:1, freeze:1}, TF_REL={rage:1, steal:1};
 const tfPc=v=>(Math.round(v*1000)/10)+'%', tfM=r=>(Math.round(r)/10)+' ม.', tfN=v=>String(+(+v).toFixed(2));
 const TF_ZK={fire:'เปลวไฟ', ice:'น้ำแข็ง', poison:'พิษ', wind:'ลมคม'};
 // special effects: n = node name when used as a proc node · d(p) = text · glob = also allowed on passive skills (hit by any skill)
@@ -3513,6 +3704,32 @@ smoke:[['ควันพิษ','💨',['dmg','*',.08,3],['stun','+',.1,2],{fx:'
   ['ควันกว้าง','⭕',['r','*',.06,3],['slow','+',.04,2],{fx:'echo',nm:'ควันระลอกสอง',i:'🔁',every:2}],
   ['ควันไว','⏱️',['cd','c',.05,3],['@ignite',.15,2],{fx:'chill',nm:'ควันเยือกแข็ง',i:'❄️',ch:.3,t:.8}],
   {fx:'trail',nm:'ทุ่งควันพิษ',i:'👑',kind:'poison',r:70,pct:.2,dur:4}]};
+// ---- the 30 character-only skills (CLASSES skx · docs/PROPOSAL-skill-trees.md §3): same shape, same rules ----
+Object.assign(TFD,{
+flyblade:[['คมดาบบิน','🗡️',['dmg','*',.08,3],['size','*',.1,2],{fx:'shards',nm:'ดาบแตกคลื่น',i:'🌙',on:'kill',n:3,pct:.35}],
+  ['วงโคจรดาบ','↩️',['life','*',.08,3],['knock','*',.15,2],{fx:'pull',nm:'ดาบดูดฝูง',i:'🧲',r:90}],
+  ['ขว้างไว','⏱️',['cd','c',.05,3],['count','+',1,1],{fx:'execute',nm:'ปลิดคมดาบ',i:'💀',hp:.3,m:1.6}],
+  {fx:'echo',nm:'ดาบคู่ขว้างซ้ำ',i:'👑',every:3}],
+riposte:[['สวนแรง','🤺',['dmg','*',.08,3],['stun','+',.1,2],{fx:'vsStun',nm:'สวนซ้ำแผล',i:'💢',m:1.5}],
+  ['วงสวน','⭕',['range','*',.06,3],['knock','*',.15,2],{fx:'burst',nm:'สวนจนแตก',i:'💥',r:55,pct:.45}],
+  ['ตั้งรับไว','⏱️',['cd','c',.06,3],['@leech',.01,2],{fx:'mend',nm:'สวนแล้วฟื้นกาย',i:'💚',pct:.03}],
+  {fx:'radial',nm:'พายุคมสวน',i:'👑',every:1,n:8,pct:.45}],
+palisade:[['ปลายหอกคม','🔱',['dmg','*',.1,3],['tick','*',-.08,2],{fx:'ignite',nm:'หอกเลือดไหล',i:'🩸',ch:.25,pct:.3,t:3}],
+  ['วงปราการ','⭕',['r','*',.06,3],['rep','*',.15,2],{fx:'shock',nm:'หอกสะท้าน',i:'⚡',ch:.15,t:.4}],
+  ['ตั้งค่ายไว','⏱️',['cd','c',.05,3],['dur','*',.1,2],{fx:'burst',nm:'ศพเสียบหอกระเบิด',i:'💥',r:50,pct:.5}],
+  {fx:'vsStun',nm:'ป้อมพิฆาต',i:'👑',m:1.5}],
+thrust:[['ปลายทวน','🔱',['dmg','*',.08,3],['knock','*',.15,2],{fx:'execute',nm:'แทงทะลุหัวใจ',i:'💀',hp:.3,m:1.6}],
+  ['ทวนยาว','📏',['range','*',.06,3],['size','*',.12,2],{fx:'shards',nm:'ทวนแตกประกาย',i:'✨',on:'hit',ch:.15,n:2,pct:.4}],
+  ['จังหวะแทง','⏱️',['cd','c',.05,3],['count','+',1,1],{fx:'echo',nm:'สามแทงซ้ำ',i:'🔁',every:4}],
+  {fx:'shock',nm:'ทวนตรึงฟ้า',i:'👑',ch:.25,t:.5}],
+bloodrite:[['โลหิตเดือด','🩸',['dmg','*',.08,3],['r','*',.06,2],{fx:'burst',nm:'ศพระเบิดเลือด',i:'💥',r:55,pct:.45}],
+  ['ดื่มเลือด','🍷',['drain','*',.12,3],['knock','*',.15,2],{fx:'feast',nm:'งานเลี้ยงโลหิต',i:'🍖',amt:2}],
+  ['พิธีไว','⏱️',['cd','c',.05,3],['cost','*',-.12,2],{fx:'ignite',nm:'เลือดติดไฟ',i:'🔥',ch:.3,pct:.3,t:3}],
+  {fx:'execute',nm:'สังเวยผู้อ่อนแอ',i:'👑',hp:.3,m:1.7}],
+chainaxe:[['ขวานหนัก','🪓',['dmg','*',.08,3],['pierce','+',1,2],{fx:'execute',nm:'ลากมาประหาร',i:'💀',hp:.3,m:1.6}],
+  ['โซ่ยาว','⛓️',['life','*',.08,3],['hook','*',.15,2],{fx:'pull',nm:'กระชากทั้งฝูง',i:'🧲',r:90}],
+  ['ขว้างไว','⏱️',['cd','c',.05,3],['@shock',.08,2],{fx:'vsStun',nm:'ทุบตัวที่มึน',i:'💢',m:1.4}],
+  {fx:'shards',nm:'ขวานแตกสะเก็ด',i:'👑',on:'kill',ch:1,n:3,pct:.4}]});
 const TF_COST=[0,1,2,4], TF_CROWN=6;
 
 /* ---- node list of a tree (cached) ---- */
@@ -3663,7 +3880,7 @@ function tfCast(s){ const F=s.fx; if(!F) return; s.tfC=(s.tfC|0)+1;
     G.fx.push({k:'ring',x:P.x,y:P.y,r0:10,r1:70,t:0,dur:.25,c:s.def.c,w:5,follow:true,dead:false}); }
   if(F.echo&&s.tfC%F.echo.every===0&&TF_ECHO[s.def.type]) later(.3,()=>{ if(!P||!G||G.over||P.skills.indexOf(s)<0) return;
     const c=s.cdT; s.cdT=0; try{ BEH[s.def.type](s,0); } finally{ s.cdT=c; } }); }
-const TF_ECHO={proj:1, swing:1, nova:1, strike:1, zone:1, chain:1, heal:1, multi:1, spikes:1};
+const TF_ECHO={proj:1, swing:1, nova:1, strike:1, zone:1, chain:1, heal:1, multi:1, spikes:1, thrust:1, rite:1};   // + skx types (25a)
 // the skill loop of world update when the run has tree effects: casts are seen as a cooldown restart · burns tick here
 function tfRun(dt){
   G.tfN=0;
@@ -3743,7 +3960,8 @@ const SK_EL={flame:'fire', meteor:'fire', trap:'fire', blast:'fire', spheres:'fi
   thunder:'wind', vortex:'wind', cyclone:'wind', spread:'wind', hawk:'wind',
   slam:'earth', spikes:'earth', bulwark:'earth',
   holy:'light', sacred:'light', cross:'light', judgment:'light', fists:'light', blades:'light',
-  venom:'dark', shadow:'dark', phantom:'dark', clones:'dark', deadeye:'dark'};
+  venom:'dark', shadow:'dark', phantom:'dark', clones:'dark', deadeye:'dark',
+  bloodrite:'dark'};   // + character-only skills (07 skx) that carry an element
 const SK_EVO_EL={mbolt:'light'};                                         // ศรดวงดาว: the evolution turns light (§1.3)
 for(const id in SK_EL) if(SK[id]) SK[id].el=SK_EL[id];
 function skEl(s){ if(!s||!s.def) return null; if(s.evolved&&SK_EVO_EL[s.id]) return SK_EVO_EL[s.id]; return s.def.el||null; }
@@ -3946,7 +4164,7 @@ const BAL={ CAP:{base:60, job1:20, job2:25, stat:50, chars:3, bag:120, stash:120
   statSpent(x){ let n=0; for(let i=0;i<x;i++) n+=BAL.statCost(i); return n; },             // points to raise one stat 0 → x
   // §3.5 skill ranks (index r = cost of ★(r−1) → ★r) · passives cost 1 per ★ · loadout slots per job tier
   RANK_COST:[0,1,1,1,2,2,2,2,3],   // ★6–8 = tier 2 of a first-job skill after the advance (27 rankCap)
-  PAS_COST:1, ADV:{base:20, job:20, fee:500}, LOADOUT:{1:4, 2:5},
+  PAS_COST:1, ADV:{base:20, job:20, fee:500}, LOADOUT:{1:5, 2:6},
   rankSpent(r){ let n=0; for(let i=1;i<=r;i++) n+=BAL.RANK_COST[i]; return n; },            // skill points for ★0 → ★r
   // START_SP: a new character (Job Lv1) starts with 6 skill points = exactly the first skill's free ★1 → ★5 (1+1+2+2).
   // Why (M2 gate §9.4, measured with RG.sim): in-run cards stop at the trained ★ and a skill only evolves at Lv5, so a character
@@ -4040,8 +4258,12 @@ const PASSIVES={
   p_shadowstep:{own:'nightblade', n:'ย่างก้าวเงา', i:'👣', per:{dodge:.012}},
 };
 for(const k in PASSIVES) PASSIVES[k].id=k;
-// SKILL_REQ[skill] = {need, r}: learning `skill` needs `need` at ★r (adv skill 1 ← base skill ★3 · adv skill 2 ← adv skill 1 ★2)
+// SKILL_REQ[skill] = {need, r, lv, jlv}: learning `skill` needs `need` at ★r (adv skill 1 ← base skill ★3 · adv skill 2 ← adv skill 1 ★2)
+// · lv = Base Lv · jlv = Job Lv of the current job. Character-only skills (CLASSES skx): first job 5th ← Base 8 · 6th ← Base 15 ·
+// advanced 3rd ← adv skill 1 ★3 + Job 5 · 4th ← adv skill 2 ★3 + Job 10 (an old character unlocks them by playing on)
 const SKILL_REQ={
+  flyblade:{lv:8}, riposte:{lv:15}, palisade:{need:'lance', r:3, jlv:5}, thrust:{need:'valor', r:3, jlv:10},
+  bloodrite:{need:'cyclone', r:3, jlv:5}, chainaxe:{need:'frenzy', r:3, jlv:10},
   lance:{need:'slash', r:3}, valor:{need:'lance', r:2},
   cyclone:{need:'blades', r:3}, frenzy:{need:'cyclone', r:2},
   meteor:{need:'flame', r:3}, blizzard:{need:'meteor', r:2},
@@ -4751,7 +4973,7 @@ DEV.loot={
 // Forward compatibility inside v1: an item / rune id this app does not know survives validation (item → unk:1, rune id kept in
 // its socket), so a newer client's loot is never destroyed. A new class, job, skill or passive does NOT survive (they are matched
 // against CLS / SK / PASSIVES): adding one needs a SCHEMA_V bump, so older apps open such a save read-only instead.
-const SCHEMA_V=6;                                    // 2: acct.up (gold upgrades) · 3: up.stat · 4: ch.tr (skill trees) + ★6–8 + resets.trFree · 5: ch.rb / ch.sl / acct.ru (bought runes, starting Lv) · 6: acct.daily.dg (daily dungeons used today) · an older app opens a newer save read-only, so it never drops what was paid for
+const SCHEMA_V=7;                                    // 2: acct.up (gold upgrades) · 3: up.stat · 4: ch.tr (skill trees) + ★6–8 + resets.trFree · 5: ch.rb / ch.sl / acct.ru (bought runes, starting Lv) · 6: acct.daily.dg (daily dungeons used today) · 7: the 30 character-only skills (CLASSES skx) in ch.sk / ch.tr / ch.sl / ch.load · an older app opens a newer save read-only, so it never drops what was paid for
 const SV_APP='2.5.0';                                 // app version stamped into every local write (saveSummary.appVer)
 const SV_NAME_RE=/^[\p{L}\p{M}\p{N} ]{2,16}$/u;
 const SV_SLOTS=['weapon','off','head','face','body','cloak','hands','feet','neck','ring'];
@@ -4843,7 +5065,8 @@ function svMig2(o){ const s=Object.assign({},o); s.v=3; return s; }   // v2 → 
 function svMig3(o){ const s=Object.assign({},o); s.v=4; return s; }   // v3 → v4: only adds ch.tr / ★6–8 / resets.trFree
 function svMig4(o){ const s=Object.assign({},o); s.v=5; return s; }   // v4 → v5: only adds ch.rb / ch.sl / acct.ru
 function svMig5(o){ const s=Object.assign({},o); s.v=6; return s; }   // v5 → v6: only adds acct.daily.dg
-const SV_MIG={0:svMig0, 1:svMig1, 2:svMig2, 3:svMig3, 4:svMig4, 5:svMig5};      // SV_MIG[v](o) → save of version v+1
+function svMig6(o){ const s=Object.assign({},o); s.v=7; return s; }   // v6 → v7: only adds skill ids (CLASSES skx)
+const SV_MIG={0:svMig0, 1:svMig1, 2:svMig2, 3:svMig3, 4:svMig4, 5:svMig5, 6:svMig6};      // SV_MIG[v](o) → save of version v+1
 function migrateSave(o,legacyBest){
   if(!svObj(o)) o=null;
   const v=o?o.v:undefined;
@@ -4934,13 +5157,14 @@ function svChar(c,seen){
   o.pts=svInt(c.pts,0,Math.max(0,BAL.ptsAt(o.lv)-spentSt),0);
   const tier=adv?2:1, jcap=adv?cap.job2:cap.job1;
   o.jlv=svInt(c.jlv,1,jcap,1); o.jxp=o.jlv>=jcap?0:svInt(c.jxp,0,BAL.jxpNeed(o.jlv,tier)-1,0);
-  const sk=svObj(c.sk)?c.sk:{}; o.sk={};
-  for(const id of cls.skills.concat(adv?adv.skills:[])){ const r=svInt(sk[id],0,tfRankCap(cls.id,o.job,id),0); if(r) o.sk[id]=r; }
+  const sk=svObj(c.sk)?c.sk:{}, pool=clsSkills(cls).concat(advSkills(adv)); o.sk={};   // pool: + the character-only skills (07 skx)
+  for(const id of pool){ const r=svInt(sk[id],0,tfRankCap(cls.id,o.job,id),0); if(r) o.sk[id]=r; }
+  for(const id of pool){ const q=SKILL_REQ[id]; if(q&&(q.lv||q.jlv)&&o.sk[id]&&typeof pgReqWhy==='function'&&pgReqWhy(o,id)) delete o.sk[id]; }   // a Base / Job Lv gate not met = not learned
   const tr=svObj(c.tr)?c.tr:{}; o.tr={};                                // skill trees (27): known nodes only, each 0…max
-  for(const id of cls.skills.concat(adv?adv.skills:[])){ const t=svObj(tr[id])?tr[id]:null; if(!t) continue; const q={};
+  for(const id of pool){ const t=svObj(tr[id])?tr[id]:null; if(!t) continue; const q={};
     for(const nd of tfNodes(id)){ const l=svInt(t[nd.id],0,nd.max,0); if(l) q[nd.id]=l; } if(Object.keys(q).length) o.tr[id]=q; }
   o.rb=svInt(c.rb,0,1e9,0);                                              // bought runes moved onto this character (28)
-  const sl=svObj(c.sl)?c.sl:{}; o.sl={}; for(const id of cls.skills.concat(adv?adv.skills:[])){ const v=svInt(sl[id],0,8,0); if(v>=2) o.sl[id]=v; }
+  const sl=svObj(c.sl)?c.sl:{}; o.sl={}; for(const id of pool){ const v=svInt(sl[id],0,8,0); if(v>=2) o.sl[id]=v; }
   tfSanitize(o);                                                         // requirements + rune points (lv) hold, like sp / pts
   if(!o.sk[first]) o.sk[first]=1;                                   // the free ★1 of the first skill never goes away
   const pas=svObj(c.pas)?c.pas:{}; o.pas={};
@@ -5322,7 +5546,13 @@ function pgCls(ch){ return ch&&typeof CLS!=='undefined'&&svHas(CLS,ch.cls)?CLS[c
 function pgAdvOf(ch){ const c=pgCls(ch); return c&&ch.job&&c.adv.find(a=>a.id===ch.job)||null; }
 function pgTier(ch){ return pgAdvOf(ch)?2:1; }
 function pgJobCap(ch){ return pgAdvOf(ch)?BAL.CAP.job2:BAL.CAP.job1; }
-function pgSkillPool(ch){ const c=pgCls(ch), a=pgAdvOf(ch); return c?c.skills.concat(a?a.skills:[]):[]; }   // skills ch may train now
+function pgSkillPool(ch){ const c=pgCls(ch), a=pgAdvOf(ch); return c?clsSkills(c).concat(advSkills(a)):[]; }   // skills ch may train now (+ character-only skx)
+// SKILL_REQ of skill id still missing for ch → its reason ('' = met · no entry = met)
+function pgReqWhy(ch,id){ const q=svHas(SKILL_REQ,id)?SKILL_REQ[id]:null; if(!q||!ch) return '';
+  if(q.lv&&(ch.lv|0)<q.lv) return 'ต้องมีเลเวลตัวละคร '+q.lv+' ก่อน (ตอนนี้ '+(ch.lv|0)+')';
+  if(q.need&&((ch.sk||{})[q.need]|0)<q.r) return 'ต้องฝึก '+SK[q.need].n+' ถึง ★'+q.r+' ก่อน';
+  if(q.jlv&&(ch.jlv|0)<q.jlv) return 'ต้องมีเลเวลอาชีพ '+q.jlv+' ก่อน (ตอนนี้ '+(ch.jlv|0)+')';
+  return ''; }
 function pgPasPool(ch){ const out=[]; if(!ch) return out; for(const id in PASSIVES){ const w=PASSIVES[id].own; if(w===ch.cls||(ch.job&&w===ch.job)) out.push(id); } return out; }
 function pgRO(){ return typeof saveReadOnly==='function'&&saveReadOnly(); }
 function pgSave(ch,reason,now){ if(!SAVE||!Array.isArray(SAVE.chars)) return;
@@ -5461,9 +5691,9 @@ function canLearn(ch,id){
     if(ch.sp<BAL.PAS_COST) return 'แต้มสกิลไม่พอ (ต้องใช้ '+BAL.PAS_COST+')';
     return ''; }
   if(!svHas(SK,id)) return 'ไม่พบสกิลนี้';
-  if(pgSkillPool(ch).indexOf(id)<0){ const a=c.adv.find(x=>x.skills.indexOf(id)>=0); return a&&!ch.job?'ต้องเลื่อนเป็น'+a.n+'ก่อน':'สกิลนี้ไม่ใช่ของอาชีพนี้'; }
-  const r=(ch.sk||{})[id]|0, rc=rankCap(ch,id); if(r>=rc) return rc<8&&c.skills.indexOf(id)>=0?'ฝึกถึง ★'+rc+' แล้ว · เลื่อนอาชีพเพื่อเปิด ★6–8':'ฝึกถึง ★'+rc+' แล้ว';
-  const q=SKILL_REQ[id]; if(q&&((ch.sk||{})[q.need]|0)<q.r) return 'ต้องฝึก '+SK[q.need].n+' ถึง ★'+q.r+' ก่อน';
+  if(pgSkillPool(ch).indexOf(id)<0){ const a=c.adv.find(x=>advSkills(x).indexOf(id)>=0); return a&&!ch.job?'ต้องเลื่อนเป็น'+a.n+'ก่อน':'สกิลนี้ไม่ใช่ของอาชีพนี้'; }
+  const r=(ch.sk||{})[id]|0, rc=rankCap(ch,id); if(r>=rc) return rc<8&&clsSkills(c).indexOf(id)>=0?'ฝึกถึง ★'+rc+' แล้ว · เลื่อนอาชีพเพื่อเปิด ★6–8':'ฝึกถึง ★'+rc+' แล้ว';
+  const why=pgReqWhy(ch,id); if(why) return why;
   const cost=BAL.RANK_COST[r+1]; if(ch.sp<cost) return 'แต้มสกิลไม่พอ (ต้องใช้ '+cost+')';
   return ''; }
 function learnSkill(ch,id){
@@ -6563,7 +6793,7 @@ DEV.charui={
   state(){ const R=UC.ref; return {tab:UC.tab, filter:UC.filter, ref:R?{uid:R.uid, seal:R.seal, busy:R.busy, last:R.last}:null}; } };
 /* ================= 54-ui-skills.js · lane P · scrSkills (+ helpers shared by 56 · 57 · 58) ================= */
 // §3.5 · §8.9: ★ ranks cost RANK_COST (★1–3: 1 · ★4–5: 2) · passives 1 per ★ · SKILL_REQ gates the advanced skills ·
-// loadout 4 (first job) / 5 (advanced) slots, slot 1 = the skill a survival run starts with · reset = the §3.3 rules.
+// loadout 5 (first job) / 6 (advanced) slots, slot 1 = the skill a survival run starts with · reset = the §3.3 rules.
 // All rules live in 42-progression.js (lane C): this file only draws them and calls learnSkill / setLoadout / resetSkills.
 // Opened by pksOpen() or by the router (BUS 'screen' with id 'scrSkills'). Nothing here runs at load except registration.
 
@@ -6615,15 +6845,15 @@ let pksTab=0, pksSel=-1;                             // tab 1 = first job · 2 =
 function pksRow(ch,id,pas){
   const rc=pas?BAL.CAP.rank:rankCap(ch,id), r=((pas?ch.pas:ch.sk)||{})[id]|0, max=r>=rc, cost=max?0:pas?BAL.PAS_COST:BAL.RANK_COST[r+1];
   const own=pas&&PASSIVES[id].own, avail=pas?(own===ch.cls||own===ch.job):pgSkillPool(ch).indexOf(id)>=0, q=!pas&&SKILL_REQ[id];
-  const why=max?'':canLearn(ch,id), lock=!max&&(!avail||(q&&((ch.sk||{})[q.need]|0)<q.r))?why:'';
+  const why=max?'':canLearn(ch,id), lock=!max&&(!avail||!!(q&&pgReqWhy(ch,id)))?why:'';   // a requirement (★ / Base Lv / Job Lv) not met
   return {id, pas, r, rc, max, cost, lock, can:!max&&why==='', inLoad:!pas&&(ch.load||[]).indexOf(id)>=0, tr:!pas&&TFD[id]?tfSpentOne(ch,id):-1}; }
 // tab 1: class skills + class passive · tab 2: the chosen advanced path, or both paths (locked) before advancing
 function pksModel(ch,tab){
   const c=pgCls(ch); if(!c) return [];
-  const paths=tab===1?[{a:null, own:c.id, sk:c.skills}]:(ch.job?c.adv.filter(x=>x.id===ch.job):c.adv).map(x=>({a:x, own:x.id, sk:x.skills}));
+  const paths=tab===1?[{a:null, own:c.id, sk:clsSkills(c)}]:(ch.job?c.adv.filter(x=>x.id===ch.job):c.adv).map(x=>({a:x, own:x.id, sk:advSkills(x)}));
   return paths.map(p=>({a:p.a, sk:p.sk.map(id=>pksRow(ch,id,false)),
     pas:Object.keys(PASSIVES).filter(id=>PASSIVES[id].own===p.own).map(id=>pksRow(ch,id,true))})); }
-// loadout edits → setLoadout (lane C validates: learned, in the pool, no duplicates, 1…4/5 slots)
+// loadout edits → setLoadout (lane C validates: learned, in the pool, no duplicates, 1…5/6 slots)
 function pksLoadAdd(ch,id,slot){ const L=ch.load.slice(), n=BAL.LOADOUT[pgTier(ch)]; if(L.indexOf(id)>=0) return false;
   if(L.length<n) L.push(id); else if(slot>=0&&slot<L.length) L[slot]=id; else return false; return setLoadout(ch,L); }
 function pksLoadDel(ch,id){ const L=ch.load.filter(x=>x!==id); return L.length>0&&L.length<ch.load.length&&setLoadout(ch,L); }
@@ -6643,7 +6873,7 @@ function pksRowHtml(r){
     if(!r.max) h+=`<div class="pks-x">→ ★${r.r+1}: ${jdBonusText(jdPassiveAt(r.id,r.r+1))}</div>`; }
   else { if(r.r) h+=`<div class="pks-i">★${r.r}: ${pksLv(d,r.r)}</div>`;
     if(!r.max) h+=`<div class="pks-x">→ ★${r.r+1}: ${pksNext(d,r.r)}</div>`;
-    if(r.r>=5&&r.rc===5&&pgCls(prgCh())&&pgCls(prgCh()).skills.indexOf(r.id)>=0) h+='<div class="pks-e">เลื่อนอาชีพแล้วฝึกต่อได้ถึง ★8 (ขั้นสอง ✦)</div>';
+    if(r.r>=5&&r.rc===5&&pgCls(prgCh())&&clsSkills(pgCls(prgCh())).indexOf(r.id)>=0) h+='<div class="pks-e">เลื่อนอาชีพแล้วฝึกต่อได้ถึง ★8 (ขั้นสอง ✦)</div>';
     if(d.evo) h+=`<div class="pks-e">วิวัฒนาการ: ★5 + การ์ด${STATS[d.evo.s].n}ในรอบ → ${esc(d.evo.n)}</div>`; }
   if(r.lock) h+=`<div class="pks-lock">🔒 ${esc(r.lock)}</div>`;
   h+='</div><div class="pks-side">'+(r.max?'<span class="pks-max">ตัน</span>'
@@ -7115,7 +7345,7 @@ function pjbCard(c,a,pick){
   return `<${tag}${pick?` type="button" data-a="pick" data-id="${a.id}" aria-pressed="${on}"`:''} class="pjb-card${on?' sel':''}">`
     +`<canvas data-adv="${a.id}" width="80" height="80" aria-hidden="true"></canvas><span class="pjb-n">${esc(a.n)}<small>${esc(a.e)}</small></span>`
     +`<span class="pjb-b">${esc(a.bt)}</span><span class="pjb-d">${esc(a.d)}</span>`
-    +`<span class="pjb-sk">${a.skills.map(id=>'<span>'+SK[id].i+' '+esc(SK[id].n)+'</span>').join('')}</span>`
+    +`<span class="pjb-sk">${advSkills(a).map(id=>'<span>'+SK[id].i+' '+esc(SK[id].n)+'</span>').join('')}</span>`
     +`<span class="pjb-ps">${pas.map(id=>'<span>'+PASSIVES[id].i+' '+esc(PASSIVES[id].n)+'</span>').join('')}</span></${tag}>`; }
 function pjbRender(){
   const root=$('#pjbRoot'); if(!root) return; prgWire(root,pjbClick);

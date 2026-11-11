@@ -34,6 +34,7 @@ function drawZones(){
         ctx.strokeStyle='#c9a57a'; ctx.lineWidth=2; ctx.beginPath(); for(let i=0;i<6;i++){ const a=i*TAU/6; ctx.moveTo(z.x+Math.cos(a)*7,z.y+Math.sin(a)*7); ctx.lineTo(z.x+Math.cos(a)*11,z.y+Math.sin(a)*11); } ctx.stroke();
         if(armed&&((G.t*4)|0)%2){ ctx.globalCompositeOperation='lighter'; glow(z.x,z.y,10,'#ff4a3a',.6); ctx.globalCompositeOperation='source-over'; } break; }
     }
+    if(z.x2) sk2DrawZone(z,fade);                                           // zones of the character-only skills (22a)
     if(z.src&&z.src.mxLook&&typeof mxDrawZone==='function') mxDrawZone(z);   // mastery looks (26a)
   }
 }
@@ -155,6 +156,7 @@ function drawProjs(){
   for(const p of G.projs){
     const sp=Math.hypot(p.vx,p.vy),a=Math.atan2(p.vy,p.vx);
     if(p.mx&&mxDrawProj(p,sp,a)) continue;                                  // mastery look (26a)
+    if(sk2DrawProj(p,sp,a)) continue;                                       // shapes of the character-only skills (22a)
     switch(p.shape){
       case 'arrow': streak(p.x,p.y,a,Math.min(55,sp*.05),5,p.c,.45); break;
       case 'dagger': streak(p.x,p.y,a,30,5,p.c,.35); break;

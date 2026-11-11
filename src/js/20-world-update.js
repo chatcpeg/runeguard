@@ -120,6 +120,7 @@ function updateProjs(dt){
   for(const p of G.projs){
     if(p.dead) continue;
     p.t+=dt; p.life-=dt;
+    if(p.ret&&pxRet(p,dt)) continue;                                    // boomerang flight back to the hand (25a)
     if(p.homing){ if(!p.tg||p.tg.dead||(p.hit&&p.hit.indexOf(p.tg.id)>=0)) p.tg=nearestTo(p.x,p.y,360,p.hit);
       if(p.tg){ const a=Math.atan2(p.vy,p.vx),ta=Math.atan2(p.tg.y-p.y,p.tg.x-p.x),na=a+clamp(angDiff(ta,a),-p.homing*dt,p.homing*dt),sp=Math.hypot(p.vx,p.vy); p.vx=Math.cos(na)*sp; p.vy=Math.sin(na)*sp; } }
     const ox=p.x,oy=p.y; p.x+=p.vx*dt; p.y+=p.vy*dt; if(p.mx) mxProjTick(p,dt);   // mastery: heat haze / fire trail (26a)
@@ -154,7 +155,8 @@ function updateZones(dt){
   const q=qLv();
   for(const z of G.zones){
     if(z.dead) continue;
-    z.t+=dt; if(z.t>=z.dur){ z.dead=true; continue; }
+    z.t+=dt; if(z.t>=z.dur){ if(z.x2) zxEnd(z); z.dead=true; continue; }
+    if(z.x2&&zxTick(z,dt)) continue;                                      // character-only zones run their own frame (25a)
     if(z.aim){ z.x+=z.aim.vx*dt; z.y+=z.aim.vy*dt; const k=Math.exp(-dt*.7); z.aim.vx*=k; z.aim.vy*=k; }   // aimed vortex (19): straight, slowing
     else if(z.drift){ z.retarget-=dt; if(z.retarget<=0||!z.tg||z.tg.dead){ z.tg=nearestTo(z.x,z.y,520); z.retarget=.8; }
       let tx,ty; if(z.tg){ tx=z.tg.x-z.x; ty=z.tg.y-z.y; } else { tx=Math.cos(z.wa); ty=Math.sin(z.wa); } const l=Math.hypot(tx,ty)||1, k=Math.min(1,dt*2);
