@@ -935,9 +935,9 @@ cyclone:{n:'พายุหมุนเหวี่ยง',i:'🌪️',type:'swi
 frenzy:{n:'เลือดคลั่ง',i:'🩸',type:'passive',c:'#ff4d4d',d:'ยิ่ง HP น้อยยิ่งตีแรง และฟื้น HP ทุกครั้งที่สังหาร',
   p:{rage:[.4,.55,.7,.85,1],steal:[.5,.7,.9,1.1,1.4]}},
 /* --- Mage --- */
-mbolt:{n:'ศรเวท',i:'🔹',type:'proj',shape:'bolt',c:'#b48cff',d:'ยิงลูกพลังเวทใส่เป้าหมาย (โหมดตัวละคร: พุ่งตรงไปจุดเล็ง ทะลุ +1)',
+mbolt:{n:'ศรเวท',i:'🔹',type:'proj',shape:'bolt',c:'#b48cff',d:'ยิงลูกพลังเวทที่เลี้ยวตามเป้า (โหมดตัวละคร: พุ่งตรงไปจุดเล็ง ทะลุ +1 ใหญ่ขึ้น 20%)',
   p:{cd:[.58,.54,.5,.46,.42],dmg:[11,14,17,21,26],speed:430,life:1.1,pierce:1,size:6,count:[1,2,2,3,3],spread:.2,homing:3,knock:50},
-  evo:{s:'INT',n:'ศรดวงดาว',d:'ระดมลูกเวท 6 ลูก ทะลุ 2 เป้า',set:{cd:.4,dmg:30,count:6,pierce:2,homing:5}}},
+  evo:{s:'INT',n:'ศรดวงดาว',d:'ระดมลูกเวท 6 ลูก ทะลุ 2 เป้า (คลาสสิกเลี้ยวตามเป้า)',set:{cd:.4,dmg:30,count:6,pierce:2,homing:5}}},
 flame:{n:'หอกเพลิง',i:'🔥',type:'proj',shape:'fire',c:'#ff7a3d',d:'หอกไฟที่ระเบิดเป็นวงเมื่อโดนเป้า',
   p:{cd:[1.8,1.65,1.5,1.3,1.1],dmg:[24,32,40,50,62],speed:380,life:1.2,pierce:1,size:9,explode:[48,54,60,68,76],count:[1,1,1,2,2],spread:.3,knock:140},
   evo:{s:'STR',n:'หอกอัคคีนรก',d:'ระเบิดวงใหญ่และทิ้งทะเลเพลิงไว้บนพื้น',set:{cd:.95,dmg:85,explode:110,count:3,burn:1}}},
@@ -977,7 +977,7 @@ deadeye:{n:'ศรสังหาร',i:'👁️',type:'proj',shape:'beam',targe
 blast:{n:'ศรระเบิด',i:'🧨',type:'proj',shape:'arrow',c:'#ffa04d',d:'ลูกธนูระเบิดเป็นวงกว้าง',
   p:{cd:[1.4,1.25,1.1,.95,.8],dmg:[25,32,40,48,58],speed:560,life:.8,pierce:1,size:6,explode:[55,60,66,74,85],count:[1,1,2,2,3],spread:.25,knock:200}},
 /* --- Cleric --- */
-holy:{n:'ลูกแสงศักดิ์สิทธิ์',i:'🌟',type:'proj',shape:'holy',c:'#fff1a8',d:'ลูกแสงพุ่งใส่ศัตรูและทะลุผ่าน (โหมดตัวละคร: พุ่งตรง ทะลุ +1)',
+holy:{n:'ลูกแสงศักดิ์สิทธิ์',i:'🌟',type:'proj',shape:'holy',c:'#fff1a8',d:'ลูกแสงเลี้ยวตามศัตรูและทะลุผ่าน (โหมดตัวละคร: พุ่งตรง ทะลุ +1 ใหญ่ขึ้น 20%)',
   p:{cd:[.66,.6,.55,.5,.45],dmg:[12,15,19,23,28],speed:300,life:1.5,pierce:[2,2,3,3,4],size:8,count:[1,1,2,2,3],spread:.4,homing:4,knock:60},
   evo:{s:'INT',n:'ลูกแก้วเซราฟ',d:'ลูกแสง 5 ลูก ทะลุไม่จำกัด',set:{cd:.45,dmg:34,count:5,pierce:99,size:11}}},
 heal:{n:'แสงฟื้นฟู',i:'💚',type:'heal',c:'#7dffa8',d:'ฟื้นฟู HP และระเบิดแสงทำร้ายศัตรูรอบตัว',
@@ -1206,7 +1206,8 @@ function artImg(k){ if(!ART.on||!artHas(k)) return null; const im=ART.img[k];
   if(typeof Image==='undefined') return null;
   const n=new Image(); n.crossOrigin='anonymous'; n.decoding='async'; ART.img[k]=n;
   n.onload=()=>artLoaded(k); n.onerror=()=>{ delete ART.cb[k]; }; n.src=ART.base+k+'.webp'; return null; }
-function artWhen(k,f){ if(!artHas(k)) return; (ART.cb[k]||(ART.cb[k]=[])).push(f); artImg(k); }
+function artWhen(k,f){ if(!artHas(k)) return; const im=ART.img[k]; if(im&&im.complete&&!im.naturalWidth) return;   // failed (offline / blocked): the vector look stays
+  (ART.cb[k]||(ART.cb[k]=[])).push(f); artImg(k); }
 function artLoaded(k){
   for(const t in SPR) if(SPR[t].ak===k&&!SPR[t].art) delete SPR[t];
   delete ART_HERO[k]; delete ART_PAT[k];
@@ -1585,7 +1586,9 @@ function updateWave(dt){
   if(!G.boss && G.wave>=3 && !G.eliteDone && G.waveT<WAVE_LEN*.5){ G.eliteDone=true; spawnElite(); }
 }
 function pickType(Wt){ let tot=0; for(const k in Wt) tot+=Wt[k]; let r=Math.random()*tot; for(const k in Wt){ r-=Wt[k]; if(r<=0) return k; } return 'shambler'; }
-function ringPos(bias){ let a; if(bias!==undefined) a=bias; else if(P.moving&&Math.random()<.5) a=Math.atan2(P.vy,P.vx)+rand(-.9,.9); else a=rand(0,TAU); const R=Math.hypot(VW,VH)/2+rand(30,110); return [P.x+Math.cos(a)*R,P.y+Math.sin(a)*R]; }
+function ringPos(bias){ let a; if(bias!==undefined) a=bias; else if(P.moving&&Math.random()<.5) a=Math.atan2(P.vy,P.vx)+rand(-.9,.9); else a=rand(0,TAU); const R=Math.hypot(VW,VH)/2+rand(30,110); let x=P.x+Math.cos(a)*R, y=P.y+Math.sin(a)*R;
+  if(G.obstacles&&typeof terBlocks==='function') for(let i=0;i<6&&terBlocks(x,y,30);i++){ const b=a+(i%2?1:-1)*(.25+.2*i); x=P.x+Math.cos(b)*R; y=P.y+Math.sin(b)*R; }   // terrain runs: not inside a rock (29a)
+  return [x,y]; }
 function spawnEnemy(type,x,y,o){ o=o||{}; const d=EN[type],cfg=G.cfg,el2=!!o.elite; const hp=o.hp||d.hp*cfg.hpMul*(el2?6:1);
   const e={id:++G.eid,type,d,x,y,vx:0,vy:0,kx:0,ky:0,r:d.r*(el2?1.4:1),hp,maxHp:hp,speed:d.speed*rand(.9,1.1)*cfg.spdMul*(el2?.92:1),dmg:d.dmg*cfg.dmgMul*(el2?1.5:1),mass:d.mass*(el2?4:1),
     xp:Math.max(1,Math.round(d.xp*(el2?12:1))),atkCd:0,flash:0,hitT:0,walk:Math.random()*4,slowT:0,slowF:1,freezeT:0,stunT:0,face:1,anim:Math.random()*10,shotCd:rand(1,3),elite:el2,boss:!!d.boss,dead:false,ai:{}};
@@ -1793,12 +1796,19 @@ BEH.passive=()=>{};
 // character runs (docs/PROPOSAL-mastery.md §2): how far an aimed strike/zone reaches (never past the screen) and where the
 // i-th of a cast lands: the first on the target, the rest round it on a golden-angle spiral inside 0.5–0.9 of the skill's radius
 function aimReach(){ return Math.hypot(VW||1280,VH||800)/2*.92; }
-function aimCluster(t,i,r){ if(!i) return [t.x,t.y]; const a=i*2.39996+t.x*.01, d=r*(.5+.4*((i*7)%5)/4); return [t.x+Math.cos(a)*d, t.y+Math.sin(a)*d*.85]; }
+// the screen box the aim may use: [cam x, cam y, half width − m, half height − m]
+function aimBox(m){ return [cam.x,cam.y,Math.max(40,(VW||1280)/2-m),Math.max(40,(VH||800)/2-m)]; }
+// nearest living enemy inside the screen box (margin m) and within R of the hero · null = nothing to aim at yet
+function aimTarget(R,m){ const b=aimBox(m); let best=null, bd=R*R;
+  for(const e of G.enemies){ if(e.dead||Math.abs(e.x-b[0])>b[2]||Math.abs(e.y-b[1])>b[3]) continue; const d=(e.x-P.x)**2+(e.y-P.y)**2; if(d<bd){ bd=d; best=e; } }
+  return best; }
+function aimCluster(t,i,r){ let x=t.x, y=t.y; if(i){ const a=i*2.39996+t.x*.01, d=r*(.5+.4*((i*7)%5)/4); x+=Math.cos(a)*d; y+=Math.sin(a)*d*.85; }
+  const b=aimBox(8); return [clamp(x,b[0]-b[2],b[0]+b[2]), clamp(y,b[1]-b[3],b[1]+b[3])]; }
 function mkStrike(x,y,r,delay,dmg,src,kind,o){ o=o||{}; return {x,y,r,delay,dmg,src,kind,t:0,done:0,hits:o.hits||1,hitInt:o.hitInt||.15,knock:o.knock||0,stun:o.stun||0,dead:false}; }
 BEH.strike=(s,dt)=>{
   s.cdT-=dt; if(s.cdT>0) return;
-  if(P.sx){ const R=Math.min(560*(P.rangeMul||1),aimReach()), t=G.near&&G.nearD<R?G.near:null; if(!t){ s.cdT=.2; return; }   // aimed: on the nearest, the rest round it
-    s.cdT=cdOf(s); const n=countOf(s), r=pv(s,'r')*P.area;
+  if(P.sx){ const r=pv(s,'r')*P.area, t=aimTarget(Math.min(560*(P.rangeMul||1),aimReach()),r*.5); if(!t){ s.cdT=.2; return; }   // aimed: the nearest on screen, the rest round it
+    s.cdT=cdOf(s); const n=countOf(s);
     for(let i=0;i<n;i++){ const q=aimCluster(t,i,r), x=q[0], y=q[1];
       const go=()=>G.strikes.push(mkStrike(x,y,r,pv(s,'delay')||.5,pv(s,'dmg'),s,s.def.fx,{hits:pv(s,'hits'),hitInt:pv(s,'hitInt'),knock:pv(s,'knock'),stun:pv(s,'stun')}));
       if(i===0) go(); else later(i*.11,go); }
@@ -1812,7 +1822,7 @@ BEH.strike=(s,dt)=>{
 };
 BEH.zone=(s,dt)=>{
   s.cdT-=dt; if(s.cdT>0) return;
-  if(P.sx){ const R=Math.min(520*(P.rangeMul||1),aimReach()), t=G.near&&G.nearD<R?G.near:null, trap=s.def.fx==='trap'; if(!t&&!trap){ s.cdT=.2; return; }   // aimed (docs §2)
+  if(P.sx){ const t=aimTarget(Math.min(520*(P.rangeMul||1),aimReach()),pv(s,'r')*P.area*.5), trap=s.def.fx==='trap'; if(!t&&!trap){ s.cdT=.2; return; }   // aimed (docs §2)
     if(trap&&!(G.near&&G.nearD<500)){ s.cdT=.2; return; }
     s.cdT=cdOf(s); const n=countOf(s), a=t?Math.atan2(t.y-P.y,t.x-P.x):0, r=pv(s,'r')*P.area, mv=Math.hypot(P.vx,P.vy), ba=mv>20?Math.atan2(-P.vy,-P.vx):rand(0,TAU);
     for(let i=0;i<n;i++){ let x,y,o={};
@@ -2029,15 +2039,17 @@ function updateProjs(dt){
       const rr=e.r+p.r; if(segD2(e.x,e.y,ox,oy,p.x,p.y)>rr*rr) continue;
       projHit(p,e); if(p.dead) break;
     }
-    if(!p.dead&&G.obstacles&&p.pierce<99&&terBlocks(p.x,p.y,p.r)){ p.dead=true; if(p.explode) explode(p.x,p.y,p.explode,p.dmg*.7,p.src,{c:p.c}); else if(!G.auto) burst(p.x,p.y,4,'#a49a86',120,.35,2,'rock'); }   // a rock stops it (29a)
-    if(!p.dead&&p.life<=0){ p.dead=true; if(p.mx&&p.mx.split) mxSplit(p); if(p.explode){ explode(p.x,p.y,p.explode,p.dmg*.7,p.src,{c:p.c});
-        if(p.mx&&p.hit&&p.hit.length){ mxBoom2(p); if(p.burn) addZone({x:p.x,y:p.y,r:p.explode*.8,dur:2*P.durMul,tick:.3,dmg:p.dmg*.12,kind:'fire',src:p.src}); } } }   // 26a: passed through someone
+    if(!p.dead&&G.obstacles&&p.pierce<99&&terBlocks(p.x,p.y,p.r)){ if(p.mx) projEnd(p); else { p.dead=true; if(p.explode) explode(p.x,p.y,p.explode,p.dmg*.7,p.src,{c:p.c}); } if(!p.explode&&!G.auto) burst(p.x,p.y,4,'#a49a86',120,.35,2,'rock'); }   // a rock stops it (29a) · pierce ≥ 99 flies through
+    if(!p.dead&&p.life<=0) projEnd(p);
     if(!p.dead&&!G.auto){ const q=qLv();
       if(p.shape==='fire'&&Math.random()<dt*(q?40:12)) part({x:p.x,y:p.y,vx:rand(-30,30)-p.vx*.1,vy:rand(-40,10),life:.35,s:3,c:pick(['#ffb050','#ff7a2a','#ffe28a']),g:-40,drag:2,k:'sq',add:true});
       else if((p.shape==='holy'||p.shape==='bolt')&&q>=1&&Math.random()<dt*20) part({x:p.x,y:p.y,vx:rand(-20,20),vy:rand(-20,20),life:.3,s:2,c:p.c,g:0,drag:2,k:'sq',add:true}); }
   }
   compact(G.projs);
 }
+// a projectile ends (range or rock): split (26a) · its blast · mastery shots that passed through someone also leave the second wave + fire field
+function projEnd(p){ p.dead=true; if(p.mx&&p.mx.split) mxSplit(p); if(!p.explode) return; explode(p.x,p.y,p.explode,p.dmg*.7,p.src,{c:p.c});
+  if(p.mx&&p.hit&&p.hit.length){ mxBoom2(p); if(p.burn) addZone({x:p.x,y:p.y,r:p.explode*.8,dur:2*P.durMul,tick:.3,dmg:p.dmg*.12,kind:'fire',src:p.src}); } }
 function projHit(p,e){
   const sp=Math.hypot(p.vx,p.vy)||1;
   damageEnemy(e,p.dmg,p.src,{knock:p.knock,nx:p.vx/sp,ny:p.vy/sp,crit:p.crit,fxd:p.fxd});
@@ -2187,7 +2199,8 @@ function fmtP(k,v){ if(PCT[k]) return Math.round(v*100)+'%'; if(SEC[k]) return (
 // base numbers (no stat / tree mods) of skill s at Lv lv · Lv 6–8 come from tfTierUp
 function pvAt(s,k,lv){ return pv({def:s.def,lv,evolved:s.evolved,cx:s.cx},k); }
 function diffText(s){ const out=[]; for(const k in s.def.p){ const a=pvAt(s,k,s.lv),b=pvAt(s,k,s.lv+1); if(typeof a!=='number'||typeof b!=='number'||Math.abs(a-b)<1e-9) continue; out.push(`${PL[k]||k} ${fmtP(k,a)} → ${fmtP(k,b)}`); } return out.join(' · '); }
-const SNAME=k=>STATS[k].ab||k;
+const SNAME=k=>P&&P.sx&&typeof MX_SN!=='undefined'&&MX_SN[k]?k:(STATS[k].ab||k);             // character runs: STR is not "ATK" (26a MX_SN)
+const SFULL=k=>P&&P.sx&&typeof MX_SN!=='undefined'&&MX_SN[k]?MX_SN[k]:STATS[k].n;
 function dexText(){ const nx=P.stats.DEX+1, names=P.skills.filter(s=>s.def.type==='proj'||s.def.type==='orbit').map(s=>s.def.n);
   const now=(nx===3||nx===5)?' (ได้ทันทีที่เลือก)':'';
   return 'คูลดาวน์ −6% · ถึง Lv3 และ Lv5: '+(names.length?names.map(n=>n+' +1 ชิ้น').join(' · ')+now:'สกิลแบบยิงหรือหมุนรอบตัวได้เพิ่ม 1 ชิ้น (ตอนนี้ยังไม่มีสกิลแบบนี้)'); }
@@ -2213,7 +2226,7 @@ function cardHTML(o,i){
     case 'new':{ const d=SK[o.id]; ic=d.i; tag='สกิลใหม่'; nm=d.n; ds=d.d; if(d.evo) df=`วิวัฒนาการเมื่อ Lv5 + ${SNAME(d.evo.s)}`; break; }
     case 'up':{ const d=o.s.def; ic=d.i; tag=`Lv ${o.s.lv} → ${o.s.lv+1}`; nm=d.n; ds=d.d; df=diffText(o.s); break; }
     case 'evo':{ const d=o.s.def; ic=d.i; tag='วิวัฒนาการ'; nm=d.evo.n; ds=d.evo.d; df=`${d.n} Lv5 + ${SNAME(d.evo.s)}`; break; }
-    case 'stat':{ const st=STATS[o.stat]; ic=st.i; const ml=P.sx&&typeof mxLvStat==='function'?mxLvStat(P,o.stat):0; tag=P.sx?`ความชำนาญ ${o.stat} Lv ${ml} → ${ml+1}`:`ค่าสถานะ Lv ${P.stats[o.stat]} → ${P.stats[o.stat]+1}`; nm=P.sx&&typeof MX_SN!=='undefined'&&MX_SN[o.stat]?`${o.stat} · ${MX_SN[o.stat]}`:`${SNAME(o.stat)} · ${st.n}`; ds=typeof st.d==='function'?st.d():st.d; df=evoUses(o.stat); break; }
+    case 'stat':{ const st=STATS[o.stat]; ic=st.i; const ml=P.sx&&typeof mxLvStat==='function'?mxLvStat(P,o.stat):0; tag=P.sx?`ความชำนาญ ${o.stat} Lv ${ml} → ${ml+1}`:`ค่าสถานะ Lv ${P.stats[o.stat]} → ${P.stats[o.stat]+1}`; nm=`${SNAME(o.stat)} · ${SFULL(o.stat)}`; ds=typeof st.d==='function'?st.d():st.d; df=evoUses(o.stat); break; }
     case 'potion': ic='🧪'; tag='ไอเทม'; nm='ยาฟื้นฟู'; ds='ฟื้นฟู HP 40% ทันที'; break;
     default: ic='💰'; tag='ไอเทม'; nm='ถุงทอง'; ds='คะแนน +250'; break;
   }
@@ -2967,10 +2980,10 @@ slam:[
   [6,'แรงกระแทก +20%',{mul:{knock:1.2}}],
   [10,'วงกว้าง +10%',{mul:{r:1.1}}],
   [15,'มึน +0.3 วิ',{add:{stun:.3}}],
-  [20,'ศัตรูที่ตายระเบิดเศษหิน',{fx:{burst:{r:60, pct:.4}}}],
-  [25,'ทุบซ้ำทุก 2 ครั้ง',{fx:{echo:{every:2}}}],
+  [20,'ศัตรูที่ตายระเบิดเศษหิน',{fx:{burst:{r:50, pct:.3}}}],
+  [25,'ทุบซ้ำทุก 3 ครั้ง',{fx:{echo:{every:3}}}],
   [30,'เป้าที่มึนโดนแรง ×1.4',{fx:{vsStun:{m:1.4}}}],
-  [35,'ร่างสุดท้าย แผ่นดินไหว · วง ×1.4',{mul:{r:1.4, dmg:1.2}}]],
+  [35,'ร่างสุดท้าย แผ่นดินไหว · วง ×1.3',{mul:{r:1.3, dmg:1.1}}]],
 blades:[
   [6,'ดาบวนเร็ว +10%',{mul:{spin:1.1}}],
   [10,'ดาบใหญ่ +15%',{mul:{size:1.15}}],
@@ -3170,7 +3183,7 @@ venom:[
   [20,'+1 หมอก',{add:{count:1}}],
   [25,'ศัตรูตายในหมอก ระเบิดพิษ',{fx:{burst:{r:60, pct:.4}}}],
   [30,'ถี่ขึ้น 20%',{mul:{tick:.83}}],
-  [35,'ร่างสุดท้าย หมอกมรณะ · แรง ×1.5 วง ×1.3',{mul:{dmg:1.5, r:1.3}}]],
+  [35,'ร่างสุดท้าย หมอกมรณะ · แรง ×1.25 วง ×1.2',{mul:{dmg:1.25, r:1.2}}]],
 shadow:[
   [6,'หลบ +2%',{add:{dodge:.02}}],
   [10,'ระเบิดเงากว้าง +15%',{mul:{r:1.15}}],
@@ -6985,7 +6998,7 @@ function hdStatSheet(box){
   if(!P||!box) return; const el=(tag,cls,txt)=>{ const n=document.createElement(tag); if(cls) n.className=cls; if(txt!=null) n.textContent=txt; return n; };
   const wrap=el('div','hd-sheet'), st=P.stats||{};
   wrap.append(el('div','dmg-title','ค่าสถานะตอนนี้'));
-  const lv=['STR','AGI','VIT','INT','DEX','LUK'].map(k=>(STATS[k].ab||k)+' '+(st[k]|0)+(P.sx?'':'/5')).join(' · ');
+  const lv=['STR','AGI','VIT','INT','DEX','LUK'].map(k=>SNAME(k)+' '+(st[k]|0)+(P.sx?'':'/5')).join(' · ');
   wrap.append(el('div','hd-sheet-lv','การ์ดค่าสถานะในรอบนี้: '+lv));
   const rows=[
     ['HP',Math.ceil(P.hp)+' / '+Math.ceil(P.maxHp)+' · ฟื้น '+HD_N(P.regen)+'/วิ'],
@@ -7011,10 +7024,10 @@ function hdStatSheet(box){
     const ev=s.def.evo; if(ev&&!s.evolved) card.append(el('div','hd-sk-e','วิวัฒนาการ: ★5 + '+(STATS[ev.s].ab||ev.s)+' อย่างน้อย 1 ('+(s.lv>=5?'สกิลครบ ★5 แล้ว':'ยังขาด '+(5-s.lv)+' ขั้น')+' · '+(STATS[ev.s].ab||ev.s)+' ตอนนี้ '+(st[ev.s]|0)+')'));
     const g=el('div','hd-sheet-grid'); for(const [k,v] of hdSkillLines(s)) g.append(el('span','hd-k',k),el('span','hd-v',v)); card.append(g);
     if(P.sx&&typeof sxHave==='function'){ const h=sxHave(P,s);
-      if(h.main) card.append(el('div','hd-sk-m','ความชำนาญ '+(STATS[h.main].ab||h.main)+' Lv '+h.lv+(h.pk?' · '+({nova:'ระเบิดโล่',trap:'ดาเมจกับดัก'}[h.pk]||'ความแรง')+' +'+(Math.round(h.pct*1000)/10)+'%':'')));
+      if(h.main) card.append(el('div','hd-sk-m','ความชำนาญ '+SNAME(h.main)+' Lv '+h.lv+(h.pk?' · '+({nova:'ระเบิดโล่',trap:'ดาเมจกับดัก'}[h.pk]||'ความแรง')+' +'+(Math.round(h.pct*1000)/10)+'%':'')));
       if(h.ms.length) card.append(el('div','hd-sk-ms','ลูกเล่นที่ได้แล้ว: '+h.ms.slice(-4).join(' · ')));
       const soon=h.main?sxNext(P,h.main).filter(x=>x.s===s):[];
-      if(soon.length) card.append(el('div','hd-sk-soon','ถัดไป: '+soon.map(x=>(STATS[h.main].ab||h.main)+' อีก '+x.n+' ใบ: '+x.t).join(' · '))); }
+      if(soon.length) card.append(el('div','hd-sk-soon','ถัดไป: '+soon.map(x=>SNAME(h.main)+' อีก '+x.n+' ใบ: '+x.t).join(' · '))); }
     const nx=hdNextText(s); if(nx) card.append(el('div','hd-sk-x',nx));
     if(s.dealt) card.append(el('div','hd-sk-e','ดาเมจที่ทำไปแล้วรอบนี้: '+fmtNum(s.dealt)));
     wrap.append(card); }
@@ -7331,7 +7344,7 @@ function tfCardDetail(o){
       T.push('<h4>ความชำนาญของ</h4><p>'+(uses.length?tfE(uses.join(', '))+' · ใบละ +1 ระดับ (แรง +4%)':'ยังไม่มีสกิลในรอบนี้ที่ใช้ค่านี้เป็นค่าหลัก · ได้แค่ผลทั่วไป')+'</p>');
       const nx=sxNext(P,o.stat).slice(0,4); if(nx.length) T.push('<h4>ลูกเล่นถัดไป</h4><p>'+nx.map(x=>'อีก '+x.n+' ใบ: '+tfE(x.s.def.n+' '+x.t)).join('<br>')+'</p>');
       T.push('<p class="tf-note">การ์ดค่าสถานะเป็นของในรอบนี้เท่านั้น ไม่ใช่ค่าสถานะถาวร</p>'); }
-    return [st.i+' '+SNAME(o.stat)+' · '+st.n,T.join('')]; }
+    return [st.i+' '+SNAME(o.stat)+' · '+SFULL(o.stat),T.join('')]; }
   if(o.k==='potion') return ['🧪 ยาฟื้นฟู','<p>ฟื้นฟู HP 40% ของ HP สูงสุดทันที · ขึ้นเมื่อไม่มีการ์ดอื่นให้สุ่มพอ</p>'];
   return ['💰 ถุงทอง','<p>คะแนน +250'+(G.char?' และทองจริง +'+5*P.lv+' (5 × Lv ความชำนาญตอนนี้)':'')+' · ขึ้นเมื่อไม่มีการ์ดอื่นให้สุ่มพอ</p>']; }
 function tfCardQ(c,o){

@@ -92,12 +92,19 @@ BEH.passive=()=>{};
 // character runs (docs/PROPOSAL-mastery.md §2): how far an aimed strike/zone reaches (never past the screen) and where the
 // i-th of a cast lands: the first on the target, the rest round it on a golden-angle spiral inside 0.5–0.9 of the skill's radius
 function aimReach(){ return Math.hypot(VW||1280,VH||800)/2*.92; }
-function aimCluster(t,i,r){ if(!i) return [t.x,t.y]; const a=i*2.39996+t.x*.01, d=r*(.5+.4*((i*7)%5)/4); return [t.x+Math.cos(a)*d, t.y+Math.sin(a)*d*.85]; }
+// the screen box the aim may use: [cam x, cam y, half width − m, half height − m]
+function aimBox(m){ return [cam.x,cam.y,Math.max(40,(VW||1280)/2-m),Math.max(40,(VH||800)/2-m)]; }
+// nearest living enemy inside the screen box (margin m) and within R of the hero · null = nothing to aim at yet
+function aimTarget(R,m){ const b=aimBox(m); let best=null, bd=R*R;
+  for(const e of G.enemies){ if(e.dead||Math.abs(e.x-b[0])>b[2]||Math.abs(e.y-b[1])>b[3]) continue; const d=(e.x-P.x)**2+(e.y-P.y)**2; if(d<bd){ bd=d; best=e; } }
+  return best; }
+function aimCluster(t,i,r){ let x=t.x, y=t.y; if(i){ const a=i*2.39996+t.x*.01, d=r*(.5+.4*((i*7)%5)/4); x+=Math.cos(a)*d; y+=Math.sin(a)*d*.85; }
+  const b=aimBox(8); return [clamp(x,b[0]-b[2],b[0]+b[2]), clamp(y,b[1]-b[3],b[1]+b[3])]; }
 function mkStrike(x,y,r,delay,dmg,src,kind,o){ o=o||{}; return {x,y,r,delay,dmg,src,kind,t:0,done:0,hits:o.hits||1,hitInt:o.hitInt||.15,knock:o.knock||0,stun:o.stun||0,dead:false}; }
 BEH.strike=(s,dt)=>{
   s.cdT-=dt; if(s.cdT>0) return;
-  if(P.sx){ const R=Math.min(560*(P.rangeMul||1),aimReach()), t=G.near&&G.nearD<R?G.near:null; if(!t){ s.cdT=.2; return; }   // aimed: on the nearest, the rest round it
-    s.cdT=cdOf(s); const n=countOf(s), r=pv(s,'r')*P.area;
+  if(P.sx){ const r=pv(s,'r')*P.area, t=aimTarget(Math.min(560*(P.rangeMul||1),aimReach()),r*.5); if(!t){ s.cdT=.2; return; }   // aimed: the nearest on screen, the rest round it
+    s.cdT=cdOf(s); const n=countOf(s);
     for(let i=0;i<n;i++){ const q=aimCluster(t,i,r), x=q[0], y=q[1];
       const go=()=>G.strikes.push(mkStrike(x,y,r,pv(s,'delay')||.5,pv(s,'dmg'),s,s.def.fx,{hits:pv(s,'hits'),hitInt:pv(s,'hitInt'),knock:pv(s,'knock'),stun:pv(s,'stun')}));
       if(i===0) go(); else later(i*.11,go); }
@@ -111,7 +118,7 @@ BEH.strike=(s,dt)=>{
 };
 BEH.zone=(s,dt)=>{
   s.cdT-=dt; if(s.cdT>0) return;
-  if(P.sx){ const R=Math.min(520*(P.rangeMul||1),aimReach()), t=G.near&&G.nearD<R?G.near:null, trap=s.def.fx==='trap'; if(!t&&!trap){ s.cdT=.2; return; }   // aimed (docs §2)
+  if(P.sx){ const t=aimTarget(Math.min(520*(P.rangeMul||1),aimReach()),pv(s,'r')*P.area*.5), trap=s.def.fx==='trap'; if(!t&&!trap){ s.cdT=.2; return; }   // aimed (docs §2)
     if(trap&&!(G.near&&G.nearD<500)){ s.cdT=.2; return; }
     s.cdT=cdOf(s); const n=countOf(s), a=t?Math.atan2(t.y-P.y,t.x-P.x):0, r=pv(s,'r')*P.area, mv=Math.hypot(P.vx,P.vy), ba=mv>20?Math.atan2(-P.vy,-P.vx):rand(0,TAU);
     for(let i=0;i<n;i++){ let x,y,o={};

@@ -21,7 +21,8 @@ function artImg(k){ if(!ART.on||!artHas(k)) return null; const im=ART.img[k];
   if(typeof Image==='undefined') return null;
   const n=new Image(); n.crossOrigin='anonymous'; n.decoding='async'; ART.img[k]=n;
   n.onload=()=>artLoaded(k); n.onerror=()=>{ delete ART.cb[k]; }; n.src=ART.base+k+'.webp'; return null; }
-function artWhen(k,f){ if(!artHas(k)) return; (ART.cb[k]||(ART.cb[k]=[])).push(f); artImg(k); }
+function artWhen(k,f){ if(!artHas(k)) return; const im=ART.img[k]; if(im&&im.complete&&!im.naturalWidth) return;   // failed (offline / blocked): the vector look stays
+  (ART.cb[k]||(ART.cb[k]=[])).push(f); artImg(k); }
 function artLoaded(k){
   for(const t in SPR) if(SPR[t].ak===k&&!SPR[t].art) delete SPR[t];
   delete ART_HERO[k]; delete ART_PAT[k];

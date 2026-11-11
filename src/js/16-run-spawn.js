@@ -36,7 +36,9 @@ function updateWave(dt){
   if(!G.boss && G.wave>=3 && !G.eliteDone && G.waveT<WAVE_LEN*.5){ G.eliteDone=true; spawnElite(); }
 }
 function pickType(Wt){ let tot=0; for(const k in Wt) tot+=Wt[k]; let r=Math.random()*tot; for(const k in Wt){ r-=Wt[k]; if(r<=0) return k; } return 'shambler'; }
-function ringPos(bias){ let a; if(bias!==undefined) a=bias; else if(P.moving&&Math.random()<.5) a=Math.atan2(P.vy,P.vx)+rand(-.9,.9); else a=rand(0,TAU); const R=Math.hypot(VW,VH)/2+rand(30,110); return [P.x+Math.cos(a)*R,P.y+Math.sin(a)*R]; }
+function ringPos(bias){ let a; if(bias!==undefined) a=bias; else if(P.moving&&Math.random()<.5) a=Math.atan2(P.vy,P.vx)+rand(-.9,.9); else a=rand(0,TAU); const R=Math.hypot(VW,VH)/2+rand(30,110); let x=P.x+Math.cos(a)*R, y=P.y+Math.sin(a)*R;
+  if(G.obstacles&&typeof terBlocks==='function') for(let i=0;i<6&&terBlocks(x,y,30);i++){ const b=a+(i%2?1:-1)*(.25+.2*i); x=P.x+Math.cos(b)*R; y=P.y+Math.sin(b)*R; }   // terrain runs: not inside a rock (29a)
+  return [x,y]; }
 function spawnEnemy(type,x,y,o){ o=o||{}; const d=EN[type],cfg=G.cfg,el2=!!o.elite; const hp=o.hp||d.hp*cfg.hpMul*(el2?6:1);
   const e={id:++G.eid,type,d,x,y,vx:0,vy:0,kx:0,ky:0,r:d.r*(el2?1.4:1),hp,maxHp:hp,speed:d.speed*rand(.9,1.1)*cfg.spdMul*(el2?.92:1),dmg:d.dmg*cfg.dmgMul*(el2?1.5:1),mass:d.mass*(el2?4:1),
     xp:Math.max(1,Math.round(d.xp*(el2?12:1))),atkCd:0,flash:0,hitT:0,walk:Math.random()*4,slowT:0,slowF:1,freezeT:0,stunT:0,face:1,anim:Math.random()*10,shotCd:rand(1,3),elite:el2,boss:!!d.boss,dead:false,ai:{}};

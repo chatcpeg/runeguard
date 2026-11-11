@@ -282,7 +282,7 @@ function hdStatSheet(box){
   if(!P||!box) return; const el=(tag,cls,txt)=>{ const n=document.createElement(tag); if(cls) n.className=cls; if(txt!=null) n.textContent=txt; return n; };
   const wrap=el('div','hd-sheet'), st=P.stats||{};
   wrap.append(el('div','dmg-title','ค่าสถานะตอนนี้'));
-  const lv=['STR','AGI','VIT','INT','DEX','LUK'].map(k=>(STATS[k].ab||k)+' '+(st[k]|0)+(P.sx?'':'/5')).join(' · ');
+  const lv=['STR','AGI','VIT','INT','DEX','LUK'].map(k=>SNAME(k)+' '+(st[k]|0)+(P.sx?'':'/5')).join(' · ');
   wrap.append(el('div','hd-sheet-lv','การ์ดค่าสถานะในรอบนี้: '+lv));
   const rows=[
     ['HP',Math.ceil(P.hp)+' / '+Math.ceil(P.maxHp)+' · ฟื้น '+HD_N(P.regen)+'/วิ'],
@@ -308,10 +308,10 @@ function hdStatSheet(box){
     const ev=s.def.evo; if(ev&&!s.evolved) card.append(el('div','hd-sk-e','วิวัฒนาการ: ★5 + '+(STATS[ev.s].ab||ev.s)+' อย่างน้อย 1 ('+(s.lv>=5?'สกิลครบ ★5 แล้ว':'ยังขาด '+(5-s.lv)+' ขั้น')+' · '+(STATS[ev.s].ab||ev.s)+' ตอนนี้ '+(st[ev.s]|0)+')'));
     const g=el('div','hd-sheet-grid'); for(const [k,v] of hdSkillLines(s)) g.append(el('span','hd-k',k),el('span','hd-v',v)); card.append(g);
     if(P.sx&&typeof sxHave==='function'){ const h=sxHave(P,s);
-      if(h.main) card.append(el('div','hd-sk-m','ความชำนาญ '+(STATS[h.main].ab||h.main)+' Lv '+h.lv+(h.pk?' · '+({nova:'ระเบิดโล่',trap:'ดาเมจกับดัก'}[h.pk]||'ความแรง')+' +'+(Math.round(h.pct*1000)/10)+'%':'')));
+      if(h.main) card.append(el('div','hd-sk-m','ความชำนาญ '+SNAME(h.main)+' Lv '+h.lv+(h.pk?' · '+({nova:'ระเบิดโล่',trap:'ดาเมจกับดัก'}[h.pk]||'ความแรง')+' +'+(Math.round(h.pct*1000)/10)+'%':'')));
       if(h.ms.length) card.append(el('div','hd-sk-ms','ลูกเล่นที่ได้แล้ว: '+h.ms.slice(-4).join(' · ')));
       const soon=h.main?sxNext(P,h.main).filter(x=>x.s===s):[];
-      if(soon.length) card.append(el('div','hd-sk-soon','ถัดไป: '+soon.map(x=>(STATS[h.main].ab||h.main)+' อีก '+x.n+' ใบ: '+x.t).join(' · '))); }
+      if(soon.length) card.append(el('div','hd-sk-soon','ถัดไป: '+soon.map(x=>SNAME(h.main)+' อีก '+x.n+' ใบ: '+x.t).join(' · '))); }
     const nx=hdNextText(s); if(nx) card.append(el('div','hd-sk-x',nx));
     if(s.dealt) card.append(el('div','hd-sk-e','ดาเมจที่ทำไปแล้วรอบนี้: '+fmtNum(s.dealt)));
     wrap.append(card); }

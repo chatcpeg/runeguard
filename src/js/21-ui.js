@@ -27,7 +27,8 @@ function fmtP(k,v){ if(PCT[k]) return Math.round(v*100)+'%'; if(SEC[k]) return (
 // base numbers (no stat / tree mods) of skill s at Lv lv · Lv 6–8 come from tfTierUp
 function pvAt(s,k,lv){ return pv({def:s.def,lv,evolved:s.evolved,cx:s.cx},k); }
 function diffText(s){ const out=[]; for(const k in s.def.p){ const a=pvAt(s,k,s.lv),b=pvAt(s,k,s.lv+1); if(typeof a!=='number'||typeof b!=='number'||Math.abs(a-b)<1e-9) continue; out.push(`${PL[k]||k} ${fmtP(k,a)} → ${fmtP(k,b)}`); } return out.join(' · '); }
-const SNAME=k=>STATS[k].ab||k;
+const SNAME=k=>P&&P.sx&&typeof MX_SN!=='undefined'&&MX_SN[k]?k:(STATS[k].ab||k);             // character runs: STR is not "ATK" (26a MX_SN)
+const SFULL=k=>P&&P.sx&&typeof MX_SN!=='undefined'&&MX_SN[k]?MX_SN[k]:STATS[k].n;
 function dexText(){ const nx=P.stats.DEX+1, names=P.skills.filter(s=>s.def.type==='proj'||s.def.type==='orbit').map(s=>s.def.n);
   const now=(nx===3||nx===5)?' (ได้ทันทีที่เลือก)':'';
   return 'คูลดาวน์ −6% · ถึง Lv3 และ Lv5: '+(names.length?names.map(n=>n+' +1 ชิ้น').join(' · ')+now:'สกิลแบบยิงหรือหมุนรอบตัวได้เพิ่ม 1 ชิ้น (ตอนนี้ยังไม่มีสกิลแบบนี้)'); }
@@ -53,7 +54,7 @@ function cardHTML(o,i){
     case 'new':{ const d=SK[o.id]; ic=d.i; tag='สกิลใหม่'; nm=d.n; ds=d.d; if(d.evo) df=`วิวัฒนาการเมื่อ Lv5 + ${SNAME(d.evo.s)}`; break; }
     case 'up':{ const d=o.s.def; ic=d.i; tag=`Lv ${o.s.lv} → ${o.s.lv+1}`; nm=d.n; ds=d.d; df=diffText(o.s); break; }
     case 'evo':{ const d=o.s.def; ic=d.i; tag='วิวัฒนาการ'; nm=d.evo.n; ds=d.evo.d; df=`${d.n} Lv5 + ${SNAME(d.evo.s)}`; break; }
-    case 'stat':{ const st=STATS[o.stat]; ic=st.i; const ml=P.sx&&typeof mxLvStat==='function'?mxLvStat(P,o.stat):0; tag=P.sx?`ความชำนาญ ${o.stat} Lv ${ml} → ${ml+1}`:`ค่าสถานะ Lv ${P.stats[o.stat]} → ${P.stats[o.stat]+1}`; nm=P.sx&&typeof MX_SN!=='undefined'&&MX_SN[o.stat]?`${o.stat} · ${MX_SN[o.stat]}`:`${SNAME(o.stat)} · ${st.n}`; ds=typeof st.d==='function'?st.d():st.d; df=evoUses(o.stat); break; }
+    case 'stat':{ const st=STATS[o.stat]; ic=st.i; const ml=P.sx&&typeof mxLvStat==='function'?mxLvStat(P,o.stat):0; tag=P.sx?`ความชำนาญ ${o.stat} Lv ${ml} → ${ml+1}`:`ค่าสถานะ Lv ${P.stats[o.stat]} → ${P.stats[o.stat]+1}`; nm=`${SNAME(o.stat)} · ${SFULL(o.stat)}`; ds=typeof st.d==='function'?st.d():st.d; df=evoUses(o.stat); break; }
     case 'potion': ic='🧪'; tag='ไอเทม'; nm='ยาฟื้นฟู'; ds='ฟื้นฟู HP 40% ทันที'; break;
     default: ic='💰'; tag='ไอเทม'; nm='ถุงทอง'; ds='คะแนน +250'; break;
   }

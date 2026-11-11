@@ -126,7 +126,7 @@ function tfCardDetail(o){
       T.push('<h4>ความชำนาญของ</h4><p>'+(uses.length?tfE(uses.join(', '))+' · ใบละ +1 ระดับ (แรง +4%)':'ยังไม่มีสกิลในรอบนี้ที่ใช้ค่านี้เป็นค่าหลัก · ได้แค่ผลทั่วไป')+'</p>');
       const nx=sxNext(P,o.stat).slice(0,4); if(nx.length) T.push('<h4>ลูกเล่นถัดไป</h4><p>'+nx.map(x=>'อีก '+x.n+' ใบ: '+tfE(x.s.def.n+' '+x.t)).join('<br>')+'</p>');
       T.push('<p class="tf-note">การ์ดค่าสถานะเป็นของในรอบนี้เท่านั้น ไม่ใช่ค่าสถานะถาวร</p>'); }
-    return [st.i+' '+SNAME(o.stat)+' · '+st.n,T.join('')]; }
+    return [st.i+' '+SNAME(o.stat)+' · '+SFULL(o.stat),T.join('')]; }
   if(o.k==='potion') return ['🧪 ยาฟื้นฟู','<p>ฟื้นฟู HP 40% ของ HP สูงสุดทันที · ขึ้นเมื่อไม่มีการ์ดอื่นให้สุ่มพอ</p>'];
   return ['💰 ถุงทอง','<p>คะแนน +250'+(G.char?' และทองจริง +'+5*P.lv+' (5 × Lv ความชำนาญตอนนี้)':'')+' · ขึ้นเมื่อไม่มีการ์ดอื่นให้สุ่มพอ</p>']; }
 function tfCardQ(c,o){
