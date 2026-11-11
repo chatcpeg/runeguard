@@ -54,6 +54,7 @@ function loadSaveFor(owner){
   if(s.ro) svlNote('มีเวอร์ชันใหม่ แตะเพื่ออัปเดต','info');
   else if(from!=='main'||gift) svlWrite('load',!gift);                    // keep the new / migrated / restored save (a gift is a change: mt stamped)
   if(gift) svlNote('ยินดีต้อนรับกลับ! ได้รับผ้าคลุมผู้บุกเบิก','good');
+  if(SAVE&&SAVE.owner==null&&!SAVE.ro&&typeof shopClamp==='function'&&!(typeof shopDevHost==='function'&&shopDevHost())){ const r=shopClamp(SAVE,0); if(r.ru||r.rb) saveNow('ent'); }   // a guest save cannot hold bought runes (buying needs an account)
   svlMark(); BUS.emit('char',curChar());
   return SAVE; }
 function svlEnsure(){ if(!SAVE) loadSaveFor(svlOwner); return SAVE; }
@@ -233,6 +234,7 @@ function createChar(name,clsId){
   return ch; }
 function deleteChar(id){
   svlFresh(); const s=svlEnsure(); if(s.ro) return false; const i=s.chars.findIndex(c=>c.id===id); if(i<0) return false;
+  const rb=Math.max(0,Math.min(1e9,Math.trunc(+s.chars[i].rb||0))); if(rb) s.acct.ru=Math.max(0,Math.trunc(+s.acct.ru||0)-rb);   // its bought runes go back to the wallet (tester pay F8)
   s.chars.splice(i,1); delete s.acct.records.survival[id];
   if(s.active===id) s.active=s.chars[0]?s.chars[0].id:null;
   saveNow('delete'); if(SAVE!==s) return false; BUS.emit('char',curChar()); return true; }

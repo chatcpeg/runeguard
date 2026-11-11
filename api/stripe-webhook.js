@@ -8,7 +8,7 @@
 // 4. One row in public.rg_purchases per Checkout Session (PostgREST on_conflict=session_id + resolution=ignore-duplicates):
 //    Stripe's retries and replays never grant twice. Written with SUPABASE_SECRET_KEY (server only).
 import { createHmac, timingSafeEqual } from 'node:crypto';
-import { SUPABASE_URL, UUID, SESSION_ID, product, keys, configured, supabaseServiceHeaders, json, timedFetch, readBody, defaultDeps } from './_shop.js';
+import { SUPABASE_URL, UUID, SESSION_ID, product, keys, configured, testMode, supabaseServiceHeaders, json, timedFetch, readBody, defaultDeps } from './_shop.js';
 
 export const TOLERANCE = 300;
 const PAID_EVENTS = ['checkout.session.completed', 'checkout.session.async_payment_succeeded'];
@@ -62,6 +62,7 @@ export async function handleWebhook(request, deps) {
   if (!v.ok) { log.warn('webhook: signature', v.why); return json(400, { error: v.why }); }
   let ev; try { ev = JSON.parse(raw.toString('utf8')); } catch (e) { return json(400, { error: 'json' }); }
 
+  if (!testMode(env) && !(ev && ev.livemode === true)) return json(200, { received: true, ignored: 'testmode' });   // live keys never record a test event
   const r = purchaseRow(ev);
   if (r.skip) return json(200, { received: true, ignored: r.skip });
   if (r.bad) { log.error('webhook: not recorded', r.bad, ev && ev.id); return json(400, { error: 'mismatch', why: r.bad }); }

@@ -52,13 +52,17 @@
 
 ## ค. Vercel — Environment Variables
 1. https://vercel.com → โปรเจกต์ **runeguard** → **Settings → Environment Variables**
-2. เพิ่ม 3 ตัว (ชื่อต้องตรงตัวอักษร) · Environments ติ๊ก **Production** และ **Preview** · เปิด **Sensitive**
+2. เพิ่ม 4 ตัว (ชื่อต้องตรงตัวอักษร) · Environments ติ๊ก **Production** อย่างเดียว (ไม่ต้องติ๊ก Preview) · เปิด **Sensitive**
 
 | Key | Value |
 |---|---|
 | `STRIPE_SECRET_KEY` | `sk_test_…` จากข้อ ก.5 |
 | `STRIPE_WEBHOOK_SECRET` | `whsec_…` จากข้อ ก.6 |
 | `SUPABASE_SECRET_KEY` | `sb_secret_…` จากข้อ ข.3 |
+| `PAY_TEST_USERS` | user id (uuid) ของบัญชีเจ้าของในเกม คั่นด้วยจุลภาคถ้ามีหลายคน · ดูได้ที่ Supabase → Authentication → Users |
+
+> ⚠ ระหว่างใช้คีย์ทดสอบ `sk_test_` เฉพาะบัญชีใน `PAY_TEST_USERS` ซื้อได้ (คนอื่นเห็น "ระบบชำระเงินยังไม่เปิด")
+> ไม่อย่างนั้นใครก็ใช้บัตรทดสอบ 4242 ซื้อรูนฟรีได้ · พอเปลี่ยนเป็นคีย์ live แล้ว webhook จะไม่บันทึก event ของโหมดทดสอบอีก
 
 3. กด Save · ค่าจะมีผลกับการ deploy ครั้งถัดไป (ถ้ากรอกหลัง push ให้กด **Redeploy** ที่ deployment ล่าสุด)
 4. บอกผมแค่ว่า "กรอกแล้ว" — ไม่ต้องส่งค่า
@@ -78,12 +82,14 @@
    - 500 = บันทึกลง Supabase ไม่ได้ (ยังไม่มีตาราง rg_purchases หรือคีย์ Supabase ผิด) · Stripe ส่งซ้ำเองนาน 3 วัน แก้แล้วสิทธิ์จะขึ้นเอง
    - 400 `mismatch` = ราคา/สินค้าไม่ตรงกับตาราง (เช่น แก้ราคาระหว่างที่มีคนกำลังจ่าย) · ไม่บันทึก · ให้ดูรายการนั้นแล้วคืนเงินหรือเพิ่มแถวเอง
    - Vercel → Logs ของ function ช่วยดูได้ (ไม่มีคีย์หรือ token อยู่ใน log)
-5. รายการทดสอบมี `livemode = false` ในตาราง · ก่อนเปิดจริงลบแถวทดสอบได้ (ข้อ ช.)
+5. รายการทดสอบมี `livemode = false` ในตาราง · **ต้องลบก่อนเปิดจริง** (ข้อ จ.1)
 
 ## จ. เปิดรับเงินจริง
-1. Stripe: Activate payments → ทำ ก.4–6 ในโหมด Live
-2. Vercel: เปลี่ยน `STRIPE_SECRET_KEY` และ `STRIPE_WEBHOOK_SECRET` เป็นชุด Live → Redeploy
-3. ซื้อจริงหนึ่งครั้ง (35 บาท) เพื่อตรวจ แล้วคืนเงินผ่าน Stripe ได้ถ้าต้องการ
+1. **ลบรายการทดสอบก่อน (บังคับ)** · Supabase → SQL Editor: `delete from public.rg_purchases where livemode = false;`
+   (ไม่อย่างนั้นสิทธิ์ที่ได้จากบัตรทดสอบจะติดบัญชีถาวร)
+2. Stripe: Activate payments → ทำ ก.4–6 ในโหมด Live
+3. Vercel: เปลี่ยน `STRIPE_SECRET_KEY` และ `STRIPE_WEBHOOK_SECRET` เป็นชุด Live → Redeploy (`PAY_TEST_USERS` ปล่อยไว้ได้ ไม่มีผลกับคีย์ live)
+4. ซื้อจริงหนึ่งครั้ง (35 บาท) เพื่อตรวจ แล้วคืนเงินผ่าน Stripe ได้ถ้าต้องการ
 
 ## ช. คืนเงิน / ถอนสิทธิ์ (ทำเองใน dashboard)
 - คืนเงินที่ Stripe → Payments → เลือกรายการ → Refund (Stripe คืนเงินให้ผู้ซื้อ)

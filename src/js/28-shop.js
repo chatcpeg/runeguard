@@ -27,8 +27,9 @@ function entLoad(){ ENT={sup:0, runes:0, src:'none'};
   try{ const o=JSON.parse(localStorage.getItem('runeguard.devEnt')||'null'); if(o&&typeof o==='object'){
     ENT={sup:Math.max(0,+o.sup||0), runes:Math.max(0,Math.min(1e7,o.runes|0)), src:'dev'}; } }catch(e){}
   return ENT; }
-function isSupporter(){ return entGet().sup>Date.now(); }
-function supDaysLeft(){ return isSupporter()?Math.ceil((entGet().sup-Date.now())/864e5):0; }
+function entNow(){ return Date.now()+((ENTS&&ENTS.off)||0); }   // the server's clock (Date header of the purchase list) · a moved device clock gives nothing
+function isSupporter(){ return entGet().sup>entNow(); }
+function supDaysLeft(){ return isSupporter()?Math.ceil((entGet().sup-entNow())/864e5):0; }
 function shopWallet(){ const A=SAVE&&SAVE.acct; return Math.max(0,(entGet().runes|0)-((A&&A.ru)|0)); }
 // move `need` bought runes from the account wallet onto character ch (only when the wallet has them all)
 function shopFund(ch,need){ need=Math.ceil(need); if(!(need>0)) return true; const A=SAVE&&SAVE.acct; if(!A||shopWallet()<need) return false;
@@ -45,20 +46,21 @@ function entFromRows(rows){
   return {sup, runes:Math.min(1e7,runes), n:ok.length, sids:ok.map(r=>r.sid).filter(Boolean)}; }
 // Σ ch.rb ≤ acct.ru ≤ bought → {ru, rb} taken back (last character first; tfSanitize drops what it can no longer pay)
 function shopClamp(S,bought){
-  const out={ru:0, rb:0}; if(!S||!S.acct||!Array.isArray(S.chars)) return out; const A=S.acct; bought=Math.max(0,bought|0);
-  if((A.ru|0)>bought){ out.ru=(A.ru|0)-bought; A.ru=bought; }
-  let sum=S.chars.reduce((n,c)=>n+Math.max(0,(c&&c.rb)|0),0);
-  for(let i=S.chars.length-1;i>=0&&sum>(A.ru|0);i--){ const c=S.chars[i], take=Math.min(Math.max(0,c.rb|0),sum-(A.ru|0));
-    if(take>0){ c.rb=(c.rb|0)-take; sum-=take; out.rb+=take; if(typeof tfSanitize==='function') tfSanitize(c); } }
+  const out={ru:0, rb:0}; if(!S||!S.acct||!Array.isArray(S.chars)) return out; const A=S.acct, I=v=>Math.max(0,Math.min(1e9,Math.trunc(+v||0)));
+  bought=I(bought); A.ru=I(A.ru); if(A.ru>bought){ out.ru=A.ru-bought; A.ru=bought; }
+  let sum=S.chars.reduce((n,c)=>n+(c?I(c.rb):0),0);
+  for(let i=S.chars.length-1;i>=0&&sum>A.ru;i--){ const c=S.chars[i]; if(!c) continue; c.rb=I(c.rb); const take=Math.min(c.rb,sum-A.ru);
+    if(take>0){ c.rb-=take; sum-=take; out.rb+=take; if(typeof tfSanitize==='function') tfSanitize(c); } }
   return out; }
 // GET own rows (signed in only · one at a time)
 function entRefresh(){
   if(!entSigned()||typeof authFetch!=='function') return Promise.resolve(false);
   if(entBusy) return entBusy; const u=entUid();
+  let off=0;
   entBusy=authFetch('/rest/v1/rg_purchases?select=session_id,product,runes,days,created_at&user_id=eq.'+u+'&order=created_at.asc,id.asc&limit=5000',{method:'GET'})
-    .then(r=>r.ok?r.json():Promise.reject(new Error('http '+r.status)))
+    .then(r=>{ const d=Date.parse(r.headers&&r.headers.get?r.headers.get('date')||'':''); if(Number.isFinite(d)) off=Math.max(-3e10,Math.min(3e10,d-Date.now())); return r.ok?r.json():Promise.reject(new Error('http '+r.status)); })
     .then(rows=>{ if(entUid()!==u||!Array.isArray(rows)) return false;
-      const e=entFromRows(rows); ENTS={uid:u, sup:e.sup, runes:e.runes, n:e.n, sids:e.sids, at:Date.now()}; entOk=false;
+      const e=entFromRows(rows); ENTS={uid:u, sup:e.sup, runes:e.runes, n:e.n, sids:e.sids, at:Date.now(), off}; entOk=false;
       shopClampLater(); BUS.emit('ent',ENTS); return true; })
     .catch(e=>{ console.warn('rg_purchases',e&&e.message); return false; })
     .finally(()=>{ entBusy=null; });

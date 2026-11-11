@@ -1,6 +1,6 @@
 /* test hook (only with #dev in the address): lets a script fast-forward a run without the screen
    lanes add DEV.<ns> in their own files; it is merged in here. Lanes never assign window.RG themselves. */
-if(location.hash==='#dev'){ const RG=Object.assign({
+if(location.hash==='#dev'&&/^(localhost|127\.0\.0\.1|\[::1\])$/.test(location.hostname)){ const RG=Object.assign({   // #dev only on this machine, never on the real site (tester pay F4)
   start(id){ startRun(id||'swordsman'); return this.info(); },
   sim(sec){ if(!G) return 'no run'; G.auto=true; const steps=Math.round(sec*60); for(let i=0;i<steps&&!G.over;i++){ update(1/60); autoUI(); } G.auto=false; refreshSkillBar(); return this.info(); },
   info(){ return G&&{t:+G.t.toFixed(1),wave:G.wave,boss:G.boss,lv:P.lv,hp:Math.round(P.hp)+'/'+Math.round(P.maxHp),kills:G.kills,enemies:G.enemies.length,projs:G.projs.length,gems:G.gems.length,zones:G.zones.length,parts:G.parts.length,decals:G.decals.length,corpses:G.corpses.length,adv:P.adv&&P.adv.id,over:G.over,won:G.won,

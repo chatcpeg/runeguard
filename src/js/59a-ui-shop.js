@@ -34,12 +34,12 @@ function shopClick(e){
   const b=e.target.closest('[data-buy],[data-a]'); if(!b||b.disabled) return;
   if(b.dataset.a==='devclear'){ DEV.shop.clear(); toast('ล้างสิทธิ์ทดสอบแล้ว','info'); shopAfter(); return; }
   const p=RSHOP.products.find(x=>x.id===b.dataset.buy); if(!p) return;
+  if(!shopDevHost()&&typeof CLOUD_OK!=='undefined'&&CLOUD_OK&&!entSigned()){ const r=SHW.reason; closeSheet();   // signed out: sign in first (tester pay F5)
+    if(typeof uiaOpenAuth!=='function'||!uiaOpenAuth('in','เข้าสู่ระบบก่อนซื้อ · สิทธิ์จะติดบัญชีและใช้ได้ทุกเครื่อง',()=>shopOpen(r))) toast(SHOP_ERR.site,'info');
+    return; }
   if(shopCanPay()){ shopBuy(p); return; }                                   // real payment first, always
   if(shopDevHost()){ DEV.shop.grant(p.id); toast('ทดสอบ: ได้ '+p.n,'good'); shopAfter(); return; }
   if(typeof CLOUD_OK==='undefined'||!CLOUD_OK){ toast(SHOP_ERR.site,'info'); return; }
-  if(!entSigned()){ const r=SHW.reason; closeSheet();
-    if(typeof uiaOpenAuth!=='function'||!uiaOpenAuth('in','เข้าสู่ระบบก่อนซื้อ · สิทธิ์จะติดบัญชีและใช้ได้ทุกเครื่อง',()=>shopOpen(r))) toast(SHOP_ERR.site,'info');
-    return; }
   if(SHOP_PAY===null){ toast('กำลังตรวจระบบชำระเงิน…','info'); shopProbe().then(()=>{ if(shopCanPay()) shopBuy(p); else toast(SHOP_ERR.off,'info'); }); return; }
   toast(SHOP_ERR.off,'info'); }
 // GET /api/checkout → {configured} · signed in only (a guest sends nothing) · a failure leaves it unknown (asked again next time)
@@ -105,7 +105,7 @@ TF_HELP.shop=['ร้านรูน',()=>`<h4>💎 แพคสนับสน�
   <table>${tfRow('รูน 60','35 บาท')}${tfRow('รูน 200','99 บาท')}${tfRow('รูน 700','299 บาท')}${tfRow('รูน 2500','899 บาท')}</table>
   <h4>การจ่ายเงิน</h4><p>ผ่าน Stripe (บัตร / พร้อมเพย์) · ต้องล็อกอินก่อน สิทธิ์จึงติดบัญชีและใช้ได้ทุกเครื่อง · <button type="button" class="btn ghost" data-help="pay">ขั้นตอนการซื้อ</button></p>`];
 TF_HELP.pay=['การชำระเงิน',()=>`<h4>ขั้นตอน</h4><table>${tfRow('1','เข้าสู่ระบบ (อีเมล หรือ Google) · สิทธิ์ผูกกับบัญชี ไม่ใช่เครื่อง')}${tfRow('2','แตะราคา → ยืนยัน → เกมพาไปหน้าชำระเงินของ Stripe')}${tfRow('3','จ่ายด้วยบัตร หรือสแกน QR พร้อมเพย์ด้วยแอปธนาคาร')}${tfRow('4','Stripe ส่งกลับมาที่เกม · สิทธิ์ขึ้นเองภายในไม่กี่วินาที')}</table>
-  <h4>ปลอดภัยอย่างไร</h4><p>เกมไม่เห็นและไม่เก็บเลขบัตร · ราคาและสิทธิ์ที่ได้กำหนดที่เซิร์ฟเวอร์ เกมส่งแค่ว่าเลือกสินค้าไหน · สิทธิ์นับจากรายการที่ Stripe ยืนยันว่าจ่ายแล้วเท่านั้น (แก้เซฟเองก็ไม่ได้รูนเพิ่ม)</p>
+  <h4>ปลอดภัยอย่างไร</h4><p>เกมไม่เห็นและไม่เก็บเลขบัตร · ราคาและสิทธิ์ที่ได้กำหนดที่เซิร์ฟเวอร์ เกมส่งแค่ว่าเลือกสินค้าไหน · สิทธิ์นับจากรายการที่ Stripe ยืนยันว่าจ่ายแล้วเท่านั้น (รูนที่ซื้อนับจากรายการซื้อของบัญชีบนเซิร์ฟเวอร์ (แก้เซฟเองแล้วจะถูกปรับกลับเมื่อออนไลน์))</p>
   <h4>ถ้าจ่ายแล้วสิทธิ์ยังไม่ขึ้น</h4><p>รอสักครู่แล้วเปิดร้านอีกครั้ง (เกมโหลดรายการซื้อใหม่) · ตรวจว่าเข้าสู่ระบบบัญชีเดียวกับตอนซื้อ · พร้อมเพย์บางธนาคารยืนยันช้ากว่าบัตร</p>
   <h4>ยกเลิก</h4><p>กดย้อนกลับในหน้า Stripe = ยกเลิก ไม่มีการตัดเงิน · แพคสนับสนุนจ่ายครั้งเดียว ไม่ต่ออายุอัตโนมัติ</p>`];
 TF_HELP.startlv=['ระดับเริ่มต้นของสกิล',()=>`<p>ตั้งว่าสกิลจะเริ่มที่ Lv เท่าไรตอนได้มาในรอบ (รวมสกิลที่ถือเริ่มรอบ) · ไม่เกิน ★ ที่ฝึกไว้ · ใช้ทุกโหมดยกเว้นคลาสสิก</p>

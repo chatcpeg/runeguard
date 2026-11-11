@@ -493,12 +493,18 @@ const guestSave = (lv = 5) => ({ v: 6, sid: 's_guest', owner: null, created: 1, 
   const r4 = await c4.authHandleRedirect();
   ok('?code= แต่ไม่มี verifier → nover · ไม่ยิงคำขอเลย · URL สะอาด', r4.kind === 'nover' && THAI.test(r4.msg) && !c4.T.order.some(x => x.startsWith('fetch')) && c4.location.href === 'http://localhost:8793/');
   const S5 = fakeServer(); S5.access.set('acc_imp', UID_A); S5.refresh.set('ref_imp', UID_A);
-  const c5 = simCtx({ href: 'http://localhost:8793/#access_token=acc_imp&refresh_token=ref_imp&expires_in=3600&token_type=bearer&type=signup', fetch: S5.fetchImpl });
+  const ls5 = memStorage(); ls5.setItem('runeguard.auth.resent', String(Date.now() - 60000));   // this browser asked for the e-mail itself (authResend)
+  const c5 = simCtx({ href: 'http://localhost:8793/#access_token=acc_imp&refresh_token=ref_imp&expires_in=3600&token_type=bearer&type=signup', fetch: S5.fetchImpl, storage: ls5 });
   const r5 = await c5.authHandleRedirect();
   ok('#access_token (implicit) → ล้าง hash → GET /auth/v1/user ก่อน → รับ session', r5.kind === 'signup' && c5.T.order[0] === 'replace /' && S5.log[0].p === '/auth/v1/user' && c5.__eval('AUTH.state') === 'in' && !c5.location.href.includes('token'));
-  const c6 = simCtx({ href: 'http://localhost:8793/#access_token=forged&refresh_token=x&type=signup', fetch: fakeServer().fetchImpl });
+  const ls6 = memStorage(); ls6.setItem('runeguard.auth.resent', String(Date.now()));
+  const c6 = simCtx({ href: 'http://localhost:8793/#access_token=forged&refresh_token=x&type=signup', fetch: fakeServer().fetchImpl, storage: ls6 });
   const r6 = await c6.authHandleRedirect();
   ok('token ปลอมใน hash → GoTrue 401 → ไม่รับ session', r6.kind === 'error' && c6.__eval('AUTH.s') === null && c6.ls.getItem('runeguard.auth') === null);
+  { const S8 = fakeServer(); S8.access.set('acc_evil', UID_A); S8.refresh.set('ref_evil', UID_A);   // login CSRF: a link made by someone else (no resend mark here)
+    const c8 = simCtx({ href: 'http://localhost:8793/#access_token=acc_evil&refresh_token=ref_evil&expires_in=3600&type=signup', fetch: S8.fetchImpl });
+    const r8 = await c8.authHandleRedirect();
+    ok('ลิงก์ #access_token ที่เครื่องนี้ไม่ได้ขอเอง (login CSRF) → nover · ไม่ถาม GoTrue · ไม่รับ session · URL สะอาด', r8.kind === 'nover' && S8.log.length === 0 && c8.__eval('AUTH.s') === null && !c8.location.href.includes('token'), r8); }
   const c7 = simCtx({ href: 'http://localhost:8793/?error=access_denied&error_code=otp_expired&error_description=%3Cb%3ECall%20555%3C%2Fb%3E#dev', fetch: fakeServer().fetchImpl });
   const r7 = await c7.authHandleRedirect();
   ok('?error= → ข้อความไทยจาก code (ไม่เอา error_description) · #dev ยังอยู่', r7.kind === 'error' && r7.msg === 'ลิงก์หมดอายุหรือใช้ไปแล้ว ขอลิงก์ใหม่' && c7.location.href === 'http://localhost:8793/#dev');

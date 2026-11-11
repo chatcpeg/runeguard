@@ -14,7 +14,7 @@ const AUTH={state:'off', s:null};                      // state: 'off'|'guest'|'
 const ATH_TIMEOUT=4000, ATH_REDIRECT_MS=3000, ATH_SKEW=60000, ATH_LOCK_MS=5000, ATH_RESEND_MS=60000, ATH_PW_MIN=8;
 // PKCE: a slot per flow (F10) · e-mail links 24 h (GoTrue ends the flow in ~5 min; the kind still picks the message)
 const ATH_PKCE_TTL={google:600000, signup:864e5, recovery:864e5}, ATH_KINDS=['google','signup','recovery'];
-const ATH_K={s:'runeguard.auth', pkce:'runeguard.auth.pkce', guest:'runeguard.guestOK'};   // keys of §6.2
+const ATH_K={s:'runeguard.auth', pkce:'runeguard.auth.pkce', guest:'runeguard.guestOK', resent:'runeguard.auth.resent'};   // keys of §6.2
 const ATH_UUID=/^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
 const ATH_B64='ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789-_';
 // one text for sign-up, recover and resend, whatever GoTrue answers (no guessing which email has an account)
@@ -256,6 +256,8 @@ async function athRedirect(){
     athAccept(s,'in'); cloudOnLogin();
     return {kind, msg:kind==='signup'?'ยืนยันอีเมลสำเร็จ':kind==='recovery'?'ตั้งรหัสผ่านใหม่ได้เลย':'เข้าสู่ระบบเรียบร้อย'};
   }
+  const rs=+STORE.get(ATH_K.resent)||0; STORE.del(ATH_K.resent);
+  if(!(rs>0&&Date.now()-rs<864e5&&rs<=Date.now()+6e4)) return {kind:'nover', msg:ATH_NOVER.signup||ATH_NOVER.any};   // someone else's link (login CSRF): not kept
   const u=await athCall('user',{token:at});   // implicit link (resend): ask GoTrue whose token this is before keeping it
   if(!u.ok) return {kind:'error', msg:athErrTh(u.code,u.status)};
   const s=athSessionFrom({access_token:at, refresh_token:h.get('refresh_token')||'', expires_in:+h.get('expires_in')||3600, user:u.data});
@@ -305,7 +307,7 @@ async function authResend(email){
   if(!athInit()) return {ok:false, msg:ATH_MSG.off};
   if(!athEmailOk(email)) return {ok:false, msg:ATH_BAD_EMAIL};
   if(Date.now()-ATH.resendAt<ATH_RESEND_MS) return {ok:false, msg:ATH_MSG.resend_wait};
-  ATH.resendAt=Date.now();
+  ATH.resendAt=Date.now(); STORE.set(ATH_K.resent,String(Date.now()));   // the implicit link that comes back is accepted only with this mark
   return athNeutral(await athCall('resend',{email}));
 }
 async function authRecover(email){

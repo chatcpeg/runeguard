@@ -22,7 +22,8 @@ const tick = ms => new Promise(r => setTimeout(r, ms));
 const THAI = /[฀-๿]/;
 const UID = '0a0a0a0a-0000-4000-8000-00000000000a', UID2 = '0b0b0b0b-0000-4000-8000-00000000000b';
 // fake values only (shape of the real ones · never a real key)
-const ENV = { STRIPE_SECRET_KEY: 'sk_test_FAKEfakeFAKE123', STRIPE_WEBHOOK_SECRET: 'whsec_FAKEfakeFAKE456', SUPABASE_SECRET_KEY: 'sb_secret_FAKEfakeFAKEfake789' };
+const UIDS = '0a0a0a0a-0000-4000-8000-00000000000a';   // PAY_TEST_USERS: test keys sell only to these
+const ENV = { STRIPE_SECRET_KEY: 'sk_test_FAKEfakeFAKE123', STRIPE_WEBHOOK_SECRET: 'whsec_FAKEfakeFAKE456', SUPABASE_SECRET_KEY: 'sb_secret_FAKEfakeFAKEfake789', PAY_TEST_USERS: ' ' + UIDS + ', not-a-uuid ' };
 const quiet = { error() {}, warn() {}, log() {} };
 const NOW = 1762900000;
 const req = (url, init) => new Request(url, init);
@@ -86,6 +87,8 @@ console.log('ก. api/checkout.js');
   r = await co(U3, post({ product: 'rune200', thb: 1, unit_amount: 100, runes: 99999, user_id: UID2, days: 366 }));
   const j = await r.json(), sx = U3.log.find(x => x.origin === 'https://api.stripe.com'), gt = U3.log.find(x => x.path === '/auth/v1/user');
   ok('สำเร็จ → 200 {url} ของ checkout.stripe.com', r.status === 200 && j.url === 'https://checkout.stripe.com/c/pay/cs_test_NEW1#abc', j);
+  { const U9 = upstream(), env = Object.assign({}, ENV, { PAY_TEST_USERS: '' }); const r9 = await co(U9, post({ product: 'rune200' }), env);
+    ok('คีย์ทดสอบ + ผู้เล่นไม่อยู่ใน PAY_TEST_USERS → 503 not_configured · ไม่ถึง Stripe (ไม่มีใครได้ของฟรีด้วยบัตรทดสอบ)', r9.status === 503 && (await r9.json()).error === 'not_configured' && !U9.log.some(x => x.origin === 'https://api.stripe.com'), r9.status); }
   ok('GoTrue: GET /auth/v1/user · apikey = publishable · Bearer = token ของผู้เล่น (ไม่ส่งคีย์ลับไป Supabase)', gt.method === 'GET' && gt.h.apikey === SHOP.SUPABASE_PUBLISHABLE_KEY && gt.h.Authorization === 'Bearer tok_good_0123456789abc' && !JSON.stringify(gt).includes('sk_test') && !JSON.stringify(gt).includes('sb_secret'));
   const f = new URLSearchParams(sx.body);
   ok('Stripe: POST /v1/checkout/sessions · Bearer sk · form-encoded · Idempotency-Key', sx.method === 'POST' && sx.h.Authorization === 'Bearer ' + ENV.STRIPE_SECRET_KEY && sx.h['Content-Type'] === 'application/x-www-form-urlencoded' && /^[0-9a-f-]{36}$/.test(sx.h['Idempotency-Key']));
@@ -151,6 +154,8 @@ const hook = (U, body, sig, env = ENV, now = NOW) => handleWebhook(req('https://
   }
   r = await handleWebhook(req('https://runeguard-lac.vercel.app/api/stripe-webhook', { method: 'GET' }), deps(U)); ok('GET → 405', r.status === 405);
 
+  { const Ul = upstream(), envL = Object.assign({}, ENV, { STRIPE_SECRET_KEY: 'sk_live_FAKEfakeFAKE123' }); const rl = await hook(Ul, body, sign(body), envL);
+    ok('คีย์ live + event โหมดทดสอบ (livemode false) → 200 ignored testmode · ไม่บันทึก', rl.status === 200 && (await rl.json()).ignored === 'testmode' && Ul.rows.length === 0); }
   U = upstream(); r = await hook(U, body, sign(body));
   const ins = U.log.find(x => x.path === '/rest/v1/rg_purchases'), row = JSON.parse(ins.body);
   ok('ถูกต้อง → 200 {received:true} · บันทึก 1 แถว', r.status === 200 && (await r.json()).received === true && U.rows.length === 1);

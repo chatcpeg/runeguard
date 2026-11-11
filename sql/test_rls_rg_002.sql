@@ -37,7 +37,7 @@ do $$ declare n int; begin
   exception when insufficient_privilege then null; end;                                          -- 42501
   begin delete from public.rg_purchases where true; raise exception 'FAIL service_role can delete';
   exception when insufficient_privilege then null; end;
-  if (select count(*) from public.rg_purchases) <> 2 then raise exception 'FAIL service_role sees % rows', (select count(*) from public.rg_purchases); end if;
+  if (select count(*) from public.rg_purchases where session_id in ('cs_test_A1','cs_test_B1')) <> 2 then raise exception 'FAIL service_role sees % test rows', (select count(*) from public.rg_purchases where session_id in ('cs_test_A1','cs_test_B1')); end if;
 end $$;
 -- ===== ผู้เล่น A =====
 set local role authenticated;

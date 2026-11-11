@@ -4690,8 +4690,9 @@ function entLoad(){ ENT={sup:0, runes:0, src:'none'};
   try{ const o=JSON.parse(localStorage.getItem('runeguard.devEnt')||'null'); if(o&&typeof o==='object'){
     ENT={sup:Math.max(0,+o.sup||0), runes:Math.max(0,Math.min(1e7,o.runes|0)), src:'dev'}; } }catch(e){}
   return ENT; }
-function isSupporter(){ return entGet().sup>Date.now(); }
-function supDaysLeft(){ return isSupporter()?Math.ceil((entGet().sup-Date.now())/864e5):0; }
+function entNow(){ return Date.now()+((ENTS&&ENTS.off)||0); }   // the server's clock (Date header of the purchase list) · a moved device clock gives nothing
+function isSupporter(){ return entGet().sup>entNow(); }
+function supDaysLeft(){ return isSupporter()?Math.ceil((entGet().sup-entNow())/864e5):0; }
 function shopWallet(){ const A=SAVE&&SAVE.acct; return Math.max(0,(entGet().runes|0)-((A&&A.ru)|0)); }
 // move `need` bought runes from the account wallet onto character ch (only when the wallet has them all)
 function shopFund(ch,need){ need=Math.ceil(need); if(!(need>0)) return true; const A=SAVE&&SAVE.acct; if(!A||shopWallet()<need) return false;
@@ -4708,20 +4709,21 @@ function entFromRows(rows){
   return {sup, runes:Math.min(1e7,runes), n:ok.length, sids:ok.map(r=>r.sid).filter(Boolean)}; }
 // Σ ch.rb ≤ acct.ru ≤ bought → {ru, rb} taken back (last character first; tfSanitize drops what it can no longer pay)
 function shopClamp(S,bought){
-  const out={ru:0, rb:0}; if(!S||!S.acct||!Array.isArray(S.chars)) return out; const A=S.acct; bought=Math.max(0,bought|0);
-  if((A.ru|0)>bought){ out.ru=(A.ru|0)-bought; A.ru=bought; }
-  let sum=S.chars.reduce((n,c)=>n+Math.max(0,(c&&c.rb)|0),0);
-  for(let i=S.chars.length-1;i>=0&&sum>(A.ru|0);i--){ const c=S.chars[i], take=Math.min(Math.max(0,c.rb|0),sum-(A.ru|0));
-    if(take>0){ c.rb=(c.rb|0)-take; sum-=take; out.rb+=take; if(typeof tfSanitize==='function') tfSanitize(c); } }
+  const out={ru:0, rb:0}; if(!S||!S.acct||!Array.isArray(S.chars)) return out; const A=S.acct, I=v=>Math.max(0,Math.min(1e9,Math.trunc(+v||0)));
+  bought=I(bought); A.ru=I(A.ru); if(A.ru>bought){ out.ru=A.ru-bought; A.ru=bought; }
+  let sum=S.chars.reduce((n,c)=>n+(c?I(c.rb):0),0);
+  for(let i=S.chars.length-1;i>=0&&sum>A.ru;i--){ const c=S.chars[i]; if(!c) continue; c.rb=I(c.rb); const take=Math.min(c.rb,sum-A.ru);
+    if(take>0){ c.rb-=take; sum-=take; out.rb+=take; if(typeof tfSanitize==='function') tfSanitize(c); } }
   return out; }
 // GET own rows (signed in only · one at a time)
 function entRefresh(){
   if(!entSigned()||typeof authFetch!=='function') return Promise.resolve(false);
   if(entBusy) return entBusy; const u=entUid();
+  let off=0;
   entBusy=authFetch('/rest/v1/rg_purchases?select=session_id,product,runes,days,created_at&user_id=eq.'+u+'&order=created_at.asc,id.asc&limit=5000',{method:'GET'})
-    .then(r=>r.ok?r.json():Promise.reject(new Error('http '+r.status)))
+    .then(r=>{ const d=Date.parse(r.headers&&r.headers.get?r.headers.get('date')||'':''); if(Number.isFinite(d)) off=Math.max(-3e10,Math.min(3e10,d-Date.now())); return r.ok?r.json():Promise.reject(new Error('http '+r.status)); })
     .then(rows=>{ if(entUid()!==u||!Array.isArray(rows)) return false;
-      const e=entFromRows(rows); ENTS={uid:u, sup:e.sup, runes:e.runes, n:e.n, sids:e.sids, at:Date.now()}; entOk=false;
+      const e=entFromRows(rows); ENTS={uid:u, sup:e.sup, runes:e.runes, n:e.n, sids:e.sids, at:Date.now(), off}; entOk=false;
       shopClampLater(); BUS.emit('ent',ENTS); return true; })
     .catch(e=>{ console.warn('rg_purchases',e&&e.message); return false; })
     .finally(()=>{ entBusy=null; });
@@ -6117,6 +6119,7 @@ function loadSaveFor(owner){
   if(s.ro) svlNote('มีเวอร์ชันใหม่ แตะเพื่ออัปเดต','info');
   else if(from!=='main'||gift) svlWrite('load',!gift);                    // keep the new / migrated / restored save (a gift is a change: mt stamped)
   if(gift) svlNote('ยินดีต้อนรับกลับ! ได้รับผ้าคลุมผู้บุกเบิก','good');
+  if(SAVE&&SAVE.owner==null&&!SAVE.ro&&typeof shopClamp==='function'&&!(typeof shopDevHost==='function'&&shopDevHost())){ const r=shopClamp(SAVE,0); if(r.ru||r.rb) saveNow('ent'); }   // a guest save cannot hold bought runes (buying needs an account)
   svlMark(); BUS.emit('char',curChar());
   return SAVE; }
 function svlEnsure(){ if(!SAVE) loadSaveFor(svlOwner); return SAVE; }
@@ -6296,6 +6299,7 @@ function createChar(name,clsId){
   return ch; }
 function deleteChar(id){
   svlFresh(); const s=svlEnsure(); if(s.ro) return false; const i=s.chars.findIndex(c=>c.id===id); if(i<0) return false;
+  const rb=Math.max(0,Math.min(1e9,Math.trunc(+s.chars[i].rb||0))); if(rb) s.acct.ru=Math.max(0,Math.trunc(+s.acct.ru||0)-rb);   // its bought runes go back to the wallet (tester pay F8)
   s.chars.splice(i,1); delete s.acct.records.survival[id];
   if(s.active===id) s.active=s.chars[0]?s.chars[0].id:null;
   saveNow('delete'); if(SAVE!==s) return false; BUS.emit('char',curChar()); return true; }
@@ -6729,7 +6733,7 @@ const AUTH={state:'off', s:null};                      // state: 'off'|'guest'|'
 const ATH_TIMEOUT=4000, ATH_REDIRECT_MS=3000, ATH_SKEW=60000, ATH_LOCK_MS=5000, ATH_RESEND_MS=60000, ATH_PW_MIN=8;
 // PKCE: a slot per flow (F10) · e-mail links 24 h (GoTrue ends the flow in ~5 min; the kind still picks the message)
 const ATH_PKCE_TTL={google:600000, signup:864e5, recovery:864e5}, ATH_KINDS=['google','signup','recovery'];
-const ATH_K={s:'runeguard.auth', pkce:'runeguard.auth.pkce', guest:'runeguard.guestOK'};   // keys of §6.2
+const ATH_K={s:'runeguard.auth', pkce:'runeguard.auth.pkce', guest:'runeguard.guestOK', resent:'runeguard.auth.resent'};   // keys of §6.2
 const ATH_UUID=/^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
 const ATH_B64='ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789-_';
 // one text for sign-up, recover and resend, whatever GoTrue answers (no guessing which email has an account)
@@ -6971,6 +6975,8 @@ async function athRedirect(){
     athAccept(s,'in'); cloudOnLogin();
     return {kind, msg:kind==='signup'?'ยืนยันอีเมลสำเร็จ':kind==='recovery'?'ตั้งรหัสผ่านใหม่ได้เลย':'เข้าสู่ระบบเรียบร้อย'};
   }
+  const rs=+STORE.get(ATH_K.resent)||0; STORE.del(ATH_K.resent);
+  if(!(rs>0&&Date.now()-rs<864e5&&rs<=Date.now()+6e4)) return {kind:'nover', msg:ATH_NOVER.signup||ATH_NOVER.any};   // someone else's link (login CSRF): not kept
   const u=await athCall('user',{token:at});   // implicit link (resend): ask GoTrue whose token this is before keeping it
   if(!u.ok) return {kind:'error', msg:athErrTh(u.code,u.status)};
   const s=athSessionFrom({access_token:at, refresh_token:h.get('refresh_token')||'', expires_in:+h.get('expires_in')||3600, user:u.data});
@@ -7020,7 +7026,7 @@ async function authResend(email){
   if(!athInit()) return {ok:false, msg:ATH_MSG.off};
   if(!athEmailOk(email)) return {ok:false, msg:ATH_BAD_EMAIL};
   if(Date.now()-ATH.resendAt<ATH_RESEND_MS) return {ok:false, msg:ATH_MSG.resend_wait};
-  ATH.resendAt=Date.now();
+  ATH.resendAt=Date.now(); STORE.set(ATH_K.resent,String(Date.now()));   // the implicit link that comes back is accepted only with this mark
   return athNeutral(await athCall('resend',{email}));
 }
 async function authRecover(email){
@@ -7793,6 +7799,7 @@ function uiaChoiceSheet(){
     box.append(uiaCard('ความคืบหน้าในเครื่องนี้',c.local),
       uiaBtn('ย้าย','primary',()=>uiaResolve('local')), uiaBtn('เริ่มใหม่','ghost',()=>uiaResolve('cloud')),
       uiaMk('p','hint','เซฟผู้เยี่ยมชมในเครื่องยังอยู่เหมือนเดิม ลบเองได้ที่หน้าบัญชี'));
+    const who=typeof authEmailMasked==='function'?authEmailMasked():''; if(who) box.prepend(uiaMk('p','hint','บัญชี: '+who));
     sheet(box,{title:'ย้ายความคืบหน้าในเครื่องขึ้นบัญชีนี้?'});
   } else {
     const link=c.kind==='choose';
@@ -9369,12 +9376,12 @@ function shopClick(e){
   const b=e.target.closest('[data-buy],[data-a]'); if(!b||b.disabled) return;
   if(b.dataset.a==='devclear'){ DEV.shop.clear(); toast('ล้างสิทธิ์ทดสอบแล้ว','info'); shopAfter(); return; }
   const p=RSHOP.products.find(x=>x.id===b.dataset.buy); if(!p) return;
+  if(!shopDevHost()&&typeof CLOUD_OK!=='undefined'&&CLOUD_OK&&!entSigned()){ const r=SHW.reason; closeSheet();   // signed out: sign in first (tester pay F5)
+    if(typeof uiaOpenAuth!=='function'||!uiaOpenAuth('in','เข้าสู่ระบบก่อนซื้อ · สิทธิ์จะติดบัญชีและใช้ได้ทุกเครื่อง',()=>shopOpen(r))) toast(SHOP_ERR.site,'info');
+    return; }
   if(shopCanPay()){ shopBuy(p); return; }                                   // real payment first, always
   if(shopDevHost()){ DEV.shop.grant(p.id); toast('ทดสอบ: ได้ '+p.n,'good'); shopAfter(); return; }
   if(typeof CLOUD_OK==='undefined'||!CLOUD_OK){ toast(SHOP_ERR.site,'info'); return; }
-  if(!entSigned()){ const r=SHW.reason; closeSheet();
-    if(typeof uiaOpenAuth!=='function'||!uiaOpenAuth('in','เข้าสู่ระบบก่อนซื้อ · สิทธิ์จะติดบัญชีและใช้ได้ทุกเครื่อง',()=>shopOpen(r))) toast(SHOP_ERR.site,'info');
-    return; }
   if(SHOP_PAY===null){ toast('กำลังตรวจระบบชำระเงิน…','info'); shopProbe().then(()=>{ if(shopCanPay()) shopBuy(p); else toast(SHOP_ERR.off,'info'); }); return; }
   toast(SHOP_ERR.off,'info'); }
 // GET /api/checkout → {configured} · signed in only (a guest sends nothing) · a failure leaves it unknown (asked again next time)
@@ -9440,7 +9447,7 @@ TF_HELP.shop=['ร้านรูน',()=>`<h4>💎 แพคสนับสน�
   <table>${tfRow('รูน 60','35 บาท')}${tfRow('รูน 200','99 บาท')}${tfRow('รูน 700','299 บาท')}${tfRow('รูน 2500','899 บาท')}</table>
   <h4>การจ่ายเงิน</h4><p>ผ่าน Stripe (บัตร / พร้อมเพย์) · ต้องล็อกอินก่อน สิทธิ์จึงติดบัญชีและใช้ได้ทุกเครื่อง · <button type="button" class="btn ghost" data-help="pay">ขั้นตอนการซื้อ</button></p>`];
 TF_HELP.pay=['การชำระเงิน',()=>`<h4>ขั้นตอน</h4><table>${tfRow('1','เข้าสู่ระบบ (อีเมล หรือ Google) · สิทธิ์ผูกกับบัญชี ไม่ใช่เครื่อง')}${tfRow('2','แตะราคา → ยืนยัน → เกมพาไปหน้าชำระเงินของ Stripe')}${tfRow('3','จ่ายด้วยบัตร หรือสแกน QR พร้อมเพย์ด้วยแอปธนาคาร')}${tfRow('4','Stripe ส่งกลับมาที่เกม · สิทธิ์ขึ้นเองภายในไม่กี่วินาที')}</table>
-  <h4>ปลอดภัยอย่างไร</h4><p>เกมไม่เห็นและไม่เก็บเลขบัตร · ราคาและสิทธิ์ที่ได้กำหนดที่เซิร์ฟเวอร์ เกมส่งแค่ว่าเลือกสินค้าไหน · สิทธิ์นับจากรายการที่ Stripe ยืนยันว่าจ่ายแล้วเท่านั้น (แก้เซฟเองก็ไม่ได้รูนเพิ่ม)</p>
+  <h4>ปลอดภัยอย่างไร</h4><p>เกมไม่เห็นและไม่เก็บเลขบัตร · ราคาและสิทธิ์ที่ได้กำหนดที่เซิร์ฟเวอร์ เกมส่งแค่ว่าเลือกสินค้าไหน · สิทธิ์นับจากรายการที่ Stripe ยืนยันว่าจ่ายแล้วเท่านั้น (รูนที่ซื้อนับจากรายการซื้อของบัญชีบนเซิร์ฟเวอร์ (แก้เซฟเองแล้วจะถูกปรับกลับเมื่อออนไลน์))</p>
   <h4>ถ้าจ่ายแล้วสิทธิ์ยังไม่ขึ้น</h4><p>รอสักครู่แล้วเปิดร้านอีกครั้ง (เกมโหลดรายการซื้อใหม่) · ตรวจว่าเข้าสู่ระบบบัญชีเดียวกับตอนซื้อ · พร้อมเพย์บางธนาคารยืนยันช้ากว่าบัตร</p>
   <h4>ยกเลิก</h4><p>กดย้อนกลับในหน้า Stripe = ยกเลิก ไม่มีการตัดเงิน · แพคสนับสนุนจ่ายครั้งเดียว ไม่ต่ออายุอัตโนมัติ</p>`];
 TF_HELP.startlv=['ระดับเริ่มต้นของสกิล',()=>`<p>ตั้งว่าสกิลจะเริ่มที่ Lv เท่าไรตอนได้มาในรอบ (รวมสกิลที่ถือเริ่มรอบ) · ไม่เกิน ★ ที่ฝึกไว้ · ใช้ทุกโหมดยกเว้นคลาสสิก</p>
@@ -10854,7 +10861,7 @@ TF_HELP.elements=['ธาตุ',()=>`<p>สกิลที่มีธาตุ
 DEV.daily={ go(k,d){ if(typeof shopDevHost==='function'&&!shopDevHost()) return 'local dev only'; const ch=curChar(); if(!ch) return 'no char'; startRun(ch.cls,'d'+k,{char:ch, diff:d|0}); return G&&G.modeId; }, left(){ return {exp:dgLeft('exp'), gold:dgLeft('gold'), rare:dgLeft('rare')}; } };
 /* test hook (only with #dev in the address): lets a script fast-forward a run without the screen
    lanes add DEV.<ns> in their own files; it is merged in here. Lanes never assign window.RG themselves. */
-if(location.hash==='#dev'){ const RG=Object.assign({
+if(location.hash==='#dev'&&/^(localhost|127\.0\.0\.1|\[::1\])$/.test(location.hostname)){ const RG=Object.assign({   // #dev only on this machine, never on the real site (tester pay F4)
   start(id){ startRun(id||'swordsman'); return this.info(); },
   sim(sec){ if(!G) return 'no run'; G.auto=true; const steps=Math.round(sec*60); for(let i=0;i<steps&&!G.over;i++){ update(1/60); autoUI(); } G.auto=false; refreshSkillBar(); return this.info(); },
   info(){ return G&&{t:+G.t.toFixed(1),wave:G.wave,boss:G.boss,lv:P.lv,hp:Math.round(P.hp)+'/'+Math.round(P.maxHp),kills:G.kills,enemies:G.enemies.length,projs:G.projs.length,gems:G.gems.length,zones:G.zones.length,parts:G.parts.length,decals:G.decals.length,corpses:G.corpses.length,adv:P.adv&&P.adv.id,over:G.over,won:G.won,

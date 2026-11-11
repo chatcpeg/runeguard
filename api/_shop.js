@@ -30,6 +30,12 @@ export function configured(env) {
   const k = keys(env);
   return /^(sk|rk)_(test|live)_\S{8,}$/.test(k.stripe) && /^whsec_\S{8,}/.test(k.whsec) && /^\S{20,}$/.test(k.supa);
 }
+// test mode (sk_test_ / rk_test_ key): only the uids in PAY_TEST_USERS may buy, so nobody gets runes with Stripe's test card
+export function testMode(env) { return /^(sk|rk)_test_/.test(keys(env).stripe); }
+export function testUsers(env) {
+  const v = env && typeof env.PAY_TEST_USERS === 'string' ? env.PAY_TEST_USERS : '';
+  return new Set(v.split(',').map(s => s.trim().toLowerCase()).filter(s => UUID.test(s)));
+}
 // a Supabase secret key goes in apikey only (an sb_secret_ key is not a JWT) · a legacy service_role JWT also as Bearer
 export function supabaseServiceHeaders(key) {
   const h = { apikey: key };

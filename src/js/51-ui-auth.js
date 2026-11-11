@@ -155,6 +155,7 @@ function uiaChoiceSheet(){
     box.append(uiaCard('ความคืบหน้าในเครื่องนี้',c.local),
       uiaBtn('ย้าย','primary',()=>uiaResolve('local')), uiaBtn('เริ่มใหม่','ghost',()=>uiaResolve('cloud')),
       uiaMk('p','hint','เซฟผู้เยี่ยมชมในเครื่องยังอยู่เหมือนเดิม ลบเองได้ที่หน้าบัญชี'));
+    const who=typeof authEmailMasked==='function'?authEmailMasked():''; if(who) box.prepend(uiaMk('p','hint','บัญชี: '+who));
     sheet(box,{title:'ย้ายความคืบหน้าในเครื่องขึ้นบัญชีนี้?'});
   } else {
     const link=c.kind==='choose';

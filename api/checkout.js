@@ -5,7 +5,7 @@
 // The price, runes and days come from api/_shop.js only (the body carries nothing but a product id). The player is whoever
 // GoTrue says the token belongs to (GET /auth/v1/user) — never an id from the request. metadata {app, user_id, product} is what
 // api/stripe-webhook.js checks before it records the purchase. No key is ever sent to the browser or written to a log.
-import { SUPABASE_URL, SUPABASE_PUBLISHABLE_KEY, APP_URL, UUID, product, keys, configured, json, timedFetch, readBody, defaultDeps } from './_shop.js';
+import { SUPABASE_URL, SUPABASE_PUBLISHABLE_KEY, APP_URL, UUID, product, keys, configured, testMode, testUsers, json, timedFetch, readBody, defaultDeps } from './_shop.js';
 
 const ORIGIN_OK = [/^http:\/\/(localhost|127\.0\.0\.1):\d{2,5}$/, /^https:\/\/runeguard-[a-z0-9-]{1,60}-chatcpegs-projects\.vercel\.app$/];
 // where Stripe sends the player back: this deployment when it is the site, a preview of it or a local `vercel dev` · else the site
@@ -57,6 +57,7 @@ export async function handleCheckout(request, deps) {
   } catch (e) { log.error('checkout: auth/v1/user', e && e.name); return json(502, { error: 'auth_upstream' }); }
   const uid = user && typeof user.id === 'string' ? user.id.toLowerCase() : '';
   if (!UUID.test(uid) || user.is_anonymous === true) return json(401, { error: 'auth' });
+  if (testMode(env) && !testUsers(env).has(uid)) return json(503, { error: 'not_configured' });   // test keys: the owner's testers only
 
   let s;
   try {
