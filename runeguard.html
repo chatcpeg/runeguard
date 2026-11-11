@@ -1634,7 +1634,7 @@ function damageEnemy(e,base,s,o){
   let dmg=base*P.might*(crit?P.critMult:1);
   if(P.rage) dmg*=1+P.rage*(1-P.hp/P.maxHp);
   dmg*=rand(.92,1.08);
-  if(e.def) dmg*=1-e.def; if(e.boss&&P.bossDmg) dmg*=1+P.bossDmg; if(P.fam&&e.d.fam){ const f=P.fam[e.d.fam]; if(f) dmg*=1+f; }
+  if(e.def&&!(e.shArc&&!fdFront(e,o))) dmg*=1-e.def; if(e.boss&&P.bossDmg) dmg*=1+P.bossDmg; if(P.fam&&e.d.fam){ const f=P.fam[e.d.fam]; if(f) dmg*=1+f; }
   e.hp-=dmg; e.flash=.09; e.hitT=.12; e.ai.hurtT=G.t; if(s) s.dealt+=dmg; G.totalDmg+=dmg;
   if((!o.quiet||crit)&&(G.texts.length<110||crit)) addNum(e.x+rand(-6,6),e.y-e.r-6,Math.round(dmg),crit?'c':'w');
   let nx=o.nx,ny=o.ny;
@@ -2412,12 +2412,12 @@ function drawBossTele(){
 }
 function drawEnemy(e){
   const S=getSpr(e.type),dir=e.face<0?1:0,fr=(e.walk|0)&3;
-  const img=e.flash>0?S.wh[dir]:S.f[dir*4+fr],sc=e.r/e.d.r,w=S.w*sc,h=S.h*sc,lift=e.d.fly?10+Math.sin(G.t*5+e.anim)*3:0,foot=e.d.r*sc*.85;
+  const img=e.flash>0?S.wh[dir]:S.f[dir*4+fr],sc=e.r/e.d.r,w=S.w*sc,h=S.h*sc,lift=(e.d.fly?10+Math.sin(G.t*5+e.anim)*3:0)+(e.lift||0),foot=e.d.r*sc*.85;   // e.lift: field archers on a tower (62a)
   let sx=1,sy=1; if(e.hitT>0){ const k=e.hitT/.12; sx=1+.16*k; sy=1-.12*k; } if(e.boss) sy*=1+Math.sin(G.t*2.4)*.015;
   if(e.boss){ ctx.globalCompositeOperation='lighter'; glow(e.x,e.y+foot*.6,e.r*2.1,'#d8444c',.35); ctx.globalCompositeOperation='source-over'; }
   if(e.elite){ ctx.globalCompositeOperation='lighter'; glow(e.x,e.y-e.r*.2,e.r*2.3,'#f0b545',.32+.14*Math.sin(G.t*6)); ctx.globalCompositeOperation='source-over';
     ctx.strokeStyle=`rgba(240,181,69,${.55+.3*Math.sin(G.t*6)})`; ctx.lineWidth=3; ctx.beginPath(); ctx.ellipse(e.x,e.y+foot,e.r*1.05,e.r*.4,0,0,TAU); ctx.stroke(); }
-  if(e.d.phase) ctx.globalAlpha=.78;
+  if(e.alpha!=null) ctx.globalAlpha=e.alpha; else if(e.d.phase) ctx.globalAlpha=.78;   // e.alpha: hidden / see-through field monsters (62a) · never set in classic
   const dw=w*sx,dh=h*sy; ctx.drawImage(img,e.x-dw/2,e.y+foot-(h/2+foot)*sy-lift,dw,dh);
   ctx.globalAlpha=1;
   if(e.freezeT>0){ ctx.globalAlpha=.9; ctx.drawImage(iceTex(),e.x-e.r*1.3,e.y-e.r*1.55,e.r*2.6,e.r*2.6); ctx.globalAlpha=1; }
@@ -3768,8 +3768,8 @@ Object.assign(EN,{
   dg_gwisp:{n:'ภูตทองคำ', base:'wraith', tint:'#f0b545', hp:22, speed:112, r:13, dmg:0, mass:.5, xp:6, goo:'#f0b545', phase:1, el:'light', flee:1, pts:5},
   dg_shade:{n:'เงาไล่ภูต', base:'bat', tint:'#6a4a9a', hp:10, speed:128, r:9, dmg:5, mass:.4, xp:1, goo:'#8a5aaa', erratic:1, fly:1, accel:8, el:'dark'},
   dg_courier:{n:'ก็อบลินแบกถุงทอง', base:'goblin', hp:26, speed:104, r:12, dmg:0, mass:.8, xp:3, goo:'#7fae5a', el:'earth', flee:1, bag:1},
-  dg_raider:{n:'ก็อบลินถือกระบอง', base:'goblin', tint:'#7a4a2a', hp:18, speed:84, r:12, dmg:7, mass:1, xp:2, goo:'#7fae5a', el:'earth'},
-  dg_slinger:{n:'ก็อบลินปาหิน', base:'goblin', tint:'#5a6a3a', hp:16, speed:70, r:11, dmg:5, mass:.8, xp:2, goo:'#7fae5a', ranged:1, keep:220, shotCd:2.4, shotSp:200, shotDmg:6, el:'earth'},
+  dg_raider:{n:'ยามคลังถือกระบอง', base:'goblin', tint:'#7a4a2a', hp:18, speed:84, r:12, dmg:7, mass:1, xp:2, goo:'#7fae5a', el:'earth'},
+  dg_slinger:{n:'ยามคลังปาหิน', base:'goblin', tint:'#5a6a3a', hp:16, speed:70, r:11, dmg:5, mass:.8, xp:2, goo:'#7fae5a', ranged:1, keep:220, shotCd:2.4, shotSp:200, shotDmg:6, el:'earth'},
   dg_ember:{n:'ร่างรูนเพลิง', base:'shambler', tint:'#ff6a2a', hp:22, speed:56, r:13, dmg:8, mass:1, xp:2, goo:'#ff8a3a', el:'fire'},
   dg_tide:{n:'ร่างรูนธารา', base:'shambler', tint:'#3a8aff', hp:22, speed:56, r:13, dmg:8, mass:1, xp:2, goo:'#5fb8ff', el:'water'},
   dg_gale:{n:'ร่างรูนวายุ', base:'runner', tint:'#5fe0a0', hp:14, speed:104, r:11, dmg:6, mass:.8, xp:2, goo:'#7fe0b0', accel:7, el:'wind'},
@@ -3803,7 +3803,10 @@ const TER_BIOME={
   haunted:{n:'ป่าหลอน', rock:[1,2], tree:[2,4], bush:[1,2], water:[0,1], wet:'mud', rk:['tomb','boulder'], tk:'dead', bk:'thorn', mount:.45, mk:['t_mount_haunt0','t_mount_rock0'], gr:'gr_haunted'},
   meadow:{n:'ทุ่งดอกไม้', rock:[0,1], tree:[1,3], bush:[2,4], water:[0,1], wet:'water', rk:['boulder'], tk:'round', bk:'flower', mount:.35, mk:['t_mount_rock0','t_mount_rock1'], gr:'gr_meadow'},
   forest:{n:'ป่าหนามก็อบลิน', rock:[1,2], tree:[3,5], bush:[1,2], water:[0,1], wet:'water', rk:['boulder'], tk:'pine', bk:'thorn', mount:.4, mk:['t_mount_rock0','t_mount_rock1'], gr:'gr_forest'},
-  ruins:{n:'ซากวิหารรูน', rock:[2,3], tree:[0,1], bush:[1,2], water:[0,1], wet:'water', rk:['pillar','boulder'], tk:'round', bk:'thorn', mount:.35, mk:['t_mount_crystal0','t_mount_rock1'], gr:'gr_ruins'}};
+  ruins:{n:'ซากวิหารรูน', rock:[2,3], tree:[0,1], bush:[1,2], water:[0,1], wet:'water', rk:['pillar','boulder'], tk:'round', bk:'thorn', mount:.35, mk:['t_mount_crystal0','t_mount_rock1'], gr:'gr_ruins'},
+  // the maps of ท่องแดนรูน (62/63 build them once per map from its seed; these are the scatter densities + looks)
+  swamp:{n:'บึงวุ้นหกสี', rock:[0,1], tree:[1,2], bush:[1,3], water:[2,4], wet:'water', rk:['boulder'], tk:'round', bk:'flower', mount:.25, mk:['t_mount_crystal0'], gr:'gr_swamp'},
+  canyon:{n:'ค่ายออร์คผาเหล็ก', rock:[2,3], tree:[0,1], bush:[1,2], water:[0,1], wet:'mud', rk:['boulder'], tk:'dead', bk:'thorn', mount:.5, mk:['t_mount_red0'], gr:'gr_canyon'}};
 // mount: chance of one mountain (a big hard rock mass, r 80–115) per chunk · mk: its painted looks · gr: the painted ground (12b)
 // tiny seeded PRNG (mulberry32) · chunk seed = hash(run seed, cx, cy)
 function terRng(a){ return function(){ a|=0; a=a+0x6D2B79F5|0; let t=Math.imul(a^a>>>15,1|a); t=t+Math.imul(t^t>>>7,61|t)^t; return ((t^t>>>14)>>>0)/4294967296; }; }
@@ -3884,23 +3887,27 @@ function terWetSpr(k,v){ return terSpr('wet_'+k+v,220,140,g=>{ const water=k==='
   g.fillStyle=water?'#3a7aa0':'#5e4a30'; g.beginPath(); g.ellipse(-6,-4,88,48,v*.2,0,TAU); g.fill();
   g.strokeStyle=water?'rgba(200,236,255,.45)':'rgba(120,96,64,.6)'; g.lineWidth=2.5; for(let i=0;i<3;i++){ g.beginPath(); g.ellipse(-20+i*22,-10+i*8,22-i*4,6,0,0,PI); g.stroke(); }
   g.strokeStyle=water?'#1a3a50':'#2e2416'; g.lineWidth=3; g.beginPath(); g.ellipse(0,0,104,62,v*.2,0,TAU); g.stroke(); }); }
-function terVisible(L,T,R,B,f){ const g=G.terrain; if(!g) return; for(const C of g.chunks.values()) for(const o of C.list){ const m=(o.cr||o.r)*2+90; if(o.x<L-m||o.x>R+m||o.y<T-m||o.y>B+m) continue; f(o); } }
+function terVisible(L,T,R,B,f){ const g=G.terrain; if(!g) return;
+  const vis=C=>{ for(const o of C.list){ const m=(o.cr||o.r)*2+90; if(o.x<L-m||o.x>R+m||o.y<T-m||o.y>B+m) continue; f(o); } };
+  if(g.fixed){ const CH=TER.CH, x1=Math.floor((R+CH)/CH), y1=Math.floor((B+CH)/CH);   // a whole map (62/63) keeps every chunk: visit only those around the view
+    for(let cx=Math.floor((L-CH)/CH);cx<=x1;cx++) for(let cy=Math.floor((T-CH)/CH);cy<=y1;cy++){ const C=g.chunks.get(cx+','+cy); if(C) vis(C); } return; }
+  for(const C of g.chunks.values()) vis(C); }
 // ground pass (core 22: mode.drawWorld, before the actors): water/mud → bushes → rocks → tree trunks
 function terDrawGround(L,T,R,B){ if(!G.terrain) return; const S=SPR_SS, dr=(img,x,y,sc)=>{ const w=img.width/S*sc, h=img.height/S*sc; ctx.drawImage(img,x-w/2,y-h/2,w,h); };
   const art=(o,im)=>{ const b=terArtBox(o,im); ctx.drawImage(im,o.x-b.w/2,b.fy-b.h,b.w,b.h); };
-  terVisible(L,T,R,B,o=>{ if(o.k!=='water'&&o.k!=='mud') return; const im=terArt(o); if(im) art(o,im); else dr(terWetSpr(o.k,o.v),o.x,o.y,o.r/96); });
+  terVisible(L,T,R,B,o=>{ if(o.k!=='water'&&o.k!=='mud'&&o.k!=='flat') return; const im=terArt(o); if(im) art(o,im); else if(o.k==='flat'){ if(typeof fdVecFlat==='function') fdVecFlat(o); } else dr(terWetSpr(o.k,o.v),o.x,o.y,o.r/96); });
   terVisible(L,T,R,B,o=>{ if(o.k!=='bush') return; const im=terArt(o); if(im) art(o,im); else dr(terBushSpr(o.bk,o.v),o.x,o.y,o.r/40); });
   terVisible(L,T,R,B,o=>{ if(TER_YK[o.k]&&terArt(o)) return;                  // painted: drawn with the actors (terYList)
     if(o.k==='rock') dr(terRockSpr(o.rk,o.v),o.x,o.y-(o.rk==='boulder'?0:o.r*.4),o.rk==='boulder'?o.r/44:o.r/24); else if(o.k==='tree') dr(terTrunkSpr(o.tk,o.v),o.x,o.y-o.r*.9,o.r/14);
-    else if(o.k==='mount') dr(terRockSpr('boulder',o.v),o.x,o.y,o.r/44); }); }
+    else if(o.k==='mount') dr(terRockSpr('boulder',o.v),o.x,o.y,o.r/44); else if(o.k==='prop'&&typeof fdVecProp==='function') fdVecProp(o); }); }
 // canopy pass (mode.drawOver, after the actors): a canopy over the player fades so the hero stays visible
 function terDrawOver(L,T,R,B){ if(!G.terrain) return; const S=SPR_SS;
   terVisible(L,T,R,B,o=>{ if(o.k!=='tree'||terArt(o)) return; const img=terCanopySpr(o.tk,o.v), sc=o.cr/58, w=img.width/S*sc, h=img.height/S*sc, cy=o.y-o.r*2.2-o.cr*.55;
     const near=Math.hypot(P.x-o.x,P.y-cy)<o.cr*1.05; ctx.globalAlpha=near?.42:.96; ctx.drawImage(img,o.x-w/2,cy-h/2,w,h); ctx.globalAlpha=1; }); }
 
 /* ---- painted scenery (12b) · trees, rocks and mountains stand in depth order with the actors (core 22: drawActors) ---- */
-const TER_YK={tree:1, rock:1, mount:1};
-function terArtKey(o){ const v=o.v|0; switch(o.k){
+const TER_YK={tree:1, rock:1, mount:1, prop:1};                         // prop = upright landmark of a map (fence, tent, portal …) · flat = lies on the ground
+function terArtKey(o){ if(o.ak0) return o.ak0; const v=o.v|0; switch(o.k){
   case 'tree': return 't_tree_'+o.tk+v; case 'rock': return 't_rock_'+o.rk+v; case 'mount': return o.mk;
   case 'bush': return 't_bush_'+o.bk+(o.bk==='thorn'?v%2:v); case 'water': case 'mud': return 't_wet_'+o.k+(v%2); }
   return null; }
@@ -3908,8 +3915,8 @@ function terArtKeys(b){ const B=TER_BIOME[b], ks=[B.gr].concat(B.mk||[]); for(le
   return [...new Set(ks)]; }
 function terArt(o){ if(typeof artImg!=='function') return null; if(o.ak===undefined) o.ak=terArtKey(o)||null; return o.ak?artImg(o.ak):null; }
 // size (world px) and the foot line the picture stands on · water/mud lie flat, centred on the feature
-function terArtBox(o,im){ const k=o.k, w=k==='tree'?o.cr*2.3:k==='mount'?o.r*2.5:k==='rock'?o.r*(o.rk==='boulder'?2.3:2.4):k==='bush'?o.r*2.5:o.r*2.15,
-  h=w*im.naturalHeight/im.naturalWidth, fy=k==='water'||k==='mud'?o.y+h/2:o.y+o.r*(k==='tree'?.55:k==='bush'?.7:.6); return {w,h,fy}; }
+function terArtBox(o,im){ const k=o.k, w=o.aw||(k==='tree'?o.cr*2.3:k==='mount'?o.r*2.5:k==='rock'?o.r*(o.rk==='boulder'?2.3:2.4):k==='bush'?o.r*2.5:o.r*2.15),
+  h=w*im.naturalHeight/im.naturalWidth, fy=k==='water'||k==='mud'||k==='flat'?o.y+h/2:o.y+o.r*(k==='tree'?.55:k==='bush'?.7:k==='prop'?(o.fy==null?.6:o.fy):.6); return {w,h,fy}; }
 function terYList(L,T,R,B){ if(!G.terrain) return null; const out=[];
   terVisible(L,T,R,B,o=>{ if(!TER_YK[o.k]) return; const im=terArt(o); if(!im) return; const b=terArtBox(o,im); out.push({o,im,w:b.w,h:b.h,fy:b.fy}); });
   out.sort((a,b)=>a.fy-b.fy); return out; }
@@ -4751,7 +4758,7 @@ DEV.loot={
 // Forward compatibility inside v1: an item / rune id this app does not know survives validation (item → unk:1, rune id kept in
 // its socket), so a newer client's loot is never destroyed. A new class, job, skill or passive does NOT survive (they are matched
 // against CLS / SK / PASSIVES): adding one needs a SCHEMA_V bump, so older apps open such a save read-only instead.
-const SCHEMA_V=6;                                    // 2: acct.up (gold upgrades) · 3: up.stat · 4: ch.tr (skill trees) + ★6–8 + resets.trFree · 5: ch.rb / ch.sl / acct.ru (bought runes, starting Lv) · 6: acct.daily.dg (daily dungeons used today) · an older app opens a newer save read-only, so it never drops what was paid for
+const SCHEMA_V=7;                                    // 2: acct.up (gold upgrades) · 3: up.stat · 4: ch.tr (skill trees) + ★6–8 + resets.trFree · 5: ch.rb / ch.sl / acct.ru (bought runes, starting Lv) · 6: acct.daily.dg (daily dungeons used today) · 7: ch.fz (ท่องแดนรูน: kills / boss kills / time per map) · an older app opens a newer save read-only, so it never drops what was paid for
 const SV_APP='2.5.0';                                 // app version stamped into every local write (saveSummary.appVer)
 const SV_NAME_RE=/^[\p{L}\p{M}\p{N} ]{2,16}$/u;
 const SV_SLOTS=['weapon','off','head','face','body','cloak','hands','feet','neck','ring'];
@@ -4804,7 +4811,7 @@ function newChar(name,clsId){
   const ch={id:uid('c_'), name:svCleanName(name)||c.n, cls:c.id, job:null, created:t, play:0, kills:0, deaths:0,
     lv:1, xp:0, pts:BAL.START_PTS, st:{STR:0,VIT:0,AGI:0,DEX:0,INT:0,LUK:0}, jlv:1, jxp:0, sp:BAL.START_SP,
     sk:{[first]:1}, pas:{}, load:[first], eq:svEmptyEq(), inv:[], bagMax:BAL.PRICE.bagStart, quick:[null,null],
-    trial:{t2:0}, zone:'z1', visited:['z1'], bestiary:{}, resets:{free:1, skFree:1, trFree:1}, tr:{}, rb:0, sl:{}, dye:{}};
+    trial:{t2:0}, zone:'z1', visited:['z1'], bestiary:{}, resets:{free:1, skFree:1, trFree:1}, tr:{}, rb:0, sl:{}, dye:{}, fz:{}};
   // §3.8 starter kit: the class's training weapon, worn · small potion ×3 on the first quick slot (tier 1 has no sockets: no RNG)
   // the weapon is bound (b:1 = never sells: no gold from create → sell → delete) · createChar (41) limits the potions (BAL.KIT_POTS)
   const wid=SV_WEAPON[c.id];
@@ -4843,7 +4850,8 @@ function svMig2(o){ const s=Object.assign({},o); s.v=3; return s; }   // v2 → 
 function svMig3(o){ const s=Object.assign({},o); s.v=4; return s; }   // v3 → v4: only adds ch.tr / ★6–8 / resets.trFree
 function svMig4(o){ const s=Object.assign({},o); s.v=5; return s; }   // v4 → v5: only adds ch.rb / ch.sl / acct.ru
 function svMig5(o){ const s=Object.assign({},o); s.v=6; return s; }   // v5 → v6: only adds acct.daily.dg
-const SV_MIG={0:svMig0, 1:svMig1, 2:svMig2, 3:svMig3, 4:svMig4, 5:svMig5};      // SV_MIG[v](o) → save of version v+1
+function svMig6(o){ const s=Object.assign({},o); s.v=7; return s; }   // v6 → v7: only adds ch.fz (validateSave fills it empty)
+const SV_MIG={0:svMig0, 1:svMig1, 2:svMig2, 3:svMig3, 4:svMig4, 5:svMig5, 6:svMig6};      // SV_MIG[v](o) → save of version v+1
 function migrateSave(o,legacyBest){
   if(!svObj(o)) o=null;
   const v=o?o.v:undefined;
@@ -4966,7 +4974,13 @@ function svChar(c,seen){
   const vis=[]; for(const z of Array.isArray(c.visited)?c.visited.slice(0,64):[]) if(svStr(z,SV_ID,'')&&vis.indexOf(z)<0&&vis.length<32) vis.push(z);
   o.visited=vis.length?vis:['z1'];
   o.bestiary={}; for(const m of svKeys(c.bestiary,200)) if(SV_ID.test(m)) o.bestiary[m]=svInt(c.bestiary[m],0,1e9,0);
+  o.fz=svFieldRec(c.fz);
   const rs=svObj(c.resets)?c.resets:{}; o.resets={free:rs.free===0?0:1, skFree:rs.skFree===0?0:1, trFree:rs.trFree===0?0:1};
+  return o; }
+// ch.fz (ท่องแดนรูน, 62 fdCommit): {mapId:{k: kills, b: field-boss kills, t: seconds}} · known maps only (ZONES, like acct.daily.dg)
+// · integers clamped · an all-zero entry is dropped · nothing here pays anything (b only opens the next map, like reaching its level)
+function svFieldRec(x){ const o={}, Z=typeof ZONES!=='undefined'&&ZONES?ZONES:{}; if(!svObj(x)) return o;
+  for(const z of svKeys(x,64)){ if(!svHas(Z,z)||!svObj(x[z])) continue; const r=x[z], k=svInt(r.k,0,1e9,0), b=svInt(r.b,0,1e6,0), t=svInt(r.t,0,1e9,0); if(k||b||t) o[z]={k, b, t}; }
   return o; }
 function validateSave(s){
   if(!svObj(s)) s={};
@@ -5584,6 +5598,7 @@ function grantRewards(ch,r,again){
     else if(!A) continue;
     else if(k==='survTier') A.survTier=Math.max(A.survTier,Math.min(BAL.SURV.maxT,v|0));
     else if(k==='boss'&&SV_ID.test(v||'')) A.bossUnlock[v]=1; }
+  if(r.mode==='field'&&typeof fdCommit==='function') try{ fdCommit(ch,r,A); }catch(e){ console.error(e); }   // ท่องแดนรูน: map records + boss timers (62)
   r.committed=true; const S0=SAVE; pgSave(ch,'reward',true); if(SAVE===S0) pgItemsNote(r);
   // the write found another tab's save and reloaded instead (svlWrite): the reward is in neither memory nor storage. Paid once more
   // onto the reloaded save (its runIds do not hold this runId, so it is not a second payment) · a second race in a row → not paid
@@ -6791,7 +6806,8 @@ function hdTick(){
   if(G.loot&&G.loot.length>HD.loot){ for(let i=HD.loot;i<G.loot.length;i++) hdGot(G.loot[i]); HD.loot=G.loot.length; hdBag(); }
   if(HD.bars) hdBars();
   if(HD.manual) hdCardBtn();
-  if(HD.pot[0]||HD.pot[1]) hdPots(false); }
+  if(HD.pot[0]||HD.pot[1]) hdPots(false);
+  if(G.mode.hudTick) try{ G.mode.hudTick(); }catch(e){ console.error(e); } }   // a mode's own HUD bits (ท่องแดนรูน: กลับป้อม · 65)
 function hdStart(){   // first HUD frame of a run
   HD.g=G; HD.cards=null; HD.n=-1; HD.xr=HD.jr=-1; HD.loot=G.loot?G.loot.length:0; SH.lastMode=G.modeId; shChrome(null);
   HD.got=0; HD.need=0; HD.full=0; HD.seen=new Set(); HD.free=G.char&&typeof itBagFree==='function'?itBagFree(G.char):1e9;
@@ -6837,10 +6853,10 @@ function hdCards(){
   if(top.length){ let i=G.choices.findIndex(o=>o.k!=='up'&&o.k!=='new'&&o.k!=='evo'); if(i<0) i=G.choices.length-1; const c=box.children[i];
     if(c) c.append(shMk('span','hd-cap','ตันที่ '+top.map(s=>s.def.n+' ★'+(P.rank[s.id]||0)).join(', ')+' · ฝึกเพิ่มที่หน้าสกิล')); } }
 function hdBars(){
-  const ch=G.char, t2=!!ch.job, jc=t2?BAL.CAP.job2:BAL.CAP.job1;
-  const xr=ch.lv>=BAL.CAP.base?1:ch.xp/BAL.bxpNeed(ch.lv), jr=ch.jlv>=jc?1:ch.jxp/BAL.jxpNeed(ch.jlv,t2?2:1);
-  if(Math.abs(xr-HD.xr)<.002&&Math.abs(jr-HD.jr)<.002&&HD.lv===ch.lv&&HD.jl===ch.jlv) return;
-  HD.xr=xr; HD.jr=jr; HD.lv=ch.lv; HD.jl=ch.jlv; const b=shEl('hdBars'); b.textContent=''; b.append(shBar('Lv '+ch.lv,xr,''),shBar('Job '+ch.jlv,jr,'','job')); }
+  const ch=G.char, t2=!!ch.job, jc=t2?BAL.CAP.job2:BAL.CAP.job1, v=G.mode.expView?G.mode.expView():null;   // expView: EXP of this run counted in (paid at the end · 62)
+  const lv=v?v.lv:ch.lv, jl=v?v.jl:ch.jlv, xr=v?v.xr:ch.lv>=BAL.CAP.base?1:ch.xp/BAL.bxpNeed(ch.lv), jr=v?v.jr:ch.jlv>=jc?1:ch.jxp/BAL.jxpNeed(ch.jlv,t2?2:1);
+  if(Math.abs(xr-HD.xr)<.002&&Math.abs(jr-HD.jr)<.002&&HD.lv===lv&&HD.jl===jl) return;
+  HD.xr=xr; HD.jr=jr; HD.lv=lv; HD.jl=jl; const b=shEl('hdBars'); b.textContent=''; b.append(shBar('Lv '+lv+(v&&v.up?' ▲':''),xr,''),shBar('Job '+jl+(v&&v.jup?' ▲':''),jr,'','job')); }
 function hdCardBtn(){
   const n=(G.pendingLv|0)+(G.pendingChest|0), on=n>0&&!G.ui&&!G.over;
   if(on&&HD.auto) G.cardReq=true;
@@ -6906,6 +6922,7 @@ function hdRewardRows(r,ch){   // pure: Reward (§7.8) → [label, value, class?
   if(!r.committed) out.push(['บันทึก',saveReadOnly()?'ไม่ได้บันทึก · ข้อมูลเป็นเวอร์ชันใหม่กว่าแอป':'ไม่ได้บันทึก','bad']);
   if(r.mode==='survival') out.push(['คลื่นที่ผ่าน',(r.waves|0)+'/'+BAL.SURV.WAVES+' · ระดับนรก T'+(r.tier|0)]);
   if(r.mode!=='trial') out.push(['Base EXP','+'+n(r.baseXp)+(r.daily?' (×2 วันนี้)':'')],['Job EXP','+'+n(r.jobXp)],['ทอง','+'+n((+r.gold||0)+(+r.overGold||0))+(r.daily?' (×2)':'')]);
+  if(r.fdLoss) out.push(['ล้มลง','EXP −'+n(r.fdLoss)+' (1% ของเลเวล)','bad']);
   if(r.marks) out.push(['ตราผู้พิชิต','+'+n(r.marks)]);
   if(r.lvUp&&ch){ let p=0; for(let L=ch.lv-r.lvUp+1;L<=ch.lv;L++) p+=BAL.statPtsFor(L); out.push(['เลเวลอัป!','Lv '+ch.lv+' · แต้มสถานะ +'+p,'good']); }
   if(r.jobUp&&ch) out.push(['เลเวลอาชีพอัป!','Job '+ch.jlv+' · แต้มสกิล +'+r.jobUp,'good']);
@@ -6940,9 +6957,9 @@ function hdItemName(it){ let s=''; try{ s=it&&it.u?itemName(it):((itemDef(it&&it
 // pause / end buttons say "กลับป้อม" in character runs; classic gets its own words back
 // survival: restart (core: startRun, no endRun) drops this run's loot / gold / EXP like กลับป้อม does, so both say so
 function hdMenuText(g){ const c=!!(g&&g.char), sv=!!(g&&(g.modeId==='survival'||g.mode&&g.mode.daily));
-  const dl=!!(g&&g.mode&&g.mode.daily);                                    // daily dungeons: restart / again lead to the daily sheet (69)
-  for(const [id,t] of [['btnMenuP',sv?'กลับป้อม (ไม่รับรางวัล)':'กลับป้อม'],['btnRestartP',dl?'เลือกด่านใหม่ (ไม่รับรางวัล)':sv?'เริ่มใหม่ (ไม่รับรางวัล)':null],['btnMenuE','กลับป้อม'],['btnAgain',dl?'เลือกด่านใหม่':null]]){ const b=$('#'+id); if(!b) continue;
-    if(!(id in SH.txt)) SH.txt[id]=b.textContent; const want=c&&t?t:SH.txt[id]; if(b.textContent!==want) b.textContent=want; } }
+  const dl=!!(g&&g.mode&&g.mode.daily), mt=c&&g.mode&&g.mode.menuText||null;   // daily dungeons: restart / again lead to the daily sheet (69) · mode.menuText: a mode's own words (62)
+  for(const [id,t0] of [['btnMenuP',sv?'กลับป้อม (ไม่รับรางวัล)':'กลับป้อม'],['btnRestartP',dl?'เลือกด่านใหม่ (ไม่รับรางวัล)':sv?'เริ่มใหม่ (ไม่รับรางวัล)':null],['btnMenuE','กลับป้อม'],['btnAgain',dl?'เลือกด่านใหม่':null]]){ const b=$('#'+id); if(!b) continue;
+    const t=mt&&mt[id]||t0; if(!(id in SH.txt)) SH.txt[id]=b.textContent; const want=c&&t?t:SH.txt[id]; if(b.textContent!==want) b.textContent=want; } }
 /* ---------- pause: full stat sheet + per-skill numbers (what every card picked so far added up to) ---------- */
 const HD_PCT=v=>(v>=0?'+':'')+Math.round(v*100)+'%';
 const HD_N=v=>Math.abs(v-Math.round(v))<.005?String(Math.round(v)):(Math.round(v*100)/100).toFixed(Math.abs(v)<10?2:1).replace(/\.?0+$/,'');
@@ -7021,6 +7038,7 @@ function hdStatSheet(box){
   box.append(wrap); }
 function hdPause(box){
   hdMenuText(G); try{ hdStatSheet(box); }catch(e){ console.error(e); }
+  if(G&&G.char&&G.mode&&G.mode.pauseExtra&&box) try{ G.mode.pauseExtra(box); }catch(e){ console.error(e); }   // ท่องแดนรูน: trip so far + กลับป้อม (65)
   if(!G||!G.char||(G.modeId!=='survival'&&!(G.mode&&G.mode.daily))||!box) return;   // survival + daily dungeons (69)
   box.append(shBtn('🏳\uFE0F ถอยทัพ · รับรางวัล','btn ghost sh-wide',()=>{ if(!G||G.over||G.ui!=='pause') return; G.retreat=true; G.ui=null; show(null); endRun(false); })); }
 function hdEdgeOff(){ if(HD.edgeN) for(const n of HD.edgeN) n.hidden=true; }
@@ -7463,7 +7481,7 @@ function bossRushStart(){}
 const DG={
   kinds:{
     exp:{id:'exp', n:'ลานวิญญาณประสบการณ์', i:'✨', per:2, sec:180, biome:'meadow', d:'ภูตแสงเรืองวิ่งหนีเป็นฝูง ไล่ฆ่าให้ได้มากที่สุดใน 3 นาที · ภูตทองคำได้แต้ม ×5 · ระวังเงาไล่ภูต', rw:'Base/Job EXP ×10 ของ EXP ที่ได้ในด่าน'},
-    gold:{id:'gold', n:'คลังทองก็อบลิน', i:'💰', per:2, sec:180, biome:'forest', d:'ก็อบลินแบกถุงทองวิ่งหนี ตีให้ถุงแตกแล้วเก็บทอง · ยืนเปิดหีบทอง 2 วิ · ระวังก็อบลินถือกระบองกับนักปาหิน', rw:'ทอง ×10 ของทองที่เก็บได้'},
+    gold:{id:'gold', n:'คลังทองก็อบลิน', i:'💰', per:2, sec:180, biome:'forest', d:'ก็อบลินแบกถุงทองวิ่งหนี ตีให้ถุงแตกแล้วเก็บทอง · ยืนเปิดหีบทอง 2 วิ · ระวังยามคลังถือกระบองกับยามคลังปาหิน', rw:'ทอง ×10 ของทองที่เก็บได้'},
     rare:{id:'rare', n:'ห้องสมบัติหายาก', i:'🎁', per:1, sec:300, biome:'ruins', d:'ล้มร่างรูนธาตุครบ 3 คลื่น แล้วล้มผู้เฝ้าคลัง (5 นาที) · ธาตุของมอนเปลี่ยนตามวัน', rw:'หีบของหายากประจำวัน'}},
   diff:[{n:'ง่าย', lv:1, hp:1, dmg:1, rw:1}, {n:'กลาง', lv:10, hp:1.8, dmg:1.4, rw:1.5}, {n:'ยาก', lv:25, hp:3, dmg:2, rw:2.2}],
   expUnit:.00025, mul:10,

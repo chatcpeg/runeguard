@@ -5,7 +5,7 @@
 // Forward compatibility inside v1: an item / rune id this app does not know survives validation (item → unk:1, rune id kept in
 // its socket), so a newer client's loot is never destroyed. A new class, job, skill or passive does NOT survive (they are matched
 // against CLS / SK / PASSIVES): adding one needs a SCHEMA_V bump, so older apps open such a save read-only instead.
-const SCHEMA_V=6;                                    // 2: acct.up (gold upgrades) · 3: up.stat · 4: ch.tr (skill trees) + ★6–8 + resets.trFree · 5: ch.rb / ch.sl / acct.ru (bought runes, starting Lv) · 6: acct.daily.dg (daily dungeons used today) · an older app opens a newer save read-only, so it never drops what was paid for
+const SCHEMA_V=7;                                    // 2: acct.up (gold upgrades) · 3: up.stat · 4: ch.tr (skill trees) + ★6–8 + resets.trFree · 5: ch.rb / ch.sl / acct.ru (bought runes, starting Lv) · 6: acct.daily.dg (daily dungeons used today) · 7: ch.fz (ท่องแดนรูน: kills / boss kills / time per map) · an older app opens a newer save read-only, so it never drops what was paid for
 const SV_APP='2.5.0';                                 // app version stamped into every local write (saveSummary.appVer)
 const SV_NAME_RE=/^[\p{L}\p{M}\p{N} ]{2,16}$/u;
 const SV_SLOTS=['weapon','off','head','face','body','cloak','hands','feet','neck','ring'];
@@ -58,7 +58,7 @@ function newChar(name,clsId){
   const ch={id:uid('c_'), name:svCleanName(name)||c.n, cls:c.id, job:null, created:t, play:0, kills:0, deaths:0,
     lv:1, xp:0, pts:BAL.START_PTS, st:{STR:0,VIT:0,AGI:0,DEX:0,INT:0,LUK:0}, jlv:1, jxp:0, sp:BAL.START_SP,
     sk:{[first]:1}, pas:{}, load:[first], eq:svEmptyEq(), inv:[], bagMax:BAL.PRICE.bagStart, quick:[null,null],
-    trial:{t2:0}, zone:'z1', visited:['z1'], bestiary:{}, resets:{free:1, skFree:1, trFree:1}, tr:{}, rb:0, sl:{}, dye:{}};
+    trial:{t2:0}, zone:'z1', visited:['z1'], bestiary:{}, resets:{free:1, skFree:1, trFree:1}, tr:{}, rb:0, sl:{}, dye:{}, fz:{}};
   // §3.8 starter kit: the class's training weapon, worn · small potion ×3 on the first quick slot (tier 1 has no sockets: no RNG)
   // the weapon is bound (b:1 = never sells: no gold from create → sell → delete) · createChar (41) limits the potions (BAL.KIT_POTS)
   const wid=SV_WEAPON[c.id];
@@ -97,7 +97,8 @@ function svMig2(o){ const s=Object.assign({},o); s.v=3; return s; }   // v2 → 
 function svMig3(o){ const s=Object.assign({},o); s.v=4; return s; }   // v3 → v4: only adds ch.tr / ★6–8 / resets.trFree
 function svMig4(o){ const s=Object.assign({},o); s.v=5; return s; }   // v4 → v5: only adds ch.rb / ch.sl / acct.ru
 function svMig5(o){ const s=Object.assign({},o); s.v=6; return s; }   // v5 → v6: only adds acct.daily.dg
-const SV_MIG={0:svMig0, 1:svMig1, 2:svMig2, 3:svMig3, 4:svMig4, 5:svMig5};      // SV_MIG[v](o) → save of version v+1
+function svMig6(o){ const s=Object.assign({},o); s.v=7; return s; }   // v6 → v7: only adds ch.fz (validateSave fills it empty)
+const SV_MIG={0:svMig0, 1:svMig1, 2:svMig2, 3:svMig3, 4:svMig4, 5:svMig5, 6:svMig6};      // SV_MIG[v](o) → save of version v+1
 function migrateSave(o,legacyBest){
   if(!svObj(o)) o=null;
   const v=o?o.v:undefined;
@@ -220,7 +221,13 @@ function svChar(c,seen){
   const vis=[]; for(const z of Array.isArray(c.visited)?c.visited.slice(0,64):[]) if(svStr(z,SV_ID,'')&&vis.indexOf(z)<0&&vis.length<32) vis.push(z);
   o.visited=vis.length?vis:['z1'];
   o.bestiary={}; for(const m of svKeys(c.bestiary,200)) if(SV_ID.test(m)) o.bestiary[m]=svInt(c.bestiary[m],0,1e9,0);
+  o.fz=svFieldRec(c.fz);
   const rs=svObj(c.resets)?c.resets:{}; o.resets={free:rs.free===0?0:1, skFree:rs.skFree===0?0:1, trFree:rs.trFree===0?0:1};
+  return o; }
+// ch.fz (ท่องแดนรูน, 62 fdCommit): {mapId:{k: kills, b: field-boss kills, t: seconds}} · known maps only (ZONES, like acct.daily.dg)
+// · integers clamped · an all-zero entry is dropped · nothing here pays anything (b only opens the next map, like reaching its level)
+function svFieldRec(x){ const o={}, Z=typeof ZONES!=='undefined'&&ZONES?ZONES:{}; if(!svObj(x)) return o;
+  for(const z of svKeys(x,64)){ if(!svHas(Z,z)||!svObj(x[z])) continue; const r=x[z], k=svInt(r.k,0,1e9,0), b=svInt(r.b,0,1e6,0), t=svInt(r.t,0,1e9,0); if(k||b||t) o[z]={k, b, t}; }
   return o; }
 function validateSave(s){
   if(!svObj(s)) s={};

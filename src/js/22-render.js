@@ -93,12 +93,12 @@ function drawBossTele(){
 }
 function drawEnemy(e){
   const S=getSpr(e.type),dir=e.face<0?1:0,fr=(e.walk|0)&3;
-  const img=e.flash>0?S.wh[dir]:S.f[dir*4+fr],sc=e.r/e.d.r,w=S.w*sc,h=S.h*sc,lift=e.d.fly?10+Math.sin(G.t*5+e.anim)*3:0,foot=e.d.r*sc*.85;
+  const img=e.flash>0?S.wh[dir]:S.f[dir*4+fr],sc=e.r/e.d.r,w=S.w*sc,h=S.h*sc,lift=(e.d.fly?10+Math.sin(G.t*5+e.anim)*3:0)+(e.lift||0),foot=e.d.r*sc*.85;   // e.lift: field archers on a tower (62a)
   let sx=1,sy=1; if(e.hitT>0){ const k=e.hitT/.12; sx=1+.16*k; sy=1-.12*k; } if(e.boss) sy*=1+Math.sin(G.t*2.4)*.015;
   if(e.boss){ ctx.globalCompositeOperation='lighter'; glow(e.x,e.y+foot*.6,e.r*2.1,'#d8444c',.35); ctx.globalCompositeOperation='source-over'; }
   if(e.elite){ ctx.globalCompositeOperation='lighter'; glow(e.x,e.y-e.r*.2,e.r*2.3,'#f0b545',.32+.14*Math.sin(G.t*6)); ctx.globalCompositeOperation='source-over';
     ctx.strokeStyle=`rgba(240,181,69,${.55+.3*Math.sin(G.t*6)})`; ctx.lineWidth=3; ctx.beginPath(); ctx.ellipse(e.x,e.y+foot,e.r*1.05,e.r*.4,0,0,TAU); ctx.stroke(); }
-  if(e.d.phase) ctx.globalAlpha=.78;
+  if(e.alpha!=null) ctx.globalAlpha=e.alpha; else if(e.d.phase) ctx.globalAlpha=.78;   // e.alpha: hidden / see-through field monsters (62a) · never set in classic
   const dw=w*sx,dh=h*sy; ctx.drawImage(img,e.x-dw/2,e.y+foot-(h/2+foot)*sy-lift,dw,dh);
   ctx.globalAlpha=1;
   if(e.freezeT>0){ ctx.globalAlpha=.9; ctx.drawImage(iceTex(),e.x-e.r*1.3,e.y-e.r*1.55,e.r*2.6,e.r*2.6); ctx.globalAlpha=1; }

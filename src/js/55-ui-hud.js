@@ -88,7 +88,8 @@ function hdTick(){
   if(G.loot&&G.loot.length>HD.loot){ for(let i=HD.loot;i<G.loot.length;i++) hdGot(G.loot[i]); HD.loot=G.loot.length; hdBag(); }
   if(HD.bars) hdBars();
   if(HD.manual) hdCardBtn();
-  if(HD.pot[0]||HD.pot[1]) hdPots(false); }
+  if(HD.pot[0]||HD.pot[1]) hdPots(false);
+  if(G.mode.hudTick) try{ G.mode.hudTick(); }catch(e){ console.error(e); } }   // a mode's own HUD bits (ท่องแดนรูน: กลับป้อม · 65)
 function hdStart(){   // first HUD frame of a run
   HD.g=G; HD.cards=null; HD.n=-1; HD.xr=HD.jr=-1; HD.loot=G.loot?G.loot.length:0; SH.lastMode=G.modeId; shChrome(null);
   HD.got=0; HD.need=0; HD.full=0; HD.seen=new Set(); HD.free=G.char&&typeof itBagFree==='function'?itBagFree(G.char):1e9;
@@ -134,10 +135,10 @@ function hdCards(){
   if(top.length){ let i=G.choices.findIndex(o=>o.k!=='up'&&o.k!=='new'&&o.k!=='evo'); if(i<0) i=G.choices.length-1; const c=box.children[i];
     if(c) c.append(shMk('span','hd-cap','ตันที่ '+top.map(s=>s.def.n+' ★'+(P.rank[s.id]||0)).join(', ')+' · ฝึกเพิ่มที่หน้าสกิล')); } }
 function hdBars(){
-  const ch=G.char, t2=!!ch.job, jc=t2?BAL.CAP.job2:BAL.CAP.job1;
-  const xr=ch.lv>=BAL.CAP.base?1:ch.xp/BAL.bxpNeed(ch.lv), jr=ch.jlv>=jc?1:ch.jxp/BAL.jxpNeed(ch.jlv,t2?2:1);
-  if(Math.abs(xr-HD.xr)<.002&&Math.abs(jr-HD.jr)<.002&&HD.lv===ch.lv&&HD.jl===ch.jlv) return;
-  HD.xr=xr; HD.jr=jr; HD.lv=ch.lv; HD.jl=ch.jlv; const b=shEl('hdBars'); b.textContent=''; b.append(shBar('Lv '+ch.lv,xr,''),shBar('Job '+ch.jlv,jr,'','job')); }
+  const ch=G.char, t2=!!ch.job, jc=t2?BAL.CAP.job2:BAL.CAP.job1, v=G.mode.expView?G.mode.expView():null;   // expView: EXP of this run counted in (paid at the end · 62)
+  const lv=v?v.lv:ch.lv, jl=v?v.jl:ch.jlv, xr=v?v.xr:ch.lv>=BAL.CAP.base?1:ch.xp/BAL.bxpNeed(ch.lv), jr=v?v.jr:ch.jlv>=jc?1:ch.jxp/BAL.jxpNeed(ch.jlv,t2?2:1);
+  if(Math.abs(xr-HD.xr)<.002&&Math.abs(jr-HD.jr)<.002&&HD.lv===lv&&HD.jl===jl) return;
+  HD.xr=xr; HD.jr=jr; HD.lv=lv; HD.jl=jl; const b=shEl('hdBars'); b.textContent=''; b.append(shBar('Lv '+lv+(v&&v.up?' ▲':''),xr,''),shBar('Job '+jl+(v&&v.jup?' ▲':''),jr,'','job')); }
 function hdCardBtn(){
   const n=(G.pendingLv|0)+(G.pendingChest|0), on=n>0&&!G.ui&&!G.over;
   if(on&&HD.auto) G.cardReq=true;
@@ -203,6 +204,7 @@ function hdRewardRows(r,ch){   // pure: Reward (§7.8) → [label, value, class?
   if(!r.committed) out.push(['บันทึก',saveReadOnly()?'ไม่ได้บันทึก · ข้อมูลเป็นเวอร์ชันใหม่กว่าแอป':'ไม่ได้บันทึก','bad']);
   if(r.mode==='survival') out.push(['คลื่นที่ผ่าน',(r.waves|0)+'/'+BAL.SURV.WAVES+' · ระดับนรก T'+(r.tier|0)]);
   if(r.mode!=='trial') out.push(['Base EXP','+'+n(r.baseXp)+(r.daily?' (×2 วันนี้)':'')],['Job EXP','+'+n(r.jobXp)],['ทอง','+'+n((+r.gold||0)+(+r.overGold||0))+(r.daily?' (×2)':'')]);
+  if(r.fdLoss) out.push(['ล้มลง','EXP −'+n(r.fdLoss)+' (1% ของเลเวล)','bad']);
   if(r.marks) out.push(['ตราผู้พิชิต','+'+n(r.marks)]);
   if(r.lvUp&&ch){ let p=0; for(let L=ch.lv-r.lvUp+1;L<=ch.lv;L++) p+=BAL.statPtsFor(L); out.push(['เลเวลอัป!','Lv '+ch.lv+' · แต้มสถานะ +'+p,'good']); }
   if(r.jobUp&&ch) out.push(['เลเวลอาชีพอัป!','Job '+ch.jlv+' · แต้มสกิล +'+r.jobUp,'good']);
@@ -237,9 +239,9 @@ function hdItemName(it){ let s=''; try{ s=it&&it.u?itemName(it):((itemDef(it&&it
 // pause / end buttons say "กลับป้อม" in character runs; classic gets its own words back
 // survival: restart (core: startRun, no endRun) drops this run's loot / gold / EXP like กลับป้อม does, so both say so
 function hdMenuText(g){ const c=!!(g&&g.char), sv=!!(g&&(g.modeId==='survival'||g.mode&&g.mode.daily));
-  const dl=!!(g&&g.mode&&g.mode.daily);                                    // daily dungeons: restart / again lead to the daily sheet (69)
-  for(const [id,t] of [['btnMenuP',sv?'กลับป้อม (ไม่รับรางวัล)':'กลับป้อม'],['btnRestartP',dl?'เลือกด่านใหม่ (ไม่รับรางวัล)':sv?'เริ่มใหม่ (ไม่รับรางวัล)':null],['btnMenuE','กลับป้อม'],['btnAgain',dl?'เลือกด่านใหม่':null]]){ const b=$('#'+id); if(!b) continue;
-    if(!(id in SH.txt)) SH.txt[id]=b.textContent; const want=c&&t?t:SH.txt[id]; if(b.textContent!==want) b.textContent=want; } }
+  const dl=!!(g&&g.mode&&g.mode.daily), mt=c&&g.mode&&g.mode.menuText||null;   // daily dungeons: restart / again lead to the daily sheet (69) · mode.menuText: a mode's own words (62)
+  for(const [id,t0] of [['btnMenuP',sv?'กลับป้อม (ไม่รับรางวัล)':'กลับป้อม'],['btnRestartP',dl?'เลือกด่านใหม่ (ไม่รับรางวัล)':sv?'เริ่มใหม่ (ไม่รับรางวัล)':null],['btnMenuE','กลับป้อม'],['btnAgain',dl?'เลือกด่านใหม่':null]]){ const b=$('#'+id); if(!b) continue;
+    const t=mt&&mt[id]||t0; if(!(id in SH.txt)) SH.txt[id]=b.textContent; const want=c&&t?t:SH.txt[id]; if(b.textContent!==want) b.textContent=want; } }
 /* ---------- pause: full stat sheet + per-skill numbers (what every card picked so far added up to) ---------- */
 const HD_PCT=v=>(v>=0?'+':'')+Math.round(v*100)+'%';
 const HD_N=v=>Math.abs(v-Math.round(v))<.005?String(Math.round(v)):(Math.round(v*100)/100).toFixed(Math.abs(v)<10?2:1).replace(/\.?0+$/,'');
@@ -318,6 +320,7 @@ function hdStatSheet(box){
   box.append(wrap); }
 function hdPause(box){
   hdMenuText(G); try{ hdStatSheet(box); }catch(e){ console.error(e); }
+  if(G&&G.char&&G.mode&&G.mode.pauseExtra&&box) try{ G.mode.pauseExtra(box); }catch(e){ console.error(e); }   // ท่องแดนรูน: trip so far + กลับป้อม (65)
   if(!G||!G.char||(G.modeId!=='survival'&&!(G.mode&&G.mode.daily))||!box) return;   // survival + daily dungeons (69)
   box.append(shBtn('🏳\uFE0F ถอยทัพ · รับรางวัล','btn ghost sh-wide',()=>{ if(!G||G.over||G.ui!=='pause') return; G.retreat=true; G.ui=null; show(null); endRun(false); })); }
 function hdEdgeOff(){ if(HD.edgeN) for(const n of HD.edgeN) n.hidden=true; }
