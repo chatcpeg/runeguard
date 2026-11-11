@@ -1445,7 +1445,8 @@ function recalc(p){
   p.dodge=0; p.rage=0; p.steal=0;
   for(const k of p.skills){ if(k.def.type!=='passive') continue; const d=pv(k,'dodge'); if(d) p.dodge=Math.max(p.dodge,d); const r=pv(k,'rage'); if(r) p.rage=r; const st=pv(k,'steal'); if(st) p.steal=st; }
   if(b.dodge) p.dodge=Math.min(.6,p.dodge+b.dodge); if(b.rage) p.rage+=b.rage; if(b.steal) p.steal+=b.steal;
-  p.drop=b.drop||0; p.bossDmg=b.boss||0; p.fam=b.fam||null;
+  if(p.sx&&p.mxDodge) p.dodge=Math.min(.6,p.dodge+p.mxDodge);           // AGI cards (26 sxStats)
+  p.drop=(b.drop||0)+(p.sx&&p.mxDrop||0); p.bossDmg=b.boss||0; p.fam=b.fam||null;
   if(oldMax&&p.maxHp>oldMax) p.hp+=p.maxHp-oldMax;
   p.hp=Math.min(p.hp,p.maxHp);
 }
@@ -1603,14 +1604,15 @@ function shadowBurst(){ const s=P.skills.find(k=>k.id==='shadow'); if(!s) return
 function enemyShoot(e,a,sp,dmg,kind){ G.eprojs.push({x:e.x,y:e.y-(e.boss?10:6),vx:Math.cos(a)*sp,vy:Math.sin(a)*sp,r:kind==='orb'?7:5,dmg,life:4.5,kind,rot:0,dead:false}); }
 
 /* ================= skill behaviours ================= */
-function fireProj(s,a){ const sp=pv(s,'speed'),life=pv(s,'life')||1,size=(pv(s,'size')||6)*(1+(P.area-1)*.5);
-  G.projs.push({x:P.x+Math.cos(a)*10,y:P.y-6+Math.sin(a)*10,vx:Math.cos(a)*sp,vy:Math.sin(a)*sp,r:size,dmg:pv(s,'dmg'),pierce:pv(s,'pierce')||1,life,max:life,knock:pv(s,'knock')||50,
-    explode:(pv(s,'explode')||0)*P.area,homing:pv(s,'homing')||0,crit:pv(s,'crit')||0,shape:s.def.shape||'bolt',c:s.def.c,src:s,burn:pv(s,'burn')||0,hit:null,tg:null,dead:false,t:0});
+function fireProj(s,a){ const sp=pv(s,'speed'),life=(pv(s,'life')||1)*(P.sx&&P.rangeMul||1),size=(pv(s,'size')||6)*(1+(P.area-1)*.5);   // character runs: DEX range · no homing (aimed once, straight)
+  const p0={x:P.x+Math.cos(a)*10,y:P.y-6+Math.sin(a)*10,vx:Math.cos(a)*sp,vy:Math.sin(a)*sp,r:size,dmg:pv(s,'dmg'),pierce:pv(s,'pierce')||1,life,max:life,knock:pv(s,'knock')||50,
+    explode:(pv(s,'explode')||0)*P.area,homing:P.sx?0:pv(s,'homing')||0,crit:pv(s,'crit')||0,shape:s.def.shape||'bolt',c:s.def.c,src:s,burn:pv(s,'burn')||0,hit:null,tg:null,dead:false,t:0}; G.projs.push(p0);
+  if(P.sx&&s.mxLook&&typeof mxProj==='function') mxProj(s,p0);           // mastery tricks of this shot (26a)
   if(s.def.shape==='beam') G.fx.push({k:'beamline',x:P.x,y:P.y-6,a,len:sp*life,t:0,dur:.2,c:s.def.c,dead:false});
   P.atkT=.12; }
 BEH.proj=(s,dt)=>{
   s.cdT-=dt; if(s.cdT>0) return;
-  const range=pv(s,'speed')*(pv(s,'life')||1)*1.05, radial=pv(s,'radial');
+  const range=pv(s,'speed')*(pv(s,'life')||1)*1.05*(P.sx&&P.rangeMul||1), radial=pv(s,'radial');
   let tg=null;
   if(radial){ if(!G.near||G.nearD>420){ s.cdT=.12; return; } }
   else { tg=s.def.target==='strongest'?strongest(range):(G.near&&G.nearD<range?G.near:null); if(!tg){ s.cdT=.12; return; } }
@@ -1625,7 +1627,7 @@ BEH.proj=(s,dt)=>{
   sfx('shoot');
 };
 function doSwing(s,i){
-  const range=pv(s,'range')*P.area,arc=pv(s,'arc'),full=arc>=6;
+  const range=pv(s,'range')*P.area*(P.sx?1+((P.rangeMul||1)-1)*.5:1),arc=pv(s,'arc'),full=arc>=6;   // DEX reach: half of the range bonus for melee
   const a=G.near?Math.atan2(G.near.y-P.y,G.near.x-P.x):P.aim;
   const dmg=pv(s,'dmg'),kn=pv(s,'knock');
   for(const e of query(P.x,P.y,range+60)){
@@ -1694,6 +1696,12 @@ BEH.passive=()=>{};
 function mkStrike(x,y,r,delay,dmg,src,kind,o){ o=o||{}; return {x,y,r,delay,dmg,src,kind,t:0,done:0,hits:o.hits||1,hitInt:o.hitInt||.15,knock:o.knock||0,stun:o.stun||0,dead:false}; }
 BEH.strike=(s,dt)=>{
   s.cdT-=dt; if(s.cdT>0) return;
+  if(P.sx){ const R=560*(P.rangeMul||1), t=G.near&&G.nearD<R?G.near:null; if(!t){ s.cdT=.2; return; }   // aimed: on the nearest, the rest in a line beyond it
+    s.cdT=cdOf(s); const n=countOf(s), a=Math.atan2(t.y-P.y,t.x-P.x), d0=Math.hypot(t.x-P.x,t.y-P.y), r=pv(s,'r')*P.area;
+    for(let i=0;i<n;i++){ const d=d0+i*r*1.4, x=P.x+Math.cos(a)*d, y=P.y+Math.sin(a)*d;
+      const go=()=>G.strikes.push(mkStrike(x,y,r,pv(s,'delay')||.5,pv(s,'dmg'),s,s.def.fx,{hits:pv(s,'hits'),hitInt:pv(s,'hitInt'),knock:pv(s,'knock'),stun:pv(s,'stun')}));
+      if(i===0) go(); else later(i*.11,go); }
+    return; }
   const first=randomInView(); if(!first){ s.cdT=.2; return; }
   s.cdT=cdOf(s);
   const n=countOf(s);
@@ -1703,6 +1711,15 @@ BEH.strike=(s,dt)=>{
 };
 BEH.zone=(s,dt)=>{
   s.cdT-=dt; if(s.cdT>0) return;
+  if(P.sx){ const R=520*(P.rangeMul||1), t=G.near&&G.nearD<R?G.near:null, trap=s.def.fx==='trap'; if(!t&&!trap){ s.cdT=.2; return; }   // aimed (docs §2)
+    if(trap&&!(G.near&&G.nearD<500)){ s.cdT=.2; return; }
+    s.cdT=cdOf(s); const n=countOf(s), a=t?Math.atan2(t.y-P.y,t.x-P.x):0, r=pv(s,'r')*P.area, mv=Math.hypot(P.vx,P.vy), ba=mv>20?Math.atan2(-P.vy,-P.vx):rand(0,TAU);
+    for(let i=0;i<n;i++){ let x,y,o={};
+      if(trap){ x=P.x+Math.cos(ba)*(10+i*r*.9); y=P.y+Math.sin(ba)*(10+i*r*.9); }   // traps: under the feet, a line along the way walked
+      else if(s.def.place==='enemy'){ const d=Math.hypot(t.x-P.x,t.y-P.y)+i*r*1.3; x=P.x+Math.cos(a)*d; y=P.y+Math.sin(a)*d; }
+      else { const aa=a+(i-(n-1)/2)*.35; x=P.x+Math.cos(aa)*50; y=P.y+Math.sin(aa)*50; o.aim={vx:Math.cos(aa)*230, vy:Math.sin(aa)*230}; }   // vortex: straight down the aim
+      addZone(Object.assign({x,y,r,dur:(pv(s,'dur')||4)*P.durMul,tick:pv(s,'tick')||.4,dmg:pv(s,'dmg')||0,slow:pv(s,'slow')||0,kind:s.def.fx,src:s,drift:pv(s,'drift')||0,pull:pv(s,'pull')||0,trap:pv(s,'trap')||0,knock:pv(s,'knock')||0},o)); }
+    return; }
   const place=s.def.place;
   if(place==='enemy'&&!randomInView()){ s.cdT=.2; return; }
   if(place!=='enemy'&&(!G.near||G.nearD>500)){ s.cdT=.2; return; }
@@ -1723,7 +1740,8 @@ BEH.chain=(s,dt)=>{
       for(let b=0;b<B&&cur;b++){ hit.push(cur.id); pts.push([cur.x,cur.y-cur.r*.4]); damageEnemy(cur,dmg,s,{knock:60,stun:.08});
         if(s.fx&&s.fx.fork&&b===s.fx.fork.at-1) tfFork(s,cur,hit,dmg,jump);
         let nx=null,bd=jump*jump; for(const e of query(cur.x,cur.y,jump+60)){ if(e.dead||hit.indexOf(e.id)>=0) continue; const d=(e.x-cur.x)**2+(e.y-cur.y)**2; if(d<bd){ bd=d; nx=e; } } cur=nx; }
-      G.fx.push({k:'chain',pts,t:0,dur:.24,c:s.def.c,paths:null,jt:-1,dead:false}); sfx('zap'); };
+      G.fx.push({k:'chain',pts,t:0,dur:.24,c:s.def.c,paths:null,jt:-1,dead:false}); sfx('zap');
+      if(s.mxLook&&s.mxLook.twin) G.fx.push({k:'chain',pts:pts.map(q=>[q[0]+3,q[1]-4]),t:0,dur:.24,c:'#ffffff',paths:null,jt:-1,dead:false}); };   // mastery 6 (26a)
     if(c===0) go(); else later(c*.09,go); }
   P.atkT=.12;
 };
@@ -1903,7 +1921,7 @@ function updateProjs(dt){
     p.t+=dt; p.life-=dt;
     if(p.homing){ if(!p.tg||p.tg.dead||(p.hit&&p.hit.indexOf(p.tg.id)>=0)) p.tg=nearestTo(p.x,p.y,360,p.hit);
       if(p.tg){ const a=Math.atan2(p.vy,p.vx),ta=Math.atan2(p.tg.y-p.y,p.tg.x-p.x),na=a+clamp(angDiff(ta,a),-p.homing*dt,p.homing*dt),sp=Math.hypot(p.vx,p.vy); p.vx=Math.cos(na)*sp; p.vy=Math.sin(na)*sp; } }
-    const ox=p.x,oy=p.y; p.x+=p.vx*dt; p.y+=p.vy*dt;
+    const ox=p.x,oy=p.y; p.x+=p.vx*dt; p.y+=p.vy*dt; if(p.mx) mxProjTick(p,dt);   // mastery: heat haze / fire trail (26a)
     const mx=(ox+p.x)/2,my=(oy+p.y)/2,hl=Math.hypot(p.x-ox,p.y-oy)/2;
     for(const e of query(mx,my,hl+p.r+60)){
       if(e.dead) continue; if(p.hit&&p.hit.indexOf(e.id)>=0) continue;
@@ -1911,7 +1929,7 @@ function updateProjs(dt){
       projHit(p,e); if(p.dead) break;
     }
     if(!p.dead&&G.obstacles&&p.pierce<99&&terBlocks(p.x,p.y,p.r)){ p.dead=true; if(p.explode) explode(p.x,p.y,p.explode,p.dmg*.7,p.src,{c:p.c}); else if(!G.auto) burst(p.x,p.y,4,'#a49a86',120,.35,2,'rock'); }   // a rock stops it (29a)
-    if(!p.dead&&p.life<=0){ p.dead=true; if(p.explode) explode(p.x,p.y,p.explode,p.dmg*.7,p.src,{c:p.c}); }
+    if(!p.dead&&p.life<=0){ p.dead=true; if(p.mx&&p.mx.split) mxSplit(p); if(p.explode) explode(p.x,p.y,p.explode,p.dmg*.7,p.src,{c:p.c}); }
     if(!p.dead&&!G.auto){ const q=qLv();
       if(p.shape==='fire'&&Math.random()<dt*(q?40:12)) part({x:p.x,y:p.y,vx:rand(-30,30)-p.vx*.1,vy:rand(-40,10),life:.35,s:3,c:pick(['#ffb050','#ff7a2a','#ffe28a']),g:-40,drag:2,k:'sq',add:true});
       else if((p.shape==='holy'||p.shape==='bolt')&&q>=1&&Math.random()<dt*20) part({x:p.x,y:p.y,vx:rand(-20,20),vy:rand(-20,20),life:.3,s:2,c:p.c,g:0,drag:2,k:'sq',add:true}); }
@@ -1922,7 +1940,7 @@ function projHit(p,e){
   const sp=Math.hypot(p.vx,p.vy)||1;
   damageEnemy(e,p.dmg,p.src,{knock:p.knock,nx:p.vx/sp,ny:p.vy/sp,crit:p.crit,fxd:p.fxd});
   (p.hit||(p.hit=[])).push(e.id);
-  if(p.explode){ p.dead=true; explode(p.x,p.y,p.explode,p.dmg*.7,p.src,{c:p.c}); if(p.burn) addZone({x:p.x,y:p.y,r:p.explode*.8,dur:2*P.durMul,tick:.3,dmg:p.dmg*.12,kind:'fire',src:p.src}); return; }
+  if(p.explode){ if(p.mx&&mxPassHit(p)) return; p.dead=true; explode(p.x,p.y,p.explode,p.dmg*.7,p.src,{c:p.c}); if(p.mx) mxBoom2(p); if(p.burn) addZone({x:p.x,y:p.y,r:p.explode*.8,dur:2*P.durMul,tick:.3,dmg:p.dmg*.12,kind:'fire',src:p.src}); return; }
   p.pierce--; if(p.pierce<=0) p.dead=true;
 }
 function updateEProjs(dt){
@@ -1935,7 +1953,8 @@ function updateZones(dt){
   for(const z of G.zones){
     if(z.dead) continue;
     z.t+=dt; if(z.t>=z.dur){ z.dead=true; continue; }
-    if(z.drift){ z.retarget-=dt; if(z.retarget<=0||!z.tg||z.tg.dead){ z.tg=nearestTo(z.x,z.y,520); z.retarget=.8; }
+    if(z.aim){ z.x+=z.aim.vx*dt; z.y+=z.aim.vy*dt; const k=Math.exp(-dt*.7); z.aim.vx*=k; z.aim.vy*=k; }   // aimed vortex (19): straight, slowing
+    else if(z.drift){ z.retarget-=dt; if(z.retarget<=0||!z.tg||z.tg.dead){ z.tg=nearestTo(z.x,z.y,520); z.retarget=.8; }
       let tx,ty; if(z.tg){ tx=z.tg.x-z.x; ty=z.tg.y-z.y; } else { tx=Math.cos(z.wa); ty=Math.sin(z.wa); } const l=Math.hypot(tx,ty)||1, k=Math.min(1,dt*2);
       z.vx+=(tx/l*z.drift-z.vx)*k; z.vy+=(ty/l*z.drift-z.vy)*k; z.x+=z.vx*dt; z.y+=z.vy*dt; }
     if(z.trap){ if(z.t<.4) continue; let trig=false; for(const e of query(z.x,z.y,z.r*.5+60)){ if(e.dead) continue; const rr=z.r*.45+e.r; if((e.x-z.x)**2+(e.y-z.y)**2<rr*rr){ trig=true; break; } }
@@ -2092,7 +2111,7 @@ function cardHTML(o,i){
     case 'new':{ const d=SK[o.id]; ic=d.i; tag='สกิลใหม่'; nm=d.n; ds=d.d; if(d.evo) df=`วิวัฒนาการเมื่อ Lv5 + ${SNAME(d.evo.s)}`; break; }
     case 'up':{ const d=o.s.def; ic=d.i; tag=`Lv ${o.s.lv} → ${o.s.lv+1}`; nm=d.n; ds=d.d; df=diffText(o.s); break; }
     case 'evo':{ const d=o.s.def; ic=d.i; tag='วิวัฒนาการ'; nm=d.evo.n; ds=d.evo.d; df=`${d.n} Lv5 + ${SNAME(d.evo.s)}`; break; }
-    case 'stat':{ const st=STATS[o.stat]; ic=st.i; tag=`ค่าสถานะ Lv ${P.stats[o.stat]} → ${P.stats[o.stat]+1}`; nm=`${SNAME(o.stat)} · ${st.n}`; ds=typeof st.d==='function'?st.d():st.d; df=evoUses(o.stat); break; }
+    case 'stat':{ const st=STATS[o.stat]; ic=st.i; tag=P.sx?`ความชำนาญ ${o.stat} Lv ${P.stats[o.stat]} → ${P.stats[o.stat]+1}`:`ค่าสถานะ Lv ${P.stats[o.stat]} → ${P.stats[o.stat]+1}`; nm=`${SNAME(o.stat)} · ${st.n}`; ds=typeof st.d==='function'?st.d():st.d; df=evoUses(o.stat); break; }
     case 'potion': ic='🧪'; tag='ไอเทม'; nm='ยาฟื้นฟู'; ds='ฟื้นฟู HP 40% ทันที'; break;
     default: ic='💰'; tag='ไอเทม'; nm='ถุงทอง'; ds='คะแนน +250'; break;
   }
@@ -2345,6 +2364,7 @@ function drawUnits(){ for(const s of P.skills){ if(s.def.type!=='summon'||!s.st.
 function drawProjs(){
   for(const p of G.projs){
     const sp=Math.hypot(p.vx,p.vy),a=Math.atan2(p.vy,p.vx);
+    if(p.mx&&mxDrawProj(p,sp,a)) continue;                                  // mastery look (26a)
     switch(p.shape){
       case 'arrow': streak(p.x,p.y,a,Math.min(55,sp*.05),5,p.c,.45); break;
       case 'dagger': streak(p.x,p.y,a,30,5,p.c,.35); break;
@@ -2697,18 +2717,30 @@ function sxMods(p){
   delete p.tfg;
   for(const s of p.skills){ const add={}, mul={}, set={}, id=s.id, main=SX.main[id];
     const pk=SX.pk[id]||'dmg', ev=s.evolved&&s.def.evo&&s.def.evo.set;
-    if(main&&(s.def.p[pk]!=null||ev&&ev[pk]!=null)){ const f=1+sxRate(p)*sxPoints(p,main); if(f!==1) mul[pk]=f; }
-    for(const m of SX.ms[id]||[]){ const n=sxSteps(p,m); if(!n) continue; const [ ,k,op,v]=m;
+    const lad=typeof MX_T!=='undefined'&&MX_T[id];                       // a mastery ladder (26a) replaces the 5-card milestones
+    if(!lad) for(const m of SX.ms[id]||[]){ const n=sxSteps(p,m); if(!n) continue; const [ ,k,op,v]=m;
       if(op==='+') add[k]=(add[k]||0)+v*n; else if(op==='*') mul[k]=(mul[k]||1)*(1+(v-1)*n); else set[k]=v; }   // '*' grows linearly (×1.1 per step = +10% each), never compounds
-    const t=s.def.type, ag=sxOver(p,'AGI'), vi=sxOver(p,'VIT'), st=sxOver(p,'STR');
-    if(ag&&t==='proj') mul.speed=(mul.speed||1)*(1+.04*ag);              // AGI card 6+: projectiles +4% faster each
-    if(vi&&t==='shield') mul.absorb=(mul.absorb||1)*(1+.04*vi);          // VIT card 6+: shields +4% each
-    if(st&&s.def.p.knock!=null) mul.knock=(mul.knock||1)*(1+.05*st);     // STR card 6+: knockback +5% each
     s.cx=true; if(typeof tfApply==='function') tfApply(p,s,add,mul);        // skill tree numbers + effects (27)
+    if(typeof mxApply==='function') mxApply(p,s,add,mul);                 // mastery: power +4 %/level, growth, tiers (26a)
     if(Object.keys(add).length||Object.keys(mul).length||Object.keys(set).length) s.mod={add, mul, set}; else delete s.mod; }
   if(typeof tfFinish==='function') tfFinish(p); }   // nothing yet → plain pv (a fresh character = classic numbers)
-// the stat part of recalc again, with card 6+ at SX.over and the caps (identical to core for stats ≤ 5)
+// the stat part of recalc for character runs: each card = a small general effect (docs/PROPOSAL-mastery.md §1) · damage comes
+// from mastery (26a), not from STR any more · caps instead of the old half value after card 5 · zero cards = classic numbers
 function sxStats(p,b){
+  const c=p.cls, n=k=>p.stats[k]|0, C=SX.cap;
+  p.maxHp=(c.hp+(b.hp||0))*(1+.02*n('STR')+.04*n('VIT'));
+  p.armor=c.armor+(b.armor||0)+n('STR')+.5*n('VIT');
+  p.regen=c.regen+(b.regen||0)+.25*n('VIT');
+  p.speed=c.speed*(1+(b.speed||0))*(1+Math.min(C.speed,.03*n('AGI')+.01*n('DEX')));
+  const cr=c.crit+(b.crit||0); p.crit=cr+Math.min(.015*n('LUK'),Math.max(0,C.crit-cr)); p.critMult=1.75+(b.critMult||0)+.03*n('LUK');
+  p.might=1+(b.might||0);
+  p.area=1+(b.area||0)+Math.min(1,.02*n('INT')); p.durMul=1+(b.dur||0)+Math.min(1,.02*n('INT'));
+  p.cdMul=(b.cd||1)*Math.max(C.cdMin,1/(1+.03*n('DEX')+.01*n('AGI')));
+  p.rangeMul=1+Math.min(.8,.04*n('DEX'));
+  p.magnet=125*(b.magnet||1)*(1+.04*n('LUK')); p.xpMul=1+(b.xp||0);
+  p.extraProj=b.proj||0; p.mxDodge=Math.min(.4,.008*n('AGI')); p.mxDrop=.01*n('LUK'); }
+// (old card 1–5 / 6+ version, kept for reference only · not called)
+function sxStatsOld(p,b){
   const c=p.cls, L=k=>sxLow(p,k), O=k=>sxOver(p,k), C=SX.cap;
   p.maxHp=c.hp+(b.hp||0)+20*L('VIT')+10*O('VIT');
   p.regen=c.regen+(b.regen||0)+.4*L('VIT')+.2*O('VIT');
@@ -2720,16 +2752,171 @@ function sxStats(p,b){
   p.cdMul=(b.cd||1)*Math.max(C.cdMin,Math.pow(.96,L('AGI'))*Math.pow(.98,O('AGI'))*Math.pow(.94,L('DEX'))*Math.pow(.97,O('DEX')));
   p.magnet=125*(b.magnet||1)*(1+.2*L('LUK')+.1*O('LUK')); p.xpMul=1+(b.xp||0)+.06*L('LUK')+.03*O('LUK');
   const d=p.stats.DEX|0; p.extraProj=(b.proj||0)+Math.min(C.proj,(d>=3?1:0)+(d>=5?1:0)+Math.floor(O('DEX')/5)); }
-// cards / pause sheet: the milestone that the next card(s) of stat k reach → [{n: cards left, s: skill, t: text}] nearest first
-function sxNext(p,k){ const out=[];
+// cards / pause sheet: what the next card(s) of stat k reach → [{n: cards left, s: skill, t: text}] nearest first (26a ladders + old milestones)
+function sxNext(p,k){ if(typeof mxNext==='function') return mxNext(p,k); const out=[];
   for(const s of p.skills) for(const m of SX.ms[s.id]||[]){ if(m[0]!==k) continue; const e=m[5]||5, have=p.stats[k]|0;
     if(m[2]==='='&&have>=e) continue; out.push({n:e-have%e, s, t:m[4]}); }
   return out.sort((a,b)=>a.n-b.n); }
 // pause sheet: what a skill already has from its main stat and milestones
-function sxHave(p,s){ const id=s.id, pk=SX.pk[id]||'dmg', has=s.def.p[pk]!=null||!!(s.evolved&&s.def.evo&&s.def.evo.set[pk]!=null), main=has?SX.main[id]:null;
-  const out={main, pk, pct:main?sxRate(p)*sxPoints(p,main):0, ms:[]};
+function sxHave(p,s){ const id=s.id, pk=SX.pk[id]||'dmg', has=s.def.p[pk]!=null||!!(s.evolved&&s.def.evo&&s.def.evo.set[pk]!=null), main=SX.main[id]||null;
+  const L=typeof mxLv==='function'?mxLv(p,s):0, out={main, pk:has?pk:null, lv:L, pct:has&&L?mxPow(L)-1:0, ms:typeof mxReached==='function'?mxReached(s):[]};
+  if(typeof MX_T!=='undefined'&&MX_T[id]) return out;
   for(const m of SX.ms[s.id]||[]){ const n=sxSteps(p,m); if(n) out.ms.push(m[4]+(m[2]==='='||n===1?'':' ×'+n)); }
   return out; }
+/* ================= 26a-mastery.js · lane B · stat cards = mastery (docs/PROPOSAL-mastery.md) · character runs only ================= */
+// Every stat card: (a) a small general effect (sxStats in 26) · (b) mastery +1 for every skill whose main stat it is (SX.main).
+// Mastery L of a skill = cards of its main stat + floor(permanent stat / 5) + the account upgrade 🧬 (start mastery).
+// Each level: power +4 % (to 35, then +1 %) and a little size · tiers (MX_T) add tricks through the same s.mod / s.fx paths
+// the skill tree uses (27), so every hook (burst, ignite, trail, echo …) is shared. Mage first; the other classes keep their
+// old 5-card milestones (SX.ms) until their ladders land. Classic never sets P.sx → none of this runs there (golden).
+const MX={pow:.04, powOver:.01, cap:35};
+// general effect of one card, shown on the cards (character runs)
+const MX_CARD={
+  STR:'HP +2% · DEF +1 · สกิลที่ใช้ STR ชำนาญขึ้น (แรง ขนาด ลูกเล่น)',
+  VIT:'HP +4% · ฟื้น +0.25/วิ · DEF +0.5 · สกิลที่ใช้ VIT ชำนาญขึ้น',
+  AGI:'เดิน +3% · หลบ +0.8% · โจมตีเร็ว +1% · สกิลที่ใช้ AGI ชำนาญขึ้น',
+  DEX:'โจมตีเร็ว +3% · ระยะโจมตี +4% · เดิน +1% · สกิลที่ใช้ DEX ชำนาญขึ้น',
+  INT:'พื้นที่ +2% · ระยะเวลา +2% · เวทที่ใช้ INT ชำนาญขึ้น (แรง ขนาด ลูกเล่น)',
+  LUK:'คริ +1.5% · แรงคริ +3% · ดูดของ +4% · ดรอป +1% · สกิลที่ใช้ LUK ชำนาญขึ้น'};
+function mxStart(p){ return Math.max(0,(p.bonus&&p.bonus.mxStart)|0); }
+function mxLvStat(p,k){ return k?(p.stats[k]|0)+Math.floor(((p.permSt&&p.permSt[k])|0)/5)+mxStart(p):0; }
+function mxLv(p,s){ return mxLvStat(p,SX.main[s.id]); }
+function mxPow(L){ return 1+MX.pow*Math.min(L,MX.cap)+MX.powOver*Math.max(0,L-MX.cap); }
+function mxGrow(L,a,b){ return 1+a*Math.min(L,5)+b*Math.max(0,Math.min(L,MX.cap)-5); }   // fast for 1–5 (you see it grow), slower after
+// tiers: [level, text, {add, mul, fx, look}] · look = how the skill is drawn (mxDrawProj) and per-projectile tricks (mxProj)
+const MX_T={
+flame:[
+  [6,'ไอร้อนแผ่รอบลูกไฟ (ลวก 10%)',{look:{haze:2.4, hazePct:.1}}],
+  [10,'เปลวไฟหยดลงพื้น',{look:{drip:1.5}}],
+  [12,'สะเก็ดไฟ 3 ชิ้นตอนระเบิด',{fx:{shards:{on:'hit', ch:1, n:3, pct:.25}}}],
+  [15,'แกนลูกไฟสีขาว · ทะลุ 1 ตัวก่อนระเบิด',{look:{white:1, pass:1, passBoom:1}}],
+  [18,'ระเบิดสองระลอก',{look:{boom2:1}}],
+  [20,'ไฟสีน้ำเงิน · แรง +25% · ติดไฟ',{mul:{dmg:1.25}, fx:{ignite:{ch:1, pct:.2, t:3}}, look:{blue:1}}],
+  [22,'อากาศรอบลูกไฟบิดเบี้ยว · ช้าลง 15%',{look:{hazeSlow:.15, warp:1}}],
+  [25,'สุดระยะแตกเป็น 3 ลูก',{look:{split:3}}],
+  [28,'ทางไฟลามเป็นเส้นยาว',{look:{drip:3, dripDense:1}}],
+  [30,'ระเบิดวงแหวนสุริยะ ×1.5 · ดูดศัตรูเข้ากลาง',{mul:{explode:1.5}, fx:{pull:{r:120}}, look:{sun:1}}],
+  [32,'ลูกไฟคู่หมุนเกลียว',{add:{count:1}, look:{twin:1}}],
+  [35,'ร่างสุดท้าย หงส์เพลิง · ทะลุทุกตัว ระเบิดใหญ่ปลายทาง',{mul:{explode:1.3, dmg:1.2}, look:{pass:999, passBoom:0, wings:1}}]],
+mbolt:[
+  [6,'ประกายเวทวนรอบลูก',{look:{sparkle:1}}],
+  [10,'ลูกเวทเร็วขึ้น 15%',{mul:{speed:1.15}}],
+  [15,'ทะลุ +1',{add:{pierce:1}}],
+  [20,'โดนแล้วแยก 2 ลูก',{fx:{shards:{on:'hit', ch:1, n:2, pct:.3}}}],
+  [25,'ยิงเป็นพัด +2 ลูก',{add:{count:2}}],
+  [30,'แรง +20%',{mul:{dmg:1.2}}],
+  [35,'ร่างสุดท้าย ศรรุ้งเจ็ดสี · ทะลุทุกตัว',{add:{pierce:98}, look:{rainbow:1}}]],
+frost:[
+  [6,'เกล็ดน้ำแข็งลอยรอบตัว',{look:{crystals:1}}],
+  [10,'ชะลอ +5%',{add:{slow:.05}}],
+  [15,'แช่แข็ง 0.5 วิ',{add:{freeze:.5}}],
+  [20,'วงที่สองตามมา',{fx:{echo:{every:1}}}],
+  [25,'ตัวที่ตายแตกเป็นเศษน้ำแข็ง',{fx:{shards:{on:'kill', ch:1, n:4, pct:.35}}}],
+  [30,'วงกว้าง +20%',{mul:{r:1.2}}],
+  [35,'ร่างสุดท้าย ยุคน้ำแข็ง · ทุ่งน้ำแข็ง 5 วิ',{fx:{trail:{kind:'ice', r:90, pct:.12, dur:5, slow:.5}}}]],
+thunder:[
+  [6,'สายฟ้าสองเส้นพันกัน',{look:{twin:1}}],
+  [10,'ระยะกระโดด +20%',{mul:{jump:1.2}}],
+  [15,'ชิ่ง +2',{add:{bounces:2}}],
+  [20,'ชิ่งครั้งที่ 3 แตกสาย',{fx:{fork:{at:3, n:2, b:2}}}],
+  [25,'สตันทุกตัวที่โดน 0.3 วิ',{fx:{shock:{ch:1, t:.3}}}],
+  [30,'+1 สาย',{add:{count:1}}],
+  [35,'ร่างสุดท้าย สายฟ้าเทพ · ฟ้าผ่าลงทุกจุดที่ชิ่ง',{fx:{hitboom:{r:45, pct:.5}}}]],
+meteor:[
+  [6,'หางไฟลากยาว',{look:{tail:1}}],
+  [10,'วงตก +15%',{mul:{r:1.15}}],
+  [15,'+1 ลูก',{add:{count:1}}],
+  [20,'หลุมลาวา',{fx:{trail:{kind:'fire', r:55, pct:.25, dur:3}}}],
+  [25,'อุกกาบาตตกซ้ำ',{fx:{echo:{every:2}}}],
+  [30,'ติดไฟทุกตัวที่โดน',{fx:{ignite:{ch:1, pct:.2, t:3}}}],
+  [35,'ร่างสุดท้าย ดาวหางยักษ์',{mul:{r:1.6, dmg:1.3}, fx:{burst:{r:80, pct:.6}}}]],
+blizzard:[
+  [6,'เกล็ดหิมะใหญ่ขึ้น',{look:{flakes:1}}],
+  [10,'นานขึ้น 20%',{mul:{dur:1.2}}],
+  [15,'ลูกเห็บ (แช่แข็ง)',{fx:{chill:{ch:.06, t:1}}}],
+  [20,'+1 พายุ',{add:{count:1}}],
+  [25,'แช่แข็งบ่อยขึ้น',{fx:{chill:{ch:.15, t:1.2}}}],
+  [30,'วงกว้าง +30%',{mul:{r:1.3}}],
+  [35,'ร่างสุดท้าย พายุหิมะใหญ่',{mul:{r:2, dmg:1.3}}]],
+vortex:[
+  [6,'ใบไม้หมุนในวังวน',{look:{leaves:1}}],
+  [10,'ดูดแรง +40%',{mul:{pull:1.4}}],
+  [15,'แรง +20%',{mul:{dmg:1.2}}],
+  [20,'ใบมีดลมกระเด็น',{fx:{shards:{on:'hit', ch:.08, n:2, pct:.5}}}],
+  [25,'+1 วังวน',{add:{count:1}}],
+  [30,'นานขึ้น 30%',{mul:{dur:1.3}}],
+  [35,'ร่างสุดท้าย ทอร์นาโดยักษ์',{mul:{r:1.8, dmg:1.3}}]],
+spikes:[
+  [6,'ฝุ่นหินพุ่ง',{look:{dust:1}}],
+  [10,'กระแทก +30%',{mul:{knock:1.3}}],
+  [15,'หนามสองแถว (+4)',{add:{count:4}}],
+  [20,'หนามระเบิดหิน',{fx:{burst:{r:45, pct:.35}}}],
+  [25,'สตัน 0.5 วิ',{fx:{shock:{ch:.2, t:.5}}}],
+  [30,'หนามใหญ่ +20%',{mul:{r:1.2}}],
+  [35,'ร่างสุดท้าย ภูเขาหนาม · หนามผุดเป็นวง',{fx:{radial:{every:2, n:12, pct:.5}}}]]};
+// called from sxMods after the tree (27) → power + growth + the tiers reached
+function mxApply(p,s,add,mul){
+  const L=mxLv(p,s); delete s.mxLook; if(!L){ delete s.mxL; return; } s.mxL=L;
+  const pk=SX.pk[s.id]||'dmg', ev=s.evolved&&s.def.evo&&s.def.evo.set, has=k=>s.def.p[k]!=null||!!(ev&&ev[k]!=null);
+  if(has(pk)) mul[pk]=(mul[pk]||1)*mxPow(L);
+  if(has('size')) mul.size=(mul.size||1)*mxGrow(L,.08,.01);
+  if(has('r')&&s.def.type!=='orbit') mul.r=(mul.r||1)*mxGrow(L,.03,.006);
+  if(has('explode')) mul.explode=(mul.explode||1)*mxGrow(L,.03,.006);
+  const T=MX_T[s.id]; if(!T) return; const look={};
+  for(const [lv,,o] of T){ if(lv>L) break;
+    for(const k in o.add||{}) add[k]=(add[k]||0)+o.add[k];
+    for(const k in o.mul||{}) mul[k]=(mul[k]||1)*o.mul[k];
+    if(o.fx){ s.fx=s.fx||{}; for(const f in o.fx) tfMerge(s.fx,f,o.fx[f]); }
+    if(o.look) Object.assign(look,o.look); }
+  look.lv=L; s.mxLook=look; }
+// next tiers a card of stat k reaches · [{n: cards left, s, t}] nearest first (cards / pause sheet)
+function mxNext(p,k){ const out=[];
+  for(const s of p.skills){ if(SX.main[s.id]!==k) continue; const L=mxLv(p,s), T=MX_T[s.id];
+    if(T){ const nx=T.find(x=>x[0]>L); if(nx) out.push({n:nx[0]-L, s, t:nx[1], lv:nx[0]}); continue; }
+    for(const m of SX.ms[s.id]||[]){ if(m[0]!==k) continue; const e=m[5]||5, have=p.stats[k]|0; if(m[2]==='='&&have>=e) continue; out.push({n:e-have%e, s, t:m[4]}); } }
+  return out.sort((a,b)=>a.n-b.n); }
+function mxReached(s){ const T=MX_T[s.id], L=s.mxL|0; return T?T.filter(x=>x[0]<=L).map(x=>x[1]):[]; }
+
+/* ---- per projectile tricks (fireProj → mxProj · updateProjs → mxProjTick / life end mxSplit · projHit → pass / boom2) ---- */
+function mxProj(s,p){ const k=s.mxLook; if(!k||!k.lv) return; const m=p.mx={lv:k.lv, look:k};
+  if(k.haze) m.haze=p.r*k.haze*(1+Math.min(4,Math.max(0,k.lv-6))*.1); if(k.pass) m.pass=k.pass;
+  if(k.drip) m.drip=k.drip; if(k.split) m.split=k.split; if(k.boom2) m.boom2=1; m.ht=0; m.dd=0; m.ph=(G.projs.length&1)*PI; }
+function mxProjTick(p,dt){ const m=p.mx; if(!m) return;
+  if(m.haze){ m.ht-=dt; if(m.ht<=0){ m.ht=.2; const R=m.haze, pct=(m.look.hazePct||.1);
+      for(const e of query(p.x,p.y,R+40)){ if(e.dead) continue; if((e.x-p.x)**2+(e.y-p.y)**2>(R+e.r)**2) continue;
+        damageEnemy(e,p.dmg*pct,p.src,{fxd:true,quiet:true,slow:m.look.hazeSlow||0,slowDur:.4}); } } }
+  if(m.drip){ m.dd+=Math.hypot(p.vx,p.vy)*dt; const step=m.look.dripDense?26:48;
+    if(m.dd>=step){ m.dd=0; let n=0; for(const z of G.zones) if(z.fxd) n++;
+      if(n<24) addZone({x:p.x,y:p.y+p.r*.5,r:14+p.r*.8,dur:m.drip,tick:.5,dmg:p.dmg*.06,kind:'fire',src:p.src,fxd:true}); } } }
+function mxSplit(p){ const m=p.mx, n=m.split, a0=Math.atan2(p.vy,p.vx);
+  for(let i=0;i<n;i++){ const a=a0+(i-(n-1)/2)*.55, q={x:p.x,y:p.y,vx:Math.cos(a)*380,vy:Math.sin(a)*380,r:p.r*.55,dmg:p.dmg*.4,pierce:1,life:.4,max:.4,knock:60,
+    explode:p.explode*.5,homing:0,crit:0,shape:p.shape,c:p.c,src:p.src,burn:0,hit:null,tg:null,dead:false,t:0,fxd:true};
+    q.mx={lv:Math.min(m.lv,24),look:m.look,ht:0,dd:0}; G.projs.push(q); } }
+// projHit with an exploding projectile: pass through (with a small blast) while pass > 0 · or a second wave after 0.3 s
+function mxPassHit(p){ const m=p.mx; if(!m||!(m.pass>0)) return false; m.pass--;
+  if(m.look.passBoom) explode(p.x,p.y,p.explode*.6,p.dmg*.5,p.src,{c:p.c}); return true; }
+function mxBoom2(p){ const m=p.mx; if(!m||!m.boom2) return; const x=p.x, y=p.y, r=p.explode*.85, d=p.dmg*.5, s=p.src, c=p.c;
+  later(.3,()=>{ if(G&&!G.over) explode(x,y,r,d,s,{c}); }); }
+
+/* ---- drawing (13 drawProjs asks first: true = drawn here) ---- */
+function mxDrawProj(p,sp,a){ const m=p.mx; if(!m||!m.look) return false; const k=m.look, L=m.lv;
+  if(p.shape==='fire'){ const blue=k.blue, c1=blue?'#2a6bff':'#ff5a1a', c2=blue?'#7fc4ff':'#ffb347', c3=blue?'#e8f6ff':'#fff3c4', r=p.r;
+    let x=p.x, y=p.y; if(k.twin){ const o=Math.sin(p.t*9+(m.ph||0))*r*1.4; x+=-Math.sin(a)*o; y+=Math.cos(a)*o; }   // two shots spiral around each other
+    ctx.globalCompositeOperation='lighter';
+    if(m.haze){ const R=m.haze, w=k.warp?1.8:1; ctx.strokeStyle=hexA(c2,.16); ctx.lineWidth=2; ctx.beginPath();
+      for(let t=0;t<=TAU+.01;t+=.22){ const rr=R+Math.sin(t*6+G.t*12)*3*w, px=x+Math.cos(t)*rr, py=y+Math.sin(t)*rr; t?ctx.lineTo(px,py):ctx.moveTo(px,py); } ctx.stroke(); }
+    if(k.wings){ const f=Math.sin(G.t*16)*.35; ctx.fillStyle=hexA(c2,.7); for(const sg of [-1,1]){ ctx.beginPath();
+        const bx=x-Math.cos(a)*r*.4, by=y-Math.sin(a)*r*.4, nx=-Math.sin(a)*sg, ny=Math.cos(a)*sg;
+        ctx.moveTo(bx,by); ctx.quadraticCurveTo(bx-Math.cos(a)*r*2.2+nx*r*(2.6+f*2),by-Math.sin(a)*r*2.2+ny*r*(2.6+f*2),bx-Math.cos(a)*r*4.2+nx*r*(1.4+f),by-Math.sin(a)*r*4.2+ny*r*(1.4+f));
+        ctx.quadraticCurveTo(bx-Math.cos(a)*r*2.4+nx*r*.9,by-Math.sin(a)*r*2.4+ny*r*.9,bx,by); ctx.fill(); } }
+    streak(x,y,a,Math.min(90,40+L*1.4),r*3,c1,.75); glow(x,y,r*(3.2+(k.sun?1:0)),c2,.85);
+    ctx.globalCompositeOperation='source-over'; circ(ctx,c2,x,y,r*.95); circ(ctx,k.white?'#ffffff':c3,x-r*.2,y-r*.2,r*(k.white?.62:.45));
+    return true; }
+  if(p.shape==='bolt'&&(k.sparkle||k.rainbow)){ const c=k.rainbow?`hsl(${(G.t*360+p.t*600)%360},90%,65%)`:p.c;
+    ctx.globalCompositeOperation='lighter'; streak(p.x,p.y,a,sp*.06,p.r*3,k.rainbow?'#ffffff':p.c,.7); glow(p.x,p.y,p.r*2.8,k.rainbow?'#ffffff':p.c,.85);
+    for(let i=0;i<3;i++){ const t=G.t*8+i*TAU/3; ctx.fillStyle=k.rainbow?`hsl(${(i*120+G.t*300)%360},90%,70%)`:'#e8dcff'; ctx.fillRect(p.x+Math.cos(t)*p.r*2-1.5,p.y+Math.sin(t)*p.r*2-1.5,3,3); }
+    ctx.globalCompositeOperation='source-over'; circ(ctx,k.rainbow?c:'#ffffff',p.x,p.y,p.r*.7); return true; }
+  return false; }
 /* ================= 27-skill-trees.js · lane B · skill trees (docs/PROPOSAL-skill-trees.md §2) + ★6–8 tier 2 (§4) ================= */
 // Every skill: 3 branches × 3 tiers + a crown. Tier 1–2 = numbers (into s.mod, the same path as the stat milestones of 26),
 // tier 3 + crown = special effects (s.fx) run by the hooks below. Bought with rune points (1 per Base Lv) on the character
@@ -3085,6 +3272,9 @@ function tfHit(e,s,base,dealt){
         const o=B.find(x=>x.e===e); if(o){ o.d=Math.max(o.d,d); o.t=Math.max(o.t,t); } else if(B.length<160) B.push({e,s,d,t,nt:.5}); }
       if(F.pull&&tfICD(s||P,'pull',.25)){ const r=F.pull.r*P.area;
         for(const q of query(e.x,e.y,r+60)){ if(q.dead||q.boss||q===e) continue; const dx=e.x-q.x, dy=e.y-q.y, d=Math.hypot(dx,dy); if(d>r||d<1) continue; const f=220/Math.max(.5,q.mass); q.kx+=dx/d*f; q.ky+=dy/d*f; } } }
+    if(F.hitboom&&s&&tfICD(s,'hitboom',.05)&&tfRoom()){ const r=F.hitboom.r*P.area, d=base*F.hitboom.pct;
+      for(const q of query(e.x,e.y,r+60)){ if(q.dead||q===e) continue; if((q.x-e.x)**2+(q.y-e.y)**2>(r+q.r)**2) continue; damageEnemy(q,d,s,{fxd:true,quiet:true,stun:.15}); }
+      G.fx.push({k:'ring',x:e.x,y:e.y,r0:6,r1:r,t:0,dur:.22,c:'#fff27a',w:5,dead:false}); }
     if(F.leech&&dealt>0) healP(dealt*F.leech.pct);
     if(F.trail&&s&&tfICD(s,'trail',.35)&&G.zones.reduce((n,z)=>n+(z.fxd?1:0),0)<12&&tfRoom()) addZone({x:e.x,y:e.y,r:F.trail.r*P.area,dur:F.trail.dur,tick:.5,dmg:base*F.trail.pct,slow:F.trail.slow||0,kind:F.trail.kind||'fire',src:s,fxd:true});
     if(F.shards&&F.shards.on!=='kill'&&s&&Math.random()<F.shards.ch&&tfICD(s,'shards',.1)&&tfRoom()){ const n=F.shards.n, a0=Math.random()*TAU;
@@ -3413,7 +3603,7 @@ const BAL={ CAP:{base:60, job1:20, job2:25, stat:50, chars:3, bag:120, stash:120
   UP:{ max:10, order:['xp','mag','gold','hp','dmg','drop','stat'],
     def:{ xp:{n:'EXP ที่ได้', i:'📘', per:.03}, mag:{n:'ระยะดูดของ', i:'🧲', per:.04, m:.5}, gold:{n:'ทองที่ได้จากรอบ', i:'💰', per:.01},   // mag: +5 units (0.5 m · 10 units = 1 m on the edge arrows) = ×0.04 of the base 125
       hp:{n:'HP สูงสุด', i:'❤️', per:.02}, dmg:{n:'ดาเมจ', i:'⚔️', per:.015}, drop:{n:'โอกาสดรอปของ', i:'🎁', per:.01},
-      stat:{n:'พลังผูกค่าสถานะ (ต่อแต้ม)', i:'🧬', per:.001, base:.005} },   // + to SX.base: each point of a skill's main stat
+      stat:{n:'ความชำนาญเริ่มรอบ', i:'🧬', per:1, unit:'ระดับ'} },   // every run starts with mastery +level on every skill (26a mxStart)
     cost(lv){ return Math.round(500*Math.pow(1.5,lv)/5)*5; } },
   // survival loot boxes (25-mode-survival.js): one appears every every[0]–every[1] s near the player · elites leave a small one
   BOX:{ every:[45,60], dist:[380,600], max:3, maxSmall:4, life:120, elite:.15,
@@ -4788,7 +4978,7 @@ function buildRunBonus(ch){
 function pgUpLv(k){ const A=pgAcct(), u=A&&A.up; return u&&svHas(u,k)?Math.max(0,Math.min(BAL.UP.max,u[k]|0)):0; }
 // the run bonus part of the upgrades (hp is added by buildRunBonus as a % of the rest · gold is paid in onRunEnd)
 function upBonus(){ const U=BAL.UP.def, b={}, v=k=>pgUpLv(k)*U[k].per;
-  if(v('xp')) b.xp=pgR6(v('xp')); if(v('stat')) b.statPow=pgR6(v('stat')); if(v('mag')) b.magnet=pgR6(1+v('mag')); if(v('dmg')) b.might=pgR6(v('dmg')); if(v('drop')) b.drop=pgR6(v('drop'));
+  if(v('xp')) b.xp=pgR6(v('xp')); if(pgUpLv('stat')) b.mxStart=pgUpLv('stat'); if(v('mag')) b.magnet=pgR6(1+v('mag')); if(v('dmg')) b.might=pgR6(v('dmg')); if(v('drop')) b.drop=pgR6(v('drop'));
   return b; }
 function upCost(k){ const lv=pgUpLv(k); return svHas(BAL.UP.def,k)&&lv<BAL.UP.max?BAL.UP.cost(lv):0; }
 // buy one level of upgrade k → '' = done (saved) · otherwise the reason, nothing changed
@@ -5540,7 +5730,7 @@ function hbUpFill(box){
     const pct=v=>(Math.round(v*1000)/10)+'%', now=(d.base||0)+lv*d.per, nx=(d.base||0)+(lv+1)*d.per;   // base: a rate that starts above 0 (stat power 0.5%)
     row.append(shMk('span','hb-up-i',d.i));
     const mid=shMk('div','hb-up-m'); mid.append(shMk('b',null,d.n+' · ขั้น '+lv+'/'+U.max));
-    const pre=d.base?'ต่อแต้ม ':'+', fm=d.m?(v=>(Math.round(v/d.per*d.m*10)/10)+' ม.'):pct;   // d.m: shown in metres (pickup range)
+    const pre=d.base?'ต่อแต้ม ':'+', fm=d.unit?(v=>Math.round(v)+' '+d.unit):d.m?(v=>(Math.round(v/d.per*d.m*10)/10)+' ม.'):pct;   // d.unit: a count (mastery levels)   // d.m: shown in metres (pickup range)
     mid.append(shMk('span','hb-up-v',lv>=U.max?pre+fm(now)+' (เต็มแล้ว)':pre+fm(now)+' → '+(d.base?'':'+')+fm(nx)));
     const bar=shMk('i','hb-up-bar'); bar.style.setProperty('--p',String(lv/U.max)); mid.append(bar); row.append(mid);
     const b=shBtn(cost?fmt(cost)+' ทอง':'เต็ม','uc-b pri',()=>{ const r=buyUpgrade(k);
@@ -6135,10 +6325,10 @@ function hdStatEffect(k){
   const a=hdSnap(), b=hdTry(k,hdSnap), L=[], cut=v=>String(v).split(' (')[0], pc=v=>Math.round(v*1000)/10+'%';
   // milestones (character runs): reached by this very card, else the nearest ones
   if(P.sx&&typeof SX!=='undefined'){ const have=P.stats[k]|0, now=[];
-    for(const s of P.skills) for(const m of SX.ms[s.id]||[]){ const e=m[5]||5; if(m[0]===k&&(have+1)%e===0&&(m[2]!=='='||have+1===e)) now.push(s.def.n+' '+m[4]); }
+    const nx=sxNext(P,k); for(const x of nx) if(x.n===1) now.push(x.s.def.n+': '+x.t);               // mastery tiers (26a) + old milestones
     for(const t of now) L.push({t:'★ ใบนี้: '+t, c:'ms'});
-    if(!now.length) for(const x of sxNext(P,k).slice(0,2)) L.push({t:'อีก '+x.n+' ใบ: '+x.s.def.n+' '+x.t, c:'soon'});
-    if(have>=5) L.push({t:'ใบที่ 6 ขึ้นไป: ผลทั่วไปครึ่งหนึ่ง (มีเพดาน)', c:'note'}); }
+    if(!now.length) for(const x of nx.slice(0,2)) L.push({t:'อีก '+x.n+' ใบ: '+x.s.def.n+' '+x.t, c:'soon'});
+    const us=P.skills.filter(s=>SX.main[s.id]===k); if(us.length&&typeof mxLv==='function') L.push({t:'ความชำนาญ '+us.map(s=>s.def.n+' Lv '+mxLv(P,s)+' → '+(mxLv(P,s)+1)).join(' · ')+' (แรง +4%/ระดับ)', c:'note'}); }
   const g=[];
   if(b.mi!==a.mi) g.push('ดาเมจรวม ×'+HD_N(a.mi)+' → ×'+HD_N(b.mi)); if(b.ar!==a.ar) g.push('พื้นที่ ×'+HD_N(a.ar)+' → ×'+HD_N(b.ar));
   if(b.du!==a.du) g.push('ระยะเวลา ×'+HD_N(a.du)+' → ×'+HD_N(b.du)); if(b.cd!==a.cd) g.push('คูลดาวน์ ×'+HD_N(a.cd)+' → ×'+HD_N(b.cd));
@@ -6162,7 +6352,7 @@ function hdCardInfo(){
       if(t) lines.push(...t.replace(/^[^:]*: /,'').split(' · '));
       if(cd&&!(t&&t.indexOf('คูลดาวน์')>=0)) lines.push('คูลดาวน์ '+String(cd[1]).split(' (')[0]+' (ไม่เปลี่ยน)'); }
     else if(o.k==='stat'){ lines=hdStatEffect(o.stat); const ds=c.querySelector('.ds');
-      if(P.sx&&(P.stats[o.stat]|0)>=5&&ds&&typeof SX!=='undefined'&&SX.half[o.stat]) ds.textContent=SX.half[o.stat]; }   // card 6+: the half numbers, not cards 1–5's
+      if(P.sx&&ds&&typeof MX_CARD!=='undefined'&&MX_CARD[o.stat]) ds.textContent=MX_CARD[o.stat]; }   // character runs: mastery card text (26a)
     if(o.k==='up'){ const df=c.querySelector('.df'), have=df?df.textContent:'', mod=P.might!==1||P.area!==1||P.durMul!==1||P.cdMul!==1||P.extraProj>0;
       lines=lines.filter(t=>have.indexOf(t)<0&&(mod||/^คูลดาวน์/.test(t)&&have.indexOf('คูลดาวน์')<0)); }   // core diffText already says it (no stat bonus yet) → don't repeat
     if(!lines.length) return; const d=document.createElement('span'); d.className='hd-ci';
@@ -6420,10 +6610,10 @@ function hdStatSheet(box){
     const ev=s.def.evo; if(ev&&!s.evolved) card.append(el('div','hd-sk-e','วิวัฒนาการ: ★5 + '+(STATS[ev.s].ab||ev.s)+' อย่างน้อย 1 ('+(s.lv>=5?'สกิลครบ ★5 แล้ว':'ยังขาด '+(5-s.lv)+' ขั้น')+' · '+(STATS[ev.s].ab||ev.s)+' ตอนนี้ '+(st[ev.s]|0)+')'));
     const g=el('div','hd-sheet-grid'); for(const [k,v] of hdSkillLines(s)) g.append(el('span','hd-k',k),el('span','hd-v',v)); card.append(g);
     if(P.sx&&typeof sxHave==='function'){ const h=sxHave(P,s);
-      if(h.main) card.append(el('div','hd-sk-m','ค่าหลัก '+(STATS[h.main].ab||h.main)+' · '+({nova:'ระเบิดโล่',trap:'ดาเมจกับดัก'}[h.pk]||'ความแรง')+' +'+(Math.round(h.pct*1000)/10)+'% ('+(Math.round(sxRate(P)*1000)/10)+'% ต่อแต้ม)'));
-      if(h.ms.length) card.append(el('div','hd-sk-ms','จุดเปลี่ยนที่ได้แล้ว: '+h.ms.join(' · ')));
-      const soon=(SX.ms[s.id]||[]).map(m=>{ const e=m[5]||5, have=P.stats[m[0]]|0; return m[2]==='='&&have>=e?null:{n:e-have%e, t:(STATS[m[0]].ab||m[0])+' อีก '+(e-have%e)+' ใบ: '+m[4]}; }).filter(Boolean).sort((a,b)=>a.n-b.n);
-      if(soon.length) card.append(el('div','hd-sk-soon','ถัดไป: '+soon.map(x=>x.t).join(' · '))); }
+      if(h.main) card.append(el('div','hd-sk-m','ความชำนาญ '+(STATS[h.main].ab||h.main)+' Lv '+h.lv+(h.pk?' · '+({nova:'ระเบิดโล่',trap:'ดาเมจกับดัก'}[h.pk]||'ความแรง')+' +'+(Math.round(h.pct*1000)/10)+'%':'')));
+      if(h.ms.length) card.append(el('div','hd-sk-ms','ลูกเล่นที่ได้แล้ว: '+h.ms.slice(-4).join(' · ')));
+      const soon=h.main?sxNext(P,h.main).filter(x=>x.s===s):[];
+      if(soon.length) card.append(el('div','hd-sk-soon','ถัดไป: '+soon.map(x=>(STATS[h.main].ab||h.main)+' อีก '+x.n+' ใบ: '+x.t).join(' · '))); }
     const nx=hdNextText(s); if(nx) card.append(el('div','hd-sk-x',nx));
     if(s.dealt) card.append(el('div','hd-sk-e','ดาเมจที่ทำไปแล้วรอบนี้: '+fmtNum(s.dealt)));
     wrap.append(card); }
@@ -6723,7 +6913,7 @@ function tfLines(L){ return L.map(x=>typeof x==='object'?x.t:x).filter(Boolean);
 function tfCardDetail(o){
   const T=[], P2=s=>tfLines(hdSkillLines(s).map(([k,v])=>k+' '+v)), cap=id=>P.rank?(P.rank[id]||0):5;
   const skill=(d,id)=>{ const main=typeof SX!=='undefined'&&P.sx&&SX.main[id];
-    if(main) T.push('<h4>ค่าหลัก</h4><p>'+tfE(main+' · '+STATS[main].n)+' · การ์ด '+tfE(main)+' 1 ใบ = สกิลนี้แรงขึ้น '+tfPc(sxRate(P))+'</p>');
+    if(main) T.push('<h4>ความชำนาญ</h4><p>'+tfE(main+' · '+STATS[main].n)+' · การ์ด '+tfE(main)+' 1 ใบ = ความชำนาญ +1 (แรง +4% ต่อระดับ ถึง 35 แล้ว +1%)'+(MX_T[id]?'<br>ลูกเล่นตามระดับ: '+MX_T[id].map(x=>'Lv '+x[0]+' '+tfE(x[1])).join('<br>'):'')+'</p>');
     const tr=tfTreeLines(id); if(tr.length) T.push('<h4>🌳 จากต้นไม้</h4><p>'+tr.map(tfE).join('<br>')+'</p>');
     if(d.evo) T.push('<h4>วิวัฒนาการ</h4><p>'+tfE(d.evo.n+': '+d.evo.d)+' · ต้อง Lv 5 + การ์ด '+d.evo.s+(P.sx?' + '+d.evo.s+' ถาวร 25':'')+'</p>'); };
   if(o.k==='new'){ const d=SK[o.id], s=makeSkill(o.id); if(P.sx){ s.cx=true; s.mod=null; }
@@ -6735,10 +6925,10 @@ function tfCardDetail(o){
     if(P.rank) T.push('<h4>เพดาน</h4><p>ฝึกไว้ ★'+cap(s.id)+(rankCap(G.char,s.id)>cap(s.id)?' · ฝึกเพิ่มได้ถึง ★'+rankCap(G.char,s.id)+' ที่หน้าสกิล':'')+'</p>');
     skill(d,s.id); return [d.i+' '+(o.k==='evo'?'วิวัฒนาการ: '+d.evo.n:d.n+' Lv '+s.lv+' → '+(s.lv+1)),T.join('')]; }
   if(o.k==='stat'){ const st=STATS[o.stat], have=P.stats[o.stat]|0, ds=typeof st.d==='function'?st.d():st.d;
-    T.push('<p>'+tfE(P.sx&&have>=5&&typeof SX!=='undefined'&&SX.half[o.stat]?SX.half[o.stat]:ds)+'</p><h4>ใบนี้ทำให้ (ใบที่ '+(have+1)+')</h4><p>'+tfLines(hdStatEffect(o.stat)).map(tfE).join('<br>')+'</p>');
+    T.push('<p>'+tfE(P.sx&&typeof MX_CARD!=='undefined'?MX_CARD[o.stat]:ds)+'</p><h4>ใบนี้ทำให้ (ใบที่ '+(have+1)+')</h4><p>'+tfLines(hdStatEffect(o.stat)).map(tfE).join('<br>')+'</p>');
     if(P.sx){ const uses=P.skills.filter(s=>SX.main[s.id]===o.stat).map(s=>s.def.n);
-      T.push('<h4>ค่าหลักของ</h4><p>'+(uses.length?tfE(uses.join(', '))+' · ใบละ +'+tfPc(sxRate(P)):'ยังไม่มีสกิลในรอบนี้ที่ใช้ค่านี้เป็นค่าหลัก')+'</p>');
-      const nx=sxNext(P,o.stat).slice(0,4); if(nx.length) T.push('<h4>จุดเปลี่ยนถัดไป</h4><p>'+nx.map(x=>'อีก '+x.n+' ใบ: '+tfE(x.s.def.n+' '+x.t)).join('<br>')+'</p>');
+      T.push('<h4>ความชำนาญของ</h4><p>'+(uses.length?tfE(uses.join(', '))+' · ใบละ +1 ระดับ (แรง +4%)':'ยังไม่มีสกิลในรอบนี้ที่ใช้ค่านี้เป็นค่าหลัก · ได้แค่ผลทั่วไป')+'</p>');
+      const nx=sxNext(P,o.stat).slice(0,4); if(nx.length) T.push('<h4>ลูกเล่นถัดไป</h4><p>'+nx.map(x=>'อีก '+x.n+' ใบ: '+tfE(x.s.def.n+' '+x.t)).join('<br>')+'</p>');
       T.push('<p class="tf-note">การ์ดค่าสถานะเป็นของในรอบนี้เท่านั้น ไม่ใช่ค่าสถานะถาวร</p>'); }
     return [st.i+' '+SNAME(o.stat)+' · '+st.n,T.join('')]; }
   if(o.k==='potion') return ['🧪 ยาฟื้นฟู','<p>ฟื้นฟู HP 40% ของ HP สูงสุดทันที · ขึ้นเมื่อไม่มีการ์ดอื่นให้สุ่มพอ</p>'];

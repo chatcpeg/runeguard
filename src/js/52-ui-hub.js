@@ -259,7 +259,7 @@ function hbUpFill(box){
     const pct=v=>(Math.round(v*1000)/10)+'%', now=(d.base||0)+lv*d.per, nx=(d.base||0)+(lv+1)*d.per;   // base: a rate that starts above 0 (stat power 0.5%)
     row.append(shMk('span','hb-up-i',d.i));
     const mid=shMk('div','hb-up-m'); mid.append(shMk('b',null,d.n+' · ขั้น '+lv+'/'+U.max));
-    const pre=d.base?'ต่อแต้ม ':'+', fm=d.m?(v=>(Math.round(v/d.per*d.m*10)/10)+' ม.'):pct;   // d.m: shown in metres (pickup range)
+    const pre=d.base?'ต่อแต้ม ':'+', fm=d.unit?(v=>Math.round(v)+' '+d.unit):d.m?(v=>(Math.round(v/d.per*d.m*10)/10)+' ม.'):pct;   // d.unit: a count (mastery levels)   // d.m: shown in metres (pickup range)
     mid.append(shMk('span','hb-up-v',lv>=U.max?pre+fm(now)+' (เต็มแล้ว)':pre+fm(now)+' → '+(d.base?'':'+')+fm(nx)));
     const bar=shMk('i','hb-up-bar'); bar.style.setProperty('--p',String(lv/U.max)); mid.append(bar); row.append(mid);
     const b=shBtn(cost?fmt(cost)+' ทอง':'เต็ม','uc-b pri',()=>{ const r=buyUpgrade(k);

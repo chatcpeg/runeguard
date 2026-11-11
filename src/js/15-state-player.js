@@ -37,7 +37,8 @@ function recalc(p){
   p.dodge=0; p.rage=0; p.steal=0;
   for(const k of p.skills){ if(k.def.type!=='passive') continue; const d=pv(k,'dodge'); if(d) p.dodge=Math.max(p.dodge,d); const r=pv(k,'rage'); if(r) p.rage=r; const st=pv(k,'steal'); if(st) p.steal=st; }
   if(b.dodge) p.dodge=Math.min(.6,p.dodge+b.dodge); if(b.rage) p.rage+=b.rage; if(b.steal) p.steal+=b.steal;
-  p.drop=b.drop||0; p.bossDmg=b.boss||0; p.fam=b.fam||null;
+  if(p.sx&&p.mxDodge) p.dodge=Math.min(.6,p.dodge+p.mxDodge);           // AGI cards (26 sxStats)
+  p.drop=(b.drop||0)+(p.sx&&p.mxDrop||0); p.bossDmg=b.boss||0; p.fam=b.fam||null;
   if(oldMax&&p.maxHp>oldMax) p.hp+=p.maxHp-oldMax;
   p.hp=Math.min(p.hp,p.maxHp);
 }

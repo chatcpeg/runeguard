@@ -3,7 +3,7 @@
 // Runs the real src/js files in node:vm (test/_vm.mjs) with an in-memory localStorage. No dependencies.
 import { loadSrc, memStorage } from './_vm.mjs';
 
-const FILES = ['04', '05', '06', '07', '08', '15', '16', '24', '25', '26', '27', '28', '30', '31', '33', '34', '35', '40', '41', '42', '50'];
+const FILES = ['04', '05', '06', '07', '08', '15', '16', '24', '25', '26', '26a', '27', '28', '30', '31', '33', '34', '35', '40', '41', '42', '50'];
 let pass = 0, fail = 0;
 const ok = (name, cond, info) => { if (cond) { pass++; console.log('  ✓ ' + name); } else { fail++; console.log('  ✗ ' + name + (info !== undefined ? '\n      ' + (typeof info === 'string' ? info : JSON.stringify(info)) : '')); } };
 const note = t => console.log('  · ' + t);

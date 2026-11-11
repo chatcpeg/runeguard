@@ -3,7 +3,7 @@
 // Runs the real src/js files in node:vm (test/_vm.mjs) with an in-memory localStorage. No dependencies.
 import { loadSrc, memStorage } from './_vm.mjs';
 
-const FILES = ['04', '05', '06', '07', '08', '15', '16', '24', '25', '26', '27', '28', '29', '30', '31', '33', '34', '40', '41', '42', '69'];
+const FILES = ['04', '05', '06', '07', '08', '15', '16', '24', '25', '26', '26a', '27', '28', '29', '30', '31', '33', '34', '40', '41', '42', '69'];
 let pass = 0, fail = 0;
 const ok = (name, cond, info) => { if (cond) { pass++; console.log('  ✓ ' + name); } else { fail++; console.log('  ✗ ' + name + (info !== undefined ? '\n      ' + (typeof info === 'string' ? info : JSON.stringify(info)) : '')); } };
 const note = t => console.log('  · ' + t);
@@ -87,7 +87,7 @@ console.log('§3.7 ตัวใหม่ = คลาสสิกทุก field'
       const m=metaBonus(ch), b=buildRunBonus(ch);
       const A=makePlayer(CLS['${c}']); recalc(A); A.hp=A.maxHp;                          // classic newRun
       const B=makePlayer(CLS['${c}']); recalc(B); B.hp=B.maxHp; const g={}; prepareRun(g,B,ch,'survival');
-      const skip=new Set(['bonus','rank','loadout','advOffered','sx','permSt','tree','sl']), diff=[];   // sx/permSt/tree: character-run flags of 26/27 · skill.cx = character numbers flag
+      const skip=new Set(['bonus','rank','loadout','advOffered','sx','permSt','tree','sl','rangeMul','mxDodge','mxDrop']), diff=[];   // sx/permSt/tree: character-run flags of 26/27 · skill.cx = character numbers flag
       const J=(k,v)=>k==='skills'?JSON.stringify(v.map(s=>Object.assign({},s,{cx:undefined}))):JSON.stringify(v);
       for(const k of new Set(Object.keys(A).concat(Object.keys(B)))) if(!skip.has(k)&&J(k,A[k])!==J(k,B[k])) diff.push(k);
       return {m:JSON.stringify(m), b:JSON.stringify(b), diff, n:Object.keys(A).length, bonus:B.bonus, adv:B.adv, offered:B.advOffered}; })()`);
@@ -1493,38 +1493,42 @@ console.log('กล่องสุ่มเอาชีวิตรอด (BAL.B
   ok('ตัวจับเวลา 45–60 วิ → กล่องเกิดห่าง 380–600 · ไม่เกิน 3 กล่องบนพื้น', r.t0 >= 45 && r.t0 <= 60 && r.n1 === 1 && r.d >= 380 && r.d <= 600 && r.small === false && r.cap === 3, r);
 }
 
-console.log('ค่าสถานะไม่มีเพดาน + ค่าหลัก/จุดเปลี่ยน (26-stat-scaling)');
+console.log('การ์ดค่าสถานะ = ความชำนาญ (26 + 26a · docs/PROPOSAL-mastery.md)');
 {
   const { X } = fresh();
-  const r = X(`(()=>{ const o={}, F=['maxHp','regen','speed','crit','critMult','might','area','durMul','cdMul','magnet','xpMul','extraProj'];
-    const mk=(sx,st)=>{ const p=makePlayer(CLS.mage); Object.assign(p.stats,st); if(sx){ p.sx=true; p.permSt={}; } recalc(p); return p; };
-    // 1) stats ≤ 5: sx gives the core numbers exactly (every combination of 0/3/5)
-    let bad=[]; for(const v of [0,3,5]) for(const k of ['STR','AGI','VIT','INT','DEX','LUK']){ const st={[k]:v, DEX:v===3?2:0};
-      const a=mk(false,st), b=mk(true,st); for(const f of F) if(Math.abs(a[f]-b[f])>1e-9) bad.push(k+v+':'+f); }
-    o.same=bad;
-    // 2) card 6+: half, with caps
-    const p10=mk(true,{STR:10,AGI:30,VIT:10,INT:40,DEX:40,LUK:40}), base=mk(false,{});
-    o.might=p10.might; o.hp=p10.maxHp-base.maxHp; o.speed=p10.speed/base.speed; o.area=p10.area; o.crit=p10.crit; o.cd=p10.cdMul; o.proj=p10.extraProj; o.cm=p10.critMult;
-    // 3) main stat power + milestones through pv
-    const p=mk(true,{INT:10,DEX:5}); p.skills.push(makeSkill('thunder'), makeSkill('flame')); recalc(p);
-    const th=p.skills.find(s=>s.id==='thunder'), fl=p.skills.find(s=>s.id==='flame'), raw=SK.thunder.p;
-    o.th={dmg:pv(th,'dmg')/raw.dmg[0], b:pv(th,'bounces')-raw.bounces[0], c:pv(th,'count')-(raw.count?raw.count[0]||raw.count:1)};
-    o.burn=pv(fl,'burn'); o.ex=pv(fl,'explode')/(Array.isArray(SK.flame.p.explode)?SK.flame.p.explode[0]:SK.flame.p.explode);
-    p.bonus={statPow:.01}; recalc(p); o.th2=pv(th,'dmg')/raw.dmg[0];
-    p.permSt={INT:25}; recalc(p); o.th3=pv(th,'dmg')/raw.dmg[0];
-    const f=mk(true,{}); f.skills.push(makeSkill('thunder')); recalc(f); o.freshMod=f.skills.some(s=>s.mod);
-    o.next=(()=>{ const q=mk(true,{INT:3}); q.skills.push(makeSkill('thunder')); recalc(q); return sxNext(q,'INT').map(x=>x.n+':'+x.s.id); })();
+  const r = X(`(()=>{ const o={}, F=['maxHp','regen','speed','crit','critMult','might','area','durMul','cdMul','magnet','xpMul','extraProj','armor'];
+    const mk=(sx,st,cls)=>{ const p=makePlayer(CLS[cls||'mage']); Object.assign(p.stats,st); if(sx){ p.sx=true; p.permSt={}; } recalc(p); return p; };
+    const a0=mk(false,{}), b0=mk(true,{}); o.zero=F.filter(f=>Math.abs(a0[f]-b0[f])>1e-9);
+    const c=CLS.mage, g=(st)=>mk(true,st);
+    const S=g({STR:10}), V=g({VIT:10}), A=g({AGI:10}), D=g({DEX:10}), I=g({INT:10}), L=g({LUK:10});
+    o.str=[+(S.maxHp/c.hp).toFixed(3), S.armor-c.armor, S.might]; o.vit=[+(V.maxHp/c.hp).toFixed(3), +(V.regen-c.regen).toFixed(3)];
+    o.agi=[+(A.speed/c.speed).toFixed(3), +A.dodge.toFixed(3)]; o.dex=[+D.cdMul.toFixed(4), +D.rangeMul.toFixed(3), +(D.speed/c.speed).toFixed(3)];
+    o.int=[+I.area.toFixed(3), +I.durMul.toFixed(3)]; o.luk=[+(L.crit-c.crit).toFixed(3), +L.critMult.toFixed(3), +L.drop.toFixed(3)];
+    const cap=g({AGI:40, DEX:60, INT:90, LUK:90}); o.cap=[+(cap.speed/c.speed).toFixed(3), +cap.cdMul.toFixed(3), +cap.rangeMul.toFixed(3), +cap.area.toFixed(3), +cap.crit.toFixed(3)];
+    const p=g({INT:10}); p.skills.push(makeSkill('thunder'), makeSkill('flame')); recalc(p);
+    const th=p.skills.find(s=>s.id==='thunder'), raw=SK.thunder.p; o.th=[+(pv(th,'dmg')/raw.dmg[0]).toFixed(4), +(pv(th,'jump')/raw.jump).toFixed(4), th.mxL];
+    const q=g({INT:20}); q.skills.push(makeSkill('flame')); recalc(q); const fl=q.skills.find(s=>s.id==='flame');
+    o.fl=[+(pv(fl,'dmg')/SK.flame.p.dmg[0]).toFixed(4), !!fl.mxLook.haze, !!fl.mxLook.blue, !!(fl.fx&&fl.fx.ignite), !!(fl.fx&&fl.fx.shards), q.tf===true];
+    const st=g({}); st.bonus={mxStart:3}; st.skills.push(makeSkill('thunder')); recalc(st); o.start=+(pv(st.skills[1],'dmg')/raw.dmg[0]).toFixed(4);
+    const pm=g({}); pm.permSt={INT:25}; pm.skills.push(makeSkill('thunder')); recalc(pm); o.perm=pm.skills[1].mxL;
+    const f=g({}); f.skills.push(makeSkill('thunder')); recalc(f); o.freshMod=f.skills.some(s=>s.mod);
+    const n5=g({INT:5}); n5.skills.push(makeSkill('flame')); recalc(n5); o.next=sxNext(n5,'INT').map(x=>x.n+':'+x.s.id+':'+x.lv);
+    const sw=mk(true,{STR:5},'swordsman'); recalc(sw); const sl=sw.skills[0]; o.slash=[+(pv(sl,'dmg')/SK.slash.p.dmg[0]).toFixed(4), +(pv(sl,'arc')-SK.slash.p.arc).toFixed(2)];
     return o; })()`);
-  ok('ค่า ≤ 5: ผลทุก field เท่าสูตรเดิม (ไม่ว่าจะเปิด sx หรือไม่)', r.same.length === 0, r.same);
-  ok('ใบที่ 6+: ATK 10 = ×1.9 (60% + 30%) · VIT 10 = HP +150', Math.abs(r.might - 1.9) < 1e-9 && r.hp === 150, r);
-  ok('เพดาน: เดิน ≤ +60% · พื้นที่ ≤ ×3 · คริ ≤ 75% · คูลดาวน์ ≥ ×0.45 · กระสุนเพิ่ม ≤ 6', Math.abs(r.speed - 1.6) < 1e-9 && r.area <= 3 + 1e-9 && r.crit <= .75 + 1e-9 && r.cd >= .45 - 1e-9 && r.proj <= 6, r);
-  ok('LUK ใบที่ 6+: ความแรงคริ +5% ต่อใบ', Math.abs(r.cm - (1.75 + .05 * 35)) < 1e-9, r.cm);
-  ok('สายฟ้า (ค่าหลัก INT 10): ดาเมจ ×1.05 · INT 10 = กระโดดต่อสาย +2 · DEX 5 = +1 สาย', Math.abs(r.th.dmg - 1.05) < 1e-9 && r.th.b === 2 && r.th.c === 1, r.th);
-  ok('หอกเพลิง INT 10: ทิ้งไฟบนพื้น (burn) · วงระเบิด ×1.2 (+10% ต่อขั้น แบบเส้นตรง)', r.burn === 1 && Math.abs(r.ex - 1.2) < 1e-9, r);
-  ok('อัปถาวร statPow +1% → 1.5% ต่อแต้ม · INT ถาวร 25 = +5 แต้ม', Math.abs(r.th2 - 1.15) < 1e-9 && Math.abs(r.th3 - 1.225) < 1e-9, r);
-  ok('ตัวละครใหม่ไม่มีการ์ด: ไม่มี s.mod (pv เดิมทุกค่า)', r.freshMod === false, r.freshMod);
-  // the card pool (21-ui buildChoices: P.sx || stat < 5) is checked in the browser — 21-ui is not loaded here
-  ok('sxNext: INT 3 → อีก 2 ใบ ทั้งสายฟ้าและศรเวทได้จุดเปลี่ยน', r.next.includes('2:thunder') && r.next.includes('2:mbolt'), r.next);
+  ok('ไม่มีการ์ด: ทุก field เท่าคลาสสิก', r.zero.length === 0, r.zero);
+  ok('STR 10 (จอมเวท): HP ×1.2 · DEF +10 · ไม่เพิ่มดาเมจ (might 1)', JSON.stringify(r.str) === '[1.2,10,1]', r.str);
+  ok('VIT 10: HP ×1.4 · ฟื้น +2.5/วิ', JSON.stringify(r.vit) === '[1.4,2.5]', r.vit);
+  ok('AGI 10: เดิน ×1.3 · หลบ 8%', JSON.stringify(r.agi) === '[1.3,0.08]', r.agi);
+  ok('DEX 10: คูลดาวน์ ×1/1.3 · ระยะ ×1.4 · เดิน ×1.1', r.dex[0] === +(1 / 1.3).toFixed(4) && r.dex[1] === 1.4 && r.dex[2] === 1.1, r.dex);
+  ok('INT 10: พื้นที่ ×1.2 · ระยะเวลา ×1.2', JSON.stringify(r.int) === '[1.2,1.2]', r.int);
+  ok('LUK 10: คริ +15% · แรงคริ 2.05 · ดรอป +10%', JSON.stringify(r.luk) === '[0.15,2.05,0.1]', r.luk);
+  ok('เพดาน: เดิน ≤ +60% · คูลดาวน์ ≥ ×0.45 · ระยะ ≤ +80% · พื้นที่ ≤ ×2 · คริ ≤ 75%', JSON.stringify(r.cap) === '[1.6,0.45,1.8,2,0.75]', r.cap);
+  ok('สายฟ้า ความชำนาญ INT 10: แรง ×1.4 · ระยะกระโดด ×1.2 (ลูกเล่น Lv10)', r.th[0] === 1.4 && r.th[1] === 1.2 && r.th[2] === 10, r.th);
+  ok('หอกเพลิง ความชำนาญ 20: แรง ×1.8×1.25 · ไอร้อน · ไฟน้ำเงิน · ติดไฟ · สะเก็ด · เปิดระบบผลพิเศษ', r.fl[0] === +(1.8 * 1.25).toFixed(4) && r.fl.slice(1).every(Boolean), r.fl);
+  ok('อัปถาวร 🧬 ขั้น 3 = เริ่มรอบด้วยความชำนาญ +3 (แรง ×1.12) · INT ถาวร 25 = +5 ระดับ', r.start === 1.12 && r.perm === 5, r);
+  ok('ตัวละครใหม่ไม่มีการ์ด: ไม่มี s.mod', r.freshMod === false, r.freshMod);
+  ok('ใบถัดไปของ INT 5: หอกเพลิงได้ลูกเล่น Lv6 (อีก 1 ใบ)', r.next.includes('1:flame:6'), r.next);
+  ok('นักดาบ (ยังไม่มีบันไดความชำนาญ): STR 5 = แรง ×1.2 + จุดเปลี่ยนเดิม (มุมฟัน +0.26)', r.slash[0] === 1.2 && r.slash[1] === .26, r.slash);
 }
 
 console.log('ค่าสถานะ: ข้อที่ tester รอบ 2 เจอ (F1–F8)');
@@ -1533,7 +1537,7 @@ console.log('ค่าสถานะ: ข้อที่ tester รอบ 2 เ
   const r = X(`(()=>{ const o={}, mk=(cls,st,bonus)=>{ const p=makePlayer(CLS[cls]); Object.assign(p.stats,st); p.sx=true; p.permSt={}; if(bonus) p.bonus=bonus; recalc(p); return p; };
     const sw=mk('swordsman',{VIT:5}); sw.skills.push(makeSkill('bulwark')); recalc(sw); const bw=sw.skills.find(s=>s.id==='bulwark');
     o.nova=pv(bw,'nova')/SK.bulwark.p.nova[0]; o.bwHave=sxHave(sw,bw);
-    const fr=mk('swordsman',{STR:5}); fr.skills.push(makeSkill('frenzy')); recalc(fr); o.frenzy=sxHave(fr,fr.skills.find(s=>s.id==='frenzy')).main;
+    const fr=mk('swordsman',{STR:5}); fr.skills.push(makeSkill('frenzy')); recalc(fr); o.frenzy=sxHave(fr,fr.skills.find(s=>s.id==='frenzy')).pk;
     const big=mk('swordsman',{VIT:40}); big.skills.push(makeSkill('bulwark')); recalc(big); o.abs=pv(big.skills.find(s=>s.id==='bulwark'),'absorb')/SK.bulwark.p.absorb[0];
     const mg=mk('mage',{AGI:100, INT:100}); mg.skills.push(makeSkill('frost'), makeSkill('blizzard')); recalc(mg); o.slow=mg.skills.filter(s=>s.def.p.slow!=null).map(s=>pv(s,'slow'));
     const th=mk('thief',{AGI:400}); th.skills.push(makeSkill('shadow')); recalc(th); o.dodge=pv(th.skills.find(s=>s.id==='shadow'),'dodge');
@@ -1543,12 +1547,12 @@ console.log('ค่าสถานะ: ข้อที่ tester รอบ 2 เ
     const junk={}; for(let i=0;i<30;i++) junk['zz'+String.fromCharCode(97+i%26)+String.fromCharCode(97+(i/26|0))]=1; Object.assign(junk,{xp:3, stat:2});
     o.keys=validateSave({v:3, acct:{up:junk}, chars:[]}).acct.up;
     return o; })()`);
-  ok('ปราการเหล็ก: ค่าหลัก VIT ไปเพิ่มดาเมจระเบิดโล่ (nova ×1.025) · หน้าพักเกมบอกว่าเป็นระเบิดโล่', Math.abs(r.nova - 1.025) < 1e-9 && r.bwHave.pk === 'nova' && r.bwHave.main === 'VIT', r);
+  ok('ปราการเหล็ก: ความชำนาญ VIT ไปเพิ่มดาเมจระเบิดโล่ (nova ×1.2 ที่ VIT 5) · หน้าพักเกมบอกว่าเป็นระเบิดโล่', Math.abs(r.nova - 1.2) < 1e-9 && r.bwHave.pk === 'nova' && r.bwHave.main === 'VIT', r);
   ok('เลือดคลั่ง (ไม่มีดาเมจ): ไม่ขึ้นบรรทัดความแรง', r.frenzy === null, r.frenzy);
-  ok('ผลคูณเป็นเส้นตรง: VIT 40 → ดูดซับ ×(1+0.1·8)×(1+0.04·35) = ×4.32 ไม่ใช่ทบต้น ×8.5', Math.abs(r.abs - 1.8 * 2.4) < 1e-9, r.abs);
+  ok('ผลคูณเป็นเส้นตรง: VIT 40 → ดูดซับ ×(1+0.1·8) = ×1.8 ไม่ใช่ทบต้น', Math.abs(r.abs - 1.8) < 1e-9, r.abs);
   ok('ชะลอไม่เกิน 80% แม้การ์ด 100 ใบ (ศัตรูไม่หยุด/ไม่ถอยหลัง)', r.slow.length === 2 && r.slow.every(v => v <= .8 + 1e-9), r.slow);
   ok('หลบจากเงาพริ้วไม่เกิน 50%', r.dodge <= .5 + 1e-9, r.dodge);
-  ok('คริจากอุปกรณ์สูง + LUK ≤ 5 = เท่าเดิม (ไม่ถูกตัด 75%) · ใบที่ 6+ ไม่ดันเกินเดิม', Math.abs(r.crit[0] - r.crit[1]) < 1e-9 && r.crit[1] > .75 && Math.abs(r.critOver - r.crit[1]) < 1e-9, r);
+  ok('คริจากอุปกรณ์สูง (70%) + การ์ด LUK: การ์ดดันได้ถึง 75% เท่านั้น · อุปกรณ์อย่างเดียวไม่ถูกตัด', r.crit[1] < r.crit[0] && Math.abs(r.critOver - r.crit[1]) < 1e-9 && Math.abs(r.crit[0] - r.crit[1] - .25) < 1e-9, r);
   ok('เซฟ v3: v2 → v3 ไม่เสีย up.stat · คีย์ขยะ 30 ตัวไม่ดัน xp/stat ออก', r.ver[0] === 6 && r.ver[1].stat === 4 && r.ver[1].xp === 2 && r.keys.xp === 3 && r.keys.stat === 2, r);
 }
 

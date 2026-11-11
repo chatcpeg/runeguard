@@ -147,6 +147,7 @@ function drawUnits(){ for(const s of P.skills){ if(s.def.type!=='summon'||!s.st.
 function drawProjs(){
   for(const p of G.projs){
     const sp=Math.hypot(p.vx,p.vy),a=Math.atan2(p.vy,p.vx);
+    if(p.mx&&mxDrawProj(p,sp,a)) continue;                                  // mastery look (26a)
     switch(p.shape){
       case 'arrow': streak(p.x,p.y,a,Math.min(55,sp*.05),5,p.c,.45); break;
       case 'dagger': streak(p.x,p.y,a,30,5,p.c,.35); break;

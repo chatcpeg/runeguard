@@ -1,12 +1,13 @@
 /* ================= skill behaviours ================= */
-function fireProj(s,a){ const sp=pv(s,'speed'),life=pv(s,'life')||1,size=(pv(s,'size')||6)*(1+(P.area-1)*.5);
-  G.projs.push({x:P.x+Math.cos(a)*10,y:P.y-6+Math.sin(a)*10,vx:Math.cos(a)*sp,vy:Math.sin(a)*sp,r:size,dmg:pv(s,'dmg'),pierce:pv(s,'pierce')||1,life,max:life,knock:pv(s,'knock')||50,
-    explode:(pv(s,'explode')||0)*P.area,homing:pv(s,'homing')||0,crit:pv(s,'crit')||0,shape:s.def.shape||'bolt',c:s.def.c,src:s,burn:pv(s,'burn')||0,hit:null,tg:null,dead:false,t:0});
+function fireProj(s,a){ const sp=pv(s,'speed'),life=(pv(s,'life')||1)*(P.sx&&P.rangeMul||1),size=(pv(s,'size')||6)*(1+(P.area-1)*.5);   // character runs: DEX range · no homing (aimed once, straight)
+  const p0={x:P.x+Math.cos(a)*10,y:P.y-6+Math.sin(a)*10,vx:Math.cos(a)*sp,vy:Math.sin(a)*sp,r:size,dmg:pv(s,'dmg'),pierce:pv(s,'pierce')||1,life,max:life,knock:pv(s,'knock')||50,
+    explode:(pv(s,'explode')||0)*P.area,homing:P.sx?0:pv(s,'homing')||0,crit:pv(s,'crit')||0,shape:s.def.shape||'bolt',c:s.def.c,src:s,burn:pv(s,'burn')||0,hit:null,tg:null,dead:false,t:0}; G.projs.push(p0);
+  if(P.sx&&s.mxLook&&typeof mxProj==='function') mxProj(s,p0);           // mastery tricks of this shot (26a)
   if(s.def.shape==='beam') G.fx.push({k:'beamline',x:P.x,y:P.y-6,a,len:sp*life,t:0,dur:.2,c:s.def.c,dead:false});
   P.atkT=.12; }
 BEH.proj=(s,dt)=>{
   s.cdT-=dt; if(s.cdT>0) return;
-  const range=pv(s,'speed')*(pv(s,'life')||1)*1.05, radial=pv(s,'radial');
+  const range=pv(s,'speed')*(pv(s,'life')||1)*1.05*(P.sx&&P.rangeMul||1), radial=pv(s,'radial');
   let tg=null;
   if(radial){ if(!G.near||G.nearD>420){ s.cdT=.12; return; } }
   else { tg=s.def.target==='strongest'?strongest(range):(G.near&&G.nearD<range?G.near:null); if(!tg){ s.cdT=.12; return; } }
@@ -21,7 +22,7 @@ BEH.proj=(s,dt)=>{
   sfx('shoot');
 };
 function doSwing(s,i){
-  const range=pv(s,'range')*P.area,arc=pv(s,'arc'),full=arc>=6;
+  const range=pv(s,'range')*P.area*(P.sx?1+((P.rangeMul||1)-1)*.5:1),arc=pv(s,'arc'),full=arc>=6;   // DEX reach: half of the range bonus for melee
   const a=G.near?Math.atan2(G.near.y-P.y,G.near.x-P.x):P.aim;
   const dmg=pv(s,'dmg'),kn=pv(s,'knock');
   for(const e of query(P.x,P.y,range+60)){
@@ -90,6 +91,12 @@ BEH.passive=()=>{};
 function mkStrike(x,y,r,delay,dmg,src,kind,o){ o=o||{}; return {x,y,r,delay,dmg,src,kind,t:0,done:0,hits:o.hits||1,hitInt:o.hitInt||.15,knock:o.knock||0,stun:o.stun||0,dead:false}; }
 BEH.strike=(s,dt)=>{
   s.cdT-=dt; if(s.cdT>0) return;
+  if(P.sx){ const R=560*(P.rangeMul||1), t=G.near&&G.nearD<R?G.near:null; if(!t){ s.cdT=.2; return; }   // aimed: on the nearest, the rest in a line beyond it
+    s.cdT=cdOf(s); const n=countOf(s), a=Math.atan2(t.y-P.y,t.x-P.x), d0=Math.hypot(t.x-P.x,t.y-P.y), r=pv(s,'r')*P.area;
+    for(let i=0;i<n;i++){ const d=d0+i*r*1.4, x=P.x+Math.cos(a)*d, y=P.y+Math.sin(a)*d;
+      const go=()=>G.strikes.push(mkStrike(x,y,r,pv(s,'delay')||.5,pv(s,'dmg'),s,s.def.fx,{hits:pv(s,'hits'),hitInt:pv(s,'hitInt'),knock:pv(s,'knock'),stun:pv(s,'stun')}));
+      if(i===0) go(); else later(i*.11,go); }
+    return; }
   const first=randomInView(); if(!first){ s.cdT=.2; return; }
   s.cdT=cdOf(s);
   const n=countOf(s);
@@ -99,6 +106,15 @@ BEH.strike=(s,dt)=>{
 };
 BEH.zone=(s,dt)=>{
   s.cdT-=dt; if(s.cdT>0) return;
+  if(P.sx){ const R=520*(P.rangeMul||1), t=G.near&&G.nearD<R?G.near:null, trap=s.def.fx==='trap'; if(!t&&!trap){ s.cdT=.2; return; }   // aimed (docs §2)
+    if(trap&&!(G.near&&G.nearD<500)){ s.cdT=.2; return; }
+    s.cdT=cdOf(s); const n=countOf(s), a=t?Math.atan2(t.y-P.y,t.x-P.x):0, r=pv(s,'r')*P.area, mv=Math.hypot(P.vx,P.vy), ba=mv>20?Math.atan2(-P.vy,-P.vx):rand(0,TAU);
+    for(let i=0;i<n;i++){ let x,y,o={};
+      if(trap){ x=P.x+Math.cos(ba)*(10+i*r*.9); y=P.y+Math.sin(ba)*(10+i*r*.9); }   // traps: under the feet, a line along the way walked
+      else if(s.def.place==='enemy'){ const d=Math.hypot(t.x-P.x,t.y-P.y)+i*r*1.3; x=P.x+Math.cos(a)*d; y=P.y+Math.sin(a)*d; }
+      else { const aa=a+(i-(n-1)/2)*.35; x=P.x+Math.cos(aa)*50; y=P.y+Math.sin(aa)*50; o.aim={vx:Math.cos(aa)*230, vy:Math.sin(aa)*230}; }   // vortex: straight down the aim
+      addZone(Object.assign({x,y,r,dur:(pv(s,'dur')||4)*P.durMul,tick:pv(s,'tick')||.4,dmg:pv(s,'dmg')||0,slow:pv(s,'slow')||0,kind:s.def.fx,src:s,drift:pv(s,'drift')||0,pull:pv(s,'pull')||0,trap:pv(s,'trap')||0,knock:pv(s,'knock')||0},o)); }
+    return; }
   const place=s.def.place;
   if(place==='enemy'&&!randomInView()){ s.cdT=.2; return; }
   if(place!=='enemy'&&(!G.near||G.nearD>500)){ s.cdT=.2; return; }
@@ -119,7 +135,8 @@ BEH.chain=(s,dt)=>{
       for(let b=0;b<B&&cur;b++){ hit.push(cur.id); pts.push([cur.x,cur.y-cur.r*.4]); damageEnemy(cur,dmg,s,{knock:60,stun:.08});
         if(s.fx&&s.fx.fork&&b===s.fx.fork.at-1) tfFork(s,cur,hit,dmg,jump);
         let nx=null,bd=jump*jump; for(const e of query(cur.x,cur.y,jump+60)){ if(e.dead||hit.indexOf(e.id)>=0) continue; const d=(e.x-cur.x)**2+(e.y-cur.y)**2; if(d<bd){ bd=d; nx=e; } } cur=nx; }
-      G.fx.push({k:'chain',pts,t:0,dur:.24,c:s.def.c,paths:null,jt:-1,dead:false}); sfx('zap'); };
+      G.fx.push({k:'chain',pts,t:0,dur:.24,c:s.def.c,paths:null,jt:-1,dead:false}); sfx('zap');
+      if(s.mxLook&&s.mxLook.twin) G.fx.push({k:'chain',pts:pts.map(q=>[q[0]+3,q[1]-4]),t:0,dur:.24,c:'#ffffff',paths:null,jt:-1,dead:false}); };   // mastery 6 (26a)
     if(c===0) go(); else later(c*.09,go); }
   P.atkT=.12;
 };

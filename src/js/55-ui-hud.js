@@ -23,10 +23,10 @@ function hdStatEffect(k){
   const a=hdSnap(), b=hdTry(k,hdSnap), L=[], cut=v=>String(v).split(' (')[0], pc=v=>Math.round(v*1000)/10+'%';
   // milestones (character runs): reached by this very card, else the nearest ones
   if(P.sx&&typeof SX!=='undefined'){ const have=P.stats[k]|0, now=[];
-    for(const s of P.skills) for(const m of SX.ms[s.id]||[]){ const e=m[5]||5; if(m[0]===k&&(have+1)%e===0&&(m[2]!=='='||have+1===e)) now.push(s.def.n+' '+m[4]); }
+    const nx=sxNext(P,k); for(const x of nx) if(x.n===1) now.push(x.s.def.n+': '+x.t);               // mastery tiers (26a) + old milestones
     for(const t of now) L.push({t:'★ ใบนี้: '+t, c:'ms'});
-    if(!now.length) for(const x of sxNext(P,k).slice(0,2)) L.push({t:'อีก '+x.n+' ใบ: '+x.s.def.n+' '+x.t, c:'soon'});
-    if(have>=5) L.push({t:'ใบที่ 6 ขึ้นไป: ผลทั่วไปครึ่งหนึ่ง (มีเพดาน)', c:'note'}); }
+    if(!now.length) for(const x of nx.slice(0,2)) L.push({t:'อีก '+x.n+' ใบ: '+x.s.def.n+' '+x.t, c:'soon'});
+    const us=P.skills.filter(s=>SX.main[s.id]===k); if(us.length&&typeof mxLv==='function') L.push({t:'ความชำนาญ '+us.map(s=>s.def.n+' Lv '+mxLv(P,s)+' → '+(mxLv(P,s)+1)).join(' · ')+' (แรง +4%/ระดับ)', c:'note'}); }
   const g=[];
   if(b.mi!==a.mi) g.push('ดาเมจรวม ×'+HD_N(a.mi)+' → ×'+HD_N(b.mi)); if(b.ar!==a.ar) g.push('พื้นที่ ×'+HD_N(a.ar)+' → ×'+HD_N(b.ar));
   if(b.du!==a.du) g.push('ระยะเวลา ×'+HD_N(a.du)+' → ×'+HD_N(b.du)); if(b.cd!==a.cd) g.push('คูลดาวน์ ×'+HD_N(a.cd)+' → ×'+HD_N(b.cd));
@@ -50,7 +50,7 @@ function hdCardInfo(){
       if(t) lines.push(...t.replace(/^[^:]*: /,'').split(' · '));
       if(cd&&!(t&&t.indexOf('คูลดาวน์')>=0)) lines.push('คูลดาวน์ '+String(cd[1]).split(' (')[0]+' (ไม่เปลี่ยน)'); }
     else if(o.k==='stat'){ lines=hdStatEffect(o.stat); const ds=c.querySelector('.ds');
-      if(P.sx&&(P.stats[o.stat]|0)>=5&&ds&&typeof SX!=='undefined'&&SX.half[o.stat]) ds.textContent=SX.half[o.stat]; }   // card 6+: the half numbers, not cards 1–5's
+      if(P.sx&&ds&&typeof MX_CARD!=='undefined'&&MX_CARD[o.stat]) ds.textContent=MX_CARD[o.stat]; }   // character runs: mastery card text (26a)
     if(o.k==='up'){ const df=c.querySelector('.df'), have=df?df.textContent:'', mod=P.might!==1||P.area!==1||P.durMul!==1||P.cdMul!==1||P.extraProj>0;
       lines=lines.filter(t=>have.indexOf(t)<0&&(mod||/^คูลดาวน์/.test(t)&&have.indexOf('คูลดาวน์')<0)); }   // core diffText already says it (no stat bonus yet) → don't repeat
     if(!lines.length) return; const d=document.createElement('span'); d.className='hd-ci';
@@ -308,10 +308,10 @@ function hdStatSheet(box){
     const ev=s.def.evo; if(ev&&!s.evolved) card.append(el('div','hd-sk-e','วิวัฒนาการ: ★5 + '+(STATS[ev.s].ab||ev.s)+' อย่างน้อย 1 ('+(s.lv>=5?'สกิลครบ ★5 แล้ว':'ยังขาด '+(5-s.lv)+' ขั้น')+' · '+(STATS[ev.s].ab||ev.s)+' ตอนนี้ '+(st[ev.s]|0)+')'));
     const g=el('div','hd-sheet-grid'); for(const [k,v] of hdSkillLines(s)) g.append(el('span','hd-k',k),el('span','hd-v',v)); card.append(g);
     if(P.sx&&typeof sxHave==='function'){ const h=sxHave(P,s);
-      if(h.main) card.append(el('div','hd-sk-m','ค่าหลัก '+(STATS[h.main].ab||h.main)+' · '+({nova:'ระเบิดโล่',trap:'ดาเมจกับดัก'}[h.pk]||'ความแรง')+' +'+(Math.round(h.pct*1000)/10)+'% ('+(Math.round(sxRate(P)*1000)/10)+'% ต่อแต้ม)'));
-      if(h.ms.length) card.append(el('div','hd-sk-ms','จุดเปลี่ยนที่ได้แล้ว: '+h.ms.join(' · ')));
-      const soon=(SX.ms[s.id]||[]).map(m=>{ const e=m[5]||5, have=P.stats[m[0]]|0; return m[2]==='='&&have>=e?null:{n:e-have%e, t:(STATS[m[0]].ab||m[0])+' อีก '+(e-have%e)+' ใบ: '+m[4]}; }).filter(Boolean).sort((a,b)=>a.n-b.n);
-      if(soon.length) card.append(el('div','hd-sk-soon','ถัดไป: '+soon.map(x=>x.t).join(' · '))); }
+      if(h.main) card.append(el('div','hd-sk-m','ความชำนาญ '+(STATS[h.main].ab||h.main)+' Lv '+h.lv+(h.pk?' · '+({nova:'ระเบิดโล่',trap:'ดาเมจกับดัก'}[h.pk]||'ความแรง')+' +'+(Math.round(h.pct*1000)/10)+'%':'')));
+      if(h.ms.length) card.append(el('div','hd-sk-ms','ลูกเล่นที่ได้แล้ว: '+h.ms.slice(-4).join(' · ')));
+      const soon=h.main?sxNext(P,h.main).filter(x=>x.s===s):[];
+      if(soon.length) card.append(el('div','hd-sk-soon','ถัดไป: '+soon.map(x=>(STATS[h.main].ab||h.main)+' อีก '+x.n+' ใบ: '+x.t).join(' · '))); }
     const nx=hdNextText(s); if(nx) card.append(el('div','hd-sk-x',nx));
     if(s.dealt) card.append(el('div','hd-sk-e','ดาเมจที่ทำไปแล้วรอบนี้: '+fmtNum(s.dealt)));
     wrap.append(card); }

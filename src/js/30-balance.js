@@ -79,7 +79,7 @@ const BAL={ CAP:{base:60, job1:20, job2:25, stat:50, chars:3, bag:120, stash:120
   UP:{ max:10, order:['xp','mag','gold','hp','dmg','drop','stat'],
     def:{ xp:{n:'EXP ที่ได้', i:'📘', per:.03}, mag:{n:'ระยะดูดของ', i:'🧲', per:.04, m:.5}, gold:{n:'ทองที่ได้จากรอบ', i:'💰', per:.01},   // mag: +5 units (0.5 m · 10 units = 1 m on the edge arrows) = ×0.04 of the base 125
       hp:{n:'HP สูงสุด', i:'❤️', per:.02}, dmg:{n:'ดาเมจ', i:'⚔️', per:.015}, drop:{n:'โอกาสดรอปของ', i:'🎁', per:.01},
-      stat:{n:'พลังผูกค่าสถานะ (ต่อแต้ม)', i:'🧬', per:.001, base:.005} },   // + to SX.base: each point of a skill's main stat
+      stat:{n:'ความชำนาญเริ่มรอบ', i:'🧬', per:1, unit:'ระดับ'} },   // every run starts with mastery +level on every skill (26a mxStart)
     cost(lv){ return Math.round(500*Math.pow(1.5,lv)/5)*5; } },
   // survival loot boxes (25-mode-survival.js): one appears every every[0]–every[1] s near the player · elites leave a small one
   BOX:{ every:[45,60], dist:[380,600], max:3, maxSmall:4, life:120, elite:.15,

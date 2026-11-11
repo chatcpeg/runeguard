@@ -109,7 +109,7 @@ function tfLines(L){ return L.map(x=>typeof x==='object'?x.t:x).filter(Boolean);
 function tfCardDetail(o){
   const T=[], P2=s=>tfLines(hdSkillLines(s).map(([k,v])=>k+' '+v)), cap=id=>P.rank?(P.rank[id]||0):5;
   const skill=(d,id)=>{ const main=typeof SX!=='undefined'&&P.sx&&SX.main[id];
-    if(main) T.push('<h4>ค่าหลัก</h4><p>'+tfE(main+' · '+STATS[main].n)+' · การ์ด '+tfE(main)+' 1 ใบ = สกิลนี้แรงขึ้น '+tfPc(sxRate(P))+'</p>');
+    if(main) T.push('<h4>ความชำนาญ</h4><p>'+tfE(main+' · '+STATS[main].n)+' · การ์ด '+tfE(main)+' 1 ใบ = ความชำนาญ +1 (แรง +4% ต่อระดับ ถึง 35 แล้ว +1%)'+(MX_T[id]?'<br>ลูกเล่นตามระดับ: '+MX_T[id].map(x=>'Lv '+x[0]+' '+tfE(x[1])).join('<br>'):'')+'</p>');
     const tr=tfTreeLines(id); if(tr.length) T.push('<h4>🌳 จากต้นไม้</h4><p>'+tr.map(tfE).join('<br>')+'</p>');
     if(d.evo) T.push('<h4>วิวัฒนาการ</h4><p>'+tfE(d.evo.n+': '+d.evo.d)+' · ต้อง Lv 5 + การ์ด '+d.evo.s+(P.sx?' + '+d.evo.s+' ถาวร 25':'')+'</p>'); };
   if(o.k==='new'){ const d=SK[o.id], s=makeSkill(o.id); if(P.sx){ s.cx=true; s.mod=null; }
@@ -121,10 +121,10 @@ function tfCardDetail(o){
     if(P.rank) T.push('<h4>เพดาน</h4><p>ฝึกไว้ ★'+cap(s.id)+(rankCap(G.char,s.id)>cap(s.id)?' · ฝึกเพิ่มได้ถึง ★'+rankCap(G.char,s.id)+' ที่หน้าสกิล':'')+'</p>');
     skill(d,s.id); return [d.i+' '+(o.k==='evo'?'วิวัฒนาการ: '+d.evo.n:d.n+' Lv '+s.lv+' → '+(s.lv+1)),T.join('')]; }
   if(o.k==='stat'){ const st=STATS[o.stat], have=P.stats[o.stat]|0, ds=typeof st.d==='function'?st.d():st.d;
-    T.push('<p>'+tfE(P.sx&&have>=5&&typeof SX!=='undefined'&&SX.half[o.stat]?SX.half[o.stat]:ds)+'</p><h4>ใบนี้ทำให้ (ใบที่ '+(have+1)+')</h4><p>'+tfLines(hdStatEffect(o.stat)).map(tfE).join('<br>')+'</p>');
+    T.push('<p>'+tfE(P.sx&&typeof MX_CARD!=='undefined'?MX_CARD[o.stat]:ds)+'</p><h4>ใบนี้ทำให้ (ใบที่ '+(have+1)+')</h4><p>'+tfLines(hdStatEffect(o.stat)).map(tfE).join('<br>')+'</p>');
     if(P.sx){ const uses=P.skills.filter(s=>SX.main[s.id]===o.stat).map(s=>s.def.n);
-      T.push('<h4>ค่าหลักของ</h4><p>'+(uses.length?tfE(uses.join(', '))+' · ใบละ +'+tfPc(sxRate(P)):'ยังไม่มีสกิลในรอบนี้ที่ใช้ค่านี้เป็นค่าหลัก')+'</p>');
-      const nx=sxNext(P,o.stat).slice(0,4); if(nx.length) T.push('<h4>จุดเปลี่ยนถัดไป</h4><p>'+nx.map(x=>'อีก '+x.n+' ใบ: '+tfE(x.s.def.n+' '+x.t)).join('<br>')+'</p>');
+      T.push('<h4>ความชำนาญของ</h4><p>'+(uses.length?tfE(uses.join(', '))+' · ใบละ +1 ระดับ (แรง +4%)':'ยังไม่มีสกิลในรอบนี้ที่ใช้ค่านี้เป็นค่าหลัก · ได้แค่ผลทั่วไป')+'</p>');
+      const nx=sxNext(P,o.stat).slice(0,4); if(nx.length) T.push('<h4>ลูกเล่นถัดไป</h4><p>'+nx.map(x=>'อีก '+x.n+' ใบ: '+tfE(x.s.def.n+' '+x.t)).join('<br>')+'</p>');
       T.push('<p class="tf-note">การ์ดค่าสถานะเป็นของในรอบนี้เท่านั้น ไม่ใช่ค่าสถานะถาวร</p>'); }
     return [st.i+' '+SNAME(o.stat)+' · '+st.n,T.join('')]; }
   if(o.k==='potion') return ['🧪 ยาฟื้นฟู','<p>ฟื้นฟู HP 40% ของ HP สูงสุดทันที · ขึ้นเมื่อไม่มีการ์ดอื่นให้สุ่มพอ</p>'];

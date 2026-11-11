@@ -69,7 +69,7 @@ function buildRunBonus(ch){
 function pgUpLv(k){ const A=pgAcct(), u=A&&A.up; return u&&svHas(u,k)?Math.max(0,Math.min(BAL.UP.max,u[k]|0)):0; }
 // the run bonus part of the upgrades (hp is added by buildRunBonus as a % of the rest · gold is paid in onRunEnd)
 function upBonus(){ const U=BAL.UP.def, b={}, v=k=>pgUpLv(k)*U[k].per;
-  if(v('xp')) b.xp=pgR6(v('xp')); if(v('stat')) b.statPow=pgR6(v('stat')); if(v('mag')) b.magnet=pgR6(1+v('mag')); if(v('dmg')) b.might=pgR6(v('dmg')); if(v('drop')) b.drop=pgR6(v('drop'));
+  if(v('xp')) b.xp=pgR6(v('xp')); if(pgUpLv('stat')) b.mxStart=pgUpLv('stat'); if(v('mag')) b.magnet=pgR6(1+v('mag')); if(v('dmg')) b.might=pgR6(v('dmg')); if(v('drop')) b.drop=pgR6(v('drop'));
   return b; }
 function upCost(k){ const lv=pgUpLv(k); return svHas(BAL.UP.def,k)&&lv<BAL.UP.max?BAL.UP.cost(lv):0; }
 // buy one level of upgrade k → '' = done (saved) · otherwise the reason, nothing changed

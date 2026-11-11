@@ -72,18 +72,30 @@ function sxMods(p){
   delete p.tfg;
   for(const s of p.skills){ const add={}, mul={}, set={}, id=s.id, main=SX.main[id];
     const pk=SX.pk[id]||'dmg', ev=s.evolved&&s.def.evo&&s.def.evo.set;
-    if(main&&(s.def.p[pk]!=null||ev&&ev[pk]!=null)){ const f=1+sxRate(p)*sxPoints(p,main); if(f!==1) mul[pk]=f; }
-    for(const m of SX.ms[id]||[]){ const n=sxSteps(p,m); if(!n) continue; const [ ,k,op,v]=m;
+    const lad=typeof MX_T!=='undefined'&&MX_T[id];                       // a mastery ladder (26a) replaces the 5-card milestones
+    if(!lad) for(const m of SX.ms[id]||[]){ const n=sxSteps(p,m); if(!n) continue; const [ ,k,op,v]=m;
       if(op==='+') add[k]=(add[k]||0)+v*n; else if(op==='*') mul[k]=(mul[k]||1)*(1+(v-1)*n); else set[k]=v; }   // '*' grows linearly (×1.1 per step = +10% each), never compounds
-    const t=s.def.type, ag=sxOver(p,'AGI'), vi=sxOver(p,'VIT'), st=sxOver(p,'STR');
-    if(ag&&t==='proj') mul.speed=(mul.speed||1)*(1+.04*ag);              // AGI card 6+: projectiles +4% faster each
-    if(vi&&t==='shield') mul.absorb=(mul.absorb||1)*(1+.04*vi);          // VIT card 6+: shields +4% each
-    if(st&&s.def.p.knock!=null) mul.knock=(mul.knock||1)*(1+.05*st);     // STR card 6+: knockback +5% each
     s.cx=true; if(typeof tfApply==='function') tfApply(p,s,add,mul);        // skill tree numbers + effects (27)
+    if(typeof mxApply==='function') mxApply(p,s,add,mul);                 // mastery: power +4 %/level, growth, tiers (26a)
     if(Object.keys(add).length||Object.keys(mul).length||Object.keys(set).length) s.mod={add, mul, set}; else delete s.mod; }
   if(typeof tfFinish==='function') tfFinish(p); }   // nothing yet → plain pv (a fresh character = classic numbers)
-// the stat part of recalc again, with card 6+ at SX.over and the caps (identical to core for stats ≤ 5)
+// the stat part of recalc for character runs: each card = a small general effect (docs/PROPOSAL-mastery.md §1) · damage comes
+// from mastery (26a), not from STR any more · caps instead of the old half value after card 5 · zero cards = classic numbers
 function sxStats(p,b){
+  const c=p.cls, n=k=>p.stats[k]|0, C=SX.cap;
+  p.maxHp=(c.hp+(b.hp||0))*(1+.02*n('STR')+.04*n('VIT'));
+  p.armor=c.armor+(b.armor||0)+n('STR')+.5*n('VIT');
+  p.regen=c.regen+(b.regen||0)+.25*n('VIT');
+  p.speed=c.speed*(1+(b.speed||0))*(1+Math.min(C.speed,.03*n('AGI')+.01*n('DEX')));
+  const cr=c.crit+(b.crit||0); p.crit=cr+Math.min(.015*n('LUK'),Math.max(0,C.crit-cr)); p.critMult=1.75+(b.critMult||0)+.03*n('LUK');
+  p.might=1+(b.might||0);
+  p.area=1+(b.area||0)+Math.min(1,.02*n('INT')); p.durMul=1+(b.dur||0)+Math.min(1,.02*n('INT'));
+  p.cdMul=(b.cd||1)*Math.max(C.cdMin,1/(1+.03*n('DEX')+.01*n('AGI')));
+  p.rangeMul=1+Math.min(.8,.04*n('DEX'));
+  p.magnet=125*(b.magnet||1)*(1+.04*n('LUK')); p.xpMul=1+(b.xp||0);
+  p.extraProj=b.proj||0; p.mxDodge=Math.min(.4,.008*n('AGI')); p.mxDrop=.01*n('LUK'); }
+// (old card 1–5 / 6+ version, kept for reference only · not called)
+function sxStatsOld(p,b){
   const c=p.cls, L=k=>sxLow(p,k), O=k=>sxOver(p,k), C=SX.cap;
   p.maxHp=c.hp+(b.hp||0)+20*L('VIT')+10*O('VIT');
   p.regen=c.regen+(b.regen||0)+.4*L('VIT')+.2*O('VIT');
@@ -95,13 +107,14 @@ function sxStats(p,b){
   p.cdMul=(b.cd||1)*Math.max(C.cdMin,Math.pow(.96,L('AGI'))*Math.pow(.98,O('AGI'))*Math.pow(.94,L('DEX'))*Math.pow(.97,O('DEX')));
   p.magnet=125*(b.magnet||1)*(1+.2*L('LUK')+.1*O('LUK')); p.xpMul=1+(b.xp||0)+.06*L('LUK')+.03*O('LUK');
   const d=p.stats.DEX|0; p.extraProj=(b.proj||0)+Math.min(C.proj,(d>=3?1:0)+(d>=5?1:0)+Math.floor(O('DEX')/5)); }
-// cards / pause sheet: the milestone that the next card(s) of stat k reach → [{n: cards left, s: skill, t: text}] nearest first
-function sxNext(p,k){ const out=[];
+// cards / pause sheet: what the next card(s) of stat k reach → [{n: cards left, s: skill, t: text}] nearest first (26a ladders + old milestones)
+function sxNext(p,k){ if(typeof mxNext==='function') return mxNext(p,k); const out=[];
   for(const s of p.skills) for(const m of SX.ms[s.id]||[]){ if(m[0]!==k) continue; const e=m[5]||5, have=p.stats[k]|0;
     if(m[2]==='='&&have>=e) continue; out.push({n:e-have%e, s, t:m[4]}); }
   return out.sort((a,b)=>a.n-b.n); }
 // pause sheet: what a skill already has from its main stat and milestones
-function sxHave(p,s){ const id=s.id, pk=SX.pk[id]||'dmg', has=s.def.p[pk]!=null||!!(s.evolved&&s.def.evo&&s.def.evo.set[pk]!=null), main=has?SX.main[id]:null;
-  const out={main, pk, pct:main?sxRate(p)*sxPoints(p,main):0, ms:[]};
+function sxHave(p,s){ const id=s.id, pk=SX.pk[id]||'dmg', has=s.def.p[pk]!=null||!!(s.evolved&&s.def.evo&&s.def.evo.set[pk]!=null), main=SX.main[id]||null;
+  const L=typeof mxLv==='function'?mxLv(p,s):0, out={main, pk:has?pk:null, lv:L, pct:has&&L?mxPow(L)-1:0, ms:typeof mxReached==='function'?mxReached(s):[]};
+  if(typeof MX_T!=='undefined'&&MX_T[id]) return out;
   for(const m of SX.ms[s.id]||[]){ const n=sxSteps(p,m); if(n) out.ms.push(m[4]+(m[2]==='='||n===1?'':' ×'+n)); }
   return out; }

@@ -353,6 +353,9 @@ function tfHit(e,s,base,dealt){
         const o=B.find(x=>x.e===e); if(o){ o.d=Math.max(o.d,d); o.t=Math.max(o.t,t); } else if(B.length<160) B.push({e,s,d,t,nt:.5}); }
       if(F.pull&&tfICD(s||P,'pull',.25)){ const r=F.pull.r*P.area;
         for(const q of query(e.x,e.y,r+60)){ if(q.dead||q.boss||q===e) continue; const dx=e.x-q.x, dy=e.y-q.y, d=Math.hypot(dx,dy); if(d>r||d<1) continue; const f=220/Math.max(.5,q.mass); q.kx+=dx/d*f; q.ky+=dy/d*f; } } }
+    if(F.hitboom&&s&&tfICD(s,'hitboom',.05)&&tfRoom()){ const r=F.hitboom.r*P.area, d=base*F.hitboom.pct;
+      for(const q of query(e.x,e.y,r+60)){ if(q.dead||q===e) continue; if((q.x-e.x)**2+(q.y-e.y)**2>(r+q.r)**2) continue; damageEnemy(q,d,s,{fxd:true,quiet:true,stun:.15}); }
+      G.fx.push({k:'ring',x:e.x,y:e.y,r0:6,r1:r,t:0,dur:.22,c:'#fff27a',w:5,dead:false}); }
     if(F.leech&&dealt>0) healP(dealt*F.leech.pct);
     if(F.trail&&s&&tfICD(s,'trail',.35)&&G.zones.reduce((n,z)=>n+(z.fxd?1:0),0)<12&&tfRoom()) addZone({x:e.x,y:e.y,r:F.trail.r*P.area,dur:F.trail.dur,tick:.5,dmg:base*F.trail.pct,slow:F.trail.slow||0,kind:F.trail.kind||'fire',src:s,fxd:true});
     if(F.shards&&F.shards.on!=='kill'&&s&&Math.random()<F.shards.ch&&tfICD(s,'shards',.1)&&tfRoom()){ const n=F.shards.n, a0=Math.random()*TAU;

@@ -122,7 +122,7 @@ function updateProjs(dt){
     p.t+=dt; p.life-=dt;
     if(p.homing){ if(!p.tg||p.tg.dead||(p.hit&&p.hit.indexOf(p.tg.id)>=0)) p.tg=nearestTo(p.x,p.y,360,p.hit);
       if(p.tg){ const a=Math.atan2(p.vy,p.vx),ta=Math.atan2(p.tg.y-p.y,p.tg.x-p.x),na=a+clamp(angDiff(ta,a),-p.homing*dt,p.homing*dt),sp=Math.hypot(p.vx,p.vy); p.vx=Math.cos(na)*sp; p.vy=Math.sin(na)*sp; } }
-    const ox=p.x,oy=p.y; p.x+=p.vx*dt; p.y+=p.vy*dt;
+    const ox=p.x,oy=p.y; p.x+=p.vx*dt; p.y+=p.vy*dt; if(p.mx) mxProjTick(p,dt);   // mastery: heat haze / fire trail (26a)
     const mx=(ox+p.x)/2,my=(oy+p.y)/2,hl=Math.hypot(p.x-ox,p.y-oy)/2;
     for(const e of query(mx,my,hl+p.r+60)){
       if(e.dead) continue; if(p.hit&&p.hit.indexOf(e.id)>=0) continue;
@@ -130,7 +130,7 @@ function updateProjs(dt){
       projHit(p,e); if(p.dead) break;
     }
     if(!p.dead&&G.obstacles&&p.pierce<99&&terBlocks(p.x,p.y,p.r)){ p.dead=true; if(p.explode) explode(p.x,p.y,p.explode,p.dmg*.7,p.src,{c:p.c}); else if(!G.auto) burst(p.x,p.y,4,'#a49a86',120,.35,2,'rock'); }   // a rock stops it (29a)
-    if(!p.dead&&p.life<=0){ p.dead=true; if(p.explode) explode(p.x,p.y,p.explode,p.dmg*.7,p.src,{c:p.c}); }
+    if(!p.dead&&p.life<=0){ p.dead=true; if(p.mx&&p.mx.split) mxSplit(p); if(p.explode) explode(p.x,p.y,p.explode,p.dmg*.7,p.src,{c:p.c}); }
     if(!p.dead&&!G.auto){ const q=qLv();
       if(p.shape==='fire'&&Math.random()<dt*(q?40:12)) part({x:p.x,y:p.y,vx:rand(-30,30)-p.vx*.1,vy:rand(-40,10),life:.35,s:3,c:pick(['#ffb050','#ff7a2a','#ffe28a']),g:-40,drag:2,k:'sq',add:true});
       else if((p.shape==='holy'||p.shape==='bolt')&&q>=1&&Math.random()<dt*20) part({x:p.x,y:p.y,vx:rand(-20,20),vy:rand(-20,20),life:.3,s:2,c:p.c,g:0,drag:2,k:'sq',add:true}); }
@@ -141,7 +141,7 @@ function projHit(p,e){
   const sp=Math.hypot(p.vx,p.vy)||1;
   damageEnemy(e,p.dmg,p.src,{knock:p.knock,nx:p.vx/sp,ny:p.vy/sp,crit:p.crit,fxd:p.fxd});
   (p.hit||(p.hit=[])).push(e.id);
-  if(p.explode){ p.dead=true; explode(p.x,p.y,p.explode,p.dmg*.7,p.src,{c:p.c}); if(p.burn) addZone({x:p.x,y:p.y,r:p.explode*.8,dur:2*P.durMul,tick:.3,dmg:p.dmg*.12,kind:'fire',src:p.src}); return; }
+  if(p.explode){ if(p.mx&&mxPassHit(p)) return; p.dead=true; explode(p.x,p.y,p.explode,p.dmg*.7,p.src,{c:p.c}); if(p.mx) mxBoom2(p); if(p.burn) addZone({x:p.x,y:p.y,r:p.explode*.8,dur:2*P.durMul,tick:.3,dmg:p.dmg*.12,kind:'fire',src:p.src}); return; }
   p.pierce--; if(p.pierce<=0) p.dead=true;
 }
 function updateEProjs(dt){
@@ -154,7 +154,8 @@ function updateZones(dt){
   for(const z of G.zones){
     if(z.dead) continue;
     z.t+=dt; if(z.t>=z.dur){ z.dead=true; continue; }
-    if(z.drift){ z.retarget-=dt; if(z.retarget<=0||!z.tg||z.tg.dead){ z.tg=nearestTo(z.x,z.y,520); z.retarget=.8; }
+    if(z.aim){ z.x+=z.aim.vx*dt; z.y+=z.aim.vy*dt; const k=Math.exp(-dt*.7); z.aim.vx*=k; z.aim.vy*=k; }   // aimed vortex (19): straight, slowing
+    else if(z.drift){ z.retarget-=dt; if(z.retarget<=0||!z.tg||z.tg.dead){ z.tg=nearestTo(z.x,z.y,520); z.retarget=.8; }
       let tx,ty; if(z.tg){ tx=z.tg.x-z.x; ty=z.tg.y-z.y; } else { tx=Math.cos(z.wa); ty=Math.sin(z.wa); } const l=Math.hypot(tx,ty)||1, k=Math.min(1,dt*2);
       z.vx+=(tx/l*z.drift-z.vx)*k; z.vy+=(ty/l*z.drift-z.vy)*k; z.x+=z.vx*dt; z.y+=z.vy*dt; }
     if(z.trap){ if(z.t<.4) continue; let trig=false; for(const e of query(z.x,z.y,z.r*.5+60)){ if(e.dead) continue; const rr=z.r*.45+e.r; if((e.x-z.x)**2+(e.y-z.y)**2<rr*rr){ trig=true; break; } }
