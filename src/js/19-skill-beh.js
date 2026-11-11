@@ -2,6 +2,7 @@
 function fireProj(s,a){ const sp=pv(s,'speed'),life=(pv(s,'life')||1)*(P.sx&&P.rangeMul||1),size=(pv(s,'size')||6)*(1+(P.area-1)*.5);   // character runs: DEX range · no homing (aimed once, straight)
   const p0={x:P.x+Math.cos(a)*10,y:P.y-6+Math.sin(a)*10,vx:Math.cos(a)*sp,vy:Math.sin(a)*sp,r:size,dmg:pv(s,'dmg'),pierce:pv(s,'pierce')||1,life,max:life,knock:pv(s,'knock')||50,
     explode:(pv(s,'explode')||0)*P.area,homing:P.sx?0:pv(s,'homing')||0,crit:pv(s,'crit')||0,shape:s.def.shape||'bolt',c:s.def.c,src:s,burn:pv(s,'burn')||0,hit:null,tg:null,dead:false,t:0}; G.projs.push(p0);
+  if(P.sx&&(s.def.p.homing||0)>0){ p0.pierce+=1; p0.r*=1.2; }           // ศรเวท / ลูกแสง no longer seek: +1 pierce · 20 % bigger
   if(P.sx&&s.mxLook&&typeof mxProj==='function') mxProj(s,p0);           // mastery tricks of this shot (26a)
   if(s.def.shape==='beam') G.fx.push({k:'beamline',x:P.x,y:P.y-6,a,len:sp*life,t:0,dur:.2,c:s.def.c,dead:false});
   P.atkT=.12; }
@@ -88,12 +89,16 @@ BEH.shield=(s,dt)=>{
   if(s.st.t<=0){ P.shield=P.shieldMax=pv(s,'absorb'); P.shieldSrc=s; s.st.t=cdOf(s); sfx('shield'); G.fx.push({k:'ring',x:P.x,y:P.y,r0:40,r1:22,t:0,dur:.3,c:s.def.c,w:4,follow:true,dead:false}); }
 };
 BEH.passive=()=>{};
+// character runs (docs/PROPOSAL-mastery.md §2): how far an aimed strike/zone reaches (never past the screen) and where the
+// i-th of a cast lands: the first on the target, the rest round it on a golden-angle spiral inside 0.5–0.9 of the skill's radius
+function aimReach(){ return Math.hypot(VW||1280,VH||800)/2*.92; }
+function aimCluster(t,i,r){ if(!i) return [t.x,t.y]; const a=i*2.39996+t.x*.01, d=r*(.5+.4*((i*7)%5)/4); return [t.x+Math.cos(a)*d, t.y+Math.sin(a)*d*.85]; }
 function mkStrike(x,y,r,delay,dmg,src,kind,o){ o=o||{}; return {x,y,r,delay,dmg,src,kind,t:0,done:0,hits:o.hits||1,hitInt:o.hitInt||.15,knock:o.knock||0,stun:o.stun||0,dead:false}; }
 BEH.strike=(s,dt)=>{
   s.cdT-=dt; if(s.cdT>0) return;
-  if(P.sx){ const R=560*(P.rangeMul||1), t=G.near&&G.nearD<R?G.near:null; if(!t){ s.cdT=.2; return; }   // aimed: on the nearest, the rest in a line beyond it
-    s.cdT=cdOf(s); const n=countOf(s), a=Math.atan2(t.y-P.y,t.x-P.x), d0=Math.hypot(t.x-P.x,t.y-P.y), r=pv(s,'r')*P.area;
-    for(let i=0;i<n;i++){ const d=d0+i*r*1.4, x=P.x+Math.cos(a)*d, y=P.y+Math.sin(a)*d;
+  if(P.sx){ const R=Math.min(560*(P.rangeMul||1),aimReach()), t=G.near&&G.nearD<R?G.near:null; if(!t){ s.cdT=.2; return; }   // aimed: on the nearest, the rest round it
+    s.cdT=cdOf(s); const n=countOf(s), r=pv(s,'r')*P.area;
+    for(let i=0;i<n;i++){ const q=aimCluster(t,i,r), x=q[0], y=q[1];
       const go=()=>G.strikes.push(mkStrike(x,y,r,pv(s,'delay')||.5,pv(s,'dmg'),s,s.def.fx,{hits:pv(s,'hits'),hitInt:pv(s,'hitInt'),knock:pv(s,'knock'),stun:pv(s,'stun')}));
       if(i===0) go(); else later(i*.11,go); }
     return; }
@@ -106,12 +111,12 @@ BEH.strike=(s,dt)=>{
 };
 BEH.zone=(s,dt)=>{
   s.cdT-=dt; if(s.cdT>0) return;
-  if(P.sx){ const R=520*(P.rangeMul||1), t=G.near&&G.nearD<R?G.near:null, trap=s.def.fx==='trap'; if(!t&&!trap){ s.cdT=.2; return; }   // aimed (docs §2)
+  if(P.sx){ const R=Math.min(520*(P.rangeMul||1),aimReach()), t=G.near&&G.nearD<R?G.near:null, trap=s.def.fx==='trap'; if(!t&&!trap){ s.cdT=.2; return; }   // aimed (docs §2)
     if(trap&&!(G.near&&G.nearD<500)){ s.cdT=.2; return; }
     s.cdT=cdOf(s); const n=countOf(s), a=t?Math.atan2(t.y-P.y,t.x-P.x):0, r=pv(s,'r')*P.area, mv=Math.hypot(P.vx,P.vy), ba=mv>20?Math.atan2(-P.vy,-P.vx):rand(0,TAU);
     for(let i=0;i<n;i++){ let x,y,o={};
       if(trap){ x=P.x+Math.cos(ba)*(10+i*r*.9); y=P.y+Math.sin(ba)*(10+i*r*.9); }   // traps: under the feet, a line along the way walked
-      else if(s.def.place==='enemy'){ const d=Math.hypot(t.x-P.x,t.y-P.y)+i*r*1.3; x=P.x+Math.cos(a)*d; y=P.y+Math.sin(a)*d; }
+      else if(s.def.place==='enemy'){ const q=aimCluster(t,i,r); x=q[0]; y=q[1]; }
       else { const aa=a+(i-(n-1)/2)*.35; x=P.x+Math.cos(aa)*50; y=P.y+Math.sin(aa)*50; o.aim={vx:Math.cos(aa)*230, vy:Math.sin(aa)*230}; }   // vortex: straight down the aim
       addZone(Object.assign({x,y,r,dur:(pv(s,'dur')||4)*P.durMul,tick:pv(s,'tick')||.4,dmg:pv(s,'dmg')||0,slow:pv(s,'slow')||0,kind:s.def.fx,src:s,drift:pv(s,'drift')||0,pull:pv(s,'pull')||0,trap:pv(s,'trap')||0,knock:pv(s,'knock')||0},o)); }
     return; }

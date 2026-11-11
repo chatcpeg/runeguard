@@ -53,7 +53,7 @@ function cardHTML(o,i){
     case 'new':{ const d=SK[o.id]; ic=d.i; tag='สกิลใหม่'; nm=d.n; ds=d.d; if(d.evo) df=`วิวัฒนาการเมื่อ Lv5 + ${SNAME(d.evo.s)}`; break; }
     case 'up':{ const d=o.s.def; ic=d.i; tag=`Lv ${o.s.lv} → ${o.s.lv+1}`; nm=d.n; ds=d.d; df=diffText(o.s); break; }
     case 'evo':{ const d=o.s.def; ic=d.i; tag='วิวัฒนาการ'; nm=d.evo.n; ds=d.evo.d; df=`${d.n} Lv5 + ${SNAME(d.evo.s)}`; break; }
-    case 'stat':{ const st=STATS[o.stat]; ic=st.i; tag=P.sx?`ความชำนาญ ${o.stat} Lv ${P.stats[o.stat]} → ${P.stats[o.stat]+1}`:`ค่าสถานะ Lv ${P.stats[o.stat]} → ${P.stats[o.stat]+1}`; nm=`${SNAME(o.stat)} · ${st.n}`; ds=typeof st.d==='function'?st.d():st.d; df=evoUses(o.stat); break; }
+    case 'stat':{ const st=STATS[o.stat]; ic=st.i; const ml=P.sx&&typeof mxLvStat==='function'?mxLvStat(P,o.stat):0; tag=P.sx?`ความชำนาญ ${o.stat} Lv ${ml} → ${ml+1}`:`ค่าสถานะ Lv ${P.stats[o.stat]} → ${P.stats[o.stat]+1}`; nm=P.sx&&typeof MX_SN!=='undefined'&&MX_SN[o.stat]?`${o.stat} · ${MX_SN[o.stat]}`:`${SNAME(o.stat)} · ${st.n}`; ds=typeof st.d==='function'?st.d():st.d; df=evoUses(o.stat); break; }
     case 'potion': ic='🧪'; tag='ไอเทม'; nm='ยาฟื้นฟู'; ds='ฟื้นฟู HP 40% ทันที'; break;
     default: ic='💰'; tag='ไอเทม'; nm='ถุงทอง'; ds='คะแนน +250'; break;
   }

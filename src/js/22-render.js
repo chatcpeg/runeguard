@@ -34,6 +34,7 @@ function drawZones(){
         ctx.strokeStyle='#c9a57a'; ctx.lineWidth=2; ctx.beginPath(); for(let i=0;i<6;i++){ const a=i*TAU/6; ctx.moveTo(z.x+Math.cos(a)*7,z.y+Math.sin(a)*7); ctx.lineTo(z.x+Math.cos(a)*11,z.y+Math.sin(a)*11); } ctx.stroke();
         if(armed&&((G.t*4)|0)%2){ ctx.globalCompositeOperation='lighter'; glow(z.x,z.y,10,'#ff4a3a',.6); ctx.globalCompositeOperation='source-over'; } break; }
     }
+    if(z.src&&z.src.mxLook&&typeof mxDrawZone==='function') mxDrawZone(z);   // mastery looks (26a)
   }
 }
 function drawStrikesUnder(){
@@ -44,6 +45,7 @@ function drawStrikesUnder(){
 }
 function drawStrikesOver(){
   for(const s of G.strikes){
+    if(s.src&&s.src.mxLook&&typeof mxDrawStrike==='function') mxDrawStrike(s);   // mastery looks (26a)
     if(s.kind==='meteor'&&s.t<s.delay){ const k=s.t/s.delay,mx=s.x+(1-k)*220,my=s.y-(1-k)*420,rr=Math.max(6,s.r*.32),a=Math.atan2(420,-220);
       streak(mx,my,a,rr*7,rr*2.4,'#ff7a2a',.8); glow(mx,my,rr*2.6,'#ff8a3a',.9); circ(ctx,'#ffb050',mx,my,rr); circ(ctx,'#fff2c0',mx,my,rr*.5); }
     else if(s.kind==='arrows'&&s.t>=s.delay-.15&&s.done<s.hits){ ctx.strokeStyle='rgba(232,245,192,.85)'; ctx.lineWidth=1.6; ctx.beginPath(); for(let i=0;i<7;i++){ const a=(i*2.4+s.t*7)%TAU,d=s.r*((i*.37+s.t*1.3)%1),x=s.x+Math.cos(a)*d,y=s.y+Math.sin(a)*d,fall=(s.t*5+i*.3)%1; ctx.moveTo(x-3,y-44+fall*30); ctx.lineTo(x,y-30+fall*30); } ctx.stroke(); }
@@ -79,6 +81,7 @@ function drawGems(L,T,R,B){
     ctx.fillStyle='rgba(255,255,255,.6)'; ctx.beginPath(); for(const g of arr){ const y=g.y+Math.sin(G.t*4+g.x*.05)*1.5; ctx.moveTo(g.x,y-s); ctx.lineTo(g.x+s*.35,y-s*.2); ctx.lineTo(g.x,y); ctx.closePath(); } ctx.fill(); }
 }
 function drawAuras(){
+  if(P.sx&&typeof mxDrawAround==='function') mxDrawAround();
   for(const s of P.skills){ if(s.def.type!=='aura') continue; const r=pv(s,'r')*P.area;
     ctx.globalCompositeOperation='lighter'; glow(P.x,P.y,r*1.05,s.def.c,.18);
     ctx.save(); ctx.translate(P.x,P.y); ctx.scale(1,.78); ctx.rotate(G.t*.6); ctx.globalAlpha=.6; ctx.drawImage(runeTex(s.def.c),-r,-r,r*2,r*2); ctx.restore(); ctx.globalAlpha=1; ctx.globalCompositeOperation='source-over'; }

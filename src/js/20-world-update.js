@@ -130,7 +130,8 @@ function updateProjs(dt){
       projHit(p,e); if(p.dead) break;
     }
     if(!p.dead&&G.obstacles&&p.pierce<99&&terBlocks(p.x,p.y,p.r)){ p.dead=true; if(p.explode) explode(p.x,p.y,p.explode,p.dmg*.7,p.src,{c:p.c}); else if(!G.auto) burst(p.x,p.y,4,'#a49a86',120,.35,2,'rock'); }   // a rock stops it (29a)
-    if(!p.dead&&p.life<=0){ p.dead=true; if(p.mx&&p.mx.split) mxSplit(p); if(p.explode) explode(p.x,p.y,p.explode,p.dmg*.7,p.src,{c:p.c}); }
+    if(!p.dead&&p.life<=0){ p.dead=true; if(p.mx&&p.mx.split) mxSplit(p); if(p.explode){ explode(p.x,p.y,p.explode,p.dmg*.7,p.src,{c:p.c});
+        if(p.mx&&p.hit&&p.hit.length){ mxBoom2(p); if(p.burn) addZone({x:p.x,y:p.y,r:p.explode*.8,dur:2*P.durMul,tick:.3,dmg:p.dmg*.12,kind:'fire',src:p.src}); } } }   // 26a: passed through someone
     if(!p.dead&&!G.auto){ const q=qLv();
       if(p.shape==='fire'&&Math.random()<dt*(q?40:12)) part({x:p.x,y:p.y,vx:rand(-30,30)-p.vx*.1,vy:rand(-40,10),life:.35,s:3,c:pick(['#ffb050','#ff7a2a','#ffe28a']),g:-40,drag:2,k:'sq',add:true});
       else if((p.shape==='holy'||p.shape==='bolt')&&q>=1&&Math.random()<dt*20) part({x:p.x,y:p.y,vx:rand(-20,20),vy:rand(-20,20),life:.3,s:2,c:p.c,g:0,drag:2,k:'sq',add:true}); }

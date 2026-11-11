@@ -63,7 +63,6 @@ const SX={ base:.005, over:.5, cap:{speed:.6, area:2, dur:2, crit:.75, cdMin:.45
 
 function sxOver(p,k){ return Math.max(0,(p.stats[k]|0)-5); }
 function sxLow(p,k){ return Math.min(5,p.stats[k]|0); }
-function sxRate(p){ return SX.base+((p.bonus&&p.bonus.statPow)||0); }
 function sxPoints(p,k){ return (p.stats[k]|0)+Math.floor(((p.permSt&&p.permSt[k])|0)/5); }
 // the steps of one milestone this run: floor(cards / every)
 function sxSteps(p,m){ return Math.floor((p.stats[m[0]]|0)/(m[5]||5)); }
@@ -93,20 +92,7 @@ function sxStats(p,b){
   p.cdMul=(b.cd||1)*Math.max(C.cdMin,1/(1+.03*n('DEX')+.01*n('AGI')));
   p.rangeMul=1+Math.min(.8,.04*n('DEX'));
   p.magnet=125*(b.magnet||1)*(1+.04*n('LUK')); p.xpMul=1+(b.xp||0);
-  p.extraProj=b.proj||0; p.mxDodge=Math.min(.4,.008*n('AGI')); p.mxDrop=.01*n('LUK'); }
-// (old card 1–5 / 6+ version, kept for reference only · not called)
-function sxStatsOld(p,b){
-  const c=p.cls, L=k=>sxLow(p,k), O=k=>sxOver(p,k), C=SX.cap;
-  p.maxHp=c.hp+(b.hp||0)+20*L('VIT')+10*O('VIT');
-  p.regen=c.regen+(b.regen||0)+.4*L('VIT')+.2*O('VIT');
-  p.speed=c.speed*(1+(b.speed||0))*(1+Math.min(C.speed,.07*L('AGI')+.03*O('AGI')));
-  const cr=c.crit+(b.crit||0)+.05*L('LUK'); p.crit=cr+Math.min(.025*O('LUK'),Math.max(0,C.crit-cr));   // cards 1–5 + gear as before · only card 6+ stops at 75%
-  p.critMult=1.75+(b.critMult||0)+.05*O('LUK');
-  p.might=1+(b.might||0)+.12*L('STR')+.06*O('STR');
-  p.area=1+(b.area||0)+Math.min(C.area,.1*L('INT')+.05*O('INT')); p.durMul=1+(b.dur||0)+Math.min(C.dur,.1*L('INT')+.05*O('INT'));
-  p.cdMul=(b.cd||1)*Math.max(C.cdMin,Math.pow(.96,L('AGI'))*Math.pow(.98,O('AGI'))*Math.pow(.94,L('DEX'))*Math.pow(.97,O('DEX')));
-  p.magnet=125*(b.magnet||1)*(1+.2*L('LUK')+.1*O('LUK')); p.xpMul=1+(b.xp||0)+.06*L('LUK')+.03*O('LUK');
-  const d=p.stats.DEX|0; p.extraProj=(b.proj||0)+Math.min(C.proj,(d>=3?1:0)+(d>=5?1:0)+Math.floor(O('DEX')/5)); }
+  p.extraProj=b.proj||0; p.mxDodge=Math.min(.4,.008*n('AGI')); p.mxDrop=Math.min(.3,.01*n('LUK')); }
 // cards / pause sheet: what the next card(s) of stat k reach → [{n: cards left, s: skill, t: text}] nearest first (26a ladders + old milestones)
 function sxNext(p,k){ if(typeof mxNext==='function') return mxNext(p,k); const out=[];
   for(const s of p.skills) for(const m of SX.ms[s.id]||[]){ if(m[0]!==k) continue; const e=m[5]||5, have=p.stats[k]|0;

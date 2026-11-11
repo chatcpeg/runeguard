@@ -12,7 +12,9 @@ const MX_CARD={
   AGI:'เดิน +3% · หลบ +0.8% · โจมตีเร็ว +1% · สกิลที่ใช้ AGI ชำนาญขึ้น',
   DEX:'โจมตีเร็ว +3% · ระยะโจมตี +4% · เดิน +1% · สกิลที่ใช้ DEX ชำนาญขึ้น',
   INT:'พื้นที่ +2% · ระยะเวลา +2% · เวทที่ใช้ INT ชำนาญขึ้น (แรง ขนาด ลูกเล่น)',
-  LUK:'คริ +1.5% · แรงคริ +3% · ดูดของ +4% · ดรอป +1% · สกิลที่ใช้ LUK ชำนาญขึ้น'};
+  LUK:'คริ +1.5% · แรงคริ +3% · ดูดของ +4% · ดรอป +1% (สูงสุด +30%) · สกิลที่ใช้ LUK ชำนาญขึ้น'};
+// card names in character runs (STR no longer adds damage there, so it is not "attack")
+const MX_SN={STR:'พลังกาย'};
 function mxStart(p){ return Math.max(0,(p.bonus&&p.bonus.mxStart)|0); }
 function mxLvStat(p,k){ return k?(p.stats[k]|0)+Math.floor(((p.permSt&&p.permSt[k])|0)/5)+mxStart(p):0; }
 function mxLv(p,s){ return mxLvStat(p,SX.main[s.id]); }
@@ -379,8 +381,8 @@ function mxProjTick(p,dt){ const m=p.mx; if(!m) return;
       for(const e of query(p.x,p.y,R+40)){ if(e.dead) continue; if((e.x-p.x)**2+(e.y-p.y)**2>(R+e.r)**2) continue;
         damageEnemy(e,p.dmg*pct,p.src,{fxd:true,quiet:true,slow:m.look.hazeSlow||0,slowDur:.4}); } } }
   if(m.drip){ m.dd+=Math.hypot(p.vx,p.vy)*dt; const step=m.look.dripDense?26:48;
-    if(m.dd>=step){ m.dd=0; let n=0; for(const z of G.zones) if(z.fxd) n++;
-      if(n<24) addZone({x:p.x,y:p.y+p.r*.5,r:14+p.r*.8,dur:m.drip,tick:.5,dmg:p.dmg*.06,kind:'fire',src:p.src,fxd:true}); } } }
+    if(m.dd>=step){ m.dd=0; let n=0; for(const z of G.zones) if(z.drip) n++;
+      if(n<16) addZone({x:p.x,y:p.y+p.r*.5,r:14+p.r*.8,dur:m.drip,tick:.5,dmg:p.dmg*.06,kind:'fire',src:p.src,fxd:true,drip:1}); } } }
 function mxSplit(p){ const m=p.mx, n=m.split, a0=Math.atan2(p.vy,p.vx);
   for(let i=0;i<n;i++){ const a=a0+(i-(n-1)/2)*.55, q={x:p.x,y:p.y,vx:Math.cos(a)*380,vy:Math.sin(a)*380,r:p.r*.55,dmg:p.dmg*.4,pierce:1,life:.4,max:.4,knock:60,
     explode:p.explode*.5,homing:0,crit:0,shape:p.shape,c:p.c,src:p.src,burn:0,hit:null,tg:null,dead:false,t:0,fxd:true};
@@ -390,6 +392,25 @@ function mxPassHit(p){ const m=p.mx; if(!m||!(m.pass>0)) return false; m.pass--;
   if(m.look.passBoom) explode(p.x,p.y,p.explode*.6,p.dmg*.5,p.src,{c:p.c}); return true; }
 function mxBoom2(p){ const m=p.mx; if(!m||!m.boom2) return; const x=p.x, y=p.y, r=p.explode*.85, d=p.dmg*.5, s=p.src, c=p.c;
   later(.3,()=>{ if(G&&!G.over) explode(x,y,r,d,s,{c}); }); }
+
+/* ---- the Lv6 looks of the other mage skills (22 calls these only for skills with a mastery look) ---- */
+// strikes (drawStrikesOver, 'lighter' pass): meteor tail · spikes dust
+function mxDrawStrike(s){ const k=s.src.mxLook;
+  if(k.tail&&s.kind==='meteor'&&s.t<s.delay){ const q=s.t/s.delay, rr=Math.max(6,s.r*.32), a=Math.atan2(420,-220);
+    streak(s.x+(1-q)*220,s.y-(1-q)*420,a,rr*15,rr*1.5,'#ffd27a',.5); }
+  if(k.dust&&s.kind==='spike'&&s.t>=s.delay&&s.t<s.delay+.4){ const q=(s.t-s.delay)/.4;
+    ctx.fillStyle=`rgba(200,170,120,${.22*(1-q)})`; ctx.beginPath(); ctx.ellipse(s.x,s.y,s.r*(1+q*1.4),s.r*(.6+q*.8),0,0,TAU); ctx.fill(); } }
+// zones (drawZones): blizzard flakes · vortex leaves
+function mxDrawZone(z){ const k=z.src.mxLook, fade=Math.max(0,Math.min(1,(z.dur-z.t)*3,z.t*6)), sd=z.seed||0;
+  if(k.flakes){ ctx.fillStyle=`rgba(240,250,255,${.85*fade})`; for(let i=0;i<10;i++){ const a=sd*7+i*2.4+G.t*.8, d=z.r*((i*.37+G.t*.15)%1);
+      ctx.beginPath(); ctx.arc(z.x+Math.cos(a)*d,z.y+Math.sin(a)*d*.8,2.4+(i%3),0,TAU); ctx.fill(); } }
+  if(k.leaves){ for(let i=0;i<6;i++){ const a=G.t*5+i*TAU/6+sd, d=z.r*(.35+.2*(i%3)); ctx.fillStyle=i%2?`rgba(120,200,90,${.9*fade})`:`rgba(210,226,110,${.9*fade})`;
+      ctx.save(); ctx.translate(z.x+Math.cos(a)*d,z.y+Math.sin(a)*d*.7); ctx.rotate(a*2); ctx.beginPath(); ctx.ellipse(0,0,5,2.4,0,0,TAU); ctx.fill(); ctx.restore(); } } }
+// around the hero (drawAuras): frost crystals
+function mxDrawAround(){ if(!P.skills.some(x=>x.mxLook&&x.mxLook.crystals)) return;
+  ctx.fillStyle='rgba(205,242,255,.85)';
+  for(let i=0;i<3;i++){ const a=G.t*1.6+i*TAU/3, x=P.x+Math.cos(a)*34, y=P.y-8+Math.sin(a)*14;
+    ctx.save(); ctx.translate(x,y); ctx.rotate(a); ctx.beginPath(); ctx.moveTo(0,-6); ctx.lineTo(3,0); ctx.lineTo(0,6); ctx.lineTo(-3,0); ctx.closePath(); ctx.fill(); ctx.restore(); } }
 
 /* ---- drawing (13 drawProjs asks first: true = drawn here) ---- */
 function mxDrawProj(p,sp,a){ const m=p.mx; if(!m||!m.look) return false; const k=m.look, L=m.lv;

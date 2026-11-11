@@ -88,7 +88,7 @@ frenzy:[['โทสะ','😡',['rage','*',.1,3],['rage','*',.1,2],{fx:'execute'
   {fx:'vsStun',nm:'ไล่ล่าผู้หมดแรง',i:'👑',m:1.4}],
 /* mage */
 mbolt:[['พลังเวท','💥',['dmg','*',.08,3],['pierce','+',1,2],{fx:'shards',nm:'ลูกเวทแตกสาม',i:'✨',on:'hit',ch:.25,n:3,pct:.3}],
-  ['ทะลวง','🎯',['pierce','+',1,2],['homing','*',.3,2],{fx:'execute',nm:'ปลิดลมหายใจ',i:'💀',hp:.35,m:1.5}],
+  ['ทะลวง','🎯',['pierce','+',1,2],['size','*',.12,2],{fx:'execute',nm:'ปลิดลมหายใจ',i:'💀',hp:.35,m:1.5}],
   ['ความไว','💨',['cd','c',.05,3],['speed','*',.1,2],{fx:'echo',nm:'ร่ายซ้อน',i:'🔁',every:6}],
   {fx:'radial',nm:'ฝนดารา',i:'🌠',every:4,n:8,pct:.5}],
 flame:[['ไฟแรง','🔥',['dmg','*',.08,3],['explode','*',.08,2],{fx:'burst',nm:'ระเบิดซ้อน',i:'💥',r:50,pct:.4}],
@@ -154,7 +154,7 @@ blast:[['ดินระเบิด','💥',['dmg','*',.08,3],['explode','*',.0
   {fx:'shards',nm:'สะเก็ดระเบิด',i:'👑',on:'kill',ch:1,n:4,pct:.4}],
 /* cleric */
 holy:[['แสงจ้า','✨',['dmg','*',.08,3],['pierce','+',1,2],{fx:'feast',nm:'แสงชุบชีวิต',i:'💚',amt:3}],
-  ['แสงไว','⏱️',['cd','c',.05,3],['homing','*',.3,2],{fx:'echo',nm:'ลูกแสงซ้อน',i:'🔁',every:5}],
+  ['แสงไว','⏱️',['cd','c',.05,3],['size','*',.12,2],{fx:'echo',nm:'ลูกแสงซ้อน',i:'🔁',every:5}],
   ['ลูกแสงใหญ่','⭕',['size','*',.1,3],['speed','*',.1,2],{fx:'shards',nm:'แสงแตกกระจาย',i:'🌟',on:'hit',ch:.2,n:3,pct:.3}],
   {fx:'radial',nm:'ดวงอาทิตย์น้อย',i:'👑',every:4,n:8,pct:.5}],
 heal:[['พรฟื้นฟู','💚',['heal','*',.1,3],['healPct','+',.01,2],{fx:'chill',nm:'แสงตรึง',i:'❄️',ch:1,t:.6}],
@@ -357,7 +357,7 @@ function tfHit(e,s,base,dealt){
       for(const q of query(e.x,e.y,r+60)){ if(q.dead||q===e) continue; if((q.x-e.x)**2+(q.y-e.y)**2>(r+q.r)**2) continue; damageEnemy(q,d,s,{fxd:true,quiet:true,stun:.15}); }
       G.fx.push({k:'ring',x:e.x,y:e.y,r0:6,r1:r,t:0,dur:.22,c:'#fff27a',w:5,dead:false}); }
     if(F.leech&&dealt>0) healP(dealt*F.leech.pct);
-    if(F.trail&&s&&tfICD(s,'trail',.35)&&G.zones.reduce((n,z)=>n+(z.fxd?1:0),0)<12&&tfRoom()) addZone({x:e.x,y:e.y,r:F.trail.r*P.area,dur:F.trail.dur,tick:.5,dmg:base*F.trail.pct,slow:F.trail.slow||0,kind:F.trail.kind||'fire',src:s,fxd:true});
+    if(F.trail&&s&&tfICD(s,'trail',.35)&&G.zones.reduce((n,z)=>n+(z.fxd&&!z.drip?1:0),0)<12&&tfRoom()) addZone({x:e.x,y:e.y,r:F.trail.r*P.area,dur:F.trail.dur,tick:.5,dmg:base*F.trail.pct,slow:F.trail.slow||0,kind:F.trail.kind||'fire',src:s,fxd:true});
     if(F.shards&&F.shards.on!=='kill'&&s&&Math.random()<F.shards.ch&&tfICD(s,'shards',.1)&&tfRoom()){ const n=F.shards.n, a0=Math.random()*TAU;
       for(let i=0;i<n;i++) tfBolt(e.x,e.y,a0+i*TAU/n,base*F.shards.pct,s,'dagger',.45); } } }
 // a skill cast (detected by tfRun) → echo / radial / mend
