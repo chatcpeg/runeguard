@@ -1,6 +1,6 @@
 /* ================= 54-ui-skills.js · lane P · scrSkills (+ helpers shared by 56 · 57 · 58) ================= */
 // §3.5 · §8.9: ★ ranks cost RANK_COST (★1–3: 1 · ★4–5: 2) · passives 1 per ★ · SKILL_REQ gates the advanced skills ·
-// loadout 4 (first job) / 5 (advanced) slots, slot 1 = the skill a survival run starts with · reset = the §3.3 rules.
+// loadout 5 (first job) / 6 (advanced) slots, slot 1 = the skill a survival run starts with · reset = the §3.3 rules.
 // All rules live in 42-progression.js (lane C): this file only draws them and calls learnSkill / setLoadout / resetSkills.
 // Opened by pksOpen() or by the router (BUS 'screen' with id 'scrSkills'). Nothing here runs at load except registration.
 
@@ -52,15 +52,15 @@ let pksTab=0, pksSel=-1;                             // tab 1 = first job · 2 =
 function pksRow(ch,id,pas){
   const rc=pas?BAL.CAP.rank:rankCap(ch,id), r=((pas?ch.pas:ch.sk)||{})[id]|0, max=r>=rc, cost=max?0:pas?BAL.PAS_COST:BAL.RANK_COST[r+1];
   const own=pas&&PASSIVES[id].own, avail=pas?(own===ch.cls||own===ch.job):pgSkillPool(ch).indexOf(id)>=0, q=!pas&&SKILL_REQ[id];
-  const why=max?'':canLearn(ch,id), lock=!max&&(!avail||(q&&((ch.sk||{})[q.need]|0)<q.r))?why:'';
+  const why=max?'':canLearn(ch,id), lock=!max&&(!avail||!!(q&&pgReqWhy(ch,id)))?why:'';   // a requirement (★ / Base Lv / Job Lv) not met
   return {id, pas, r, rc, max, cost, lock, can:!max&&why==='', inLoad:!pas&&(ch.load||[]).indexOf(id)>=0, tr:!pas&&TFD[id]?tfSpentOne(ch,id):-1}; }
 // tab 1: class skills + class passive · tab 2: the chosen advanced path, or both paths (locked) before advancing
 function pksModel(ch,tab){
   const c=pgCls(ch); if(!c) return [];
-  const paths=tab===1?[{a:null, own:c.id, sk:c.skills}]:(ch.job?c.adv.filter(x=>x.id===ch.job):c.adv).map(x=>({a:x, own:x.id, sk:x.skills}));
+  const paths=tab===1?[{a:null, own:c.id, sk:clsSkills(c)}]:(ch.job?c.adv.filter(x=>x.id===ch.job):c.adv).map(x=>({a:x, own:x.id, sk:advSkills(x)}));
   return paths.map(p=>({a:p.a, sk:p.sk.map(id=>pksRow(ch,id,false)),
     pas:Object.keys(PASSIVES).filter(id=>PASSIVES[id].own===p.own).map(id=>pksRow(ch,id,true))})); }
-// loadout edits → setLoadout (lane C validates: learned, in the pool, no duplicates, 1…4/5 slots)
+// loadout edits → setLoadout (lane C validates: learned, in the pool, no duplicates, 1…5/6 slots)
 function pksLoadAdd(ch,id,slot){ const L=ch.load.slice(), n=BAL.LOADOUT[pgTier(ch)]; if(L.indexOf(id)>=0) return false;
   if(L.length<n) L.push(id); else if(slot>=0&&slot<L.length) L[slot]=id; else return false; return setLoadout(ch,L); }
 function pksLoadDel(ch,id){ const L=ch.load.filter(x=>x!==id); return L.length>0&&L.length<ch.load.length&&setLoadout(ch,L); }
@@ -80,7 +80,7 @@ function pksRowHtml(r){
     if(!r.max) h+=`<div class="pks-x">→ ★${r.r+1}: ${jdBonusText(jdPassiveAt(r.id,r.r+1))}</div>`; }
   else { if(r.r) h+=`<div class="pks-i">★${r.r}: ${pksLv(d,r.r)}</div>`;
     if(!r.max) h+=`<div class="pks-x">→ ★${r.r+1}: ${pksNext(d,r.r)}</div>`;
-    if(r.r>=5&&r.rc===5&&pgCls(prgCh())&&pgCls(prgCh()).skills.indexOf(r.id)>=0) h+='<div class="pks-e">เลื่อนอาชีพแล้วฝึกต่อได้ถึง ★8 (ขั้นสอง ✦)</div>';
+    if(r.r>=5&&r.rc===5&&pgCls(prgCh())&&clsSkills(pgCls(prgCh())).indexOf(r.id)>=0) h+='<div class="pks-e">เลื่อนอาชีพแล้วฝึกต่อได้ถึง ★8 (ขั้นสอง ✦)</div>';
     if(d.evo) h+=`<div class="pks-e">วิวัฒนาการ: ★5 + การ์ด${STATS[d.evo.s].n}ในรอบ → ${esc(d.evo.n)}</div>`; }
   if(r.lock) h+=`<div class="pks-lock">🔒 ${esc(r.lock)}</div>`;
   h+='</div><div class="pks-side">'+(r.max?'<span class="pks-max">ตัน</span>'

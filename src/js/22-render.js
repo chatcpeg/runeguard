@@ -34,13 +34,14 @@ function drawZones(){
         ctx.strokeStyle='#c9a57a'; ctx.lineWidth=2; ctx.beginPath(); for(let i=0;i<6;i++){ const a=i*TAU/6; ctx.moveTo(z.x+Math.cos(a)*7,z.y+Math.sin(a)*7); ctx.lineTo(z.x+Math.cos(a)*11,z.y+Math.sin(a)*11); } ctx.stroke();
         if(armed&&((G.t*4)|0)%2){ ctx.globalCompositeOperation='lighter'; glow(z.x,z.y,10,'#ff4a3a',.6); ctx.globalCompositeOperation='source-over'; } break; }
     }
+    if(z.x2) sk2DrawZone(z,fade);                                           // zones of the character-only skills (22a)
     if(z.src&&z.src.mxLook&&typeof mxDrawZone==='function') mxDrawZone(z);   // mastery looks (26a)
   }
 }
 function drawStrikesUnder(){
   for(const s of G.strikes){ if(s.t>=s.delay||s.kind==='spike') continue; const k=s.t/s.delay;
     if(s.kind==='meteor'){ ctx.fillStyle=`rgba(0,0,0,${.15+.35*k})`; ctx.beginPath(); ctx.ellipse(s.x,s.y,s.r*(.3+.7*k),s.r*(.3+.7*k)*.6,0,0,TAU); ctx.fill(); }
-    const col=s.kind==='meteor'?'255,110,50':s.kind==='arrows'?'220,240,170':'255,240,190';
+    const col=s.kind==='meteor'||s.kind==='lava'?'255,110,50':s.kind==='arrows'?'220,240,170':'255,240,190';
     ctx.fillStyle=`rgba(${col},${.06+.14*k})`; ctx.beginPath(); ctx.arc(s.x,s.y,s.r,0,TAU); ctx.fill(); ctx.strokeStyle=`rgba(${col},${.35+.4*k})`; ctx.lineWidth=2; ctx.beginPath(); ctx.arc(s.x,s.y,s.r*k,0,TAU); ctx.stroke(); }
 }
 function drawStrikesOver(){
@@ -49,6 +50,7 @@ function drawStrikesOver(){
     if(s.kind==='meteor'&&s.t<s.delay){ const k=s.t/s.delay,mx=s.x+(1-k)*220,my=s.y-(1-k)*420,rr=Math.max(6,s.r*.32),a=Math.atan2(420,-220);
       streak(mx,my,a,rr*7,rr*2.4,'#ff7a2a',.8); glow(mx,my,rr*2.6,'#ff8a3a',.9); circ(ctx,'#ffb050',mx,my,rr); circ(ctx,'#fff2c0',mx,my,rr*.5); }
     else if(s.kind==='arrows'&&s.t>=s.delay-.15&&s.done<s.hits){ ctx.strokeStyle='rgba(232,245,192,.85)'; ctx.lineWidth=1.6; ctx.beginPath(); for(let i=0;i<7;i++){ const a=(i*2.4+s.t*7)%TAU,d=s.r*((i*.37+s.t*1.3)%1),x=s.x+Math.cos(a)*d,y=s.y+Math.sin(a)*d,fall=(s.t*5+i*.3)%1; ctx.moveTo(x-3,y-44+fall*30); ctx.lineTo(x,y-30+fall*30); } ctx.stroke(); }
+    else if(s.kind==='lava') sk2Lava(s);                                     // volcano bombs (22a)
   }
 }
 function drawItem(g){
@@ -136,25 +138,27 @@ function drawActors(L,T,R,B){
   upTo(Infinity); if(!drawn) drawPlayer();
 }
 function drawOrbits(){
-  for(const s of P.skills){ if(s.def.type!=='orbit'||!s.st.pos) continue; const size=pv(s,'size')*(1+(P.area-1)*.5),R=pv(s,'r')*P.area;
+  for(const s of P.skills){ if(s.def.type!=='orbit'||!s.st.pos) continue; const size=pv(s,'size')*(1+(P.area-1)*.5),R=s.st.R||pv(s,'r')*P.area;   // st.R: breathing radius (25a orbX)
     ctx.globalCompositeOperation='lighter'; ctx.lineCap='round';
     for(const p of s.st.pos){ if(!p) continue; ctx.strokeStyle=hexA(s.def.c,.16); ctx.lineWidth=size*1.1; ctx.beginPath(); ctx.arc(P.x,P.y-4,R,p[2]-.75,p[2]-.3); ctx.stroke(); ctx.strokeStyle=hexA(s.def.c,.34); ctx.lineWidth=size*.9; ctx.beginPath(); ctx.arc(P.x,P.y-4,R,p[2]-.32,p[2]); ctx.stroke(); }
     if(s.def.os==='orb') for(const p of s.st.pos){ if(!p) continue; glow(p[0],p[1],size*2.4,s.def.c,.75); circ(ctx,s.def.c,p[0],p[1],size); circ(ctx,'#ffffff',p[0]-size*.25,p[1]-size*.25,size*.38); }
     ctx.globalCompositeOperation='source-over';
     if(s.def.os==='blade') for(const p of s.st.pos){ if(!p) continue; ctx.save(); ctx.translate(p[0],p[1]); ctx.rotate(p[2]);
       ctx.fillStyle='#16202c'; ctx.beginPath(); ctx.moveTo(-size-1.5,-3.6); ctx.lineTo(size*.8,-3.6); ctx.lineTo(size*1.4,0); ctx.lineTo(size*.8,3.6); ctx.lineTo(-size-1.5,3.6); ctx.closePath(); ctx.fill();
-      ctx.fillStyle=s.evolved?'#fff2c0':s.def.c; ctx.beginPath(); ctx.moveTo(-size,-2.2); ctx.lineTo(size*.8,-2.2); ctx.lineTo(size*1.25,0); ctx.lineTo(size*.8,2.2); ctx.lineTo(-size,2.2); ctx.closePath(); ctx.fill(); ctx.fillStyle='rgba(255,255,255,.7)'; ctx.fillRect(-size*.6,-1.4,size*1.2,.9); ctx.fillStyle='#c9a24a'; ctx.fillRect(-size-1,-4.5,3,9); ctx.restore(); } }
+      ctx.fillStyle=s.evolved?'#fff2c0':s.def.c; ctx.beginPath(); ctx.moveTo(-size,-2.2); ctx.lineTo(size*.8,-2.2); ctx.lineTo(size*1.25,0); ctx.lineTo(size*.8,2.2); ctx.lineTo(-size,2.2); ctx.closePath(); ctx.fill(); ctx.fillStyle='rgba(255,255,255,.7)'; ctx.fillRect(-size*.6,-1.4,size*1.2,.9); ctx.fillStyle='#c9a24a'; ctx.fillRect(-size-1,-4.5,3,9); ctx.restore(); }
+    if(s.def.ox) sk2DrawOrbit(s,size); }                                     // orbit styles of the character-only skills (22a)
 }
 function drawHawk(u){ const flap=Math.sin(G.t*18+u.a)*.6; ctx.fillStyle='rgba(0,0,0,.25)'; ctx.beginPath(); ctx.ellipse(u.x,u.y+22,7,2.5,0,0,TAU); ctx.fill();
   if(u.state===1){ ctx.globalCompositeOperation='lighter'; streak(u.x,u.y,u.ang,40,10,'#ffd9a0',.6); ctx.globalCompositeOperation='source-over'; }
   ctx.save(); ctx.translate(u.x,u.y); ctx.rotate(u.ang||0); ctx.lineJoin='round'; ctx.strokeStyle='#2a1a0e'; ctx.lineWidth=2;
   ctx.fillStyle='#b07a40'; ctx.beginPath(); ctx.moveTo(-1,0); ctx.lineTo(-6,-13-flap*6); ctx.lineTo(5,-2); ctx.closePath(); ctx.stroke(); ctx.fill(); ctx.beginPath(); ctx.moveTo(-1,0); ctx.lineTo(-6,13+flap*6); ctx.lineTo(5,2); ctx.closePath(); ctx.stroke(); ctx.fill();
   ctx.fillStyle='#8a5a30'; ctx.beginPath(); ctx.ellipse(0,0,9,4,0,0,TAU); ctx.stroke(); ctx.fill(); ctx.beginPath(); ctx.moveTo(-8,0); ctx.lineTo(-13,-3); ctx.lineTo(-13,3); ctx.closePath(); ctx.fill(); circ(ctx,'#efe4cc',8,0,3.4); circ(ctx,'#1a1410',9,-1,.9); ctx.fillStyle='#f0b545'; ctx.beginPath(); ctx.moveTo(11,-1); ctx.lineTo(14.5,0); ctx.lineTo(11,1.5); ctx.closePath(); ctx.fill(); ctx.restore(); }
-function drawUnits(){ for(const s of P.skills){ if(s.def.type!=='summon'||!s.st.units) continue; for(const u of s.st.units){ if(s.def.mode==='hawk') drawHawk(u); else { ctx.save(); ctx.globalAlpha=.6; if(!(typeof artDrawHero==='function'&&artDrawHero(ctx,P.look,u.x,u.y,u.face||1,G.t+(u.a||0),true,{}))) heroOutlined(ctx,CLONE_LOOK,u.x,u.y,1,G.t,u.face||1,true,u.aim||0,{outline:'#9a7dff',seed:u.a}); ctx.restore(); } } } }
+function drawUnits(){ for(const s of P.skills){ if(s.def.type!=='summon'||!s.st.units) continue; for(const u of s.st.units){ if(s.def.mode==='hawk') drawHawk(u); else if(s.def.mode!=='clone') sk2DrawUnit(s,u); else { ctx.save(); ctx.globalAlpha=.6; if(!(typeof artDrawHero==='function'&&artDrawHero(ctx,P.look,u.x,u.y,u.face||1,G.t+(u.a||0),true,{}))) heroOutlined(ctx,CLONE_LOOK,u.x,u.y,1,G.t,u.face||1,true,u.aim||0,{outline:'#9a7dff',seed:u.a}); ctx.restore(); } } } }
 function drawProjs(){
   for(const p of G.projs){
     const sp=Math.hypot(p.vx,p.vy),a=Math.atan2(p.vy,p.vx);
     if(p.mx&&mxDrawProj(p,sp,a)) continue;                                  // mastery look (26a)
+    if(sk2DrawProj(p,sp,a)) continue;                                       // shapes of the character-only skills (22a)
     switch(p.shape){
       case 'arrow': streak(p.x,p.y,a,Math.min(55,sp*.05),5,p.c,.45); break;
       case 'dagger': streak(p.x,p.y,a,30,5,p.c,.35); break;
@@ -261,7 +265,7 @@ function render(){
   drawZones(); drawStrikesUnder(); drawAuras(); drawGems(L,T,R,B); drawBossTele();
   drawFx(true); drawCorpses();
   drawActors(L,T,R,B); if(M.drawOver) M.drawOver(L,T,R,B);
-  drawOrbits(); drawUnits();
+  drawOrbits(); drawUnits(); if(P.sx) sk2DrawOver();                    // marks / nets / seals of the character-only skills (22a)
   drawParts(false);
   ctx.globalCompositeOperation='lighter';
   drawProjs(); drawFx(false); drawParts(true); drawStrikesOver();

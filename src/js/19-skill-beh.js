@@ -4,6 +4,7 @@ function fireProj(s,a){ const sp=pv(s,'speed'),life=(pv(s,'life')||1)*(P.sx&&P.r
     explode:(pv(s,'explode')||0)*P.area,homing:P.sx?0:pv(s,'homing')||0,crit:pv(s,'crit')||0,shape:s.def.shape||'bolt',c:s.def.c,src:s,burn:pv(s,'burn')||0,hit:null,tg:null,dead:false,t:0}; G.projs.push(p0);
   if(P.sx&&(s.def.p.homing||0)>0){ p0.pierce+=1; p0.r*=1.2; }           // ศรเวท / ลูกแสง no longer seek: +1 pierce · 20 % bigger
   if(P.sx&&s.mxLook&&typeof mxProj==='function') mxProj(s,p0);           // mastery tricks of this shot (26a)
+  if(P.sx&&s.def.px) pxFire(s,p0);                                       // boomerang / ricochet / hook … of the character-only skills (25a)
   if(s.def.shape==='beam') G.fx.push({k:'beamline',x:P.x,y:P.y-6,a,len:sp*life,t:0,dur:.2,c:s.def.c,dead:false});
   P.atkT=.12; }
 BEH.proj=(s,dt)=>{
@@ -61,7 +62,8 @@ BEH.nova=(s,dt)=>{
   G.shake=Math.max(G.shake,5); P.atkT=.12; sfx('boom');
 };
 BEH.orbit=(s,dt)=>{
-  const st=s.st,n=countOf(s),R=pv(s,'r')*P.area,size=pv(s,'size')*(1+(P.area-1)*.5),dmg=pv(s,'dmg'),kn=pv(s,'knock')||100;
+  const st=s.st,n=countOf(s),R0=pv(s,'r')*P.area,size=pv(s,'size')*(1+(P.area-1)*.5),dmg=pv(s,'dmg'),kn=pv(s,'knock')||100;
+  const X=s.def.ox?orbX(s,R0):null, R=X?X.R:R0, rt=X?X.rate:.5;          // character-only orbits (25a): wave radius · hit rate · slow
   st.a=(st.a||0)+pv(s,'spin')*dt;
   if(!st.hits) st.hits=new Map();
   if(!st.pos) st.pos=[];
@@ -71,9 +73,9 @@ BEH.orbit=(s,dt)=>{
     let p=st.pos[i]; if(!p) p=st.pos[i]=[0,0,0]; p[0]=bx; p[1]=by; p[2]=a;
     for(const e of query(bx,by,size+60)){
       if(e.dead) continue; const rr=e.r+size,dx=e.x-bx,dy=e.y-by; if(dx*dx+dy*dy>rr*rr) continue;
-      const nt=st.hits.get(e.id)||0; if(G.t<nt) continue; st.hits.set(e.id,G.t+.5);
+      const nt=st.hits.get(e.id)||0; if(G.t<nt) continue; st.hits.set(e.id,G.t+rt);
       const ex=e.x-P.x,ey=e.y-P.y,l=Math.hypot(ex,ey)||1;
-      damageEnemy(e,dmg,s,{knock:kn,nx:ex/l,ny:ey/l});
+      damageEnemy(e,dmg,s,X?{knock:kn,nx:ex/l,ny:ey/l,slow:X.slow,slowDur:1}:{knock:kn,nx:ex/l,ny:ey/l});
     }
   }
   if(st.hits.size>600){ for(const [k,v] of st.hits) if(v<G.t) st.hits.delete(k); }
@@ -118,6 +120,7 @@ BEH.strike=(s,dt)=>{
 };
 BEH.zone=(s,dt)=>{
   s.cdT-=dt; if(s.cdT>0) return;
+  if(s.def.zx){ zxCast(s); return; }                                     // character-only zones (25a): own placement + effects
   if(P.sx){ const t=aimTarget(Math.min(520*(P.rangeMul||1),aimReach()),pv(s,'r')*P.area*.5), trap=s.def.fx==='trap'; if(!t&&!trap){ s.cdT=.2; return; }   // aimed (docs §2)
     if(trap&&!(G.near&&G.nearD<500)){ s.cdT=.2; return; }
     s.cdT=cdOf(s); const n=countOf(s), a=t?Math.atan2(t.y-P.y,t.x-P.x):0, r=pv(s,'r')*P.area, mv=Math.hypot(P.vx,P.vy), ba=mv>20?Math.atan2(-P.vy,-P.vx):rand(0,TAU);
@@ -167,7 +170,7 @@ BEH.multi=(s,dt)=>{
   for(const e of G.enemies){ if(!e.dead&&(e.x-P.x)**2+(e.y-P.y)**2<R2) list.push(e); }
   if(!list.length){ s.cdT=.15; return; }
   s.cdT=cdOf(s);
-  list.sort((a,b)=>b.hp-a.hp);
+  if(s.def.pick==='weak') list.sort((a,b)=>a.hp/a.maxHp-b.hp/b.maxHp||a.hp-b.hp); else list.sort((a,b)=>b.hp-a.hp);   // pick weak: ปลิดชีพ (25a skx)
   const tg=list.slice(0,n);
   G.fx.push({k:'dash',pts:[[P.x,P.y-6]].concat(tg.map(e=>[e.x,e.y-e.r*.3])),t:0,dur:.35,c:s.def.c,dead:false});
   tg.forEach((e,i)=>{ const go=()=>{ if(e.dead) return; damageEnemy(e,pv(s,'dmg'),s,{crit:pv(s,'crit'),knock:140}); G.fx.push({k:'xcut',x:e.x,y:e.y-e.r*.3,r:e.r+12,t:0,dur:.26,c:s.def.c,dead:false}); sfx('slice'); }; if(i===0) go(); else later(i*.06,go); });
@@ -184,7 +187,7 @@ BEH.spikes=(s,dt)=>{
 BEH.summon=(s,dt)=>{
   const n=countOf(s),U=s.st.units||(s.st.units=[]);
   while(U.length<n) U.push({x:P.x,y:P.y,state:0,cd:rand(.2,.8),tg:null,a:rand(0,TAU),ang:0,face:1,aim:0});
-  for(let i=0;i<U.length;i++){ if(s.def.mode==='hawk') hawkUpdate(s,U[i],dt,G.t*1.4+i*TAU/U.length); else cloneUpdate(s,U[i],dt,i,U.length); }
+  for(let i=0;i<U.length;i++){ if(s.def.mode==='hawk') hawkUpdate(s,U[i],dt,G.t*1.4+i*TAU/U.length); else if(s.def.mode!=='clone') skxUnit(s,U[i],dt,i,U.length); else cloneUpdate(s,U[i],dt,i,U.length); }   // skxUnit: wolf / lantern (25a)
 };
 function hawkUpdate(s,u,dt,fa){
   const fx=P.x+Math.cos(fa)*46,fy=P.y-26+Math.sin(fa)*22,px=u.x,py=u.y;

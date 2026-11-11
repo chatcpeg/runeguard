@@ -6,7 +6,7 @@
 
 /* ---- ★ caps and tier 2 ---- */
 const TF_GROW={dmg:.12, heal:.12, absorb:.12, nova:.12, trap:.12, r:.03, range:.03, explode:.04};
-function tfRankCap(cls,job,id){ const c=CLS[cls]; return job&&c&&c.skills.indexOf(id)>=0?8:BAL.CAP.rank; }
+function tfRankCap(cls,job,id){ const c=CLS[cls]; return job&&c&&clsSkills(c).indexOf(id)>=0?8:BAL.CAP.rank; }   // every first-job skill (+ skx)
 function rankCap(ch,id){ return ch?tfRankCap(ch.cls,ch.job,id):BAL.CAP.rank; }
 // Lv 6–8 value from the Lv 5 value v (g = lv − 5) · p2 = explicit steps (never over an evolution's own number)
 function tfTierUp(k,v,g,s){
@@ -23,8 +23,19 @@ Object.assign(SK.slash,{p2:{count:[2,3,3]}});
 const TF_KN={dmg:'ดาเมจ', cd:'คูลดาวน์', count:'จำนวน', pierce:'ทะลุ', speed:'ความเร็วกระสุน', size:'ขนาด', explode:'วงระเบิด', homing:'การเลี้ยวตามเป้า',
   crit:'คริติคอล', knock:'แรงกระแทก', range:'ระยะฟัน', r:'รัศมี', stun:'สตัน', slow:'ชะลอ', freeze:'แช่แข็ง', spin:'ความเร็วหมุน', absorb:'โล่ดูดซับ',
   nova:'ดาเมจระเบิด', tick:'ช่วงห่างแต่ละครั้ง', bounces:'ชิ่ง', jump:'ระยะกระโดด', hits:'จำนวนครั้งที่โดน', dur:'ระยะเวลา', pull:'แรงดูด', trap:'ระเบิดกับดัก',
-  heal:'ฟื้น HP', healPct:'ฟื้น HP ตาม % HP สูงสุด', targets:'เป้าต่อครั้ง', rage:'โทสะ', steal:'ฟื้นต่อการสังหาร', dodge:'หลบหลีก'};
-const TF_PCTK={slow:1, dodge:1, crit:1, healPct:1}, TF_SECK={stun:1, freeze:1}, TF_REL={rage:1, steal:1};
+  heal:'ฟื้น HP', healPct:'ฟื้น HP ตาม % HP สูงสุด', targets:'เป้าต่อครั้ง', rage:'โทสะ', steal:'ฟื้นต่อการสังหาร', dodge:'หลบหลีก',
+  // keys of the character-only skills (25a)
+  life:'ระยะพุ่ง', hook:'แรงกระชาก', rep:'แรงผลัก', cost:'สละ HP', drain:'ดูดเลือดกลับ', boom:'แรงระเบิดท้าย', drip:'หางไฟ', shots:'ลูกต่อชุด', wave:'คลื่นวง',
+  hold:'ตรึง', split:'สะเก็ด', shard:'แรงสะเก็ด', amp:'ดาเมจที่ตัวถูกหมายได้รับ', delay:'หน่วงก่อนระเบิด', fin:'หมัดปิดท้ายทุก',
+  bounce:'กระดอน', rate:'ช่วงเฉือนซ้ำ', lure:'ระยะล่อ'};
+// the same keys on the level-up cards / skills page (core 21 PL · PCT · SEC: only new keys are added, classic labels stay)
+if(typeof PL!=='undefined') Object.assign(PL,{life:'ระยะพุ่ง', hook:'แรงกระชาก', rep:'แรงผลัก', cost:'สละ HP', drain:'ดูดเลือดกลับ', size:'ขนาด',
+  boom:'แรงระเบิดท้าย ×', drip:'หางไฟ', shots:'ลูกต่อชุด', wave:'คลื่นวง', pull:'แรงดูด', tick:'ช่วงห่าง', dur:'ระยะเวลา',
+  hold:'ตรึง', split:'สะเก็ด', shard:'แรงสะเก็ด', amp:'หมายหัว: ดาเมจเพิ่ม', delay:'หน่วง', fin:'ปิดท้ายทุก (หมัด)',
+  bounce:'กระดอน', lure:'ระยะล่อ', crit:'คริติคอลเพิ่ม'});
+if(typeof PCT!=='undefined') Object.assign(PCT,{cost:1, drain:1, wave:1, shard:1, amp:1, crit:1});
+if(typeof SEC!=='undefined') Object.assign(SEC,{tick:1, dur:1, drip:1, hold:1, delay:1});
+const TF_PCTK={slow:1, dodge:1, crit:1, healPct:1, cost:1, drain:1, amp:1}, TF_SECK={stun:1, freeze:1, drip:1, hold:1, delay:1}, TF_REL={rage:1, steal:1};
 const tfPc=v=>(Math.round(v*1000)/10)+'%', tfM=r=>(Math.round(r)/10)+' ม.', tfN=v=>String(+(+v).toFixed(2));
 const TF_ZK={fire:'เปลวไฟ', ice:'น้ำแข็ง', poison:'พิษ', wind:'ลมคม'};
 // special effects: n = node name when used as a proc node · d(p) = text · glob = also allowed on passive skills (hit by any skill)
@@ -218,6 +229,128 @@ smoke:[['ควันพิษ','💨',['dmg','*',.08,3],['stun','+',.1,2],{fx:'
   ['ควันกว้าง','⭕',['r','*',.06,3],['slow','+',.04,2],{fx:'echo',nm:'ควันระลอกสอง',i:'🔁',every:2}],
   ['ควันไว','⏱️',['cd','c',.05,3],['@ignite',.15,2],{fx:'chill',nm:'ควันเยือกแข็ง',i:'❄️',ch:.3,t:.8}],
   {fx:'trail',nm:'ทุ่งควันพิษ',i:'👑',kind:'poison',r:70,pct:.2,dur:4}]};
+// ---- the 30 character-only skills (CLASSES skx · docs/PROPOSAL-skill-trees.md §3): same shape, same rules ----
+Object.assign(TFD,{
+flyblade:[['คมดาบบิน','🗡️',['dmg','*',.08,3],['size','*',.1,2],{fx:'shards',nm:'ดาบแตกคลื่น',i:'🌙',on:'kill',n:3,pct:.35}],
+  ['วงโคจรดาบ','↩️',['life','*',.08,3],['knock','*',.15,2],{fx:'pull',nm:'ดาบดูดฝูง',i:'🧲',r:90}],
+  ['ขว้างไว','⏱️',['cd','c',.05,3],['count','+',1,1],{fx:'execute',nm:'ปลิดคมดาบ',i:'💀',hp:.3,m:1.6}],
+  {fx:'echo',nm:'ดาบคู่ขว้างซ้ำ',i:'👑',every:3}],
+riposte:[['สวนแรง','🤺',['dmg','*',.08,3],['stun','+',.1,2],{fx:'vsStun',nm:'สวนซ้ำแผล',i:'💢',m:1.5}],
+  ['วงสวน','⭕',['range','*',.06,3],['knock','*',.15,2],{fx:'burst',nm:'สวนจนแตก',i:'💥',r:55,pct:.45}],
+  ['ตั้งรับไว','⏱️',['cd','c',.06,3],['@leech',.01,2],{fx:'mend',nm:'สวนแล้วฟื้นกาย',i:'💚',pct:.03}],
+  {fx:'radial',nm:'พายุคมสวน',i:'👑',every:1,n:8,pct:.45}],
+palisade:[['ปลายหอกคม','🔱',['dmg','*',.1,3],['tick','*',-.08,2],{fx:'ignite',nm:'หอกเลือดไหล',i:'🩸',ch:.25,pct:.3,t:3}],
+  ['วงปราการ','⭕',['r','*',.06,3],['rep','*',.15,2],{fx:'shock',nm:'หอกสะท้าน',i:'⚡',ch:.15,t:.4}],
+  ['ตั้งค่ายไว','⏱️',['cd','c',.05,3],['dur','*',.1,2],{fx:'burst',nm:'ศพเสียบหอกระเบิด',i:'💥',r:50,pct:.5}],
+  {fx:'vsStun',nm:'ป้อมพิฆาต',i:'👑',m:1.5}],
+thrust:[['ปลายทวน','🔱',['dmg','*',.08,3],['knock','*',.15,2],{fx:'execute',nm:'แทงทะลุหัวใจ',i:'💀',hp:.3,m:1.6}],
+  ['ทวนยาว','📏',['range','*',.06,3],['size','*',.12,2],{fx:'shards',nm:'ทวนแตกประกาย',i:'✨',on:'hit',ch:.15,n:2,pct:.4}],
+  ['จังหวะแทง','⏱️',['cd','c',.05,3],['count','+',1,1],{fx:'echo',nm:'สามแทงซ้ำ',i:'🔁',every:4}],
+  {fx:'shock',nm:'ทวนตรึงฟ้า',i:'👑',ch:.25,t:.5}],
+bloodrite:[['โลหิตเดือด','🩸',['dmg','*',.08,3],['r','*',.06,2],{fx:'burst',nm:'ศพระเบิดเลือด',i:'💥',r:55,pct:.45}],
+  ['ดื่มเลือด','🍷',['drain','*',.12,3],['knock','*',.15,2],{fx:'feast',nm:'งานเลี้ยงโลหิต',i:'🍖',amt:2}],
+  ['พิธีไว','⏱️',['cd','c',.05,3],['cost','*',-.12,2],{fx:'ignite',nm:'เลือดติดไฟ',i:'🔥',ch:.3,pct:.3,t:3}],
+  {fx:'execute',nm:'สังเวยผู้อ่อนแอ',i:'👑',hp:.3,m:1.7}],
+chainaxe:[['ขวานหนัก','🪓',['dmg','*',.08,3],['pierce','+',1,2],{fx:'execute',nm:'ลากมาประหาร',i:'💀',hp:.3,m:1.6}],
+  ['โซ่ยาว','⛓️',['life','*',.08,3],['hook','*',.15,2],{fx:'pull',nm:'กระชากทั้งฝูง',i:'🧲',r:90}],
+  ['ขว้างไว','⏱️',['cd','c',.05,3],['@shock',.08,2],{fx:'vsStun',nm:'ทุบตัวที่มึน',i:'💢',m:1.4}],
+  {fx:'shards',nm:'ขวานแตกสะเก็ด',i:'👑',on:'kill',ch:1,n:3,pct:.4}],
+gravorb:[['แรงโน้มถ่วง','🧲',['pull','*',.1,3],['dur','*',.1,2],{fx:'chill',nm:'ห้วงเยือกแข็ง',i:'❄️',ch:.12,t:.8}],
+  ['ยุบตัว','💥',['boom','*',.1,3],['explode','*',.08,2],{fx:'burst',nm:'ยุบแล้วแตก',i:'🎆',r:55,pct:.4}],
+  ['ลูกแก้วไว','⏱️',['cd','c',.05,3],['count','+',1,1],{fx:'echo',nm:'ลูกแก้วคู่',i:'🔁',every:3}],
+  {fx:'vsStun',nm:'ขอบฟ้าเหตุการณ์',i:'👑',m:1.5}],
+aquaring:[['น้ำหนัก','💧',['dmg','*',.08,3],['size','*',.1,2],{fx:'chill',nm:'หยดน้ำเยือก',i:'❄️',ch:.06,t:.8}],
+  ['กระแสน้ำ','🌊',['count','+',1,2],['wave','*',.15,2],{fx:'pull',nm:'วังน้ำดูด',i:'🌀',r:80}],
+  ['คลื่นเย็น','🥶',['slow','+',.04,3],['spin','*',.1,2],{fx:'vsStun',nm:'แตกเป็นน้ำแข็ง',i:'💎',m:1.5}],
+  {fx:'shards',nm:'น้ำกระเซ็น',i:'👑',on:'hit',ch:.1,n:2,pct:.5}],
+comet:[['มวลดาวหาง','☄️',['dmg','*',.08,3],['explode','*',.08,2],{fx:'burst',nm:'หางระเบิด',i:'💥',r:50,pct:.4}],
+  ['หางไฟ','🔥',['drip','*',.15,3],['@ignite',.12,2],{fx:'trail',nm:'ทางลาวา',i:'🌋',kind:'fire',r:45,pct:.25,dur:3}],
+  ['ดาวหางไว','⏱️',['cd','c',.05,3],['speed','*',.1,2],{fx:'shards',nm:'สะเก็ดดาวหาง',i:'✨',on:'kill',ch:1,n:3,pct:.35}],
+  {fx:'echo',nm:'ดาวหางคู่แฝด',i:'👑',every:3}],
+rift:[['ศรดาว','⭐',['dmg','*',.08,3],['shots','+',1,1],{fx:'shards',nm:'ดาวแตก',i:'✨',on:'hit',ch:.15,n:2,pct:.4}],
+  ['ประตูกว้าง','🌌',['dur','*',.08,3],['tick','*',-.08,2],{fx:'execute',nm:'ดาวปลิดชีพ',i:'💀',hp:.3,m:1.6}],
+  ['เปิดไว','⏱️',['cd','c',.05,3],['@shock',.08,2],{fx:'chill',nm:'ห้วงอวกาศเย็น',i:'❄️',ch:.08,t:.8}],
+  {fx:'mod',nm:'ประตูคู่',i:'👑',add:{count:1}}],
+volcano:[['ลาวาร้อน','🌋',['dmg','*',.08,3],['tick','*',-.08,2],{fx:'ignite',nm:'ลาวาติดไฟ',i:'🔥',ch:.3,pct:.3,t:3}],
+  ['ปะทุ','💥',['boom','*',.1,3],['explode','*',.08,2],{fx:'burst',nm:'หินหลอมระเบิด',i:'🎆',r:55,pct:.45}],
+  ['ภูเขาไฟไว','⏱️',['cd','c',.05,3],['dur','*',.1,2],{fx:'trail',nm:'ธารลาวา',i:'♨️',kind:'fire',r:45,pct:.25,dur:3}],
+  {fx:'mod',nm:'ภูเขาไฟคู่',i:'👑',add:{count:1}}],
+leafblade:[['ใบคม','🍃',['dmg','*',.08,3],['count','+',1,2],{fx:'ignite',nm:'บาดลึก',i:'🩸',ch:.25,pct:.3,t:3}],
+  ['ลมหวน','↩️',['life','*',.08,3],['slow','+',.04,2],{fx:'pull',nm:'ใบไม้ดูดฝูง',i:'🌀',r:80}],
+  ['ร่ายไว','⏱️',['cd','c',.05,3],['speed','*',.1,2],{fx:'shards',nm:'ใบแตกกิ่ง',i:'✨',on:'kill',ch:1,n:3,pct:.35}],
+  {fx:'echo',nm:'พายุใบไม้คู่',i:'👑',every:3}],
+ballista:[['ลูกดอกหนัก','🎯',['dmg','*',.08,3],['pierce','+',1,2],{fx:'execute',nm:'ยิงจุดตาย',i:'💀',hp:.3,m:1.6}],
+  ['กลไกเร็ว','⚙️',['tick','*',-.06,3],['shots','+',1,1],{fx:'shards',nm:'ลูกดอกแตก',i:'✨',on:'hit',ch:.15,n:2,pct:.4}],
+  ['ตั้งไว','⏱️',['cd','c',.05,3],['dur','*',.1,2],{fx:'shock',nm:'ดอกตรึง',i:'📌',ch:.15,t:.4}],
+  {fx:'mod',nm:'ป้อมคู่',i:'👑',add:{count:1}}],
+netshot:[['ตาข่ายหนา','🕸️',['hold','*',.1,3],['explode','*',.08,2],{fx:'vsStun',nm:'ซ้ำตัวติดตาข่าย',i:'💢',m:1.6}],
+  ['ศรหนัก','🏹',['dmg','*',.1,3],['count','+',1,1],{fx:'burst',nm:'ตาข่ายระเบิด',i:'💥',r:50,pct:.45}],
+  ['ยิงไว','⏱️',['cd','c',.05,3],['@ignite',.12,2],{fx:'shards',nm:'เชือกขาดกระเด็น',i:'✨',on:'kill',ch:1,n:3,pct:.35}],
+  {fx:'echo',nm:'ตาข่ายซ้อน',i:'👑',every:3}],
+wolf:[['เขี้ยวคม','🐺',['dmg','*',.08,3],['@ignite',.1,2],{fx:'execute',nm:'กัดคอ',i:'💀',hp:.3,m:1.6}],
+  ['ฝูงหมาป่า','➕',['count','+',1,1],['cd','c',.06,2],{fx:'shock',nm:'หอนสะท้าน',i:'⚡',ch:.15,t:.5}],
+  ['ล่าเหยื่อ','🎯',['slow','+',.05,3],['@leech',.006,2],{fx:'feast',nm:'กินเหยื่อ',i:'🍖',amt:1}],
+  {fx:'burst',nm:'จ่าฝูงจันทรา',i:'👑',r:50,pct:.5}],
+gale:[['ลมแรง','🌪️',['dmg','*',.08,3],['knock','*',.15,2],{fx:'shock',nm:'ลมตีจนมึน',i:'⚡',ch:.2,t:.5}],
+  ['คลื่นกว้าง','⭕',['size','*',.1,3],['life','*',.1,2],{fx:'vsStun',nm:'ลมบดขยี้',i:'💢',m:1.5}],
+  ['ยิงไว','⏱️',['cd','c',.05,3],['slow','+',.05,2],{fx:'chill',nm:'ลมหนาวยะเยือก',i:'❄️',ch:.1,t:.8}],
+  {fx:'echo',nm:'ศรลมคู่',i:'👑',every:3}],
+mark:[['ตราลึก','🎯',['amp','+',.03,3],['dur','*',.15,2],{fx:'execute',nm:'ประหารตัวถูกหมาย',i:'💀',hp:.35,m:1.7}],
+  ['ศรหนัก','🏹',['dmg','*',.1,3],['crit','+',.05,2],{fx:'shock',nm:'ศรตรึงร่าง',i:'📌',ch:.5,t:.6}],
+  ['ล่าไว','⏱️',['cd','c',.06,3],['speed','*',.1,2],{fx:'burst',nm:'ล่าสำเร็จ',i:'💥',r:60,pct:.6}],
+  {fx:'mod',nm:'ตราคู่',i:'👑',add:{count:1}}],
+starshard:[['ดาวหนัก','🌟',['dmg','*',.08,3],['shard','*',.1,2],{fx:'burst',nm:'ดาวระเบิด',i:'💥',r:45,pct:.4}],
+  ['สะเก็ดเพิ่ม','✨',['split','+',1,3],['pierce','+',1,1],{fx:'shards',nm:'สะเก็ดซ้อนสะเก็ด',i:'🌠',on:'kill',ch:1,n:3,pct:.3}],
+  ['ยิงไว','⏱️',['cd','c',.05,3],['speed','*',.1,2],{fx:'execute',nm:'ดาวปลิดวิญญาณ',i:'💀',hp:.3,m:1.6}],
+  {fx:'radial',nm:'ดาราแตกรอบทิศ',i:'👑',every:4,n:8,pct:.5}],
+prayer:[['พรฟื้นฟู','💚',['heal','*',.1,3],['dur','*',.1,2],{fx:'mend',nm:'สวดแล้วฟื้นกาย',i:'🙏',pct:.03}],
+  ['แสงลงทัณฑ์','☀️',['dmg','*',.1,3],['slow','+',.04,2],{fx:'ignite',nm:'แสงแผดเผา',i:'🔥',ch:.15,pct:.3,t:3}],
+  ['ลานกว้าง','⭕',['r','*',.06,3],['cd','c',.06,2],{fx:'feast',nm:'วิญญาณคืนพลัง',i:'🍖',amt:1}],
+  {fx:'chill',nm:'ลานตรึงวิญญาณ',i:'👑',ch:.08,t:1}],
+lantern:[['แสงจ้า','🏮',['dmg','*',.08,3],['pierce','+',1,2],{fx:'execute',nm:'แสงชำระ',i:'⚖️',hp:.3,m:1.6}],
+  ['โคมเพิ่ม','➕',['count','+',1,1],['cd','c',.06,2],{fx:'shock',nm:'แสงแยงตา',i:'⚡',ch:.15,t:.5}],
+  ['ลำแสงไกล','📏',['life','*',.1,3],['@leech',.004,2],{fx:'feast',nm:'โคมเก็บวิญญาณ',i:'💚',amt:1}],
+  {fx:'radial',nm:'โคมสาดแสง',i:'👑',every:5,n:8,pct:.5}],
+seal:[['ตราแรง','🔯',['dmg','*',.08,3],['r','*',.06,2],{fx:'shock',nm:'ตราตรึง',i:'⚡',ch:.3,t:.5}],
+  ['ตราเพิ่ม','➕',['targets','+',1,3],['delay','*',-.08,2],{fx:'burst',nm:'ตราลามระเบิด',i:'💥',r:50,pct:.45}],
+  ['ประทับไว','⏱️',['cd','c',.05,3],['@ignite',.1,2],{fx:'vsStun',nm:'ลงทัณฑ์ซ้ำ',i:'💢',m:1.5}],
+  {fx:'echo',nm:'ตราสวรรค์ซ้อน',i:'👑',every:3}],
+veil:[['ม่านหนา','🌅',['r','*',.06,3],['heal','*',.15,2],{fx:'mend',nm:'อรุณฟื้นกาย',i:'💚',pct:.04}],
+  ['แสงผลัก','💥',['dmg','*',.1,3],['knock','*',.15,2],{fx:'shock',nm:'ม่านสะท้าน',i:'⚡',ch:.5,t:.5}],
+  ['ตั้งม่านไว','⏱️',['cd','c',.06,3],['slow','+',.05,2],{fx:'chill',nm:'ม่านเยือก',i:'❄️',ch:.3,t:.8}],
+  {fx:'radial',nm:'แสงอรุณสาดรอบทิศ',i:'👑',every:1,n:10,pct:.6}],
+palm:[['ฝ่ามือหนัก','🖐️',['dmg','*',.08,3],['knock','*',.15,2],{fx:'vsStun',nm:'ฝ่ามือซ้ำแผล',i:'💢',m:1.5}],
+  ['คลื่นกว้าง','⭕',['size','*',.1,3],['life','*',.1,2],{fx:'shards',nm:'คลื่นแตกกระจาย',i:'✨',on:'hit',ch:.12,n:2,pct:.4}],
+  ['ลมปราณไว','⏱️',['cd','c',.05,3],['@leech',.005,2],{fx:'ignite',nm:'ฝ่ามือเพลิง',i:'🔥',ch:.25,pct:.3,t:3}],
+  {fx:'echo',nm:'ฝ่ามือคู่',i:'👑',every:3}],
+combo:[['หมัดหนัก','👊',['dmg','*',.08,3],['boom','*',.1,2],{fx:'vsStun',nm:'ปิดท้ายซ้ำแผล',i:'💢',m:1.5}],
+  ['ระเบิดหมัด','💥',['r','*',.06,3],['stun','+',.1,2],{fx:'burst',nm:'หมัดระเบิดศพ',i:'🎆',r:50,pct:.45}],
+  ['ต่อยไว','⏱️',['cd','c',.05,3],['range','*',.06,2],{fx:'ignite',nm:'หมัดเปลวสุริยะ',i:'🔥',ch:.2,pct:.3,t:3}],
+  {fx:'mod',nm:'สี่หมัดสุริยัน',i:'👑',add:{fin:-1}}],
+coin:[['เหรียญหนัก','🪙',['dmg','*',.08,3],['crit','+',.04,2],{fx:'execute',nm:'เหรียญปลิดชีพ',i:'💀',hp:.3,m:1.6}],
+  ['กระดอนไกล','↪️',['bounce','+',1,3],['jump','*',.12,2],{fx:'shards',nm:'เหรียญแตกเศษ',i:'✨',on:'kill',ch:1,n:3,pct:.35}],
+  ['ดีดไว','⏱️',['cd','c',.05,3],['count','+',1,1],{fx:'burst',nm:'แจ็กพอต',i:'🎰',r:50,pct:.5}],
+  {fx:'feast',nm:'โชคใหญ่',i:'👑',amt:2}],
+caltrops:[['เหล็กคม','📌',['dmg','*',.1,3],['tick','*',-.08,2],{fx:'ignite',nm:'เหล็กสนิมพิษ',i:'☠️',ch:.2,pct:.4,t:3}],
+  ['โปรยหนา','➕',['count','+',1,3],['r','*',.06,2],{fx:'execute',nm:'แทงซ้ำตัวอ่อน',i:'💀',hp:.3,m:1.7}],
+  ['ตรึงขา','⛓️',['slow','+',.04,3],['dur','*',.1,2],{fx:'shock',nm:'เหยียบจนชา',i:'⚡',ch:.06,t:.5}],
+  {fx:'burst',nm:'ทุ่งระเบิดเหล็ก',i:'👑',r:50,pct:.5}],
+curtain:[['ใบมีดคม','🔪',['dmg','*',.08,3],['@ignite',.1,2],{fx:'execute',nm:'เฉือนปลิดชีพ',i:'💀',hp:.3,m:1.6}],
+  ['ม่านหนา','➕',['count','+',1,3],['size','*',.1,2],{fx:'shards',nm:'ใบมีดหลุดวง',i:'✨',on:'hit',ch:.06,n:2,pct:.5}],
+  ['หมุนเร็ว','🌀',['spin','*',.08,3],['rate','*',-.08,2],{fx:'leech',nm:'ม่านดูดเลือด',i:'🩸',pct:.02}],
+  {fx:'vsStun',nm:'ม่านมรณะ',i:'👑',m:1.5}],
+reap:[['เคียวคม','🌘',['dmg','*',.08,3],['crit','+',.04,2],{fx:'shards',nm:'วิญญาณแตก',i:'✨',on:'kill',ch:1,n:3,pct:.35}],
+  ['เก็บเกี่ยว','➕',['targets','+',1,3],['range','*',.08,2],{fx:'feast',nm:'กินวิญญาณ',i:'🍖',amt:1}],
+  ['ปลิดไว','⏱️',['cd','c',.05,3],['@shock',.08,2],{fx:'burst',nm:'วิญญาณระเบิด',i:'💥',r:45,pct:.4}],
+  {fx:'echo',nm:'เคียวคู่',i:'👑',every:3}],
+bind:[['โซ่รัด','⛓️',['dmg','*',.1,3],['stun','+',.05,2],{fx:'vsStun',nm:'บีบจนแหลก',i:'💢',m:1.5}],
+  ['คุกเงา','⭕',['r','*',.06,3],['dur','*',.1,2],{fx:'pull',nm:'โซ่ลากเข้าคุก',i:'🧲',r:90}],
+  ['ปล่อยไว','⏱️',['cd','c',.05,3],['count','+',1,1],{fx:'burst',nm:'เงาแตกระเบิด',i:'💥',r:50,pct:.45}],
+  {fx:'ignite',nm:'โซ่กัดกร่อน',i:'👑',ch:.3,pct:.5,t:4}],
+decoy:[['ระเบิดเงา','💥',['dmg','*',.1,3],['explode','*',.08,2],{fx:'shock',nm:'ระเบิดสะท้าน',i:'⚡',ch:.6,t:.6}],
+  ['ล่อเก่ง','🎭',['lure','*',.08,3],['dur','*',.1,2],{fx:'chill',nm:'เงาเยือกแข็ง',i:'❄️',ch:.5,t:1}],
+  ['ทิ้งร่างไว','⏱️',['cd','c',.06,3],['count','+',1,1],{fx:'burst',nm:'ศพลูกโซ่',i:'🎆',r:55,pct:.45}],
+  {fx:'execute',nm:'กับดักมรณะ',i:'👑',hp:.35,m:1.8}]});
 const TF_COST=[0,1,2,4], TF_CROWN=6;
 
 /* ---- node list of a tree (cached) ---- */
@@ -309,9 +442,9 @@ function tfMerge(F,fx,p){ const o=F[fx]||(F[fx]={});
   for(const k in p){ if(typeof p[k]==='function'||k==='pk'||k==='fx'||k==='nm'||k==='i'||k==='d'||(k==='n'&&typeof p[k]!=='number')) continue; const v=p[k];
     if(k==='ch') o.ch=Math.min(1,(o.ch||0)+v); else if(fx==='leech'&&k==='pct') o.pct=(o.pct||0)+v; else if(typeof v==='number') o[k]=Math.max(o[k]||0,v); else o[k]=v; } }
 function tfApply(p,s,add,mul){
-  const t=p.tree&&p.tree[s.id]; delete s.fx; if(!t) return;
-  const F={};
-  for(const nd of tfNodes(s.id)){ const l=t[nd.id]|0; if(!l) continue;
+  const t=p.tree&&p.tree[s.id], I=s.def.ifx; delete s.fx; if(!t&&!I) return;
+  const F={}; if(I) for(const f in I) tfMerge(F,f,I[f]);                // inherent effects of a character-only skill (06 ifx: bleed, mark …)
+  if(t) for(const nd of tfNodes(s.id)){ const l=t[nd.id]|0; if(!l) continue;
     if(nd.kind==='num'){ const k=nd.op==='c'?'cd':nd.k;
       if(nd.op==='+') add[k]=(add[k]||0)+nd.per*l; else mul[k]=(mul[k]||1)*(1+(nd.op==='c'?-1:1)*nd.per*l); }
     else if(nd.kind==='proc') tfMerge(F,nd.fx,Object.assign({},nd.p,{[nd.pk]:nd.per*l}));
@@ -328,7 +461,7 @@ function tfICD(s,k,t){ const m=s.tfI||(s.tfI={}); if((m[k]||-1)>G.t) return fals
 function tfRoom(){ if((G.tfN|0)>=TF_CAP) return false; G.tfN=(G.tfN|0)+1; return true; }
 function tfSets(s){ return s&&s.fx?(P.tfg?[s.fx,P.tfg]:[s.fx]):(P.tfg?[P.tfg]:[]); }
 // damage multiplier before the hit (execute · vsStun)
-function tfPre(e,s){ let m=1;
+function tfPre(e,s){ let m=1; if(e.markT>G.t) m*=1+(e.markA||0);       // ศรหมายหัว (06 ifx mark): every skill hits a marked enemy harder
   for(const F of tfSets(s)){
     if(F.execute&&e.hp<e.maxHp*F.execute.hp) m*=F.execute.m;
     if(F.vsStun&&(e.stunT>0||e.freezeT>0)) m*=F.vsStun.m; }
@@ -349,6 +482,7 @@ function tfHit(e,s,base,dealt){
     else {
       if(F.shock&&!e.boss&&Math.random()<F.shock.ch) e.stunT=Math.max(e.stunT,F.shock.t||.4);
       if(F.chill&&!e.boss&&Math.random()<F.chill.ch) e.freezeT=Math.max(e.freezeT,F.chill.t||.8);
+      if(F.mark&&s){ const a=pv(s,'amp')||.2; e.markA=e.markT>G.t?Math.max(e.markA||0,a):a; e.markT=G.t+(pv(s,'dur')||4); G.mk=1; }
       if(F.ignite&&Math.random()<F.ignite.ch){ const B=G.tfBurn||(G.tfBurn=[]), d=base*(F.ignite.pct||.25), t=F.ignite.t||3;
         const o=B.find(x=>x.e===e); if(o){ o.d=Math.max(o.d,d); o.t=Math.max(o.t,t); } else if(B.length<160) B.push({e,s,d,t,nt:.5}); }
       if(F.pull&&tfICD(s||P,'pull',.25)){ const r=F.pull.r*P.area;
@@ -368,7 +502,7 @@ function tfCast(s){ const F=s.fx; if(!F) return; s.tfC=(s.tfC|0)+1;
     G.fx.push({k:'ring',x:P.x,y:P.y,r0:10,r1:70,t:0,dur:.25,c:s.def.c,w:5,follow:true,dead:false}); }
   if(F.echo&&s.tfC%F.echo.every===0&&TF_ECHO[s.def.type]) later(.3,()=>{ if(!P||!G||G.over||P.skills.indexOf(s)<0) return;
     const c=s.cdT; s.cdT=0; try{ BEH[s.def.type](s,0); } finally{ s.cdT=c; } }); }
-const TF_ECHO={proj:1, swing:1, nova:1, strike:1, zone:1, chain:1, heal:1, multi:1, spikes:1};
+const TF_ECHO={proj:1, swing:1, nova:1, strike:1, zone:1, chain:1, heal:1, multi:1, spikes:1, thrust:1, rite:1, seal:1, ward:1, combo:1};   // + skx types (25a)
 // the skill loop of world update when the run has tree effects: casts are seen as a cooldown restart · burns tick here
 function tfRun(dt){
   G.tfN=0;

@@ -18,6 +18,7 @@ function fresh(stubs = {}) {
   return { ctx, X, ls, dump, notes };
 }
 const CLASSES = ['swordsman', 'mage', 'archer', 'cleric', 'thief'];
+const SKILL_TOTAL = 70;   // 40 + the character-only skills shipped so far (docs/PROPOSAL-skill-trees.md §3 → 70)
 
 // ------------------------------------------------------------------------------------------------
 console.log('§3.2 เลเวลและ EXP');
@@ -151,10 +152,11 @@ console.log('§3.5 สกิล ★ · SKILL_REQ · loadout');
     out.okk=setLoadout(ch,['cross','holy']); out.after=ch.load.slice();
     ch.job='highcleric'; ch.sk.sacred=0; ch.sk.holy=3; learnSkill(ch,'judgment'); learnSkill(ch,'judgment'); learnSkill(ch,'aegis'); ch.sk.sacred=1;
     out.adv5=setLoadout(ch,['holy','heal','sacred','judgment','aegis']); out.adv6=setLoadout(ch,['holy','heal','sacred','cross','judgment','aegis']); out.final=ch.load.slice();
+    out.adv7=setLoadout(ch,['holy','heal','sacred','cross','judgment','aegis','holy']);
     out.foreign=setLoadout(ch,['slash']); return out; })()`);
   ok('loadout: สกิลที่เรียน ★1 ใหม่เข้าช่องว่างเอง · ช่องแรกยังเป็นสกิลแรก', deq(lo.auto, ['holy', 'heal', 'sacred', 'cross']), lo);
-  ok('setLoadout ปฏิเสธ: ซ้ำ / ★0 / ว่าง / เกิน 4 ช่อง (ขั้นต้น) / สกิลของอาชีพอื่น · รับได้: ลำดับใหม่', !lo.dup && !lo.zero && !lo.empty && !lo.five && lo.okk && deq(lo.after, ['cross', 'holy']) && !lo.foreign, lo);
-  ok('setLoadout ขั้นสูง 5 ช่องได้ · 6 ช่องไม่ได้', lo.adv5 && !lo.adv6 && lo.final.length === 5, lo);
+  ok('setLoadout ปฏิเสธ: ซ้ำ / ★0 / ว่าง / สกิลของอาชีพอื่น · รับได้: ลำดับใหม่', !lo.dup && !lo.zero && !lo.empty && !lo.five && lo.okk && deq(lo.after, ['cross', 'holy']) && !lo.foreign, lo);
+  ok('setLoadout ขั้นสูง 6 ช่องได้ (เดิม 5) · 7 ช่องไม่ได้', lo.adv5 && lo.adv6 && !lo.adv7 && lo.final.length === 6, lo);
   const rsk = X(`(()=>{ SAVE=newSave(null); const ch=newChar('ทดสอบ','thief'); SAVE.chars.push(ch); ch.sp=20; learnSkill(ch,'dagger'); learnSkill(ch,'fan'); learnSkill(ch,'p_catstep');
     const sp0=ch.sp, spent=pgSpSpent(ch); const a=resetSkills(ch,{}); return {a, sp:ch.sp, sum:sp0+spent, sk:ch.sk, pas:ch.pas, load:ch.load}; })()`);
   ok('resetSkills: แต้มคืนครบ · ★1 ฟรีของสกิลแรกยังอยู่ · loadout ตัดสกิลที่เป็น ★0', rsk.a && rsk.sp === rsk.sum && rsk.sp === 20 && deq(rsk.sk, { dagger: 1 }) && deq(rsk.pas, {}) && deq(rsk.load, ['dagger']), rsk);
@@ -202,8 +204,8 @@ console.log('§3.4 เลื่อนอาชีพ');
   ok('advanceJob ไม่ได้ถ้าเงื่อนไขไม่ครบ (ทอง 499) · ได้เมื่อครบ: job = knight · jlv 1 · jxp 0 · หักทอง 500',
     !jr.a0 && !jr.a1 && !jr.a2 && !jr.bad && jr.a3 && jr.job === 'knight' && jr.jlv === 1 && jr.jxp === 0 && jr.gold === 150, jr);
   ok('advanceJob ทำได้ครั้งเดียว เปลี่ยนสายไม่ได้ ไม่หักทองซ้ำ · validateSave ยังคง job', !jr.again && !jr.again2 && jr.job2 === 'knight' && jr.gold2 === 5000 && jr.vjob === 'knight' && jr.f5[1] === '0', jr);
-  const js = X(`(()=>{ const ch=newChar('ทดสอบ','mage'); ch.job='elementalist'; return [pgTier(ch), pgJobCap(ch), pgSkillPool(ch).join(), BAL.LOADOUT[pgTier(ch)]]; })()`);
-  ok('หลังเลื่อน: เพดาน Job 25 · ปลดสกิลขั้นสูง 2 ตัว · loadout 5 ช่อง', deq(js, [2, 25, 'mbolt,flame,frost,thunder,vortex,spikes', 5]), js);
+  const js = X(`(()=>{ const ch=newChar('ทดสอบ','mage'); ch.job='elementalist'; return [pgTier(ch), pgJobCap(ch), pgSkillPool(ch).join(), BAL.LOADOUT[pgTier(ch)], BAL.LOADOUT[1]]; })()`);
+  ok('หลังเลื่อน: เพดาน Job 25 · ปลดสกิลขั้นสูง · loadout 6 ช่อง (ขั้นต้น 5)', js[0] === 2 && js[1] === 25 && js[2].startsWith('mbolt,flame,frost,thunder,') && js[2].includes('vortex,spikes') && js[3] === 6 && js[4] === 5, js);
 }
 
 // ------------------------------------------------------------------------------------------------
@@ -239,10 +241,10 @@ console.log('§6.3 migrateSave');
   ok('migrateSave(v0 + best): นำเข้าสถิติไป acct.records.classic · pioneer = true · migratedBest = true · คลาสที่ไม่รู้จักถูกตัด',
     deq(m.a.records.classic, { swordsman: { score: 12345, wave: 14, kills: 900, won: false }, mage: { score: 99999, wave: 20, kills: 4000, won: true } }) && m.a.flags.pioneer === true && m.a.flags.migratedBest === true, m.a);
   ok('migrateSave: {} (ไม่มี v) + best แบบ string ก็นำเข้า · ไม่มี best → pioneer = false · ไม่ใช่ object → เซฟใหม่ v3',
-    m.bv === 7 && m.bc.mage.score === 99999 && m.bp === true && m.c.pioneer === false && m.c.migratedBest === false && m.d === true && m.e === 7 && deq(m.ev, []), m);
-  const ro = X(`(()=>{ const o={v:8, sid:'s_abc', chars:[{id:'c_x', name:'ใหม่กว่า', cls:'mage', lv:70, future:1}], acct:{gold:5}, extra:{a:1}};
+    m.bv === 8 && m.bc.mage.score === 99999 && m.bp === true && m.c.pioneer === false && m.c.migratedBest === false && m.d === true && m.e === 8 && deq(m.ev, []), m);
+  const ro = X(`(()=>{ const o={v:9, sid:'s_abc', chars:[{id:'c_x', name:'ใหม่กว่า', cls:'mage', lv:70, future:1}], acct:{gold:5}, extra:{a:1}};
     const s=migrateSave(o,null); return {v:s.v, ro:s.ro, enumerable:Object.keys(s).includes('ro'), json:JSON.stringify(s).includes('"ro"'), lv:s.chars[0].lv, src:o.chars[0].lv}; })()`);
-  ok('migrateSave(v > SCHEMA_V) → อ่านอย่างเดียว (s.ro, ไม่ติดไปกับ JSON) · ข้อมูลต้นฉบับไม่ถูกแก้', ro.v === 8 && ro.ro === true && !ro.enumerable && !ro.json && ro.lv === 60 && ro.src === 70, ro);
+  ok('migrateSave(v > SCHEMA_V) → อ่านอย่างเดียว (s.ro, ไม่ติดไปกับ JSON) · ข้อมูลต้นฉบับไม่ถูกแก้', ro.v === 9 && ro.ro === true && !ro.enumerable && !ro.json && ro.lv === 60 && ro.src === 70, ro);
 }
 
 // ------------------------------------------------------------------------------------------------
@@ -321,7 +323,7 @@ console.log('§6.2 เซฟในเครื่อง: คีย์ · write-a
   ls.setItem('runeguard.save.guest', '{"v":1,"chars":[');
   const fb = X(`(()=>{ const s=loadSaveFor(null); return {n:s.chars.length, kills:s.chars[0]&&s.chars[0].kills, st:svlState().from}; })()`);
   ok('คีย์หลักเสีย → ใช้ .bak + toast "เซฟในเครื่องเสีย ใช้สำรองแทน" · คีย์หลักถูกเขียนใหม่ · .bak เดิมยังอยู่',
-    fb.n === 1 && fb.st === 'bak' && notes.some(n => n[0] === 'เซฟในเครื่องเสีย ใช้สำรองแทน') && ls.getItem('runeguard.save.guest.bak') === goodBak && JSON.parse(ls.getItem("runeguard.save.guest")).v === 7, fb);
+    fb.n === 1 && fb.st === 'bak' && notes.some(n => n[0] === 'เซฟในเครื่องเสีย ใช้สำรองแทน') && ls.getItem('runeguard.save.guest.bak') === goodBak && JSON.parse(ls.getItem("runeguard.save.guest")).v === 8, fb);
   ls.setItem('runeguard.save.guest', 'garbage'); ls.setItem('runeguard.save.guest.bak', '[1,2]');
   const nw = X(`(()=>{ const s=loadSaveFor(null); return {n:s.chars.length, st:svlState().from, rec:s.acct.records.classic.swordsman.score}; })()`);
   ok('เสียทั้งคู่ → เซฟใหม่ (ยังนำเข้าสถิติคลาสสิก) + toast', nw.n === 0 && nw.st === 'lost' && nw.rec === 9000 && notes.some(n => /เซฟในเครื่องเสีย/.test(n[0])), nw);
@@ -331,7 +333,7 @@ console.log('§6.2 เซฟในเครื่อง: คีย์ · write-a
 }
 {
   const { X, ls, dump, notes } = fresh();
-  const future = JSON.stringify({ v: 8, sid: 's_future', owner: null, acct: { gold: 77 }, chars: [{ id: 'c_f1', name: 'อนาคต', cls: 'mage', lv: 5 }], active: 'c_f1', newField: { x: 1 } });
+  const future = JSON.stringify({ v: 9, sid: 's_future', owner: null, acct: { gold: 77 }, chars: [{ id: 'c_f1', name: 'อนาคต', cls: 'mage', lv: 5 }], active: 'c_f1', newField: { x: 1 } });
   ls.setItem('runeguard.save.guest', future);
   const before = JSON.stringify(dump());
   const ro = X(`(()=>{ const s=loadSaveFor(null); const out={ro:saveReadOnly(), lv:curChar().lv, gold:s.acct.gold};
@@ -508,10 +510,10 @@ console.log('fix-r1 · สองแท็บ · เซฟหลักพัง�
 }
 {
   const { X, ls } = fresh();
-  const future = JSON.stringify({ v: 8, sid: 's_future', acct: { gold: 77, gems: 5 }, chars: [{ id: 'c_f1', name: 'อนาคต', cls: 'mage', lv: 5, pet: 'cat', st: { WIS: 3 } }], active: 'c_f1' });
+  const future = JSON.stringify({ v: 9, sid: 's_future', acct: { gold: 77, gems: 5 }, chars: [{ id: 'c_f1', name: 'อนาคต', cls: 'mage', lv: 5, pet: 'cat', st: { WIS: 3 } }], active: 'c_f1' });
   ls.setItem('runeguard.save.guest', future);
   ok('export ของเซฟอ่านอย่างเดียว = ข้อความที่เก็บไว้เดิม (ไม่ตัด field ของเวอร์ชันใหม่)', X(`(loadSaveFor(null), exportSave())`) === future);
-  ok('migrateSave: v ไม่ใช่จำนวนเต็ม (1.5) = ขยะ ไม่ใช่เวอร์ชันใหม่', X(`(()=>{ const s=migrateSave({v:1.5, acct:{gold:5}, chars:[]}); return !s.ro&&s.v===7; })()`));
+  ok('migrateSave: v ไม่ใช่จำนวนเต็ม (1.5) = ขยะ ไม่ใช่เวอร์ชันใหม่', X(`(()=>{ const s=migrateSave({v:1.5, acct:{gold:5}, chars:[]}); return !s.ro&&s.v===8; })()`));
 }
 {
   const { X } = fresh();
@@ -796,7 +798,7 @@ console.log('carry-over (a) · เซฟหลักอ่านไม่ได�
   const { X, ls } = fresh();
   ls.setItem(K, raw);
   const a = X(`(()=>{ const s=loadSaveFor(null); return {from:svlState().from, n:s.chars.length}; })()`);
-  ok('โหลด: เริ่มเซฟใหม่ (lost) · .bak = ข้อความเดิมของเซฟหลักทุกไบต์ · เซฟหลักเป็นเซฟใหม่ที่อ่านได้', a.from === 'lost' && ls.getItem(K + '.bak') === raw && JSON.parse(ls.getItem(K)).v === 7, a);
+  ok('โหลด: เริ่มเซฟใหม่ (lost) · .bak = ข้อความเดิมของเซฟหลักทุกไบต์ · เซฟหลักเป็นเซฟใหม่ที่อ่านได้', a.from === 'lost' && ls.getItem(K + '.bak') === raw && JSON.parse(ls.getItem(K)).v === 8, a);
   X(`createChar('หลังพัง','mage'); saveNow('t1'); curChar().quick[1]='u_potion_s'; saveNow('t2');`);
   ok('เขียนเซฟที่ยังไม่มีความคืบหน้าซ้ำ ๆ ไม่ทับ .bak ที่เก็บข้อความเสียไว้', ls.getItem(K + '.bak') === raw);
   X(`curChar().kills=3; saveNow('p1'); curChar().kills=4; saveNow('p2');`);
@@ -807,7 +809,7 @@ console.log('carry-over (a) · เซฟหลักอ่านไม่ได�
   const { X, ls } = fresh();
   ls.setItem(K, 'garbage-main'); ls.setItem(K + '.bak', 'garbage-bak');
   X(`loadSaveFor(null)`);
-  ok('เสียทั้งคู่: .bak = ข้อความของเซฟหลัก (ใหม่กว่า) · เซฟหลักใหม่อ่านได้', ls.getItem(K + '.bak') === 'garbage-main' && JSON.parse(ls.getItem(K)).v === 7);
+  ok('เสียทั้งคู่: .bak = ข้อความของเซฟหลัก (ใหม่กว่า) · เซฟหลักใหม่อ่านได้', ls.getItem(K + '.bak') === 'garbage-main' && JSON.parse(ls.getItem(K)).v === 8);
   const base = memStorage(), lsx = { getItem: k => base.getItem(k), removeItem: k => base.removeItem(k), clear: () => base.clear(), key: i => base.key(i), get length() { return base.length; },
     setItem: (k, v) => { if (String(k).endsWith('.bak')) throw new Error('QuotaExceededError'); base.setItem(k, v); } };
   const F = fresh({ localStorage: lsx });
@@ -1462,7 +1464,7 @@ console.log('อัปเกรดถาวร (acct.up) · เซฟ v2');
     const m=migrateSave({v:1, acct:{gold:50}, chars:[]}); const n=newSave(null), one=validateSave({v:2,acct:{up:{dmg:3}},chars:[]});
     return {a, mv:m.v, mup:m.acct.up, mg:m.acct.gold, nv:n.v, nup:n.acct.up, again:JSON.stringify(validateSave(one))===JSON.stringify(one)}; })()`);
   ok('validateSave: ขั้นถูกบีบ 0–10 · ทศนิยมปัดลง · ชื่อหัวข้ออนาคต (a–z) เก็บไว้ · __proto__ ทิ้ง · idempotent', deq(v.a, { xp: 10, gold: 4, hp: 2, nope: 5 }) && v.again, v);
-  ok('เซฟ v1 → ย้ายเป็น v3 (ทองไม่หาย · up ว่าง) · เซฟใหม่ = v3 + up ว่าง', v.mv === 7 && v.mg === 50 && deq(v.mup, {}) && v.nv === 7 && deq(v.nup, {}), v);
+  ok('เซฟ v1 → ย้ายเป็น v3 (ทองไม่หาย · up ว่าง) · เซฟใหม่ = v3 + up ว่าง', v.mv === 8 && v.mg === 50 && deq(v.mup, {}) && v.nv === 8 && deq(v.nup, {}), v);
 }
 {
   const { X, ls } = fresh();
@@ -1535,7 +1537,7 @@ console.log('บันไดความชำนาญครบทุกอา�
 {
   const { X } = fresh();
   const r = X(`(()=>{ const bad=[], FX={burst:1,shock:1,chill:1,ignite:1,trail:1,pull:1,leech:1,feast:1,mend:1,execute:1,vsStun:1,shards:1,echo:1,radial:1,fork:1,hitboom:1};
-    const ids=[]; for(const c of CLASSES) ids.push(...c.skills, ...c.adv.flatMap(a=>a.skills));
+    const ids=[]; for(const c of CLASSES) ids.push(...clsSkills(c), ...c.adv.flatMap(a=>advSkills(a)));
     for(const id of ids){ const T=MX_T[id], d=SK[id]; if(!T){ bad.push(id+': ไม่มีบันได'); continue; }
       let last=0; for(const [lv,t,o] of T){ if(!(lv>last)) bad.push(id+': ระดับไม่เรียง '+lv); last=lv; if(!t) bad.push(id+': ไม่มีข้อความ '+lv);
         for(const k of Object.keys(o.add||{}).concat(Object.keys(o.mul||{}))) if(d.p[k]==null) bad.push(id+' Lv'+lv+': ไม่มีค่า '+k);
@@ -1545,9 +1547,55 @@ console.log('บันไดความชำนาญครบทุกอา�
     for(const id of ['fan','venom','shadow','phantom','whirl','clones','smoke']) p.skills.push(makeSkill(id)); recalc(p);
     const nums=[]; for(const s of p.skills) for(const k in s.def.p){ const v=pv(s,k); if(typeof v==='number'&&!isFinite(v)) nums.push(s.id+'.'+k); }
     return {bad, n:ids.length, nums, tf:p.tf===true, sh:+pv(p.skills.find(s=>s.id==='shadow'),'dodge').toFixed(3)}; })()`);
-  ok('ทุกสกิลของ 5 อาชีพมีบันได 35 ระดับ · ใช้แต่ค่าที่สกิลมีจริง · fx อยู่ในคลัง · echo เฉพาะชนิดที่ร่ายซ้ำได้', r.bad.length === 0 && r.n === 40, r.bad.slice(0, 8));
+  ok('ทุกสกิลของ 5 อาชีพ (รวมสกิลเฉพาะโหมดตัวละคร) มีบันได 35 ระดับ · ใช้แต่ค่าที่สกิลมีจริง · fx อยู่ในคลัง · echo เฉพาะชนิดที่ร่ายซ้ำได้', r.bad.length === 0 && r.n === SKILL_TOTAL, [r.n, r.bad.slice(0, 8)]);
   ok('โจร ความชำนาญ 40 ทุกค่า: ทุกตัวเลขของ 8 สกิลเป็นจำนวนจริง · เปิดระบบผลพิเศษ', r.nums.length === 0 && r.tf, r);
   ok('เงาพริ้ว Lv40: หลบ 0.08 + 0.02 + 0.03 + 0.03 + 0.05 = 0.21', r.sh === .21, r.sh);
+}
+
+console.log('สกิลเพิ่ม 30 ตัว (CLASSES skx · โหมดตัวละครเท่านั้น · PROPOSAL-skill-trees §3)');
+{
+  const { X } = fresh();
+  const r = X(`(()=>{ const o={bad:[]}, B=o.bad, skx=[];
+    for(const c of CLASSES){ for(const id of c.skx||[]) skx.push(id); for(const a of c.adv) for(const id of a.skx||[]) skx.push(id); }
+    o.n=skx.length; o.total=Object.keys(SK).length; o.dup=skx.length!==new Set(skx).size;
+    o.classic=CLASSES.every(c=>c.skills.length===4&&c.adv.every(a=>a.skills.length===2));                       // classic lists untouched
+    for(const id of skx){ const d=SK[id]; if(!d){ B.push(id+': ไม่มีใน SK'); continue; }
+      if(!SX.main[id]) B.push(id+': ไม่มีค่าหลัก'); if(!MX_T[id]) B.push(id+': ไม่มีบันได'); if(tfNodes(id).length!==10) B.push(id+': ต้นไม้ไม่ครบ');
+      if(!SKILL_REQ[id]) B.push(id+': ไม่มีเงื่อนไขปลด'); if(!d.n||!d.d||!d.i) B.push(id+': ไม่มีชื่อ/คำอธิบาย'); }
+    // every numeric tree node of every skill points at a number the skill really has
+    // (a × node on a missing number does nothing · new skills: every node key must exist)
+    for(const id of Object.keys(SK)) for(const nd of tfNodes(id)) if(nd.kind==='num'){ const k=nd.op==='c'?'cd':nd.k; if(SK[id].p[k]==null&&(nd.op!=='+'||skx.indexOf(id)>=0)) B.push(id+' '+nd.id+': ไม่มีค่า '+k); }
+    for(const id of Object.keys(TFD)) for(const nd of tfNodes(id)) if(nd.kind==='fx'&&nd.fx==='mod') for(const k in Object.assign({},nd.p.add,nd.p.mul)) if(SK[id].p[k]==null) B.push(id+' '+nd.id+': mod '+k);
+    // mastery 40 on every stat: every number of every new skill stays a real number
+    for(const c of CLASSES){ const p=makePlayer(c); p.sx=true; p.permSt={}; for(const k of STAT_ORDER) p.stats[k]=40;
+      const ids=(c.skx||[]).concat(...c.adv.map(a=>a.skx||[])); for(const id of ids) p.skills.push(makeSkill(id)); for(const s of p.skills) s.lv=5; recalc(p);
+      for(const s of p.skills) for(const k in s.def.p){ const v=pv(s,k); if(typeof v==='number'&&!isFinite(v)) B.push(s.id+'.'+k+' = '+v); } }
+    return o; })()`);
+  ok('สกิลเพิ่มทุกตัว: มีใน SK · ค่าหลัก · บันไดความชำนาญ · ต้นไม้ 10 โหนด · เงื่อนไขปลด · ชื่อ/คำอธิบาย · โหนดตัวเลขชี้ค่าที่สกิลมีจริง · ความชำนาญ 40 ไม่มีค่าแปลก', r.bad.length === 0 && !r.dup, r.bad.slice(0, 10));
+  ok('จำนวนสกิลทั้งเกม = ' + SKILL_TOTAL + ' · รายการคลาสสิก (skills) ยัง 4 + 2 + 2 ต่ออาชีพ', r.total === SKILL_TOTAL && r.n === SKILL_TOTAL - 40 && r.classic, r);
+  const g = X(`(()=>{ SAVE=newSave(null); const o={}, ch=newChar('ปลดสกิล','swordsman'); SAVE.chars.push(ch); SAVE.active=ch.id; ch.sp=99;
+    o.lv1=canLearn(ch,'flyblade'); ch.lv=8; o.lv8=canLearn(ch,'flyblade'); o.r15=canLearn(ch,'riposte'); o.learn=learnSkill(ch,'flyblade'); o.load=ch.load.slice();
+    o.pool=pgSkillPool(ch).join(); o.slots=BAL.LOADOUT[pgTier(ch)];
+    ch.lv=20; ch.job='knight'; ch.jlv=1; o.cap8=rankCap(ch,'flyblade'); o.adv=[canLearn(ch,'palisade')]; ch.sk.lance=3; o.adv.push(canLearn(ch,'palisade')); ch.jlv=5; o.adv.push(canLearn(ch,'palisade'));
+    o.pool2=pgSkillPool(ch).join();
+    // fake saves: a gated skill below its Base / Job Lv is dropped · another path's skill is dropped · ★ clamped like every first-job skill
+    const raw=(o2)=>svChar(JSON.parse(JSON.stringify(Object.assign({cls:'swordsman', name:'ปลอม', lv:1, jlv:1, job:null, sk:{slash:1}}, o2))));
+    o.f1=raw({sk:{slash:1, flyblade:5, riposte:3}}).sk;
+    o.f2=raw({lv:15, sk:{slash:1, flyblade:9, riposte:3}}).sk;
+    o.f3=raw({lv:30, job:'knight', jlv:4, sk:{slash:1, flyblade:9, lance:3, palisade:2, bloodrite:2}}).sk;
+    o.f4=raw({lv:30, job:'knight', jlv:9, sk:{slash:1, lance:3, palisade:2, valor:2, thrust:1}}).sk;
+    o.f5=raw({lv:30, job:'knight', jlv:12, sk:{slash:1, lance:3, palisade:2, valor:3, thrust:4}, load:['thrust','palisade','lance','slash','x','slash']}).load;
+    // an old v6 save keeps its character · gets the new slots and can learn the new skills by playing on
+    const old=migrateSave({v:6, acct:{gold:5}, chars:[{id:'c_old1', cls:'swordsman', name:'เก่า', lv:16, jlv:14, sp:9, sk:{slash:5, slam:2, blades:1, bulwark:1}, load:['slash','slam','blades','bulwark']}], active:'c_old1'});
+    const oc=old.chars[0]; o.old=[old.v, oc.load.join(), oc.sp, canLearn(oc,'flyblade'), canLearn(oc,'riposte'), BAL.LOADOUT[pgTier(oc)]];
+    return o; })()`);
+  ok('ปลดตามเลเวล: ดาบบินคืนมือต้อง Base 8 · ดาบสวนกลับต้อง Base 15 · ฝึกแล้วเข้าช่องว่างเอง', /เลเวลตัวละคร 8/.test(g.lv1) && g.lv8 === '' && /เลเวลตัวละคร 15/.test(g.r15) && g.learn === true && deq(g.load, ['slash', 'flyblade']), g);
+  ok('สกิลเพิ่มอยู่ใน pgSkillPool (ขั้นต้น 6) · ช่องติดตัว 5 · หลังเลื่อน ★8 ได้เหมือนสกิลขั้นต้นเดิม', g.pool === 'slash,slam,blades,bulwark,flyblade,riposte' && g.slots === 5 && g.cap8 === 8, g);
+  ok('ปลดตามอาชีพ: ปราการหอกต้อง หอกพุ่ง ★3 แล้ว Job Lv 5 · pool ขั้นสูง = 4 สกิล', /หอกพุ่งทะยาน ถึง ★3/.test(g.adv[0]) && /เลเวลอาชีพ 5/.test(g.adv[1]) && g.adv[2] === '' && g.pool2.endsWith('lance,valor,palisade,thrust'), g);
+  ok('เซฟปลอม: สกิลที่ Base Lv ไม่ถึงถูกทิ้ง · ★ เกินถูกตัด (ก่อนเลื่อน 5 · หลังเลื่อน 8) · Job Lv ไม่ถึง/สกิลสายอื่นถูกทิ้ง',
+    deq(g.f1, { slash: 1 }) && deq(g.f2, { slash: 1, flyblade: 5, riposte: 3 }) && deq(g.f3, { slash: 1, flyblade: 8, lance: 3 }) && deq(g.f4, { slash: 1, lance: 3, palisade: 2, valor: 2 }), g);
+  ok('เซฟปลอม: loadout 6 ช่องหลังเลื่อน · ตัดซ้ำ/ไม่รู้จัก', deq(g.f5, ['thrust', 'palisade', 'lance', 'slash']), g.f5);
+  ok('เซฟเก่า v6 → v8: ตัวละครครบ · ช่องเพิ่มเป็น 5 · ปลดสกิลใหม่ตามเลเวล (Lv16 = ทั้งสองตัว)', g.old[0] === 8 && g.old[1] === 'slash,slam,blades,bulwark' && g.old[2] === 9 && g.old[3] === '' && g.old[4] === '' && g.old[5] === 5, g.old);
 }
 
 console.log('ค่าสถานะ: ข้อที่ tester รอบ 2 เจอ (F1–F8)');
@@ -1572,7 +1620,7 @@ console.log('ค่าสถานะ: ข้อที่ tester รอบ 2 เ
   ok('ชะลอไม่เกิน 80% แม้การ์ด 100 ใบ (ศัตรูไม่หยุด/ไม่ถอยหลัง)', r.slow.length === 2 && r.slow.every(v => v <= .8 + 1e-9), r.slow);
   ok('หลบจากเงาพริ้วไม่เกิน 50%', r.dodge <= .5 + 1e-9, r.dodge);
   ok('คริจากอุปกรณ์สูง (70%) + การ์ด LUK: การ์ดดันได้ถึง 75% เท่านั้น · อุปกรณ์อย่างเดียวไม่ถูกตัด', r.crit[1] < r.crit[0] && Math.abs(r.critOver - r.crit[1]) < 1e-9 && Math.abs(r.crit[0] - r.crit[1] - .25) < 1e-9, r);
-  ok('เซฟ v3: v2 → v3 ไม่เสีย up.stat · คีย์ขยะ 30 ตัวไม่ดัน xp/stat ออก', r.ver[0] === 7 && r.ver[1].stat === 4 && r.ver[1].xp === 2 && r.keys.xp === 3 && r.keys.stat === 2, r);
+  ok('เซฟ v3: v2 → v3 ไม่เสีย up.stat · คีย์ขยะ 30 ตัวไม่ดัน xp/stat ออก', r.ver[0] === 8 && r.ver[1].stat === 4 && r.ver[1].xp === 2 && r.keys.xp === 3 && r.keys.stat === 2, r);
 }
 
 console.log('ต้นไม้สกิล (27) · ★6–8 · เซฟ v4');
@@ -1604,7 +1652,7 @@ console.log('ต้นไม้สกิล (27) · ★6–8 · เซฟ v4');
   ok('แต้มไม่พอ = ฝึกไม่ได้ (บอกจำนวน)', /แต้มรูนไม่พอ/.test(r.poor), r.poor);
   ok('รีเซ็ตต้นไม้ (Lv 30 ใช้สิทธิ์ฟรี 1 ครั้ง) → แต้มคืนครบ · trFree = 0', r.reset === true && r.after === 0 && r.freeFlag === 0, r);
   ok('เซฟ: โหนดแปลก/ขั้นเกินถูกตัด · ขั้นเกิน max = max · สกิลต่างอาชีพถูกทิ้ง · A3 ที่ A2 ยังไม่เต็มถูกตัด', JSON.stringify(r.tr) === JSON.stringify({thunder:{A1:3, B1:2}}), r.tr);
-  ok('เซฟ v3 → v4 ไม่เสียต้นไม้ · SCHEMA_V = 4', r.v === 7 && JSON.stringify(r.mig) === JSON.stringify({flame:{A1:2}}), r);
+  ok('เซฟ v3 → v4 ไม่เสียต้นไม้ · SCHEMA_V = 4', r.v === 8 && JSON.stringify(r.mig) === JSON.stringify({flame:{A1:2}}), r);
   ok('เพดาน ★: ก่อนเลื่อน 5 · หลังเลื่อนสกิลขั้นต้น 8 · สกิลขั้นสูง 5 · เซฟเก็บ ★8 เฉพาะตอนเลื่อนแล้ว', JSON.stringify(r.cap) === '[5,8,5]' && r.sv8 === 8 && r.sv5 === 5, r);
 }
 {
@@ -1671,7 +1719,7 @@ console.log('ร้านรูน (28): กระเป๋ารูน · ร�
   ok('เซฟ: ระดับเริ่มต้นเกิน ★ ถูกตัดลง · สกิลไม่รู้จัก/★ ต่ำกว่า 2 ถูกทิ้ง · rb/ru อยู่ครบ', r.sv[0] === '{"mbolt":3,"flame":2}' && r.sv[1] === 16 && r.acct === 16, r);
   ok('ในรอบ: สกิลแรกเริ่มที่ Lv3 · สุ่มใหม่ 2 ครั้ง · ผู้สนับสนุน = ไม่จำกัด', JSON.stringify(r.run) === '[3,3,2]' && r.supRr > 99, r);
   ok('การ์ด: โหมดตัวละคร 5 ใบ · ผู้สนับสนุนไม่ล็อก · คนทั่วไปล็อกใบ 4–5 · คลาสสิก 3 ใบไม่ล็อก', JSON.stringify(r.cards) === '[5,false,false]' && JSON.stringify(r.lock) === '[false,true,true]' && JSON.stringify(r.classic) === '[3,false]', r);
-  ok('SCHEMA_V = 7', r.v === 7, r.v);
+  ok('SCHEMA_V = 8 (v7 = แผนที่ ch.fz · v8 = สกิลเฉพาะโหมดตัวละคร)', r.v === 8, r.v);
 }
 
 console.log('เฟส A: ธาตุ · สีชั้น · ด่านรายวัน · เซฟ v6');
@@ -1697,7 +1745,7 @@ console.log('เฟส A: ธาตุ · สีชั้น · ด่านร�
   ok('สีชั้นหัวหน้า (ม่วง): HP ×3.5 · ดาเมจ ×1.5 · EXP ×4', JSON.stringify(r.rank) === '[2,3.5,1.5,4]', r.rank);
   ok('สิทธิ์รายวัน: วิญญาณ 2 · ทอง 2 · ห้องสมบัติ 1 (เสาร์อาทิตย์ 2) · Lv12 เข้ายากไม่ได้', r.left0[0] === 2 && r.left0[1] === 2 && r.left0[2] && r.why[0] === '' && /เลเวล 25/.test(r.why[1]) && /ไม่พบ/.test(r.why[2]), r);
   ok('ใช้ครบแล้วเข้าไม่ได้ · ข้ามวันได้สิทธิ์ใหม่', JSON.stringify(r.left1) === '[0,1]' && /ครบแล้ว/.test(r.full) && r.newDay === 2, r);
-  ok('เซฟ: daily.dg เก็บเฉพาะ exp/gold/rare 0–9 · v5 → v6 ได้ dg ว่าง', r.dg === '{"exp":2,"gold":1,"rare":9}' && r.migV === 7 && r.migDg === '{}', r);
+  ok('เซฟ: daily.dg เก็บเฉพาะ exp/gold/rare 0–9 · v5 → v6 ได้ dg ว่าง', r.dg === '{"exp":2,"gold":1,"rare":9}' && r.migV === 8 && r.migDg === '{}', r);
   ok('โหมด dexp/dgold/drare มีรางวัล และเริ่มทุกสกิลที่ Lv1 (หรือระดับเริ่มต้น)', r.modes, r.modes);
 }
 

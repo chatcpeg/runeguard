@@ -40,7 +40,8 @@ function updateEnemies(dt){
     if(e.freezeT>0) e.freezeT-=dt;
     if(e.stunT>0) e.stunT-=dt;
     if(e.slowT>0){ e.slowT-=dt; if(e.slowT<=0) e.slowF=1; }
-    let dx=P.x-e.x,dy=P.y-e.y; const d=Math.hypot(dx,dy)||1; dx/=d; dy/=d;
+    let dx=P.x-e.x,dy=P.y-e.y; if(G.lures&&!e.d.ranged&&!e.ai.home){ const z=lureAt(e); if(z){ dx=z.x-e.x; dy=z.y-e.y; } }   // ร่างล่อ (25a): walk at the decoy
+    const d=Math.hypot(dx,dy)||1; dx/=d; dy/=d;
     if(e.boss){ bossAI(e,dt,d,dx,dy); e.walk+=Math.hypot(e.vx,e.vy)*dt/(e.d.r*.9); if(G.bounds) clampToBounds(e); if(G.obstacles&&!e.d.fly) pushOutObstacles(e); continue; }
     if(d>far){ if(G.mode.relocate){ relocate(e); continue; } if(G.mode.far&&G.mode.far(e,d)) continue; }
     if(e.ai.home&&G.mode.steer&&G.mode.steer(e,dt,d,dx,dy)) continue;
@@ -120,6 +121,7 @@ function updateProjs(dt){
   for(const p of G.projs){
     if(p.dead) continue;
     p.t+=dt; p.life-=dt;
+    if(p.ret&&pxRet(p,dt)) continue;                                    // boomerang flight back to the hand (25a)
     if(p.homing){ if(!p.tg||p.tg.dead||(p.hit&&p.hit.indexOf(p.tg.id)>=0)) p.tg=nearestTo(p.x,p.y,360,p.hit);
       if(p.tg){ const a=Math.atan2(p.vy,p.vx),ta=Math.atan2(p.tg.y-p.y,p.tg.x-p.x),na=a+clamp(angDiff(ta,a),-p.homing*dt,p.homing*dt),sp=Math.hypot(p.vx,p.vy); p.vx=Math.cos(na)*sp; p.vy=Math.sin(na)*sp; } }
     const ox=p.x,oy=p.y; p.x+=p.vx*dt; p.y+=p.vy*dt; if(p.mx) mxProjTick(p,dt);   // mastery: heat haze / fire trail (26a)
@@ -130,6 +132,7 @@ function updateProjs(dt){
       projHit(p,e); if(p.dead) break;
     }
     if(!p.dead&&G.obstacles&&p.pierce<99&&terBlocks(p.x,p.y,p.r)){ if(p.mx) projEnd(p); else { p.dead=true; if(p.explode) explode(p.x,p.y,p.explode,p.dmg*.7,p.src,{c:p.c}); } if(!p.explode&&!G.auto) burst(p.x,p.y,4,'#a49a86',120,.35,2,'rock'); }   // a rock stops it (29a) · pierce ≥ 99 flies through
+    if(!p.dead&&p.life<=0&&p.x2&&pxEnd(p)) p.dead=true;                   // character-only projectiles end their own way (25a)
     if(!p.dead&&p.life<=0) projEnd(p);
     if(!p.dead&&!G.auto){ const q=qLv();
       if(p.shape==='fire'&&Math.random()<dt*(q?40:12)) part({x:p.x,y:p.y,vx:rand(-30,30)-p.vx*.1,vy:rand(-40,10),life:.35,s:3,c:pick(['#ffb050','#ff7a2a','#ffe28a']),g:-40,drag:2,k:'sq',add:true});
@@ -144,6 +147,7 @@ function projHit(p,e){
   const sp=Math.hypot(p.vx,p.vy)||1;
   damageEnemy(e,p.dmg,p.src,{knock:p.knock,nx:p.vx/sp,ny:p.vy/sp,crit:p.crit,fxd:p.fxd});
   (p.hit||(p.hit=[])).push(e.id);
+  if(p.x2&&pxHit(p,e)) return;                                           // ricochet / net / split … (25a)
   if(p.explode){ if(p.mx&&mxPassHit(p)) return; p.dead=true; explode(p.x,p.y,p.explode,p.dmg*.7,p.src,{c:p.c}); if(p.mx) mxBoom2(p); if(p.burn) addZone({x:p.x,y:p.y,r:p.explode*.8,dur:2*P.durMul,tick:.3,dmg:p.dmg*.12,kind:'fire',src:p.src}); return; }
   p.pierce--; if(p.pierce<=0) p.dead=true;
 }
@@ -156,7 +160,8 @@ function updateZones(dt){
   const q=qLv();
   for(const z of G.zones){
     if(z.dead) continue;
-    z.t+=dt; if(z.t>=z.dur){ z.dead=true; continue; }
+    z.t+=dt; if(z.t>=z.dur){ if(z.x2) zxEnd(z); z.dead=true; continue; }
+    if(z.x2&&zxTick(z,dt)) continue;                                      // character-only zones run their own frame (25a)
     if(z.aim){ z.x+=z.aim.vx*dt; z.y+=z.aim.vy*dt; const k=Math.exp(-dt*.7); z.aim.vx*=k; z.aim.vy*=k; }   // aimed vortex (19): straight, slowing
     else if(z.drift){ z.retarget-=dt; if(z.retarget<=0||!z.tg||z.tg.dead){ z.tg=nearestTo(z.x,z.y,520); z.retarget=.8; }
       let tx,ty; if(z.tg){ tx=z.tg.x-z.x; ty=z.tg.y-z.y; } else { tx=Math.cos(z.wa); ty=Math.sin(z.wa); } const l=Math.hypot(tx,ty)||1, k=Math.min(1,dt*2);
@@ -175,6 +180,7 @@ function updateZones(dt){
 }
 function strikeImpact(s){
   const x=s.x,y=s.y,q=qLv();
+  if(s.kind==='lava'){ zxLava(s); return; }                                // volcano bombs (25a)
   if(s.kind==='arrows'){ aoe(x,y,s.r,s.dmg,s.src,{knock:s.knock,quiet:true}); for(let i=0;i<4;i++){ const a=rand(0,TAU),d=Math.sqrt(Math.random())*s.r,ax=x+Math.cos(a)*d,ay=y+Math.sin(a)*d; G.fx.push({k:'arrowhit',x:ax,y:ay,t:0,dur:.25,c:'#e8f5c0',dead:false}); if(q>=1&&i<2) addDecal(arrowStuckTex(),ax,ay-10,10,1.1,1,true); } sfx('hit'); return; }
   if(s.kind==='meteor'){ explode(x,y,s.r,s.dmg,s.src,{knock:s.knock,c:'#ff7a2a'}); addZone({x,y,r:s.r*.7,dur:1.6*P.durMul,tick:.3,dmg:s.dmg*.06,kind:'fire',src:s.src}); addDecal(crackTex(),x,y,s.r*.9,7,.8); burst(x,y,q?14:6,'#6a5040',s.r*3,.7,5,'rock'); G.shake=Math.max(G.shake,9); return; }
   aoe(x,y,s.r,s.dmg,s.src,{knock:s.knock,stun:s.stun});

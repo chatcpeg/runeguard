@@ -17,7 +17,13 @@ const SX={ base:.005, over:.5, cap:{speed:.6, area:2, dur:2, crit:.75, cdMin:.45
     mbolt:'INT', flame:'INT', frost:'INT', thunder:'INT', meteor:'INT', blizzard:'INT', vortex:'INT', spikes:'INT',
     arrow:'DEX', spread:'AGI', rain:'LUK', trap:'INT', hawk:'AGI', arrownova:'DEX', deadeye:'LUK', blast:'DEX',
     holy:'INT', heal:'VIT', sacred:'VIT', cross:'DEX', judgment:'INT', aegis:'VIT', fists:'STR', spheres:'INT',
-    dagger:'LUK', fan:'AGI', venom:'INT', shadow:'AGI', phantom:'LUK', whirl:'AGI', clones:'DEX', smoke:'AGI' },
+    dagger:'LUK', fan:'AGI', venom:'INT', shadow:'AGI', phantom:'LUK', whirl:'AGI', clones:'DEX', smoke:'AGI',
+    // the 30 character-only skills (CLASSES skx)
+    flyblade:'STR', riposte:'VIT', palisade:'VIT', thrust:'STR', bloodrite:'STR', chainaxe:'STR',
+    gravorb:'INT', aquaring:'INT', comet:'INT', rift:'INT', volcano:'INT', leafblade:'INT',
+    ballista:'DEX', netshot:'INT', wolf:'AGI', gale:'DEX', mark:'LUK', starshard:'DEX',
+    prayer:'VIT', lantern:'DEX', seal:'INT', veil:'VIT', palm:'AGI', combo:'STR',
+    coin:'LUK', caltrops:'AGI', curtain:'AGI', reap:'LUK', bind:'INT', decoy:'DEX' },
   // milestones: [stat, param, op ('+' add per step · '*' multiply per step · '=' set once reached), value, Thai text, every]
   ms:{
     slash:[['STR','arc','+',.26,'มุมฟันกว้าง +15°'], ['AGI','count','+',1,'ฟันเพิ่ม 1 ครั้ง',10]],

@@ -90,29 +90,29 @@ console.log('§3.5 หน้าสกิล (ข้อมูลที่หน�
     ch.sk.mbolt=3; o.r3=pksRow(ch,'mbolt',false).cost; ch.sk.mbolt=8; const mx=pksRow(ch,'mbolt',false); o.max=[mx.max,mx.can,mx.cost]; ch.sk.mbolt=5; const m5=pksRow(ch,'mbolt',false); o.tier2=[m5.max,m5.rc,m5.cost];
     o.poor=(ch.sp=1,pksRow(ch,'flame',false)); o.next=pksNext(SK.flame,3); o.lv=pksLv(SK.mbolt,1); o.stars=prgStars(3);
     return o; })()`);
-  ok('ขั้นต้น (จอมเวท): 4 สกิลของอาชีพ (ศรเวท ★1 ฟรี) + passive สมาธิแห่งรูน · แต้ม 0 = ฝึกไม่ได้แต่ไม่ล็อก',
-    deq(m.t1, [[null, ['mbolt:1:1:0:0', 'flame:0:1:0:0', 'frost:0:1:0:0', 'thunder:0:1:0:0'], ['p_runefocus']]]), m.t1);
-  ok('ขั้นสูงก่อนเลื่อน: แสดงทั้งสองสาย (สกิล 2 + passive 2 ต่อสาย) ล็อกด้วย "ต้องเลื่อนเป็น…ก่อน"',
-    deq(m.t2, [['archmage', ['meteor:L', 'blizzard:L'], ['p_manasea', 'p_starcalm']], ['elementalist', ['vortex:L', 'spikes:L'], ['p_elemweave', 'p_earthpull']]]) && /^ต้องเลื่อนเป็น/.test(m.lock2), m);
+  ok('ขั้นต้น (จอมเวท): 6 สกิลของอาชีพ (ศรเวท ★1 ฟรี · 2 ตัวใหม่ล็อกด้วย Base Lv) + passive สมาธิแห่งรูน · แต้ม 0 = ฝึกไม่ได้แต่ไม่ล็อก',
+    deq(m.t1, [[null, ['mbolt:1:1:0:0', 'flame:0:1:0:0', 'frost:0:1:0:0', 'thunder:0:1:0:0', 'gravorb:0:1:0:1', 'aquaring:0:1:0:1'], ['p_runefocus']]]), m.t1);
+  ok('ขั้นสูงก่อนเลื่อน: แสดงทั้งสองสาย (สกิล 4 + passive 2 ต่อสาย) ล็อกด้วย "ต้องเลื่อนเป็น…ก่อน"',
+    deq(m.t2, [['archmage', ['meteor:L', 'blizzard:L', 'comet:L', 'rift:L'], ['p_manasea', 'p_starcalm']], ['elementalist', ['vortex:L', 'spikes:L', 'volcano:L', 'leafblade:L'], ['p_elemweave', 'p_earthpull']]]) && /^ต้องเลื่อนเป็น/.test(m.lock2), m);
   ok('เลื่อนแล้วเหลือสายเดียว · SKILL_REQ: อุกกาบาตต้องหอกเพลิง ★3 (★2 = ล็อก) · ครบแล้วฝึกได้ราคา 1 · พายุหิมะยังล็อก (อุกกาบาต ★2)',
     deq(m.job, ['archmage']) && /ต้องฝึก/.test(m.req) && m.reqCan === false && m.met[0] === '' && m.met[1] === true && m.met[2] === 1 && /ต้องฝึก/.test(m.blz), m);
   ok('ราคา ★: ★3 → ★4 = 2 แต้ม · เลื่อนอาชีพแล้ว ★5 → ★6 = 2 แต้ม (ขั้นสอง) · ★8 = ตัน ฝึกต่อไม่ได้ · แต้มไม่พอ = ฝึกไม่ได้แต่ไม่ล็อก', m.r3 === 2 && m.max[0] === true && m.max[1] === false && m.max[2] === 0 && deq(m.tier2, [false, 8, 2]) && m.poor.can === false && m.poor.lock === '', m);
   ok('ข้อความ ★ ถัดไปเทียบค่าจาก SK (หอกเพลิง ★3 → ★4) และดาว ★★★☆☆', /→/.test(m.next) && /ดาเมจ/.test(m.lv) && m.stars === '★★★☆☆', m);
-  const L = X(`(()=>{ SAVE=newSave(null); const ch=newChar('ทดสอบ','thief'); SAVE.chars.push(ch); SAVE.active=ch.id; const ids=CLS.thief.skills, o={ids}; ch.sk={}; for(const id of ids) ch.sk[id]=1; ch.load=[ids[0]];
-    o.a1=pksLoadAdd(ch,ids[1],-1); o.a2=pksLoadAdd(ch,ids[2],-1); o.a3=pksLoadAdd(ch,ids[3],-1); o.full=ch.load.slice();
-    o.dupe=pksLoadAdd(ch,ids[1],-1);
+  const L = X(`(()=>{ SAVE=newSave(null); const ch=newChar('ทดสอบ','swordsman'); SAVE.chars.push(ch); SAVE.active=ch.id; const ids=clsSkills(CLS.swordsman), o={ids}; ch.sk={}; for(const id of ids) ch.sk[id]=1; ch.load=[ids[0]];
+    o.a1=pksLoadAdd(ch,ids[1],-1); o.a2=pksLoadAdd(ch,ids[2],-1); o.a3=pksLoadAdd(ch,ids[3],-1); o.a4=pksLoadAdd(ch,ids[4],-1); o.full=ch.load.slice();
+    o.dupe=pksLoadAdd(ch,ids[1],-1); o.over=pksLoadAdd(ch,ids[5],-1);
     o.sw=pksLoadSwap(ch,0,2); o.afterSw=ch.load.slice(); o.swBad=pksLoadSwap(ch,1,1);
     o.del=pksLoadDel(ch,ids[1]); o.afterDel=ch.load.slice();
     ch.load=[ids[0]]; o.last=pksLoadDel(ch,ids[0]);
-    ch.job=CLS.thief.adv[0].id; const s=CLS.thief.adv[0].skills; ch.sk[s[0]]=1; ch.sk[s[1]]=1; ch.load=ids.slice();
-    o.s=s; o.a5=pksLoadAdd(ch,s[0],-1); o.full5=pksLoadAdd(ch,s[1],-1); o.rep=pksLoadAdd(ch,s[1],0); o.load5=ch.load.slice();
+    ch.job=CLS.swordsman.adv[0].id; const s=advSkills(CLS.swordsman.adv[0]); ch.sk[s[0]]=1; ch.sk[s[1]]=1; ch.load=ids.slice(0,5);
+    o.s=s; o.a6=pksLoadAdd(ch,s[0],-1); o.full6=pksLoadAdd(ch,s[1],-1); o.rep=pksLoadAdd(ch,s[1],0); o.load6=ch.load.slice();
     const m2=newChar('ทดสอบ','mage'); SAVE.chars.push(m2); o.unl=pksLoadAdd(m2,'flame',-1);
     return o; })()`);
   const T = L.ids;
-  ok('ใส่สกิลลง loadout (setLoadout) ได้จนเต็ม 4 ช่อง · ใส่ซ้ำไม่ได้', L.a1 && L.a2 && L.a3 && deq(L.full, T) && L.dupe === false, L);
+  ok('ใส่สกิลลง loadout (setLoadout) ได้จนเต็ม 5 ช่อง (เดิม 4) · ใส่ซ้ำไม่ได้ · ช่องเต็มแล้วใส่ตัวที่ 6 ไม่ได้', L.a1 && L.a2 && L.a3 && L.a4 && deq(L.full, T.slice(0, 5)) && L.dupe === false && L.over === false, L);
   ok('สลับช่อง 1 ↔ 3 (ช่องแรก = สกิลเริ่มรอบ) · สลับช่องเดียวกันไม่ได้', L.sw === true && L.afterSw[0] === T[2] && L.afterSw[2] === T[0] && L.swBad === false, L);
   ok('ถอดได้ · ถอดตัวสุดท้ายไม่ได้ (ต้องมีอย่างน้อย 1)', L.del === true && L.afterDel.indexOf(T[1]) < 0 && L.last === false, L);
-  ok('ขั้นสูง 5 ช่อง: ช่องที่ 5 ใส่ได้ · เต็มแล้วต้องเลือกช่องที่จะแทน · แทนช่อง 1 ได้', L.a5 === true && L.full5 === false && L.rep === true && L.load5[0] === L.s[1] && L.load5.length === 5, L);
+  ok('ขั้นสูง 6 ช่อง (เดิม 5): ช่องที่ 6 ใส่ได้ · เต็มแล้วต้องเลือกช่องที่จะแทน · แทนช่อง 1 ได้', L.a6 === true && L.full6 === false && L.rep === true && L.load6[0] === L.s[1] && L.load6.length === 6, L);
   ok('สกิลที่ ★0 ใส่ loadout ไม่ได้', L.unl === false, L);
   // reset through the page: Base < 20 free · confirmBox → resetSkills
   const r = await_(X(`(async()=>{ SAVE=newSave(null); const ch=newChar('ทดสอบ','mage'); SAVE.chars.push(ch); SAVE.active=ch.id; ch.sp=5; learnSkill(ch,'flame'); learnSkill(ch,'flame');

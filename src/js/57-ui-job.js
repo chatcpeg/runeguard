@@ -15,7 +15,7 @@ function pjbCard(c,a,pick){
   return `<${tag}${pick?` type="button" data-a="pick" data-id="${a.id}" aria-pressed="${on}"`:''} class="pjb-card${on?' sel':''}">`
     +`<canvas data-adv="${a.id}" width="80" height="80" aria-hidden="true"></canvas><span class="pjb-n">${esc(a.n)}<small>${esc(a.e)}</small></span>`
     +`<span class="pjb-b">${esc(a.bt)}</span><span class="pjb-d">${esc(a.d)}</span>`
-    +`<span class="pjb-sk">${a.skills.map(id=>'<span>'+SK[id].i+' '+esc(SK[id].n)+'</span>').join('')}</span>`
+    +`<span class="pjb-sk">${advSkills(a).map(id=>'<span>'+SK[id].i+' '+esc(SK[id].n)+'</span>').join('')}</span>`
     +`<span class="pjb-ps">${pas.map(id=>'<span>'+PASSIVES[id].i+' '+esc(PASSIVES[id].n)+'</span>').join('')}</span></${tag}>`; }
 function pjbRender(){
   const root=$('#pjbRoot'); if(!root) return; prgWire(root,pjbClick);

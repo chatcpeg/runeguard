@@ -228,7 +228,7 @@ console.log('เซฟ v7: migration + validate (เซฟปลอมไม่�
     const bad={v:7, acct:{gold:5, fboss:{g1:{next:9e99, kills:-5}, '__proto__':{next:1}, zz:{next:'x', kills:'7'}}}, chars:[Object.assign(newChar('ปลอม','archer'),{fz:{g1:{k:1e99, b:-3, t:'12'}, s1:{k:5.7, b:2, t:-1}, zz9:{k:9}, constructor:{k:1}, o1:'bad', g2:[1]}})]};
     const v=validateSave(JSON.parse(JSON.stringify(bad))), c=v.chars[0];
     return {SV:SCHEMA_V, mv:m.v, mfz:JSON.stringify(m.chars[0].fz), fz:JSON.stringify(c.fz), fb:JSON.stringify(v.acct.fboss), idem:JSON.stringify(validateSave(JSON.parse(JSON.stringify(v))).chars[0].fz)===JSON.stringify(c.fz), gold:v.acct.gold, inv:c.inv.length}; })()`);
-  ok('SCHEMA_V = 7 · เซฟ v6 → v7 ได้ ch.fz ว่าง', r.SV === 7 && r.mv === 7 && r.mfz === '{}', r);
+  ok('SCHEMA_V = 8 · เซฟ v6 → ล่าสุด ได้ ch.fz ว่าง', r.SV === 8 && r.mv === 8 && r.mfz === '{}', r);
   ok('ch.fz: เฉพาะแผนที่ที่มีจริง · ตัวเลขถูก clamp (k ≤ 1e9, b ≥ 0) · key ต้องห้าม/ค่าขยะถูกทิ้ง · validate ซ้ำได้ผลเดิม', r.fz === '{"g1":{"k":1000000000,"b":0,"t":12},"s1":{"k":5,"b":2,"t":0}}' && r.idem, r.fz);
   ok('acct.fboss ปลอม: next ≤ ปี 2100 · kills ≥ 0 · __proto__ ไม่ผ่าน · ไม่มีทอง/ของเพิ่ม', !r.fb.includes('__proto__') && JSON.parse(r.fb).g1.kills === 0 && JSON.parse(r.fb).g1.next <= 4102444800000 && r.gold === 5, r.fb);
   const c = X(`(()=>{ SAVE=newSave(null); const ch=newChar('ทดสอบ','mage'); SAVE.chars.push(ch); SAVE.active=ch.id; const A=SAVE.acct;
