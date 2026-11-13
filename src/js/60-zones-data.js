@@ -5,6 +5,10 @@
 // of reusable behaviour blocks run by 62a-field-kits.js (ranged, charge, split, boom, heal, buff, trap, shield, summon, steal,
 // hide, swap, trail, phase …). Painted art = `art` (12b ART_DIM · may not exist yet: the vector painter `pv` of 61 is used).
 // Pure: no DOM, no G, no other lane's data at load (names.test loads this file with the core data only).
+// k = the map's tuning: damage × of its monsters and its field boss · HP × of its monsters · gold / exp × of its kills (62 fdOnKill,
+// on top of BAL.FIELD goldMul 0.3 / exp 0.5). Measured with the RG.sim bot (docs/PROPOSAL-maps-daily.md §8): s1 kills come 3× as
+// fast as g1 (slimes) → gold .4 to stay ≈ 2× survival · o1 dmg .65 (the bot died in 61–235 s at Lv20–27 with .8, boss included) ·
+// o1 exp 2 = no ×0.5 cut there (its kills paid only 0.5× survival's EXP before the cut)
 const FD_ORDER=['g1','s1','o1'];
 const ZONES={
   g1:{id:'g1', k:{hp:1, dmg:1}, n:'ป่าหนามก็อบลิน', i:'🌲', lv:[1,12], biome:'forest', el:['earth','dark','fire'], w:3600, h:2800, seed:0x6b1a5101, gearT:[1,2], zn:1,
@@ -24,7 +28,7 @@ const ZONES={
       {x0:120, y0:200, x1:1650, y1:1650, n:10, mix:[['g_sprout',3],['g_grunt',3],['g_thrower',2],['m_gustcrow',2],['g_thief',1.5],['g_boar',1]]},
       {x0:2050, y0:1250, x1:3450, y1:2650, n:10, mix:[['g_spear',2],['g_thief',2],['g_boarrider',2],['g_trapper',1.5],['g_grunt',2],['m_gustcrow',1]]},
       {x0:2050, y0:150, x1:3450, y1:1250, n:7, mix:[['g_boarrider',2],['g_spear',2],['g_hob',1],['g_trapper',1],['g_shaman',1]]}]},
-  s1:{id:'s1', k:{hp:.85, dmg:.9}, n:'บึงวุ้นหกสี', i:'💧', lv:[10,22], biome:'swamp', el:['fire','water','wind','earth','light','dark'], w:3600, h:3000, seed:0x5a1e2202, gearT:[2,3], zn:2,
+  s1:{id:'s1', k:{hp:.85, dmg:.9, gold:.4}, n:'บึงวุ้นหกสี', i:'💧', lv:[10,22], biome:'swamp', el:['fire','water','wind','earth','light','dark'], w:3600, h:3000, seed:0x5a1e2202, gearT:[2,3], zn:2,
     tone:'rgba(10,40,48,.12)', mini:'#1d3a40', prev:'g1', next:'o1', open:10,
     d:'บึงน้ำตื้น เกาะหญ้า · 4 มุมธาตุ (บ่อน้ำพุร้อน ไฟ · บึงลึก น้ำ · ทุ่งหญ้าสูง ลม · หินผลึก ดิน) · แท่นรูนเก่ากลางแผนที่',
     entry:{x:240, y:1500},
@@ -42,7 +46,7 @@ const ZONES={
       {x0:1250, y0:1050, x1:2350, y1:2000, n:6, mix:[['s_glow',2],['s_shade',2],['s_merge',1],['s_drop',1]]},
       {x0:1150, y0:300, x1:2400, y1:1000, n:5, mix:[['s_drop',2],['s_breeze',1],['s_ember',1],['s_twin',1]]},
       {x0:1150, y0:2050, x1:2400, y1:2850, n:5, mix:[['s_drop',2],['s_pebble',1],['s_shade',1],['m_mooneel',1]]}]},
-  o1:{id:'o1', k:{hp:.6, dmg:.8}, n:'ค่ายออร์คผาเหล็ก', i:'🔥', lv:[20,34], biome:'canyon', el:['fire','earth','wind'], w:4000, h:3000, seed:0x0c3a3403, gearT:[3,4], zn:3,
+  o1:{id:'o1', k:{hp:.6, dmg:.65, exp:2}, n:'ค่ายออร์คผาเหล็ก', i:'🔥', lv:[20,34], biome:'canyon', el:['fire','earth','wind'], w:4000, h:3000, seed:0x0c3a3403, gearT:[3,4], zn:3,
     tone:'rgba(60,20,8,.12)', mini:'#45261a', prev:'s1', next:null, open:20,
     d:'หุบผาหินแดง ทางเดินแคบระหว่างหน้าผา · ค่ายใหญ่กำแพงไม้ซุง ประตู 2 บาน · หอธนู 4 หอ (ทำลายได้)',
     entry:{x:2000, y:2760},
@@ -74,7 +78,7 @@ const MOBS={
   g_spear:{n:'ก็อบลินถือหอก', lv:5, hp:26, speed:64, r:12, dmg:8, mass:1, xp:2, goo:'#7fae5a', fam:'goblin', pack:[1,2], pv:['gob','spear'],
     kit:{charge:{aim:.6, sp:540, dur:.45, cd:4, range:280, dmg:1.4}}, d:'ยืนเล็ง 0.6 วิ แล้วพุ่งเป็นเส้นตรง'},
   g_thief:{n:'ก็อบลินโจรขโมยทอง', lv:6, el:'dark', hp:24, speed:104, r:11, dmg:5, mass:.8, xp:3, goo:'#7fae5a', fam:'goblin', pack:[1,1], pv:['gob','sack'],
-    kit:{steal:{pct:.12, min:6, run:7}}, d:'ตีโดนแล้วขโมยทองในรอบแล้ววิ่งหนี · ฆ่าทันได้คืน ×2'},
+    kit:{steal:{pct:.12, min:6, run:7}}, d:'ตีโดนแล้วขโมยทองในรอบ (ไม่เกินทองจากมอน 8 ตัว) แล้ววิ่งหนี · ฆ่าทันได้ทองคืนพร้อมโบนัส'},
   g_boarrider:{n:'ก็อบลินขี่หมูป่า', lv:7, el:'earth', hp:44, speed:140, r:15, dmg:9, mass:2, xp:4, goo:'#7fae5a', fam:'goblin', pack:[1,2], accel:2.6, pv:['rider'],
     kit:{ram:{knock:560}, dismount:{at:.5, foot:'g_grunt', mount:'g_boar'}}, d:'เร็วมาก ชนแล้วกระเด็น · ตกหลังหมูเมื่อ HP ต่ำกว่าครึ่ง (ได้ 2 ตัว)'},
   g_boar:{n:'หมูป่าเขี้ยวหัก', lv:4, el:'earth', hp:30, speed:110, r:13, dmg:7, mass:1.6, xp:2, goo:'#a87a5a', fam:'beast', pack:[1,2], aggro:0, pv:['boar'],

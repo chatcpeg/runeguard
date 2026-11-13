@@ -13,7 +13,8 @@ function tfHelpBox(title,html){
       if(e.key==='Escape'||e.key==='Enter'||e.key===' '){ e.preventDefault(); tfHelpOff(); } },true);   // keys never reach the cards under it
     document.body.append(r); }
   r.querySelector('#tfHelpT').textContent=title; r.querySelector('.tf-hbody').innerHTML=html; r.hidden=false;
-  const b=r.querySelector('[data-x]'); try{ b.focus(); }catch(e){} }
+  const b=r.querySelector('[data-x]'), card=r.querySelector('.tf-hcard'); try{ b.focus({preventScroll:true}); }catch(e){}   // the button sits at the end: a plain focus scrolled a long page to its bottom (phones)
+  if(card) card.scrollTop=0; }
 function tfHelpOff(){ const r=document.getElementById('tfHelp'); if(r) r.hidden=true; }
 const tfE=s=>esc(String(s==null?'':s));
 const tfRow=(a,b)=>`<tr><td>${a}</td><td>${b}</td></tr>`;

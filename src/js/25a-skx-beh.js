@@ -50,15 +50,17 @@ BEH.seal=(s,dt)=>{ const st=s.st, Q=st.q||(st.q=[]);
 function sealBoom(s,m){ const r=pv(s,'r')*P.area; aoe(m.x,m.y,r,pv(s,'dmg'),s,{knock:120});
   G.fx.push({k:'pillar',x:m.x,y:m.y,r:Math.min(40,r*.6),t:0,dur:.45,c:s.def.c,dead:false}); G.fx.push({k:'ring',x:m.x,y:m.y,r0:r*.3,r1:r,t:0,dur:.3,c:'#fff6c8',w:5,dead:false}); if(!G.auto) sfx('boom'); }
 // ward (ม่านอรุณ): erases every enemy shot inside r (heal per shot), then a light wave that pushes and slows · wakes for shots too
-BEH.ward=(s,dt)=>{ s.cdT-=dt; if(s.cdT>0) return; const r=pv(s,'r')*P.area, r2=r*r;
-  let shots=0; for(const b of G.eprojs) if(!b.dead&&(b.x-P.x)**2+(b.y-P.y)**2<r2) shots++;
+BEH.ward=(s,dt)=>{ s.cdT-=dt; if(s.cdT>0) return; const r=pv(s,'r')*P.area, r2=r*r, L=wardLists();
+  let shots=0; for(const A of L) for(const b of A) if(!b.dead&&(b.x-P.x)**2+(b.y-P.y)**2<r2) shots++;
   if(!shots&&(!G.near||G.nearD>r*.9)){ s.cdT=.15; return; }
   s.cdT=cdOf(s); let n=0;
-  for(const b of G.eprojs){ if(b.dead||(b.x-P.x)**2+(b.y-P.y)**2>=r2) continue; b.dead=true; b.life=-1; n++; if(!G.auto&&n<14) burst(b.x,b.y,3,'#ffe9b0',70,.3,2); }   // life −1: gone before it can hit this frame
+  for(const A of L) for(const b of A){ if(b.dead||(b.x-P.x)**2+(b.y-P.y)**2>=r2) continue; b.dead=true; b.life=-1; n++; if(!G.auto&&n<14) burst(b.x,b.y,3,'#ffe9b0',70,.3,2); }   // life −1: gone before it can hit this frame
   if(n) healP(n*(pv(s,'heal')||2));
   aoe(P.x,P.y,r,pv(s,'dmg'),s,{knock:pv(s,'knock'),slow:pv(s,'slow'),slowDur:1.5});
   G.fx.push({k:'ring',x:P.x,y:P.y,r0:20,r1:r,t:0,dur:.45,c:s.def.c,w:10,follow:true,dead:false}); G.fx.push({k:'ring',x:P.x,y:P.y,r0:r*.6,r1:r*1.08,t:0,dur:.5,c:'#ffffff',w:3,follow:true,dead:false});
   P.atkT=.12; if(!G.auto) sfx('shield'); };
+// every list of enemy shots: the undead's G.eprojs + the field monsters' / field bosses' G.fd.shots (62a)
+function wardLists(){ return G.fd&&Array.isArray(G.fd.shots)?[G.eprojs,G.fd.shots]:[G.eprojs]; }
 // combo (ห้าหมัดสุริยัน): quick punches (the swing of 19) · every `fin`-th cast a sun blast in front instead (boom × dmg, stun)
 BEH.combo=(s,dt)=>{ s.cdT-=dt; if(s.cdT>0) return; const range=pv(s,'range')*P.area;
   if(!G.near||G.nearD>range*1.6+G.near.r){ s.cdT=.1; return; }
@@ -141,7 +143,9 @@ function zxCast(s){
   for(let i=0;i<n;i++){ let x=P.x, y=P.y; const o={};
     if(s.def.maxZ){ let c=0, first=-1; for(let j=0;j<G.zones.length;j++){ const q=G.zones[j]; if(q.src===s&&!q.dead){ c++; if(first<0) first=j; } }   // many small zones (caltrops): drop our own
       if(c>=s.def.maxZ&&first>=0) G.zones.splice(first,1); }                                                               // oldest, never another skill's
-    if(pl==='self'){ if(i||s.def.shoot){ const b=s.def.shoot?a+PI+(i-(n-1)/2)*1.2:i*TAU/n, d=s.def.shoot?28:r*.6; x+=Math.cos(b)*d; y+=Math.sin(b)*d*.75; } if(s.def.follow||v('follow')) o.follow=1; }   // a turret stands just behind the hero
+    if(pl==='self'){ if(i||s.def.shoot){ const b=s.def.shoot?a+PI+(i-(n-1)/2)*1.2:i*TAU/n, d=s.def.shoot?28:r*.6; x+=Math.cos(b)*d; y+=Math.sin(b)*d*.75;
+        if(s.def.shoot&&G.obstacles){ const q=zxFreeSpot(b,d,x,y); x=q[0]; y=q[1]; } }   // a turret stands just behind the hero · never inside a rock (its bolts would stop at once)
+      if(s.def.follow||v('follow')) o.follow=1; }
     else if(pl==='aim'){ const b=a+(i-(n-1)/2)*.35, sp=v('speed')||200; x+=Math.cos(b)*36; y+=Math.sin(b)*36; o.aim={vx:Math.cos(b)*sp, vy:Math.sin(b)*sp}; }
     else if(pl==='enemy'){ const q=aimCluster(t,i,r*2); x=q[0]; y=q[1]; }
     else if(pl==='feet'){ x+=Math.cos(ba)*(10+i*r*1.1)+Math.cos(ba+PI/2)*(i%2?r*.5:-r*.5)*(i?1:0); y+=Math.sin(ba)*(10+i*r*1.1)+Math.sin(ba+PI/2)*(i%2?r*.5:-r*.5)*(i?1:0); }
@@ -152,6 +156,11 @@ function zxCast(s){
       lure:(v('lure')||0)*P.area,seen:G.t},o));
     const z=G.zones[G.zones.length-1]; if(z&&z.lure&&z.src===s) (G.lures||(G.lures=[])).push(z); }
   if(s.def.fx==='palisade'){ G.fx.push({k:'ring',x:P.x,y:P.y,r0:r*.3,r1:r,t:0,dur:.3,c:s.def.c,w:6,follow:true,dead:false}); sfx('shield'); } }
+// a turret spot behind the hero that no rock covers: the aimed side first, then ±0.8 / ±1.6 rad round the hero, else on the hero
+function zxFreeSpot(b,d,x,y){ const blk=(x,y)=>terBlocks(x,y,16)||terBlocks(x,y-14,16);   // the base and the bow (bolts leave 14 px up)
+  if(!blk(x,y)) return [x,y];
+  for(const o of [.8,-.8,1.6,-1.6]){ const nx=P.x+Math.cos(b+o)*d, ny=P.y+Math.sin(b+o)*d*.75; if(!blk(nx,ny)) return [nx,ny]; }
+  return [P.x,P.y]; }
 // updateEnemies: the decoy an enemy walks at instead of the hero (null = the hero) · ranged enemies and boss AI are never lured ·
 // G.lures drops zones that ended (or were pushed out of G.zones) once a frame and goes back to null when empty
 function lureAt(e){ const L=G.lures; if(!L) return null;

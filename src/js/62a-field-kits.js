@@ -19,6 +19,8 @@ function fdSteer(e,dt,d,dx,dy){
   else if(F.st===1){ if(G.t>F.free){ const h=(e.x-F.hx)**2+(e.y-F.hy)**2; if(h>Fd.leash*Fd.leash||d>1600){ F.st=2; F.tele=null; if(F.ch) F.ch.s=0; } } }
   else if(F.st===2){ if((e.x-F.hx)**2+(e.y-F.hy)**2<48*48){ F.st=0; e.hp=e.maxHp; F.wt=0; } }
   if(F.st!==1||!D.dmg) e.atkCd=Math.max(e.atkCd,.3);                  // passive / at home / leashing: never hits
+  // ร่างล่อมรณะ (25a lureAt): a chasing melee monster walks at the decoy · chase / go-home above were decided on the player
+  if(F.st===1&&G.lures&&!K.ranged&&typeof lureAt==='function'){ const z=lureAt(e); if(z){ const lx=z.x-e.x, ly=z.y-e.y; d=Math.hypot(lx,ly)||1; dx=lx/d; dy=ly/d; } }
   const M=FD_M; M.tx=0; M.ty=0; M.acc=D.accel||5; M.face=0;
   let sp=e.speed*e.slowF*(e.tSlow||1)*(F.buffT>G.t?1+F.buffV:1)*(F.spdMul||1); if(e.freezeT>0||e.stunT>0) sp=0; M.sp=sp;
   if(F.st===0){ F.wt-=dt;
@@ -65,13 +67,17 @@ FK.charge={tick(e,F,K,dt,d,dx,dy,M){
   if(C.s===1){ C.t-=dt; M.sp=0; if(e.stunT>0||e.freezeT>0){ C.s=0; F.tele=null; C.cd=1.2; return false; } if(C.t<=0){ C.s=2; C.t=K.dur; C.hit=0; F.tele=null; sfx('swing'); } return false; }
   C.cd-=dt; if(C.cd<=0&&d<K.range&&d>e.r+P.r+8&&!(e.stunT>0||e.freezeT>0)){ C.s=1; C.t=K.aim; C.cx=dx; C.cy=dy; F.tele={k:'line', ang:Math.atan2(dy,dx), len:K.sp*K.dur, t:0, dur:K.aim, w:e.r}; M.sp=0; }
   return false; }};
+// steal: 12% of the trip's gold (at least K.min) but never more than FIELD.steal.cap kills' worth of gold at its level · killed in
+// time it gives back what it took + a fixed FIELD.steal.back kills' worth (not ×2: that grew the trip's gold 12% per thief, compounding)
+function fdStealCap(e){ return Math.max(1,Math.round(BAL.FIELD.goldF(e.lv,.5)*BAL.FIELD.steal.cap)); }
 FK.steal={tick(e,F,K,dt,d,dx,dy,M,atk){
-  if(atk&&!F.loot&&F.st===1){ const g=G.goldRun|0, n=Math.min(g,Math.max(K.min,Math.round(g*K.pct)));
+  if(atk&&!F.loot&&F.st===1){ const g=G.goldRun|0, n=Math.min(g,fdStealCap(e),Math.max(K.min,Math.round(g*K.pct)));
     if(n>0){ G.goldRun=g-n; F.loot=n; addText(P.x,P.y-52,'โดนขโมย '+n+' ทอง!','#ff9a7a',true); sfx('hurt'); } F.flee=G.t+K.run; F.free=G.t+K.run+2; }
   if(F.flee>G.t){ M.tx=-dx; M.ty=-dy; M.sp=e.speed*1.15*e.slowF*(e.freezeT>0||e.stunT>0?0:1); e.atkCd=Math.max(e.atkCd,.5);
     if(F.loot&&(d>950||F.flee-G.t<.05)){ addText(e.x,e.y-e.r-14,'หนีไปพร้อมทอง!','#ff9a7a'); fdVanish(e,true); return true; } }
   return false; },
-  death(e,F){ if(F.loot){ const n=F.loot*2; for(let i=0;i<4;i++) dropGold(e.x,e.y,Math.ceil(n/4)); addText(e.x,e.y-e.r-16,'ได้ทองคืน ×2!','#f0c75a',true); } }};
+  death(e,F){ if(F.loot){ const n=F.loot+Math.round(BAL.FIELD.goldF(e.lv,.5)*BAL.FIELD.steal.back); for(let i=0;i<4;i++) dropGold(e.x,e.y,Math.floor(n/4)+(i<n%4?1:0));
+    F.loot=0; addText(e.x,e.y-e.r-16,'ได้ทองคืน +'+n+'!','#f0c75a',true); } }};
 FK.ram={tick(e,F,K,dt,d,dx,dy,M,atk){ if(atk){ P.kx+=dx*K.knock; P.ky+=dy*K.knock; G.shake=Math.max(G.shake,4); } return false; }};
 FK.dismount={tick(e,F,K){ if(F.dis||e.hp>e.maxHp*K.at) return false; F.dis=1;
   const lv=e.lv, rk=e.rank|0, b=fdExtra(K.mount,e.x+14,e.y,e,{aggro:1, lv, rank:rk}), g=fdExtra(K.foot,e.x-12,e.y,e,{aggro:1, lv, rank:rk});

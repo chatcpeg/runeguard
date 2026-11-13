@@ -412,10 +412,14 @@ console.log('§2.2 / §11.2 รางวัลจบรอบ: commit · runId �
   ok('overLv: Lv20 เล่น T0 (recLv 1) ได้ EXP × 0.2', rw.r4 === Math.round(290 * 1.1 * 0.2), rw.r4);
   ok('บททดสอบชนะ (commit): ตั้ง trial.t2 = 1 · ไม่ให้ EXP · คลาสสิก (ไม่มี char) ไม่มีรางวัล', rw.trial.t2 === 1 && rw.trial.base === 0 && rw.classic === null, rw.trial);
   ok('runIds ของบัญชีเก็บทุกรอบที่ commit แล้ว', deq(rw.ids, ['r_win1', 'r_win2', 'r_lose', 'r_trial']), rw.ids);
-  const fk = X(`(()=>{ const ch=newChar('ทุ่ง','mage'); ch.lv=10; const a=fieldKillExp(ch,{lv:10}), b=fieldKillExp(ch,{lv:18}), c=fieldKillExp(ch,{lv:1});
-    ch.xp=50; const loss=pgFieldDeath(ch); return {a,b,c,loss,xp:ch.xp}; })()`);
-  ok('fieldKillExp = mobExp · diffMul (Lv10 vs มอน 10 = 31 · มอน 18 = 60×1.32 · มอน 1 = 6×0.37) · Job 0.8× · ตายในทุ่งเสีย 1% ไม่ต่ำกว่า 0',
-    fk.a.base === 31 && fk.a.job === 25 && fk.b.base === Math.round(60 * 1.32) && fk.b.job === Math.round(fk.b.base * 0.8) && fk.c.base === Math.round(6 * 0.37) && fk.loss === 50 && fk.xp === 0, fk);
+  const fk = X(`(()=>{ const ch=newChar('ทุ่ง','mage'); ch.lv=10; const a=fieldKillExp(ch,{lv:10}), b=fieldKillExp(ch,{lv:18}), c=fieldKillExp(ch,{lv:1}), d=fieldKillExp(ch,{lv:12});
+    ch.xp=50; const loss=pgFieldDeath(ch); return {a,b,c,d,loss,xp:ch.xp, F:[BAL.FIELD.exp,BAL.FIELD.diffCap]}; })()`);
+  ok('fieldKillExp = mobExp · diffMul (เพดาน 1.1) · ×0.5 (Lv10 vs มอน 10 = 31×0.5 · มอน 18 = 60×1.1×0.5 · มอน 12 = 38×1.08×0.5 · มอน 1 = 6×0.37×0.5) · Job 0.8× · ตายในทุ่งเสีย 1% ไม่ต่ำกว่า 0',
+    fk.F[0] === .5 && fk.F[1] === 1.1 && fk.a.base === Math.round(31 * .5) && fk.a.job === Math.round(fk.a.base * .8) && fk.b.base === Math.round(60 * 1.1 * .5) && fk.b.job === Math.round(fk.b.base * 0.8)
+    && fk.d.base === Math.round(38 * 1.08 * .5) && fk.c.base === Math.round(6 * 0.37 * .5) && fk.loss === 50 && fk.xp === 0, fk);
+  const fg = X(`(()=>{ const F=BAL.FIELD; return {mul:F.goldMul, avg:[F.goldF(10,.5),F.gold(10,.5),F.gold(30,0),F.gold(30,.999999)], st:[F.steal.cap,F.steal.back], ramp:BAL.DROP.rampage.gold(10), chest:F.chestCd}; })()`);
+  ok('ทองแผนที่: goldMul 0.3 → มอน Lv10 เฉลี่ย 5.5×0.3 = 1.65 (ปัด 2) · Lv30 = 12.5×0.3×(0.7–1.3) · ก็อบลินโจร เพดาน 8 ตัว คืน +2 ตัว · ฝูงอาละวาด 8×Lv (เดิม 20×Lv) · หีบค่าย 240 วิ',
+    fg.mul === .3 && Math.abs(fg.avg[0] - 1.65) < 1e-9 && fg.avg[1] === 2 && fg.avg[2] === Math.round(12.5 * .3 * .7) && fg.avg[3] === Math.round(12.5 * .3 * 1.3) && fg.st[0] === 8 && fg.st[1] === 2 && fg.ramp === 80 && fg.chest === 240, fg);
 }
 
 // ------------------------------------------------------------------------------------------------

@@ -1,15 +1,32 @@
 /* ================= 64-boss-patterns.js · lane F · BOSS_PAT (reusable boss moves) + BOSSAI of the 3 field bosses ================= */
 // core 20 bossAI() calls BOSSAI[e.d.ai] for any boss with its own AI and then only adds walk frames, bounds and terrain.
-// A field boss = bossPattern(e, …, cfg): leash to its nest (800 → walks home, full HP), then the moves cfg lists
+// A field boss = bossPattern(e, …, cfg): breaks fences / log walls it walks into, leash to its nest (800 → walks home, full HP),
+// held in place for 3 s while being hit (or on its walk home) → straight home with full HP (no farming it from behind cover), then the moves cfg lists
 // (charge · slam · ring · summon at HP thresholds · rage) in that order, then a chase. Telegraphs use e.ai.tele, so core 22
 // drawBossTele and the RG.sim bot's dodging work as for the undead bosses. Shots go to G.fd.shots (62a).
 const BOSS_PAT={
   move(e,dt,tx,ty,sp){ const acc=1-Math.exp(-dt*4), kd=Math.exp(-dt*6); e.kx*=kd; e.ky*=kd; e.vx+=(tx*sp-e.vx)*acc; e.vy+=(ty*sp-e.vy)*acc;
     e.x+=(e.vx+e.kx)*dt; e.y+=(e.vy+e.ky)*dt; if(Math.abs(e.vx)>3) e.face=e.vx<0?-1:1; },
   tele(A,dt){ if(A.tele){ A.tele.t+=dt; if(A.tele.t>=A.tele.dur) A.tele=null; } },
+  // fences and log walls never hold a field boss: the ones it walks into break (63 fdBreak) · rocks / cliffs still stop it
+  smash(e){ const ob=G.obstacles; if(!ob||!ob.grid||typeof fdBreak!=='function') return; const cx=Math.floor(e.x/CELL), cy=Math.floor(e.y/CELL); let hit=null;
+    for(let ox=-1;ox<=1;ox++) for(let oy=-1;oy<=1;oy++){ const a=ob.grid.get(gkey(cx+ox,cy+oy)); if(!a) continue;
+      for(const f of a){ if(!f.brk||f.gone) continue; const rr=f.r+e.r+6; if((f.x-e.x)**2+(f.y-e.y)**2<rr*rr) (hit||(hit=[])).push(f); } }
+    if(hit) for(const f of hit) fdBreak(f); },
+  // held in place for FIELD.boss.stuck s — being hit while the player stays out of reach (a rock pocket, the far side of a cliff …),
+  // or on its walk home (leash) — → back on the nest at once with full HP · the clock waits while it winds up / dashes / is frozen
+  // or stunned · a boss that keeps moving (kiting) never counts
+  stuck(e,A,dt,d,cfg){ const H=e.fb; if(!H) return false;
+    const hurt=e.ai.hurtT!=null&&G.t-e.ai.hurtT<1, busy=A.wind>0||A.charge>0||A.slam>0||A.chGap>0||e.freezeT>0||e.stunT>0;
+    if(busy) return false;                                                // its own moves / frozen / stunned: the clock waits
+    if(!A.home&&(!hurt||d<e.r+P.r+50||(cfg.keep&&d<cfg.keep*1.5))){ A.stk=0; A.sx=null; return false; }
+    if(A.sx==null){ A.sx=e.x; A.sy=e.y; A.stk=0; } A.stk+=dt; if(A.stk<BAL.FIELD.boss.stuck) return false;
+    const moved=Math.hypot(e.x-A.sx,e.y-A.sy); A.stk=0; A.sx=e.x; A.sy=e.y; if(moved>=60) return false;
+    burst(e.x,e.y,24,e.d.goo||'#c8c0b0',260,.6,4); e.x=H.hx; e.y=H.hy; e.vx=e.vy=e.kx=e.ky=0; e.hp=e.maxHp; A.tele=null; A.wind=0; A.charge=0; A.slam=0; A.chGap=0; A.left=0; A.home=0; A.sx=null;
+    burst(e.x,e.y,24,e.d.goo||'#c8c0b0',260,.6,4); addText(e.x,e.y-e.r-20,'กลับรัง · ฟื้นเต็ม','#c8c0b0',true); sfx('boss'); return true; },
   // too far from the nest: walk back (×1.4) and heal to full on arrival · moves are dropped
   leash(e,A,dt){ const H=e.fb; if(!H) return false; const hx=H.hx-e.x, hy=H.hy-e.y, h=Math.hypot(hx,hy);
-    if(!A.home&&h>BAL.FIELD.boss.leash){ A.home=1; A.tele=null; A.wind=0; A.charge=0; A.slam=0; addText(e.x,e.y-e.r-20,'กลับรัง','#c8c0b0'); }
+    if(!A.home&&h>BAL.FIELD.boss.leash){ A.home=1; A.tele=null; A.wind=0; A.charge=0; A.slam=0; A.chGap=0; addText(e.x,e.y-e.r-20,'กลับรัง','#c8c0b0'); }
     if(!A.home) return false; if(h<40){ A.home=0; e.hp=e.maxHp; return false; }
     BOSS_PAT.move(e,dt,hx/(h||1),hy/(h||1),e.speed*1.4); return true; },
   // straight dash after a line telegraph · o.n dashes in a row (o.gap s apart) · hits once per dash
@@ -37,7 +54,8 @@ const BOSS_PAT={
     const m=fdExtra(type,x,y,null,{aggro:1, sum:1, free:G.t+20}); if(m) burst(x,y,6,'#6a5a4a',120,.5,3,'rock'); }
     G.fx.push({k:'ring', x:e.x, y:e.y, r0:20, r1:R*1.2, t:0, dur:.5, c:'#f0c75a', w:10, dead:false}); }};
 // cfg: {charge, slam, ring:{n,sp,cd,dmg}, summon:[{at, list, say}], rage:{at, say}, keep, extra(e,A,dt,d,dx,dy,k)}
-function bossPattern(e,dt,d,dx,dy,cfg){ const A=e.ai; BOSS_PAT.tele(A,dt);
+function bossPattern(e,dt,d,dx,dy,cfg){ const A=e.ai; BOSS_PAT.tele(A,dt); BOSS_PAT.smash(e);
+  if(BOSS_PAT.stuck(e,A,dt,d,cfg)) return;
   if(BOSS_PAT.leash(e,A,dt)) return;
   if(cfg.rage&&!A.rage&&e.hp<e.maxHp*cfg.rage.at){ A.rage=1; banner(e.d.n+' คลั่ง!',cfg.rage.say||'ทุกท่าเร็วขึ้น'); sfx('boss'); }
   const k=A.rage?.62:1;

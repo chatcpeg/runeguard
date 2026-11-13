@@ -136,11 +136,11 @@ function pgGrantExp(ch,base,job){
   const A=pgAcct(); if(out.gold&&A) A.gold=Math.min(cap.gold,A.gold+out.gold);
   if(base||job) pgSave(ch,'exp');
   return out; }
-// field kill (§3.2): mobExp(e.lv) · diffMul(e.lv − ch.lv) · P.xpMul → {base, job}
+// field kill (§3.2): mobExp(e.lv) · diffMul(e.lv − ch.lv), at most FIELD.diffCap · P.xpMul · FIELD.exp → {base, job}
 function fieldKillExp(ch,e){
-  if(!ch||!e) return {base:0, job:0}; const m=Math.max(1,e.lv|0||(e.d&&e.d.lv)|0||1);
+  if(!ch||!e) return {base:0, job:0}; const m=Math.max(1,e.lv|0||(e.d&&e.d.lv)|0||1), F=BAL.FIELD;
   const xm=(typeof P!=='undefined'&&P&&P.xpMul)||1;
-  const base=Math.round(BAL.mobExp(m)*BAL.diffMul(m-(ch.lv|0))*xm);
+  const base=Math.round(BAL.mobExp(m)*Math.min(F.diffCap,BAL.diffMul(m-(ch.lv|0)))*xm*F.exp);
   return {base, job:Math.round(base*BAL.JOB_EXP)}; }
 // field death (§2.3): lose 1% of bxpNeed(lv) inside the current level (never below 0, never a level down)
 function pgFieldDeath(ch){ if(!ch||pgRO()) return 0; const loss=Math.min(ch.xp|0,Math.round(BAL.bxpNeed(ch.lv)*BAL.FIELD.deathExp));

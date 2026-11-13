@@ -44,10 +44,16 @@ const BAL={ CAP:{base:60, job1:20, job2:25, stat:50, chars:3, bag:120, stash:120
     winGoldWaves:10 },                                                          // a win adds goldPerWave × 10
   // §5.3–5.6 field
   FIELD:{ hpByLv(m){ return 1+.12*(m-1)+.0015*(m-1)*(m-1); }, dmgByLv(m){ return 1+.06*(m-1); },
-    gold(m,u){ if(u===undefined) u=Math.random(); return Math.round((2+.35*m)*(.7+.6*u)); },   // u ∈ [0,1) → U(0.7, 1.3)
+    // gold of one field kill: goldF = the value before rounding (u ∈ [0,1) → U(0.7, 1.3), u = .5 → the average) · gold = rounded
+    // goldMul 0.3 + exp 0.5 + diffCap 1.1 (+ per-map 60 ZONES.k): the maps paid 2–11× the gold and up to 5.4× the EXP of survival per
+    // minute (no daily ×2) · now 1.6–2.0× gold · EXP g1 1.4–1.9× · s1 1.2–2.8× · o1 0.6–0.8× (docs/PROPOSAL-maps-daily.md §8, the RG.sim bot)
+    goldF(m,u){ if(u===undefined) u=Math.random(); return (2+.35*m)*(.7+.6*u)*BAL.FIELD.goldMul; },
+    gold(m,u){ return Math.round(BAL.FIELD.goldF(m,u)); }, goldMul:.3,
+    exp:.5, diffCap:1.1,                                                        // field kill EXP × 0.5 · a higher-level mob pays at most diffMul 1.1
+    steal:{cap:8, back:2},                                                      // ก็อบลินโจร: steals ≤ 8 kills' gold · killed in time = the stolen gold + 2 kills' gold
     cap:{touch:45, desk:70}, deathExp:.01, respawn:[8,15], rampage:{every:150, jitter:20, n:{touch:14, desk:18}, extra:20, sec:30},
     gemMul:3, size:{w:3200, h:2400}, points:[24,36], wander:120, aggro:260, packR:200, leash:900,
-    boss:{first:120, warn:60, appear:10, leash:800, jitter:[.9,1.1]}, potCd:8, autoPot:.35 },
+    boss:{first:120, warn:60, appear:10, leash:800, jitter:[.9,1.1], stuck:3}, potCd:8, autoPot:.35, chestCd:240 },
   // §2.4 boss hunt (lv = the boss's effective level: base Lv + diff.lv)
   BOSS:{diff:[{n:'ปกติ',hp:1,dmg:1,lv:0},{n:'ยาก',hp:2.2,dmg:1.4,lv:10},{n:'ฝันร้าย',hp:4.5,dmg:2,lv:20}],
     hp(lv,d){ return 900*BAL.FIELD.hpByLv(lv)*BAL.BOSS.diff[d].hp; },
@@ -71,7 +77,7 @@ const BAL={ CAP:{base:60, job1:20, job2:25, stat:50, chars:3, bag:120, stash:120
   // resolves the name in DROPS (33-items-data.js: §2.2 item table, gear tier = SURV.gearTier). No key = nothing drops.
   DROP:{ field:{gold:1, gem:1, dust:.03, crystal2:.003, crystal4:.006, shard:.01, gear:.006, potion:.02},
     fboss:{gold(L){ return 150+15*L; }, dust:[4,8], crystal:[1,3], gear:[1,2], uniq:.25, rune:.12, seal:.10},
-    rampage:{dust:2, gold(L){ return 20*L; }},
+    rampage:{dust:2, gold(L){ return 8*L; }},
     surv:{elite:'surv.elite', boss5:'surv.boss5', boss10:'surv.boss10', boss15:'surv.boss15', boss20:'surv.boss20'} },
   RESET:{gold:2000, marks:40, freeBelow:20},
   // account upgrades bought with gold (every character, every mode except classic) · acct.up[k] = 0–max

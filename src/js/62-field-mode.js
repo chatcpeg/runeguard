@@ -14,7 +14,7 @@ MODES.field={
   id:'field', n:'ท่องแดนรูน', cards:'manual', relocate:false,
   init(opts){ const id=opts&&svHas(ZONES,opts.zone)?opts.zone:'g1';
     G.cfg={W:{}, rate:0, hpMul:1, dmgMul:1, spdMul:1}; G.wave=1;
-    G.fdRun={exp:0, kills:{}, zones:{}, boss:{}, ramp:0, recall:false, died:false, how:'', last:id, lvSeen:0};
+    G.fdRun={exp:0, kills:{}, zones:{}, boss:{}, maps:{}, ramp:0, recall:false, died:false, how:'', last:id, lvSeen:0};
     fdZone(id,opts&&opts.portal||null,true); },
   update(dt){ fdUpdate(dt); },
   steer:fdSteer, bot(){ return fdBot(); },
@@ -31,7 +31,8 @@ MODES.field={
   rewards(r,won){ const R=G.fdRun, ch=G.char, F=G.fd; let base=Math.max(0,Math.round(R.exp));
     if(R.died&&ch){ const loss=Math.min(base,Math.round(BAL.bxpNeed(Math.max(1,ch.lv|0))*BAL.FIELD.deathExp)); base-=loss; r.fdLoss=loss; }
     r.baseXp=base; r.field={last:F?F.id:R.last, kills:Object.assign({},R.kills), zones:JSON.parse(JSON.stringify(R.zones)), boss:{}, ramp:R.ramp|0, how:R.how||''};
-    for(const k in R.boss){ const b=R.boss[k]; if(!(b.n>0)) continue; const cur=F&&F.id===k&&F.boss; r.field.boss[k]={n:b.n|0, rem:cur?(F.boss.alive?0:Math.max(0,F.boss.at-G.t)):Math.max(0,+b.rem||0)}; } },
+    for(const k in R.boss){ const b=R.boss[k]; if(!(b.n>0)) continue; const cur=F&&F.id===k&&F.boss;   // another map: its clock ran on while we were away (b.at)
+      r.field.boss[k]={n:b.n|0, rem:cur?(F.boss.alive?0:Math.max(0,F.boss.at-G.t)):Math.max(0,b.at!=null?b.at-G.t:+b.rem||0)}; } },
   expView(){ return fdExpView(); },
   menuText:{btnMenuP:'ออกจากแผนที่ (ไม่รับรางวัล)', btnRestartP:'เลือกแผนที่ใหม่ (ไม่รับรางวัล)', btnMenuE:'กลับป้อม', btnAgain:'ออกสำรวจอีกครั้ง'},
   again(){ fdAgain(); },
@@ -43,18 +44,24 @@ MODES.field={
 function fdZone(id,via,first){
   const z=ZONES[id], R=G.fdRun;
   if(G.fd) fdLeaveZone();
-  G.enemies.length=0; G.eprojs.length=0; G.projs.length=0; G.zones.length=0; G.strikes.length=0; G.corpses.length=0; G.decals.length=0;
+  G.enemies.length=0; G.eprojs.length=0; G.projs.length=0; G.zones.length=0; G.strikes.length=0; G.corpses.length=0; G.decals.length=0; G.fx.length=0; G.parts.length=0;
   G.bosses=[]; G.boss=false; G.hordeWarn=null;
   const L=fdBuild(z); fdTerrain(z,L); const N=fdNests(z,L);
+  // been here before in this trip: chests, towers and killed spawn points keep their timers (hopping a portal never resets them)
+  const S=(R.maps||(R.maps={}))[id]; if(S) for(const q of S.dead){ const r=N.recs[q[0]]; if(r&&r.type===q[2]&&q[1]>G.t){ r.st='dead'; r.t=q[1]; } }
   G.bounds={k:'rect', x0:0, y0:0, x1:z.w, y1:z.h};
   const mid=fdMid(z); G.defK=22+.8*mid; G.cfg.dmgMul=BAL.FIELD.dmgByLv(mid);       // dmgMul: the core death blast (โคมน้ำเต้า) at the map's level
   let ax=z.entry.x, ay=z.entry.y; const pv=via&&z.portals.find(q=>q.id===via);
   if(pv){ const cx=z.w/2-pv.x, cy=z.h/2-pv.y, l=Math.hypot(cx,cy)||1; ax=pv.x+cx/l*140; ay=pv.y+cy/l*140; }
   P.x=ax; P.y=ay; P.vx=P.vy=P.kx=P.ky=0; cam.x=P.x; cam.y=P.y;
+  for(const s of P.skills||[]){ const st=s.st; if(!st) continue;                // skills holding monsters of the map we left (seal stamps, hawk/wolf targets)
+    if(st.q) st.q.length=0; if(st.units) for(const u of st.units){ u.tg=null; u.x=P.x; u.y=P.y; if(u.state===1) u.state=2; } }
+  G.lures=null;
   let ap=0; try{ ap=loadSettings().autoPot||0; }catch(e){}
   const F=G.fd={z, id, t0:G.t, recs:N.recs, nests:N.nests, tick:0, maxAwake:0, oob:0, haz:[], shots:[], layout:L,
     portals:z.portals.map(p=>Object.assign({},p,{hold:0, msgT:0, lock:p.to!=='fort'&&!!fdLockWhy(G.char,p.to)})),
-    chests:L.chests.map(c=>({x:c.x, y:c.y, hold:0, cd:0})), boss:null, ramp:{at:G.t+rand(100,130), warn:0, on:null, a:0},
+    chests:L.chests.map((c,i)=>({x:c.x, y:c.y, hold:0, cd:S&&S.chest[i]>G.t?S.chest[i]:0})), boss:null,
+    ramp:{at:S&&S.ramp!=null?Math.max(S.ramp,G.t+rand(30,45)):G.t+rand(100,130), warn:0, on:null, a:0},
     mini:fdMiniBuild(z,L), fade:first?null:{t:0, dur:.35, in:1}, rc:null, curseT:0, curseV:0, autoPot:ap, spr:fdSprList(N.recs,z), stuck:{x:P.x, y:P.y, t:0, d:null}};
   if(z.boss) F.boss=fdBossInit(z);
   R.zones[id]=R.zones[id]||{k:0, t:0, b:0}; R.last=id;
@@ -63,7 +70,9 @@ function fdZone(id,via,first){
   if(typeof fdHudOn==='function') fdHudOn(); }
 function fdZoneTime(){ const F=G.fd, R=G.fdRun; if(!F) return; R.zones[F.id].t+=Math.max(0,G.t-F.t0); F.t0=G.t; }
 function fdLeaveZone(){ const F=G.fd, R=G.fdRun; fdCollectGround(true); fdZoneTime();
-  if(F.boss){ const rb=R.boss[F.id]||(R.boss[F.id]={n:0, rem:null}); rb.rem=F.boss.alive?0:Math.max(0,F.boss.at-G.t); } }
+  const S={chest:F.chests.map(c=>c.cd), dead:[], ramp:F.ramp.on?null:F.ramp.at};                  // what fdZone gives back on the way back in
+  F.recs.forEach((r,i)=>{ if(r.st==='dead'&&r.t>G.t) S.dead.push([i,r.t,r.type]); }); (R.maps||(R.maps={}))[F.id]=S;
+  if(F.boss){ const rb=R.boss[F.id]||(R.boss[F.id]={n:0, rem:null}); rb.at=F.boss.alive?G.t:F.boss.at; rb.rem=Math.max(0,rb.at-G.t); } }   // at: run time (G.t), keeps counting
 // the monster types of a map (spawn points + what they turn into / call) → built one per frame (§5.2 fade)
 function fdSprList(recs,z){ const s=new Set(recs.map(r=>r.type));
   if(z.boss) s.add(z.boss.id); if(z.id==='s1') s.add('sb_shard');
@@ -129,19 +138,21 @@ function fdOnKill(e){ if(e.boss) return; const M=e.fm; if(!M) return; const R=G.
   if(d.struct){ addText(e.x,e.y-e.r*2,d.n+'พัง!','#ffd27a',true); G.shake=Math.max(G.shake,8); burst(e.x,e.y-20,18,'#8a6a4a',220,.6,4,'rock'); }
   if(M.ramp) fdRampKill(e);
   if(e.fdNoLoot) return;
-  const ch=G.char, mul=(e.rank?RANK[e.rank].xp:1)*(M.child?.25:M.sum?.5:1), x=fieldKillExp(ch,e);
+  const ch=G.char, Z=F.z.k||FD_K1, mul=(e.rank?RANK[e.rank].xp:1)*(M.child?.25:M.sum?.5:1)*(Z.exp||1), x=fieldKillExp(ch,e);   // Z: the map's tuning (60)
   R.exp+=Math.round(x.base*mul); R.kills[e.type]=(R.kills[e.type]|0)+1; if(R.zones[F.id]) R.zones[F.id].k++;
   if(e.rank>=1&&!G.auto) addText(e.x,e.y-e.r-26,'+'+fmtNum(Math.round(x.base*mul))+' EXP','#bfe6ff');
-  const gl=BAL.FIELD.gold(e.lv), minor=M.child||M.sum;
-  if(!minor||Math.random()<.15) dropGold(e.x,e.y,Math.max(1,Math.round(gl*(1+(e.rank|0)*.6))));
+  const gl=BAL.FIELD.goldF(e.lv)*(Z.gold||1), minor=M.child||M.sum;      // split bodies / summoned ones: no gold (they were a free multiplier)
+  if(!minor) fdCoins(e.x,e.y,gl*(1+(e.rank|0)*.6));
   if(!minor){ const list=rollDrops(fdDropTable(e.type),(1+(P.drop||0))*(1+(e.rank|0)*.5)); if(list.length) dropLoot(e.x,e.y,list); }
   if(e.rank===3&&!minor) ltDropChest(e.x,e.y,rollDrops(fdChestTable(),1+(P.drop||0)),Math.round(gl*4));
   if(K&&K.potion&&rngUnit()<K.potion.p) dropLoot(e.x,e.y,[{id:F.z.zn>=2?'u_potion_l':'u_potion_s', n:1}]);
   if(K&&K.gems) for(let i=1;i<K.gems.mul;i++) dropGem(e.x+rand(-14,14),e.y+rand(-14,14),e.xp); }
+// gold worth v (a fraction: rounded up with chance = the fraction, so small values keep their average) → one pile on the ground
+function fdCoins(x,y,v){ const f=Math.floor(v), n=f+(Math.random()<v-f?1:0); if(n>0) dropGold(x,y,n); return n; }
 
 /* ---- field boss (§5.5): a real-time timer per map (acct.fboss) · appears at its nest · 64 runs it ---- */
 function fdBossInit(z){ const R=G.fdRun, b=z.boss, Fb=BAL.FIELD.boss, rb=R.boss[z.id]; let at;
-  if(rb&&rb.rem!=null) at=G.t+Math.max(Fb.appear,rb.rem);
+  if(rb&&rb.at!=null) at=Math.max(G.t+Fb.appear,rb.at);                  // back on this map in the same trip: its clock ran on meanwhile
   else { const A=pgAcct(), fb=A&&svObj(A.fboss)&&svHas(A.fboss,z.id)?A.fboss[z.id]:null, next=fb?+fb.next||0:0;
     at=next?G.t+Math.max(Fb.appear,Math.min((next-Date.now())/1000,b.every*1.15)):G.t+Fb.first; }       // never killed yet: 2 min after arriving
   return {id:b.id, x:b.x, y:b.y, place:b.place, every:b.every, at, alive:false, warned:at-G.t<=Fb.warn}; }
@@ -150,8 +161,8 @@ function fdBossTick(){ const B=G.fd.boss; if(!B) return;
   if(B.alive){ if(!G.bosses.length||G.bosses.every(b=>b.dead)) fdBossDone(); return; }
   if(!B.warned&&B.at-G.t<=BAL.FIELD.boss.warn){ B.warned=true; banner('พื้นดินสั่นสะเทือน…','👑 '+EN[B.id].n+' จะปรากฏที่'+B.place+' ใน '+Math.max(1,Math.ceil(B.at-G.t))+' วิ'); sfx('wave'); }
   if(G.t>=B.at) fdBossSpawn(B); }
-function fdBossMake(type,x,y,hpMul,el){ const d=EN[type], lv=d.lv, Fd=BAL.FIELD;
-  const e=spawnEnemy(type,x,y,{hp:Math.max(1,d.hp*Fd.hpByLv(lv)*(hpMul||1))}); e.boss=true; e.lv=lv; e.dmg=d.dmg*Fd.dmgByLv(lv); e.fdK=Fd.dmgByLv(lv);
+function fdBossMake(type,x,y,hpMul,el){ const d=EN[type], lv=d.lv, Fd=BAL.FIELD, Zd=(G.fd&&G.fd.z.k||FD_K1).dmg;   // the map's damage tuning, as its monsters (60 k.dmg)
+  const e=spawnEnemy(type,x,y,{hp:Math.max(1,d.hp*Fd.hpByLv(lv)*(hpMul||1))}); e.boss=true; e.lv=lv; e.dmg=d.dmg*Fd.dmgByLv(lv)*Zd; e.fdK=Fd.dmgByLv(lv)*Zd;
   e.el=el||d.el||null; e.xp=Math.max(1,Math.round(d.xp*Fd.gemMul/12)); e.fb={hx:x, hy:y}; return e; }
 function fdBossSpawn(B){ const e=fdBossMake(B.id,B.x,B.y); G.bosses=[e]; G.boss=true; B.alive=true;
   banner('👑 '+EN[B.id].n,'ปรากฏตัวที่'+B.place+'!'); sfx('boss'); burst(B.x,B.y,30,EN[B.id].goo,300,.7,4); G.shake=Math.max(G.shake,10); return e; }
@@ -208,7 +219,7 @@ function fdPortalTick(dt){ const F=G.fd; if(F.fade||G.ui) return;
     F.fade={t:0, dur:.28, to:p.to, via:p.via}; sfx('level'); return; } }
 function fdChestTick(dt){ const F=G.fd;
   for(const c of F.chests){ if(c.cd>G.t) continue; const inR=(P.x-c.x)**2+(P.y-c.y)**2<58*58; c.hold=inR?c.hold+dt:Math.max(0,c.hold-dt*2);
-    if(c.hold<2) continue; c.hold=0; c.cd=G.t+240; const gl=BAL.FIELD.gold(fdMid(F.z));
+    if(c.hold<2) continue; c.hold=0; c.cd=G.t+BAL.FIELD.chestCd; const gl=BAL.FIELD.goldF(fdMid(F.z))*((F.z.k&&F.z.k.gold)||1);
     for(let i=0;i<6;i++) dropGold(c.x,c.y,Math.max(1,Math.round(gl*1.5))); const list=rollDrops(fdChestTable(),1+(P.drop||0)); if(list.length) dropLoot(c.x,c.y,list);
     burst(c.x,c.y,16,'#f0c75a',200,.6,3); sfx('level'); addText(c.x,c.y-34,'หีบค่ายเปิดแล้ว!','#f0c75a',true); } }
 function fdRecall(){ if(!G||G.over||G.modeId!=='field'||G.ui) return false; const F=G.fd;

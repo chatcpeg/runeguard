@@ -26,10 +26,13 @@ function fdBuild(z){
     for(const b of S.bridges){ const a=Math.atan2(1,(S.amp/S.per)*Math.cos(b/S.per)); add({k:'flat', fk:'bridge', x:sx(b), y:b, r:96, ang:a+PI/2}); keep.push([sx(b),b,150]); } }
   for(const c of z.camps||[]){ keep.push([c.x,c.y,c.r+36]); out.camps.push(c);
     const n=Math.round(TAU*c.r/46); for(let i=0;i<n;i++){ const a=i*TAU/n; if(Math.abs(angDiff(a,c.gate))<.44) continue;
-      add({k:'prop', ak0:'t_fence0', pk:'fence', x:c.x+Math.cos(a)*c.r, y:c.y+Math.sin(a)*c.r*.82, r:19, aw:62, fy:.45, ang:a}); }
-    for(let i=0;i<c.tents;i++){ const a=c.gate+PI+(i-(c.tents-1)/2)*.95; add({k:'prop', ak0:'t_tent_goblin', pk:'tent', x:c.x+Math.cos(a)*c.r*.58, y:c.y+Math.sin(a)*c.r*.5, r:30, aw:104, fy:.42}); }
+      add({k:'prop', ak0:'t_fence0', pk:'fence', x:c.x+Math.cos(a)*c.r, y:c.y+Math.sin(a)*c.r*.82, r:19, aw:62, fy:.45, ang:a, brk:1}); }   // brk: a field boss breaks it (64)
+    const tp=[]; for(let i=0;i<c.tents;i++){ const a=c.gate+PI+(i-(c.tents-1)/2)*.95, x=c.x+Math.cos(a)*c.r*.58, y=c.y+Math.sin(a)*c.r*.5; tp.push([x,y]); add({k:'prop', ak0:'t_tent_goblin', pk:'tent', x, y, r:30, aw:104, fy:.42}); }
     const fx=c.big?c.x-c.r*.42:c.x, fy=c.big?c.y+c.r*.3:c.y; add({k:'prop', ak0:'t_campfire0', pk:'fire', x:fx, y:fy, r:14, aw:60, fy:.35, glow:1});
-    const ca=c.gate+PI+.55; out.chests.push({x:c.x+Math.cos(ca)*c.r*.62, y:c.y+Math.sin(ca)*c.r*.5}); }
+    // the camp chest: the spot (between the gate and the tents) furthest from every tent picture (104 px wide) and the fire
+    let cb=null, cd=-1; for(const o of [2,-2,1.7,-1.7,1.4,-1.4]){ const a=c.gate+PI+o, x=c.x+Math.cos(a)*c.r*.62, y=c.y+Math.sin(a)*c.r*.5;
+      let m=Math.hypot(x-fx,y-fy)+30; for(const q of tp) m=Math.min(m,Math.hypot(x-q[0],y-q[1])); if(m>cd){ cd=m; cb={x, y}; } }
+    out.chests.push(cb); }
   // s1: the rune altar in the middle + the four element corners
   if(z.altar){ const A=z.altar; keep.push([A.x,A.y,A.r+70]); add({k:'flat', ak0:'t_altar_rune', fk:'altar', x:A.x, y:A.y, r:A.r, aw:A.r*2.1});
     for(let i=0;i<4;i++){ const a=PI/4+i*PI/2; add({k:'rock', rk:'pillar', x:A.x+Math.cos(a)*(A.r+44), y:A.y+Math.sin(a)*(A.r+30), r:24, hard:1}); } }
@@ -43,7 +46,7 @@ function fdBuild(z){
   // o1: the palisade (two gates) + tents + the canyon cliffs leading up to it
   if(z.fort){ const Fo=z.fort; out.fort=Fo;
     const gap=(side,v)=>Fo.gates.some(g=>g.side===side&&Math.abs(v-g.at)<g.w/2);
-    const wall=(x,y,a)=>add({k:'prop', ak0:'t_wall_log', pk:'wall', x, y, r:30, aw:84, fy:.42, ang:a});
+    const wall=(x,y,a)=>add({k:'prop', ak0:'t_wall_log', pk:'wall', x, y, r:30, aw:84, fy:.42, ang:a, brk:1});
     for(let x=Fo.x0;x<=Fo.x1;x+=62){ wall(x,Fo.y0,0); if(!gap('s',x)) wall(x,Fo.y1,0); }
     for(let y=Fo.y0+62;y<Fo.y1;y+=62){ if(!gap('w',y)) wall(Fo.x0,y,PI/2); wall(Fo.x1,y,PI/2); }
     for(const t of Fo.tents) add({k:'prop', ak0:'t_tent_orc', pk:'otent', x:t[0], y:t[1], r:38, aw:124, fy:.42});
@@ -69,6 +72,12 @@ function fdTerrain(z,L){ G.obstacles={list:null, grid:new Map()}; G.terrain={b:z
     if(f.k==='flat'||f.ng) continue; terCellsOf(f,g=>{ const a=G.obstacles.grid.get(g); if(a) a.push(f); else G.obstacles.grid.set(g,[f]); }); }
   if(typeof artPreload==='function'){ const ks=terArtKeys(z.biome); for(const f of L.feats){ const k=f.ak0||f.mk; if(k&&ks.indexOf(k)<0) ks.push(k); }
     ks.push('t_portal','t_chest_gold','t_tower_orc'); artPreload(ks); } }
+// a field boss walked into a fence / log wall (f.brk · 64 BOSS_PAT.smash): it breaks — out of the collision grid and the drawing
+// until the map is entered again (fdBuild makes it anew) · the minimap keeps it
+function fdBreak(f){ if(f.gone) return; f.gone=1; const ob=G.obstacles;
+  if(ob&&ob.grid) terCellsOf(f,g=>{ const a=ob.grid.get(g); if(!a) return; const i=a.indexOf(f); if(i>=0) a.splice(i,1); if(!a.length) ob.grid.delete(g); });
+  const C=G.terrain&&G.terrain.chunks.get(f.ch); if(C){ const i=C.list.indexOf(f); if(i>=0) C.list.splice(i,1); }
+  burst(f.x,f.y-16,14,'#8a6a4a',240,.6,4,'rock'); G.shake=Math.max(G.shake,6); if(!G.auto) sfx('hit'); }
 // monster nests: regions (weighted mix, pack sizes), camp guards (one nest per camp: they wake together), towers + their archers
 function fdNests(z,L){ const R=L.R, nests=[], recs=[], W=z.w, H=z.h;
   const ok=(x,y,r)=>{ if(x<r+40||y<r+40||x>W-r-40||y>H-r-40) return false; for(const f of L.feats){ if(f.soft||f.k==='flat') continue; const q=f.r+r+6; if((f.x-x)**2+(f.y-y)**2<q*q) return false; } return true; };

@@ -144,8 +144,8 @@ console.log('ชุดพฤติกรรม (เล่นจริงที�
   ok('เรียกพวก: ออร์คเป่าเขาศึกเรียกออร์ค 4 ตัวมาจากขอบจอ', sm.kids === 4 && sm.type === 'o_grunt', sm);
   // steal + run
   const st = X(`(()=>{ for(const q of G.enemies) if(!q.dead) fdVanish(q); G.goldRun=200; const e=fdExtra('g_thief',P.x+40,P.y,null,{aggro:1}); e.atkCd=0; let i=0; for(;i<60*3&&!e.fm.loot;i++){ update(1/60); P.x=1500; P.y=1300; } const loot=e.fm.loot, g1=G.goldRun; let away=0;
-    for(let k=0;k<60;k++){ update(1/60); } away=Math.hypot(e.x-P.x,e.y-P.y); const gems0=G.gems.filter(g=>g.kind==='gold').length; killEnemy(e); const coins=G.gems.filter(g=>g.kind==='gold'&&!g.dead).reduce((s,g)=>s+(g.gold|0),0); return {loot, g1, away, coins}; })()`);
-  ok('ขโมยทองแล้วหนี: ก็อบลินโจรตีโดน → ทองในรอบลด → วิ่งหนี · ฆ่าทันได้คืน ×2', st.loot > 0 && st.g1 === 200 - st.loot && st.away > 80 && st.coins >= st.loot * 2, st);
+    for(let k=0;k<60;k++){ update(1/60); } away=Math.hypot(e.x-P.x,e.y-P.y); for(const g of G.gems) if(g.kind==='gold') g.dead=true; e.rank=0; killEnemy(e); const coins=G.gems.filter(g=>g.kind==='gold'&&!g.dead).reduce((s,g)=>s+(g.gold|0),0); return {loot, g1, away, coins, back:Math.round(BAL.FIELD.goldF(e.lv,.5)*2)}; })()`);
+  ok('ขโมยทองแล้วหนี: ก็อบลินโจรตีโดน → ทองในรอบลด → วิ่งหนี · ฆ่าทันได้คืนพร้อมโบนัส (+ ทองของตัวมันเอง)', st.loot > 0 && st.g1 === 200 - st.loot && st.away > 80 && st.coins >= st.loot + st.back && st.coins <= st.loot + st.back + 3, st);
   // hide / ghost / swap / trail
   const hd = X(`(()=>{ for(const q of G.enemies) if(!q.dead) fdVanish(q); P.x=1500; P.y=1300; const m=fdExtra('s_moss',P.x+400,P.y,null,{}); update(1/60); const a=m.alpha; for(let i=0;i<4;i++){ P.x=m.x-50; P.y=m.y; P.vx=P.vy=0; update(1/60); } const near=m.alpha; P.x=1500; P.y=1300; const s=fdExtra('s_shade',P.x+300,P.y,null,{}); update(1/60); return {hid:a, near, shade:s.alpha}; })()`);
   ok('ซ่อนตัว: วุ้นตะไคร่จางเหลือแค่ตาเมื่ออยู่ไกล โผล่เมื่อเข้าใกล้ · โปร่งใส: วุ้นเงาราตรีโปร่งครึ่งตัว', hd.hid < .2 && hd.near === undefined && hd.shade === .5, hd);
@@ -198,6 +198,131 @@ console.log('จ้าวถิ่น · ฝูงอาละวาด · ป�
   const cht = X2(`(()=>{ const c=G.fd.chests[0]; P.skills.length=0; for(const e of G.enemies) if(!e.dead) fdVanish(e); for(const r of G.fd.recs){ r.st='dead'; r.t=1e9; } G.god=true; P.x=c.x; P.y=c.y; const g0=G.goldRun|0;
     for(let i=0;i<60*4;i++){ update(1/60); P.x=c.x; P.y=c.y; } const want=6*Math.round(BAL.FIELD.gold(fdMid(G.fd.z))*1.5), ground=G.gems.filter(g=>!g.dead&&g.kind==='gold').reduce((a,g)=>a+(g.gold|0),0); return {opened:c.cd>G.t, got:(G.goldRun|0)-g0+ground, want}; })()`);
   ok('หีบค่าย: ยืน 2 วิ → เปิด (ทอง 6 กอง + ของ) แล้วรอเกิดใหม่', cht.opened && cht.got >= 6, cht);
+}
+
+console.log('แก้ตามผล tester: ขโมยทอง · หีบ/หอ/จุดเกิดข้ามประตู · ทอง/EXP · บอสกับรั้ว · ร่างล่อ · ม่านอรุณ · เวลาจ้าวถิ่น · สกิลข้ามแผนที่');
+{
+  const { X } = game({ zone: 'g1', lv: 12 });
+  X(`G.god=true;`);
+  // 1 · ก็อบลินโจร: steals at most 8 kills' gold · killed in time = the stolen gold + 2 kills' gold (fixed, never × the trip's gold)
+  const thief = gold => { solo(X, 'g_thief', { dx: 40 }); return X(`(()=>{ for(const g of G.gems) g.dead=true; G.goldRun=${gold}; const e=G.enemies.find(q=>!q.dead&&q.type==='g_thief'); e.atkCd=0; e.rank=0;
+    for(let i=0;i<60*3&&!e.fm.loot;i++){ update(1/60); P.x=1500; P.y=1300; } const loot=e.fm.loot, left=G.goldRun, cap=fdStealCap(e);
+    for(const g of G.gems) if(g.kind==='gold') g.dead=true; FK.steal.death(e,e.fm,e.d.kit.steal); const back=G.gems.filter(g=>!g.dead&&g.kind==='gold').reduce((a,g)=>a+(g.gold|0),0);
+    return {loot, left, cap, back, want:Math.round(BAL.FIELD.goldF(e.lv,.5)*2), lv:e.lv}; })()`); };
+  const t1 = thief(100000), t2 = thief(200), t3 = thief(4);
+  ok('ก็อบลินโจรขโมยได้ไม่เกิน ทอง 8 ตัว (Lv6 = ' + t1.cap + ') แม้ทองในรอบ 100,000 · ทองน้อยขโมยเท่าที่มี', t1.loot === t1.cap && t1.cap === Math.round(BAL_G(6) * 8) && t1.left === 100000 - t1.cap && t2.loot === Math.min(t2.cap, 24) && t3.loot === 4, [t1, t2, t3]);
+  ok('ฆ่าทันได้คืน = ที่ขโมย + โบนัสคงที่ 2 ตัว (ไม่ ×2 → ไม่มีกำไรทบต้น)', t1.back === t1.loot + t1.want && t2.back === t2.loot + t2.want && t1.back - t1.loot === t2.back - t2.loot, [t1, t2]);
+  // 3 · gold: split bodies / summons drop none · a normal kill pays goldF on average (rounded up by chance)
+  const gd = X(`(()=>{ for(const q of G.enemies) if(!q.dead) fdVanish(q); for(const g of G.gems) g.dead=true; let minor=0;
+    for(let i=0;i<40;i++){ const a=fdExtra('s_droplet',P.x+200,P.y,null,{aggro:1, child:1}), b=fdExtra('o_wolf',P.x+200,P.y,null,{aggro:1, sum:1}); killEnemy(a); killEnemy(b); }
+    minor=G.gems.filter(g=>!g.dead&&g.kind==='gold').length; for(const g of G.gems) g.dead=true; let n=0, ex=0;
+    for(let i=0;i<400;i++){ const e=fdExtra('g_grunt',P.x+200,P.y,null,{aggro:1}); e.rank=0; ex+=BAL.FIELD.goldF(e.lv,.5); killEnemy(e); n++; for(const q of G.enemies) if(!q.dead&&q.fm&&q.fm.nest==null&&q!==e&&q.type==='g_grunt') fdVanish(q); }
+    const got=G.gems.filter(g=>!g.dead&&g.kind==='gold').reduce((a,g)=>a+(g.gold|0),0); for(const g of G.gems) g.dead=true; return {minor, got, ex:Math.round(ex)}; })()`);
+  ok('ร่างแยก/ตัวที่ถูกเรียกไม่ดรอปทอง · มอนธรรมดาดรอปทองเฉลี่ย ≈ goldF (×0.3) ±15%', gd.minor === 0 && Math.abs(gd.got - gd.ex) / gd.ex < .15, gd);
+  const rp = X(`(()=>{ const z=G.fd.z, before=G.gems.length; DEV.field.rampage(); for(let i=0;i<60*6;i++) update(1/60); const on=G.fd.ramp.on; for(const e of on.list) if(!e.dead) killEnemy(e); update(1/60);
+    const c=G.gems.filter(g=>!g.dead&&g.kind==='bosschest').pop(); return {gold:c&&c.gold, want:8*Math.round(fdMid(z))}; })()`);
+  ok('กล่องฝูงอาละวาด: ทอง 8 × Lv กลางแผนที่ (เดิม 20×)', rp.gold === rp.want, rp);
+  // 5 · ร่างล่อ: a chasing melee monster walks at the decoy · a ranged one and one still at home do not
+  const lure = X(`(()=>{ for(const q of G.enemies) if(!q.dead) fdVanish(q); P.skills.length=0; G.zones.length=0; P.x=1500; P.y=1300;
+    const s=makeSkill('decoy'), mk=(type,x,y,ag)=>fdExtra(type,x,y,null,{aggro:ag}); const g=mk('g_grunt',1640,1560,1), t=mk('g_thrower',1300,1500,1), h=mk('g_grunt',1500,1720,0); h.fm.hx=h.x; h.fm.hy=h.y;
+    addZone({x:1500, y:1650, r:26, dur:6, tick:.4, dmg:0, kind:'decoy', src:s, x2:1, lure:260, seen:G.t, boom:0}); G.lures=[G.zones[G.zones.length-1]];
+    const dz=e=>Math.hypot(e.x-1500,e.y-1650), dp=e=>Math.hypot(e.x-P.x,e.y-P.y), g0=[dz(g),dp(g)];
+    for(let i=0;i<60*2.5;i++){ update(1/60); P.x=1500; P.y=1300; } return {g0, g:[Math.round(dz(g)),Math.round(dp(g)),g.fm.st], t:[Math.round(dz(t)),Math.round(dp(t))], hSt:h.fm.st, hHome:Math.round(Math.hypot(h.x-h.fm.hx,h.y-h.fm.hy))}; })()`);
+  ok('ร่างล่อมรณะ: มอนแผนที่ที่กำลังไล่ (ประชิด) เดินไปรุมร่างล่อแทนผู้เล่น · ยังไล่อยู่ (st 1)', lure.g[0] < 60 && lure.g[0] < lure.g0[0] - 100 && lure.g[1] > 200 && lure.g[2] === 1, lure);
+  ok('ร่างล่อไม่ดึงพวกยิงไกล (ก็อบลินปาหินยังรักษาระยะกับผู้เล่น) และไม่ดึงตัวที่อยู่บ้าน', lure.t[1] > 150 && lure.t[1] < 330 && lure.hSt === 0, lure);
+  X(`G.zones.length=0; G.lures=null;`);
+  // 6 · ม่านอรุณ: erases the field monsters' shots too (G.fd.shots) and heals per shot
+  const veil = X(`(()=>{ for(const q of G.enemies) if(!q.dead) fdVanish(q); for(const r of G.fd.recs){ r.st='dead'; r.t=1e9; r.e=null; } G.fd.shots.length=0; G.eprojs.length=0;
+    const s=makeSkill('veil'); s.lv=5; s.cdT=0; P.skills=[s]; P.hp=P.maxHp*.5; const h0=P.hp;
+    for(let i=0;i<6;i++) fdShot(P.x+40+i*8,P.y+(i%2?20:-20),PI,0,5,'orb',{life:9}); const far=fdShot(P.x+900,P.y,0,0,5,'orb',{life:9});
+    update(1/60); update(1/60); return {left:G.fd.shots.filter(b=>!b.dead&&b!==far).length, far:!far.dead, heal:P.hp-h0}; })()`);
+  ok('ม่านอรุณลบกระสุนมอน/จ้าวถิ่นในแผนที่ (G.fd.shots) ในวง และฟื้น HP ตามจำนวนที่ลบ · กระสุนนอกวงไม่โดน', veil.left === 0 && veil.far && veil.heal > 5, veil);
+  X(`P.skills.length=0; G.fd.shots.length=0;`);
+  // 15 · camp chests never sit on a tent / the fire
+  const cc = X(`(()=>{ const L=fdBuild(ZONES.g1), out=[]; for(const c of L.chests){ let m=1e9; for(const f of L.feats) if(f.k==='prop'&&(f.pk==='tent'||f.pk==='fire')) m=Math.min(m,Math.hypot(f.x-c.x,f.y-c.y)); out.push(Math.round(m)); } return out; })()`);
+  ok('หีบค่ายทุกค่ายห่างเต็นท์/กองไฟ ≥ 100 (ไม่วาดทับ)', cc.length === 3 && cc.every(m => m >= 100), cc);
+  ok('ข้อความช่วยเหลือ: ไกลบ้านเกิน 90 เมตร (BAL.FIELD.leash 900 ÷ 10)', X(`TF_HELP.world[1]().includes('ไกลบ้านเกิน 90 เมตร')`));
+  const kk = X(`(()=>{ const s=SK.curtain.p; return {o1:ZONES.o1.k, s1:ZONES.s1.k, g1:ZONES.g1.k, cr:s.r, cd:s.dmg}; })()`);
+  ok('ค่าแผนที่: o1 ดาเมจ ×0.65 (เดิม 0.8) + EXP ×2 (ไม่โดนตัด ×0.5) · s1 ทอง ×0.4 · g1 ปกติ · ม่านใบมีด r 70–93 ดาเมจ 15–32 (เดิม 56–74 / 11–23)',
+    kk.o1.dmg === .65 && kk.o1.exp === 2 && kk.s1.gold === .4 && !kk.g1.gold && !kk.g1.exp && kk.cr.join() === '70,75,80,85,93' && kk.cd.join() === '15,18,22,27,32', kk);
+  const ke = X(`(()=>{ for(const q of G.enemies) if(!q.dead) fdVanish(q); for(const g of G.gems) g.dead=true; const R=G.fdRun, e0=R.exp; const e=fdExtra('g_grunt',P.x+200,P.y,null,{aggro:1}); e.rank=0; killEnemy(e);
+    return {got:R.exp-e0, want:fieldKillExp(G.char,e).base}; })()`);
+  ok('EXP ต่อตัวในแผนที่ = fieldKillExp (g1 ไม่มีตัวคูณแผนที่)', ke.got === ke.want && ke.want > 0, ke);
+}
+{
+  const { X } = game({ zone: 'o1', lv: 26 });
+  const ob = X(`(()=>{ G.god=true; P.skills.length=0; for(const q of G.enemies) if(!q.dead) fdVanish(q); for(const g of G.gems) g.dead=true; DEV.field.boss(); const b=G.bosses[0], d=EN.ob_warlord;
+    const R=G.fdRun, e0=R.exp; const e=fdExtra('o_grunt',P.x+200,P.y,null,{aggro:1, lv:20}); e.rank=0; killEnemy(e);
+    return {boss:b.dmg, want:d.dmg*BAL.FIELD.dmgByLv(d.lv)*.65, mob:e.dmg, mobWant:EN.o_grunt.dmg*BAL.FIELD.dmgByLv(20)*.65, exp:R.exp-e0, base:fieldKillExp(G.char,e).base}; })()`);
+  ok('o1: มอนและจ้าวถิ่นใช้ดาเมจ ×0.65 ของแผนที่ (จ้าวถิ่นเดิมไม่ใช้ตัวคูณแผนที่) · EXP ต่อตัว ×2 ของ fieldKillExp', Math.abs(ob.boss - ob.want) < 1e-9 && Math.abs(ob.mob - ob.mobWant) < 1e-9 && ob.exp === ob.base * 2, ob);
+}
+// BAL helper for the test names
+function BAL_G(lv) { return (2 + .35 * lv) * .3; }
+{
+  // 2 · 7 · chests, towers and killed spawn points keep their timers through a portal · the boss clock runs on while away
+  const { X } = game({ zone: 'g1', lv: 14 });
+  const r = X(`(()=>{ G.god=true; P.skills.length=0; const c=G.fd.chests[0]; for(const e of G.enemies) if(!e.dead) fdVanish(e); P.x=c.x; P.y=c.y; const g0=G.goldRun;
+    for(let i=0;i<60*3;i++){ update(1/60); P.x=c.x; P.y=c.y; } const cd=c.cd, opened=cd>G.t; const i=G.fd.recs.findIndex(q=>!q.e&&q.st==='alive'), rr=G.fd.recs[i]; rr.st='dead'; rr.t=G.t+500;
+    DEV.field.boss(); const B=G.fd.boss, e=G.bosses[0]; damageEnemy(e,1e9,null,{}); update(1/60); const at0=B.at;
+    fdZone('s1','w',false); for(let k=0;k<60*90;k++) update(1/60); const away=G.t; const R={}; MODES.field.rewards(R,true); const rem=R.field.boss.g1.rem;
+    fdZone('g1','e',false); const c2=G.fd.chests[0], r2=G.fd.recs[i]; const back={cd:c2.cd, rec:[r2.st,r2.t], at:G.fd.boss.at};
+    for(const q of G.enemies) if(!q.dead) fdVanish(q); P.x=c2.x; P.y=c2.y; const gold=G.gems.filter(g=>!g.dead&&g.kind==='gold').length; for(let k=0;k<60*3;k++){ update(1/60); P.x=c2.x; P.y=c2.y; }
+    const again=G.gems.filter(g=>!g.dead&&g.kind==='gold').length>gold;
+    return {opened, cd, back, recT:rr.t, at0, away, rem:Math.round(rem), wantRem:Math.round(at0-away), again}; })()`);
+  ok('หีบค่ายที่เปิดแล้ว: ข้ามประตูไปบึงแล้วกลับมา ยังรอคูลดาวน์เดิม (เปิดซ้ำไม่ได้)', r.opened && r.back.cd === r.cd && !r.again, r);
+  ok('จุดเกิดที่ตายแล้ว: กลับมายังรอเวลาเกิดเดิม', r.back.rec[0] === 'dead' && r.back.rec[1] === r.recT, r.back);
+  ok('เวลาเกิดจ้าวถิ่นเดินต่อตอนอยู่แผนที่อื่น (ไป 90 วิ แล้วกลับ = เวลาเดิม ไม่ +90) · rewards คิดเวลาที่เหลือจากเวลาสัมบูรณ์', Math.abs(r.back.at - r.at0) < 1e-6 && r.rem === r.wantRem && r.rem > 200, r);
+  const { X: X3 } = game({ zone: 'o1', lv: 26 });
+  const tw = X3(`(()=>{ G.god=true; P.skills.length=0; const i=G.fd.recs.findIndex(q=>q.type==='o_tower'), tr=G.fd.recs[i]; P.x=tr.x; P.y=tr.y+300; for(let k=0;k<30;k++) update(1/60);
+    killEnemy(tr.e); update(1/60); const t=tr.t; fdZone('s1','n',false); for(let k=0;k<60*5;k++) update(1/60); fdZone('o1','s',false); const r2=G.fd.recs[i];
+    P.x=2000; P.y=2700; for(let k=0;k<30;k++) update(1/60); return {st:r2.st, t:r2.t, want:t, towers:G.enemies.filter(e=>!e.dead&&e.type==='o_tower').length}; })()`);
+  ok('หอธนูที่พังแล้ว: ข้ามประตูไปกลับ หอยังพังอยู่ (รอ 4 นาทีเดิม)', tw.st === 'dead' && tw.t === tw.want, tw);
+}
+{
+  // 4 · fences / log walls never hold a field boss · held in place while being hit for 3 s → home with full HP
+  for (const [z, lv] of [['g1', 12], ['o1', 30]]) {
+    const { X } = game({ zone: z, lv });
+    const r = X(`(()=>{ G.god=true; P.skills.length=0; for(const e of G.enemies) if(!e.dead) fdVanish(e); for(const q of G.fd.recs){ q.st='dead'; q.t=1e9; q.e=null; } G.fd.ramp.at=1e9;
+      DEV.field.boss(); const e=G.bosses[0], z=G.fd.z; let px, py;
+      if(z.camps){ const c=z.camps.find(c=>c.big), a=c.gate+PI; px=c.x+Math.cos(a)*(c.r+110); py=c.y+Math.sin(a)*(c.r*.82+110); }
+      else { px=z.fort.x1+130; py=e.y; }
+      P.x=px; P.y=py; const walls=()=>G.fd.layout.feats.filter(f=>f.brk&&f.gone).length; let dmin=1e9;
+      for(let i=0;i<60*14;i++){ update(1/60); P.x=px; P.y=py; if(i%30===0) damageEnemy(e,1,null,{quiet:true}); dmin=Math.min(dmin,Math.hypot(e.x-P.x,e.y-P.y)); }
+      const inGrid=[...G.obstacles.grid.values()].some(a=>a.some(f=>f.gone)); return {broke:walls(), dmin:Math.round(dmin), reach:e.r+P.r+30, inGrid}; })()`);
+    ok(z + ': จ้าวถิ่นพัง' + (z === 'g1' ? 'รั้ว' : 'กำแพงซุง') + 'แล้วเข้าถึงผู้เล่นที่ยืนยิงอยู่นอก' + (z === 'g1' ? 'รั้ว' : 'กำแพง') + ' (ชิ้นที่พังออกจากกริดชน)', r.broke >= 1 && r.dmin <= r.reach && !r.inGrid, r);
+  }
+  const { X } = game({ zone: 'g1', lv: 12 });
+  const st = X(`(()=>{ G.god=true; P.skills.length=0; for(const e of G.enemies) if(!e.dead) fdVanish(e); for(const q of G.fd.recs){ q.st='dead'; q.t=1e9; q.e=null; } G.fd.ramp.at=1e9;
+    DEV.field.boss(); const e=G.bosses[0], H=e.fb; e.x=H.hx-400; e.y=H.hy+300; const x0=e.x, y0=e.y; P.x=e.x-420; P.y=e.y;
+    const run=(sec,f)=>{ for(let i=0;i<60*sec;i++){ update(1/60); if(i%20===0) damageEnemy(e,5,null,{quiet:true}); f&&f(); } };
+    e.freezeT=6; run(4,()=>{ e.freezeT=Math.max(e.freezeT,.1); e.x=x0; e.y=y0; }); const frozen=Math.round(Math.hypot(e.x-H.hx,e.y-H.hy));
+    e.freezeT=0; e.hp=e.maxHp*.5; let kite=0; run(5,()=>{ const a=Math.atan2(P.y-e.y,P.x-e.x); P.x=e.x+Math.cos(a)*420; P.y=e.y+Math.sin(a)*420; }); kite=Math.round(Math.hypot(e.x-H.hx,e.y-H.hy)); const kHp=e.hp<e.maxHp;
+    e.x=x0; e.y=y0; e.hp=e.maxHp*.5; P.x=e.x-420; P.y=e.y; let home=null, full=false, t0=G.t;
+    run(8,()=>{ if(home==null&&Math.hypot(e.x-H.hx,e.y-H.hy)<5){ home=+(G.t-t0).toFixed(1); full=e.hp===e.maxHp; } if(home==null){ e.x=x0; e.y=y0; } P.x=x0-420; P.y=y0; });
+    return {frozen, kite, kHp, home, full}; })()`);
+  ok('จ้าวถิ่นติดอยู่กับที่ (ขยับไม่ได้) ขณะโดนตี 3 วิ → กลับรังทันทีพร้อม HP เต็ม', st.home != null && st.home >= 3 && st.home < 8 && st.full, st);
+  ok('ไม่นับตอนโดนแช่แข็ง/มึน และไม่นับตอนผู้เล่นวิ่งหนีแล้วบอสเดินตาม (kiting)', st.frozen > 300 && st.kite > 100 && st.kHp, st);
+}
+{
+  // 10 · 11 · 12 · skills against the map: ballista never inside a rock · seal stamps / hawk targets dropped at a portal · gravorb ≤ 4 orbs
+  const { X } = game({ zone: 'g1', lv: 20, cls: 'archer' });
+  const bl = X(`(()=>{ G.god=true; P.skills.length=0; for(const e of G.enemies) if(!e.dead) fdVanish(e); for(const q of G.fd.recs){ q.st='dead'; q.t=1e9; q.e=null; } G.fd.ramp.at=1e9; G.fd.boss.at=1e9;
+    let f=null; for(const a of G.obstacles.grid.values()){ for(const o of a) if(o.hard&&o.r>=30&&o.r<=70&&o.x>400&&o.y>400&&o.x<3200&&o.y<2400&&!o.edge){ f=o; break; } if(f) break; }
+    P.x=f.x+f.r+22; P.y=f.y; for(const a of G.obstacles.grid.values()) for(const o of a) if(o!==f&&o.hard&&Math.hypot(o.x-P.x,o.y-P.y)<o.r+20) return {skip:1};
+    const before=terBlocks(P.x-28,P.y,16)||terBlocks(P.x-28,P.y-14,16), q=zxFreeSpot(PI,28,P.x-28,P.y);
+    const s=makeSkill('ballista'); s.lv=5; s.cdT=0; P.skills=[s]; const m=fdExtra('g_grunt',P.x+200,P.y,null,{aggro:0}); m.hp=m.maxHp=1e6; m.speed=0;
+    for(let i=0;i<60*3;i++){ update(1/60); P.x=f.x+f.r+22; P.y=f.y; } const z=G.zones.find(z=>z.src===s);
+    return {before, free:!terBlocks(q[0],q[1],16), zone:z?!terBlocks(z.x,z.y,16)&&!terBlocks(z.x,z.y-14,16):null, dealt:Math.round(s.dealt)}; })()`);
+  ok('หน้าไม้กล: จุดหลังตัวทับหิน → ย้ายไปจุดว่าง (±0.8/±1.6 rad หรือที่ตัว) แล้วยิงโดนจริง', bl.skip || (bl.before && bl.free && bl.zone === true && bl.dealt > 0), bl);
+  const sl = X(`(()=>{ P.skills.length=0; G.zones.length=0; for(const e of G.enemies) if(!e.dead) fdVanish(e); const s=makeSkill('seal'); s.lv=5; s.cdT=0; const h=makeSkill('hawk'); P.skills=[s,h];
+    for(let i=0;i<3;i++){ const m=fdExtra('g_grunt',P.x+150+i*20,P.y,null,{aggro:0}); m.hp=m.maxHp=1e6; m.speed=0; }
+    let q=0, tg=0; for(let i=0;i<60*1.2;i++){ update(1/60); q=Math.max(q,(s.st.q||[]).length); if((h.st.units||[]).some(u=>u.tg)) tg=1; }
+    fdZone('s1','w',false); const after={q:(s.st.q||[]).length, tg:(h.st.units||[]).filter(u=>u.tg).length, lures:G.lures}; let pillars=0;
+    for(let i=0;i<60*2;i++){ update(1/60); for(const f of G.fx) if(f.k==='pillar'&&Math.hypot(f.x-P.x,f.y-P.y)>1200) pillars++; } return {q, tg, after, pillars}; })()`);
+  ok('ตราประทับแสง/เป้าของเหยี่ยว: ข้ามประตูแล้วล้างของแผนที่เก่า ไม่ระเบิดที่พิกัดเดิม', sl.q > 0 && sl.after.q === 0 && sl.after.tg === 0 && sl.after.lures === null && sl.pillars === 0, sl);
+  const gv = X(`(()=>{ P.skills.length=0; G.zones.length=0; const s=makeSkill('gravorb'); s.lv=5; s.evolved=true; P.skills=[s]; const m=fdExtra('g_grunt',P.x+200,P.y,null,{aggro:0}); m.hp=m.maxHp=1e6; m.speed=0;
+    let mx=0; for(let i=0;i<60*6;i++){ s.cdT=0; update(1/60); mx=Math.max(mx,G.zones.filter(z=>z.src===s&&!z.dead).length); } return {maxZ:SK.gravorb.maxZ, mx}; })()`);
+  ok('ลูกแก้วแรงโน้มถ่วง: ซ้อนได้ไม่เกิน 4 ลูก (maxZ 4) แม้ร่ายรัว', gv.maxZ === 4 && gv.mx <= 4 && gv.mx >= 2, gv);
 }
 
 console.log('รางวัล: EXP เข้าตัวละครตอนจบรอบ · ตาย −1% · บันทึกแผนที่/ตำรามอน/เวลาจ้าวถิ่น');
