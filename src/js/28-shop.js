@@ -76,7 +76,7 @@ function shopClampLater(){ setTimeout(()=>{ try{
 function entSummaryTh(){   // account page line
   const u=entUid(); if(!u) return ''; if(ENTS.uid!==u) return 'สิทธิ์ที่ซื้อ: ยังโหลดไม่ได้ (ต้องออนไลน์)';
   if(!ENTS.n) return 'สิทธิ์ที่ซื้อ: ยังไม่มีรายการซื้อ';
-  const d=new Date(ENTS.sup), sup=ENTS.sup>Date.now()?'ผู้สนับสนุนถึง '+d.toLocaleDateString('th-TH',{day:'numeric', month:'short', year:'numeric'}):ENTS.sup?'แพคสนับสนุนหมดอายุแล้ว':'';
+  const d=new Date(ENTS.sup), sup=ENTS.sup>entNow()?'ผู้สนับสนุนถึง '+d.toLocaleDateString('th-TH',{day:'numeric', month:'short', year:'numeric'}):ENTS.sup?'แพคสนับสนุนหมดอายุแล้ว':'';
   return 'ซื้อแล้ว '+ENTS.n+' รายการ · รูนที่ซื้อรวม '+ENTS.runes.toLocaleString('en-US')+(sup?' · '+sup:''); }
 BUS.on('auth',ev=>{ if(ev==='out'){ ENTS=Object.assign({},ENTS_NONE); entOk=false; BUS.emit('ent',ENTS); } else if(ev==='in') entRefresh(); });
 BUS.on('char',()=>{ if(ENTS.uid) shopClampLater(); });

@@ -1243,7 +1243,7 @@ caltrops:{n:'เหล็กแหลมโปรย',i:'📌',type:'zone',fx:'c
   p:{cd:[2.4,2.2,2,1.8,1.6],count:[2,2,3,3,4],r:[34,36,38,41,44],dmg:[6,8,10,12,15],tick:.35,dur:[5,5.5,6,6.5,7],slow:[.3,.32,.35,.38,.42]},
   evo:{s:'INT',n:'ทุ่งเหล็กพิษ',d:'เหล็กแหลมอาบพิษ วงกว้าง ศัตรูช้าลงมาก',set:{count:5,r:56,dmg:22,slow:.55,dur:8}}},
 curtain:{n:'ม่านใบมีด',i:'🪒',type:'orbit',os:'knife',ox:1,ifx:{ignite:{ch:.25,pct:.4,t:3}},c:'#ff9ab0',d:'ใบมีดเล็กนับสิบหมุนชิดตัวเร็วจัด ศัตรูที่เข้าใกล้โดนเฉือนถี่ ๆ จนเลือดไหล',
-  p:{count:[5,6,7,8,9],r:[70,75,80,85,93],dmg:[15,18,22,27,32],spin:[6,6.3,6.6,7,7.5],size:6,knock:40,rate:.3}},   // r ×1.25 + dmg ×1.4 (tester: 0.23× the median skill · either alone = 0.23–0.30× at mastery 20)
+  p:{count:[5,6,7,8,9],r:[70,75,80,85,93],dmg:[22,26,32,39,46],spin:[6,6.3,6.6,7,7.5],size:6,knock:40,rate:.3}},   // r ×1.25 + dmg ×1.4 ×1.45 (tester r4: still the weakest thief damage skill) (tester: 0.23× the median skill · either alone = 0.23–0.30× at mastery 20)
 reap:{n:'เคียวปลิดชีพ',i:'🌘',type:'multi',pick:'weak',ifx:{execute:{hp:.35,m:2}},c:'#c23048',d:'พุ่งปลิดชีพศัตรูที่เลือดเหลือน้อยที่สุดรอบตัวในพริบตา ตัวที่เลือดต่ำกว่า 35% โดนแรงสองเท่า',
   p:{cd:[2.8,2.6,2.4,2.2,2],targets:[3,3,4,4,5],dmg:[50,62,76,92,110],range:300,crit:.2}},
 bind:{n:'พันธนาการเงา',i:'🪢',type:'zone',fx:'bind',place:'enemy',zx:1,c:'#8a6bff',d:'โซ่เงาผุดกลางฝูงที่เล็ง ตรึงศัตรูในวงไว้กับที่และบีบรัดต่อเนื่อง (บอสไม่ติด)',
@@ -4748,7 +4748,7 @@ function shopClampLater(){ setTimeout(()=>{ try{
 function entSummaryTh(){   // account page line
   const u=entUid(); if(!u) return ''; if(ENTS.uid!==u) return 'สิทธิ์ที่ซื้อ: ยังโหลดไม่ได้ (ต้องออนไลน์)';
   if(!ENTS.n) return 'สิทธิ์ที่ซื้อ: ยังไม่มีรายการซื้อ';
-  const d=new Date(ENTS.sup), sup=ENTS.sup>Date.now()?'ผู้สนับสนุนถึง '+d.toLocaleDateString('th-TH',{day:'numeric', month:'short', year:'numeric'}):ENTS.sup?'แพคสนับสนุนหมดอายุแล้ว':'';
+  const d=new Date(ENTS.sup), sup=ENTS.sup>entNow()?'ผู้สนับสนุนถึง '+d.toLocaleDateString('th-TH',{day:'numeric', month:'short', year:'numeric'}):ENTS.sup?'แพคสนับสนุนหมดอายุแล้ว':'';
   return 'ซื้อแล้ว '+ENTS.n+' รายการ · รูนที่ซื้อรวม '+ENTS.runes.toLocaleString('en-US')+(sup?' · '+sup:''); }
 BUS.on('auth',ev=>{ if(ev==='out'){ ENTS=Object.assign({},ENTS_NONE); entOk=false; BUS.emit('ent',ENTS); } else if(ev==='in') entRefresh(); });
 BUS.on('char',()=>{ if(ENTS.uid) shopClampLater(); });
@@ -7994,7 +7994,7 @@ function hbHold(el,tap,hold){ let t=0, held=false;
   el.addEventListener('contextmenu',e=>e.preventDefault());
   el.addEventListener('click',()=>{ if(held){ held=false; return; } tap(); }); }
 async function hbDel(ch){
-  if(!await confirmBox('ลบตัวละคร "'+ch.name+'" ('+shJobName(ch)+' Lv '+ch.lv+')? ลบแล้วกู้คืนไม่ได้'+((ch.rb|0)>0?' · รูนที่ซื้อและย้ายเข้าตัวนี้ '+(ch.rb|0)+' รูนจะหายไปด้วย':''),{hold:1000, okText:'กดค้างเพื่อลบ'})) return;
+  if(!await confirmBox('ลบตัวละคร "'+ch.name+'" ('+shJobName(ch)+' Lv '+ch.lv+')? ลบแล้วกู้คืนไม่ได้'+((ch.rb|0)>0?' · รูนที่ซื้อและย้ายเข้าตัวนี้ '+(ch.rb|0)+' รูนจะคืนเข้ากระเป๋ารูนของบัญชี':''),{hold:1000, okText:'กดค้างเพื่อลบ'})) return;
   if(deleteChar(ch.id)){ toast('ลบ '+ch.name+' แล้ว','good'); hbChars(); } else toast('ลบไม่ได้ในตอนนี้','bad'); }
 
 /* ---------- scrNew: name + class + starting points ---------- */
@@ -9220,7 +9220,7 @@ function tfHelpBox(title,html){
   let r=document.getElementById('tfHelp');
   if(!r){ r=document.createElement('div'); r.id='tfHelp'; r.className='tf-help'; r.hidden=true;
     r.innerHTML='<div class="tf-hcard" role="dialog" aria-modal="true" aria-labelledby="tfHelpT"><h3 id="tfHelpT"></h3><div class="tf-hbody"></div><button type="button" class="btn" data-x="1">เข้าใจแล้ว</button></div>';
-    r.addEventListener('click',e=>{ const h=e.target.closest('[data-help]'); if(h){ tfHelp(h.dataset.help); return; } if(e.target===r||e.target.closest('[data-x]')) tfHelpOff(); });   // links between help pages
+    r.addEventListener('click',e=>{ const h=e.target.closest('[data-help]'); if(h){ tfHelp(h.dataset.help); return; } if(e.target===r||e.target.closest('[data-x]')){ e.stopPropagation(); tfHelpOff(); } });   // links between help pages · closing it leaves the sheet under it open
     addEventListener('keydown',e=>{ if(r.hidden) return; e.stopPropagation(); const a=document.activeElement;
       if((e.key==='Enter'||e.key===' ')&&a&&r.contains(a)&&a.dataset&&a.dataset.help){ e.preventDefault(); tfHelp(a.dataset.help); return; }
       if(e.key==='Escape'||e.key==='Enter'||e.key===' '){ e.preventDefault(); tfHelpOff(); } },true);   // keys never reach the cards under it
@@ -10547,10 +10547,12 @@ const BOSS_PAT={
   // or stunned · a boss that keeps moving (kiting) never counts
   stuck(e,A,dt,d,cfg){ const H=e.fb; if(!H) return false;
     const hurt=e.ai.hurtT!=null&&G.t-e.ai.hurtT<1, busy=A.wind>0||A.charge>0||A.slam>0||A.chGap>0||e.freezeT>0||e.stunT>0;
-    if(busy) return false;                                                // its own moves / frozen / stunned: the clock waits
-    if(!A.home&&(!hurt||d<e.r+P.r+50||(cfg.keep&&d<cfg.keep*1.5))){ A.stk=0; A.sx=null; return false; }
-    if(A.sx==null){ A.sx=e.x; A.sy=e.y; A.stk=0; } A.stk+=dt; if(A.stk<BAL.FIELD.boss.stuck) return false;
-    const moved=Math.hypot(e.x-A.sx,e.y-A.sy); A.stk=0; A.sx=e.x; A.sy=e.y; if(moved>=60) return false;
+    const reach=Math.max(e.r+P.r+50,(cfg.slam&&cfg.slam.r)||0,(cfg.slam&&cfg.slam.near)||0,cfg.keep?cfg.keep*1.5:0);   // any move of its own still lands
+    if(busy||(!A.home&&(!hurt||d<reach))){ A.stk=0; A.sx=null; return false; }   // its own moves / frozen / in reach / not under fire: a fresh window
+    if(A.sx==null){ A.sx=e.x; A.sy=e.y; A.stk=0; A.walk=0; }
+    A.walk+=Math.hypot(e.x-A.sx,e.y-A.sy); A.sx=e.x; A.sy=e.y; A.stk+=dt;    // the path it really walked (a kiting chase that circles back still counts)
+    if(A.stk<BAL.FIELD.boss.stuck) return false;
+    const walked=A.walk; A.stk=0; A.walk=0; if(walked>=40) return false;
     burst(e.x,e.y,24,e.d.goo||'#c8c0b0',260,.6,4); e.x=H.hx; e.y=H.hy; e.vx=e.vy=e.kx=e.ky=0; e.hp=e.maxHp; A.tele=null; A.wind=0; A.charge=0; A.slam=0; A.chGap=0; A.left=0; A.home=0; A.sx=null;
     burst(e.x,e.y,24,e.d.goo||'#c8c0b0',260,.6,4); addText(e.x,e.y-e.r-20,'กลับรัง · ฟื้นเต็ม','#c8c0b0',true); sfx('boss'); return true; },
   // too far from the nest: walk back (×1.4) and heal to full on arrival · moves are dropped
@@ -10664,7 +10666,7 @@ function wmRender(){ const ch=curChar(), who=shEl('wmWho'), map=shEl('wmMap'), b
   const rows=[['ช่วงเลเวล','Lv '+z.lv[0]+'–'+z.lv[1]+(ch&&(ch.lv|0)<z.lv[0]?' · ตัวนี้ Lv '+ch.lv+' (ต่ำกว่า)':'')],
     ['ธาตุเด่น',z.el.map(k=>EL[k].i+' '+EL[k].n).join(' · ')+' · ใช้ธาตุที่ชนะทาง'],
     ['👑 จ้าวถิ่น',B?B.n+' · Lv '+B.lv+' · ทุก '+Math.round(z.boss.every/60)+' นาที':'-'],
-    ['สถานะจ้าวถิ่น',bs.seen?(bs.ready?'พร้อมแล้ว · ปรากฏหลังเข้าแผนที่ 10 วิ':'อีก '+fmtClock(bs.inSec)):'ยังไม่เคยล้ม · ปรากฏหลังเข้าแผนที่ 2 นาที'],
+    ['สถานะจ้าวถิ่น',bs.seen?(bs.ready?'พร้อมแล้ว · ปรากฏหลังเข้าแผนที่ 10 วิ':'อีก '+fmtClock(bs.inSec)):'ยังไม่เคยล้ม · ปรากฏหลังเข้าแผนที่ '+fmtClock(bs.inSec)],
     ['ฝูงอาละวาด',z.rampage?z.rampage.n+' (ทุก ~2.5 นาที)':'-'],
     ['ของที่ดรอป','อุปกรณ์ขั้น '+z.gearT.join('–')+' · ผงรูน · ยา'+(z.zn>=2?' · ผลึกรูน':'')+' · กล่องจ้าวถิ่น (รูน)'],
     ['สถิติตัวนี้',fz?'สังหาร '+fmtNum(fz.k|0)+' · ล้มจ้าวถิ่น '+(fz.b|0)+' · เวลา '+Math.round((fz.t|0)/60)+' นาที':'ยังไม่เคยมา']];
@@ -10710,7 +10712,7 @@ if(typeof TF_HELP!=='undefined'){
 TF_HELP.world=['ท่องแดนรูน',()=>`<p>ออกจากป้อมไปสำรวจแผนที่ที่มีขอบเขต · มอนมีบ้านของตัวเอง เดินเล่นรอบบ้าน เห็นเราแล้วไล่ตาม ไกลบ้านเกิน ${Math.round(BAL.FIELD.leash/10)} เมตรจะกลับบ้านและฟื้นเต็ม · ฆ่าแล้วจุดนั้นเกิดใหม่ใน 8–15 วิ (นอกจอเท่านั้น)</p>
   <table>${FD_ORDER.map(id=>{ const z=ZONES[id]; return tfRow(z.i+' '+tfE(z.n),'Lv '+z.lv[0]+'–'+z.lv[1]+' · ธาตุ '+z.el.map(k=>EL[k].i).join('')+' · 👑 '+tfE(EN[z.boss.id].n)+(z.prev?' · เปิดที่ Lv '+z.open+' หรือล้มจ้าวถิ่นแผนที่ก่อน':' · เปิดตั้งแต่แรก')); }).join('')}</table>
   <h4>จบรอบ</h4><p>กด 🏰 กลับป้อม (ร่าย 5 วิ · โดนตีจะยกเลิก) หรือเดินเข้าประตูป้อมในป่าหนามก็อบลิน = ได้ทุกอย่างที่สะสมไว้ · ตายก็ได้เหมือนกันแต่ EXP หาย 1% ของเลเวล · EXP/Job EXP ทอง ของ บันทึกตอนจบรอบ</p>
-  <h4>จ้าวถิ่น</h4><p>แต่ละแผนที่มีจ้าวถิ่น 1 ตัว เกิดที่รังตามเวลาจริง (นับแม้ปิดเกม) · ยังไม่เคยล้ม = ปรากฏหลังเข้าแผนที่ 2 นาที · ล้มแล้วได้กล่องจ้าวถิ่น (ผงรูน ผลึก อุปกรณ์ รูน) · ครั้งแรกของบัญชีได้รูนแน่นอน</p>
+  <h4>จ้าวถิ่น</h4><p>แต่ละแผนที่มีจ้าวถิ่น 1 ตัว เกิดที่รังตามเวลาจริง (นับแม้ปิดเกม) · ยังไม่เคยล้ม = ปรากฏหลังเข้าแผนที่ 2 นาที (ค่ายออร์ค 5 นาที) · ล้มแล้วได้กล่องจ้าวถิ่น (ผงรูน ผลึก อุปกรณ์ รูน) · ครั้งแรกของบัญชีได้รูนแน่นอน</p>
   <h4>ชั้นสีของมอน</h4><table>${RANK.slice(1).map(R=>tfRow(`<b style="color:${R.c}">${R.n}</b>`,'HP ×'+R.hp+' · ดาเมจ ×'+R.dmg+' · EXP ×'+R.xp)).join('')}${tfRow('หัวหน้า','มีลูกน้องชนิดเดียวกันเดินตาม 2–3 ตัว')}${tfRow('ยอดฝีมือ','ดรอปหีบเล็กแน่นอน · มีท่ากระแทกพื้น')}</table>
   <p><button type="button" class="btn ghost" data-help="elements">ดูวงล้อธาตุ</button> <button type="button" class="btn ghost" data-help="field">ในแผนที่</button></p>`];
 TF_HELP.field=['ในแผนที่',()=>`<table>${tfRow('เดิน','WASD / ลูกศร / ลากบนจอ · สกิลโจมตีเอง')}${tfRow('🏰 กลับป้อม (B)','ร่าย 5 วิ · โดนตีจะยกเลิก · ได้รางวัลทั้งหมด')}${tfRow('⬆ เลือกการ์ด','ความชำนาญสะสมไว้ กดเปิดเมื่อพร้อม (ตั้งค่า: เปิดทันที)')}${tfRow('🧪 ยา (Q / E)','คูลดาวน์ 8 วิ · ตั้งค่าใช้ยาอัตโนมัติได้')}${tfRow('? (H)','หน้านี้')}</table>

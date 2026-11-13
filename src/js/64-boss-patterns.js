@@ -18,10 +18,12 @@ const BOSS_PAT={
   // or stunned · a boss that keeps moving (kiting) never counts
   stuck(e,A,dt,d,cfg){ const H=e.fb; if(!H) return false;
     const hurt=e.ai.hurtT!=null&&G.t-e.ai.hurtT<1, busy=A.wind>0||A.charge>0||A.slam>0||A.chGap>0||e.freezeT>0||e.stunT>0;
-    if(busy) return false;                                                // its own moves / frozen / stunned: the clock waits
-    if(!A.home&&(!hurt||d<e.r+P.r+50||(cfg.keep&&d<cfg.keep*1.5))){ A.stk=0; A.sx=null; return false; }
-    if(A.sx==null){ A.sx=e.x; A.sy=e.y; A.stk=0; } A.stk+=dt; if(A.stk<BAL.FIELD.boss.stuck) return false;
-    const moved=Math.hypot(e.x-A.sx,e.y-A.sy); A.stk=0; A.sx=e.x; A.sy=e.y; if(moved>=60) return false;
+    const reach=Math.max(e.r+P.r+50,(cfg.slam&&cfg.slam.r)||0,(cfg.slam&&cfg.slam.near)||0,cfg.keep?cfg.keep*1.5:0);   // any move of its own still lands
+    if(busy||(!A.home&&(!hurt||d<reach))){ A.stk=0; A.sx=null; return false; }   // its own moves / frozen / in reach / not under fire: a fresh window
+    if(A.sx==null){ A.sx=e.x; A.sy=e.y; A.stk=0; A.walk=0; }
+    A.walk+=Math.hypot(e.x-A.sx,e.y-A.sy); A.sx=e.x; A.sy=e.y; A.stk+=dt;    // the path it really walked (a kiting chase that circles back still counts)
+    if(A.stk<BAL.FIELD.boss.stuck) return false;
+    const walked=A.walk; A.stk=0; A.walk=0; if(walked>=40) return false;
     burst(e.x,e.y,24,e.d.goo||'#c8c0b0',260,.6,4); e.x=H.hx; e.y=H.hy; e.vx=e.vy=e.kx=e.ky=0; e.hp=e.maxHp; A.tele=null; A.wind=0; A.charge=0; A.slam=0; A.chGap=0; A.left=0; A.home=0; A.sx=null;
     burst(e.x,e.y,24,e.d.goo||'#c8c0b0',260,.6,4); addText(e.x,e.y-e.r-20,'กลับรัง · ฟื้นเต็ม','#c8c0b0',true); sfx('boss'); return true; },
   // too far from the nest: walk back (×1.4) and heal to full on arrival · moves are dropped

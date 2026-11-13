@@ -243,8 +243,8 @@ console.log('แก้ตามผล tester: ขโมยทอง · หีบ
   ok('หีบค่ายทุกค่ายห่างเต็นท์/กองไฟ ≥ 100 (ไม่วาดทับ)', cc.length === 3 && cc.every(m => m >= 100), cc);
   ok('ข้อความช่วยเหลือ: ไกลบ้านเกิน 90 เมตร (BAL.FIELD.leash 900 ÷ 10)', X(`TF_HELP.world[1]().includes('ไกลบ้านเกิน 90 เมตร')`));
   const kk = X(`(()=>{ const s=SK.curtain.p; return {o1:ZONES.o1.k, s1:ZONES.s1.k, g1:ZONES.g1.k, cr:s.r, cd:s.dmg}; })()`);
-  ok('ค่าแผนที่: o1 ดาเมจ ×0.65 (เดิม 0.8) + EXP ×2 (ไม่โดนตัด ×0.5) · s1 ทอง ×0.4 · g1 ปกติ · ม่านใบมีด r 70–93 ดาเมจ 15–32 (เดิม 56–74 / 11–23)',
-    kk.o1.dmg === .65 && kk.o1.exp === 2 && kk.s1.gold === .4 && !kk.g1.gold && !kk.g1.exp && kk.cr.join() === '70,75,80,85,93' && kk.cd.join() === '15,18,22,27,32', kk);
+  ok('ค่าแผนที่: o1 ดาเมจ ×0.65 (เดิม 0.8) + EXP ×2 (ไม่โดนตัด ×0.5) · s1 ทอง ×0.4 · g1 ปกติ · ม่านใบมีด r 70–93 ดาเมจ 22–46 (เดิม 56–74 / 11–23 · tester r4 ×1.45)',
+    kk.o1.dmg === .65 && kk.o1.exp === 2 && kk.s1.gold === .4 && !kk.g1.gold && !kk.g1.exp && kk.cr.join() === '70,75,80,85,93' && kk.cd.join() === '22,26,32,39,46', kk);
   const ke = X(`(()=>{ for(const q of G.enemies) if(!q.dead) fdVanish(q); for(const g of G.gems) g.dead=true; const R=G.fdRun, e0=R.exp; const e=fdExtra('g_grunt',P.x+200,P.y,null,{aggro:1}); e.rank=0; killEnemy(e);
     return {got:R.exp-e0, want:fieldKillExp(G.char,e).base}; })()`);
   ok('EXP ต่อตัวในแผนที่ = fieldKillExp (g1 ไม่มีตัวคูณแผนที่)', ke.got === ke.want && ke.want > 0, ke);

@@ -19,6 +19,8 @@ const SHOP = await api('_shop.js');
 let pass = 0, fail = 0;
 const ok = (name, cond, info) => { if (cond) { pass++; console.log('  ✓ ' + name); } else { fail++; console.log('  ✗ ' + name + (info !== undefined ? '\n      ได้: ' + (typeof info === 'string' ? info : JSON.stringify(info)) : '')); } };
 const tick = ms => new Promise(r => setTimeout(r, ms));
+// waits until cond() is true (polls every 10 ms, up to max ms) · Windows timers are ~15 ms coarse, so fixed sleeps were flaky
+const until = async (cond, max = 3000) => { const t0 = Date.now(); while (!cond() && Date.now() - t0 < max) await tick(10); };
 const THAI = /[฀-๿]/;
 const UID = '0a0a0a0a-0000-4000-8000-00000000000a', UID2 = '0b0b0b0b-0000-4000-8000-00000000000b';
 // fake values only (shape of the real ones · never a real key)
@@ -329,14 +331,14 @@ const click = (c, buy) => c.X(`shopClick({target:{closest:s=>s.includes('data-bu
   c = shopCtx({ search: '?paid=1&sid=cs_test_PAID1', rows: () => (++n >= 3 ? [{ session_id: 'cs_test_PAID1', product: 'sup30', runes: 0, days: 30, created_at: new Date().toISOString() }] : []) });
   c.X('SHOP_WAIT.fill(5)'); c.X('shopReturn()');
   ok('?paid=1&sid= → ลบออกจาก URL ทันที (history.state เดิม)', c.T.replaced.length === 1 && c.T.replaced[0][1] === '/' && c.T.replaced[0][0].rg === 'root', c.T.replaced);
-  await tick(120);
+  await until(() => c.T.toasts.some(([t, k]) => k === 'good' && /ได้รับสิทธิ์แล้ว/.test(t)));
   ok('โหลดรายการซื้อซ้ำจนเจอ session นี้ → "ได้รับสิทธิ์แล้ว" · เป็นผู้สนับสนุน', c.T.toasts.some(([t, k]) => k === 'good' && /ได้รับสิทธิ์แล้ว/.test(t)) && c.X('isSupporter()') === true && n >= 3, [c.T.toasts, n]);
   c = shopCtx({ search: '?paid=1&sid=cs_test_NEVER', rows: [] });
-  c.X('SHOP_WAIT.fill(2)'); c.X('shopReturn()'); await tick(150);
+  c.X('SHOP_WAIT.fill(2)'); c.X('shopReturn()'); await until(() => c.T.toasts.some(([t]) => /ยังไม่พบรายการซื้อ/.test(t)));
   ok('webhook ยังไม่มา (หมดรอบรอ) → บอกให้เปิดร้านอีกครั้ง · ไม่ใช่ผู้สนับสนุน', c.T.toasts.some(([t]) => /ยังไม่พบรายการซื้อ/.test(t)) && c.X('isSupporter()') === false);
   c = shopCtx({ search: '?paid=0' }); c.X('shopReturn()'); await tick(5);
   ok('?paid=0 → "ยกเลิกการชำระเงินแล้ว" · URL สะอาด', c.T.toasts.some(([t]) => /ยกเลิก/.test(t)) && c.T.replaced[0][1] === '/');
-  c = shopCtx({ search: '?paid=1&sid=cs_test_X', signed: false }); c.X('SHOP_WAIT.fill(2)'); c.X('shopReturn()'); await tick(80);
+  c = shopCtx({ search: '?paid=1&sid=cs_test_X', signed: false }); c.X('SHOP_WAIT.fill(2)'); c.X('shopReturn()'); await until(() => c.T.toasts.length > 0);
   ok('กลับมาแต่ยังไม่ล็อกอิน → ไม่ยิงอะไร · บอกให้เข้าสู่ระบบบัญชีที่ใช้ซื้อ', c.T.fetch.length === 0 && c.T.toasts.some(([t]) => /เข้าสู่ระบบบัญชีที่ใช้ซื้อ/.test(t)));
   c = shopCtx({ search: '?paid=1&sid=%3Cscript%3E', rows: [{ session_id: 'x', product: 'rune60', runes: 60, days: 0, created_at: new Date().toISOString() }] });
   c.X('SHOP_WAIT.fill(2)'); c.X('shopReturn()'); await tick(60);
