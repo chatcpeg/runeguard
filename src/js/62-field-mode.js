@@ -154,7 +154,7 @@ function fdCoins(x,y,v){ const f=Math.floor(v), n=f+(Math.random()<v-f?1:0); if(
 function fdBossInit(z){ const R=G.fdRun, b=z.boss, Fb=BAL.FIELD.boss, rb=R.boss[z.id]; let at;
   if(rb&&rb.at!=null) at=Math.max(G.t+Fb.appear,rb.at);                  // back on this map in the same trip: its clock ran on meanwhile
   else { const A=pgAcct(), fb=A&&svObj(A.fboss)&&svHas(A.fboss,z.id)?A.fboss[z.id]:null, next=fb?+fb.next||0:0;
-    at=next?G.t+Math.max(Fb.appear,Math.min((next-Date.now())/1000,b.every*1.15)):G.t+Fb.first; }       // never killed yet: 2 min after arriving
+    at=next?G.t+Math.max(Fb.appear,Math.min((next-Date.now())/1000,b.every*1.15)):G.t+(b.first||Fb.first); }       // never killed yet: 2 min after arriving (o1: 5)
   return {id:b.id, x:b.x, y:b.y, place:b.place, every:b.every, at, alive:false, warned:at-G.t<=Fb.warn}; }
 function fdBossKills(zid){ const A=pgAcct(), fb=A&&svObj(A.fboss)&&svHas(A.fboss,zid)?A.fboss[zid]:null; return fb?fb.kills|0:0; }
 function fdBossTick(){ const B=G.fd.boss; if(!B) return;
@@ -179,7 +179,7 @@ function fieldBossState(zoneId){ const z=ZONES[zoneId]; if(!z||!z.boss) return {
   const name=EN[z.boss.id].n;
   if(typeof G!=='undefined'&&G&&G.fd&&G.fd.id===zoneId&&G.fd.boss){ const B=G.fd.boss; return {ready:B.alive||B.at<=G.t, inSec:Math.max(0,Math.ceil(B.at-G.t)), name, alive:B.alive, seen:true}; }
   const A=typeof pgAcct==='function'?pgAcct():null, fb=A&&svObj(A.fboss)&&svHas(A.fboss,zoneId)?A.fboss[zoneId]:null;
-  if(!fb||!fb.next) return {ready:false, inSec:BAL.FIELD.boss.first, name, seen:false, kills:fb?fb.kills|0:0};
+  if(!fb||!fb.next) return {ready:false, inSec:z.boss.first||BAL.FIELD.boss.first, name, seen:false, kills:fb?fb.kills|0:0};
   const s=Math.ceil((fb.next-Date.now())/1000); return {ready:s<=0, inSec:Math.max(0,Math.min(s,z.boss.every*2)), name, seen:true, kills:fb.kills|0}; }
 
 /* ---- rampage (§5.6): every 150 ± 20 s, a 5-s warning, a pack from one side · all down in 30 s = a small chest ---- */
