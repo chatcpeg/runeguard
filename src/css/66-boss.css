@@ -1,1 +1,26 @@
-/* 66-boss.css · lane H · M0 stub (empty) */
+/* 66-boss.css · lane H · scrBoss (ล่าบอส) */
+.bs-q{width:44px;height:44px;min-height:44px;font-size:18px}
+.bs-marks{font-size:14px;font-weight:700;color:var(--rune);white-space:nowrap;font-variant-numeric:tabular-nums}
+.bs-diff{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:6px}
+.bs-d{min-width:0;min-height:52px;display:flex;flex-direction:column;align-items:center;justify-content:center;padding:4px 2px;border-radius:12px;border:1px solid var(--line);background:var(--card);color:var(--bone);cursor:pointer;line-height:1.25}
+.bs-d b{font:400 17px var(--f-display);color:var(--rune)}
+.bs-d small{font-size:11px;color:var(--ash);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:100%}
+.bs-d[aria-pressed="true"]{border-color:var(--rune);box-shadow:inset 0 0 0 1px var(--rune);background:rgba(240,181,69,.12)}
+.bs-list{display:flex;flex-direction:column;gap:8px}
+.bs-it{display:grid;grid-template-columns:40px minmax(0,1fr) auto;gap:10px;align-items:center;min-height:64px;padding:8px 12px;border-radius:14px;border:1px solid var(--line);background:var(--card)}
+.bs-it.lk{border-style:dashed;opacity:.85}
+.bs-ic{font-size:26px;text-align:center}
+.bs-t{display:flex;flex-direction:column;min-width:0;gap:1px}
+.bs-t b{font-family:var(--f-display);font-weight:400;font-size:17px;color:var(--bone);overflow-wrap:anywhere}
+.bs-t small{color:var(--ash);font-size:12.5px;line-height:1.35}
+.bs-t .bs-full{color:var(--spirit)}
+.bs-t .bs-full.none{color:var(--ash)}
+.bs-t .bs-lock{color:var(--rune)}
+.bs-md{display:inline-block;min-width:18px;padding:0 5px;border-radius:6px;border:1px solid var(--line-hi);font-weight:700;font-size:11.5px;text-align:center;color:var(--bone)}
+.bs-md.S{border-color:#f0c75a;color:#f0c75a}
+.bs-md.A{border-color:#9fd8ff;color:#9fd8ff}
+.bs-go{min-height:44px;padding:0 16px;font-size:14.5px}
+.bs-rush{display:flex;flex-direction:column;gap:8px;padding:12px 14px;border-radius:14px;border:1px solid var(--rune-deep);background:linear-gradient(135deg,rgba(240,181,69,.12),rgba(240,181,69,.02)),var(--card)}
+.bs-rush h3{margin:0;font-family:var(--f-display);font-weight:400;font-size:18px;color:var(--rune)}
+.bs-rush p{margin:0;color:var(--ash);font-size:13px;line-height:1.45}
+.bs-rush .btn{min-height:48px}

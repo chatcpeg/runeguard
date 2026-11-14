@@ -758,7 +758,32 @@ button.pjb-card{cursor:pointer}
 .wm-el.bad{border-color:var(--blood);color:#ffb0a0}
 .wm-el span{flex:1}
 .wm-elq{flex:none;width:40px;min-height:40px}
-/* 66-boss.css · lane H · M0 stub (empty) */
+/* 66-boss.css · lane H · scrBoss (ล่าบอส) */
+.bs-q{width:44px;height:44px;min-height:44px;font-size:18px}
+.bs-marks{font-size:14px;font-weight:700;color:var(--rune);white-space:nowrap;font-variant-numeric:tabular-nums}
+.bs-diff{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:6px}
+.bs-d{min-width:0;min-height:52px;display:flex;flex-direction:column;align-items:center;justify-content:center;padding:4px 2px;border-radius:12px;border:1px solid var(--line);background:var(--card);color:var(--bone);cursor:pointer;line-height:1.25}
+.bs-d b{font:400 17px var(--f-display);color:var(--rune)}
+.bs-d small{font-size:11px;color:var(--ash);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:100%}
+.bs-d[aria-pressed="true"]{border-color:var(--rune);box-shadow:inset 0 0 0 1px var(--rune);background:rgba(240,181,69,.12)}
+.bs-list{display:flex;flex-direction:column;gap:8px}
+.bs-it{display:grid;grid-template-columns:40px minmax(0,1fr) auto;gap:10px;align-items:center;min-height:64px;padding:8px 12px;border-radius:14px;border:1px solid var(--line);background:var(--card)}
+.bs-it.lk{border-style:dashed;opacity:.85}
+.bs-ic{font-size:26px;text-align:center}
+.bs-t{display:flex;flex-direction:column;min-width:0;gap:1px}
+.bs-t b{font-family:var(--f-display);font-weight:400;font-size:17px;color:var(--bone);overflow-wrap:anywhere}
+.bs-t small{color:var(--ash);font-size:12.5px;line-height:1.35}
+.bs-t .bs-full{color:var(--spirit)}
+.bs-t .bs-full.none{color:var(--ash)}
+.bs-t .bs-lock{color:var(--rune)}
+.bs-md{display:inline-block;min-width:18px;padding:0 5px;border-radius:6px;border:1px solid var(--line-hi);font-weight:700;font-size:11.5px;text-align:center;color:var(--bone)}
+.bs-md.S{border-color:#f0c75a;color:#f0c75a}
+.bs-md.A{border-color:#9fd8ff;color:#9fd8ff}
+.bs-go{min-height:44px;padding:0 16px;font-size:14.5px}
+.bs-rush{display:flex;flex-direction:column;gap:8px;padding:12px 14px;border-radius:14px;border:1px solid var(--rune-deep);background:linear-gradient(135deg,rgba(240,181,69,.12),rgba(240,181,69,.02)),var(--card)}
+.bs-rush h3{margin:0;font-family:var(--f-display);font-weight:400;font-size:18px;color:var(--rune)}
+.bs-rush p{margin:0;color:var(--ash);font-size:13px;line-height:1.45}
+.bs-rush .btn{min-height:48px}
 </style>
 
 <canvas id="game" role="img" aria-label="สนามรบ Runeguard"></canvas>
@@ -1031,7 +1056,16 @@ button.pjb-card{cursor:pointer}
     <div class="sh-foot"><button class="btn primary sh-wide" id="wmGo" type="button">เข้าแผนที่</button></div>
   </div>
 </section>
-<!-- 66-boss.html · lane H · M0 stub (empty) -->
+<!-- 66-boss.html · lane H · scrBoss: pick a boss of the arena (ล่าบอส) + the rush (68-ui-boss.js renders it) -->
+<section class="screen sh-scr" id="scrBoss" hidden aria-labelledby="bsTitle">
+  <div class="sh-panel">
+    <header class="sh-head"><button class="sh-back" type="button" data-back aria-label="ย้อนกลับ">←</button><h2 id="bsTitle">ล่าบอส</h2><span class="bs-marks" id="bsMarks" title="ตราผู้พิชิต"></span><button class="tf-q bs-q" id="bsHelp" type="button" aria-label="อธิบายโหมดล่าบอส">?</button></header>
+    <div class="sv-who" id="bsWho"></div>
+    <div class="bs-diff" id="bsDiff" role="group" aria-label="เลือกความยาก"></div>
+    <div class="bs-list" id="bsList" role="list" aria-label="รายชื่อบอส"></div>
+    <div class="bs-rush" id="bsRush"></div>
+  </div>
+</section>
 <script>
 (()=>{
 'use strict';
@@ -6771,6 +6805,7 @@ function grantRewards(ch,r,again){
     else if(k==='survTier') A.survTier=Math.max(A.survTier,Math.min(BAL.SURV.maxT,v|0));
     else if(k==='boss'&&SV_ID.test(v||'')) A.bossUnlock[v]=1; }
   if(r.mode==='field'&&typeof fdCommit==='function') try{ fdCommit(ch,r,A); }catch(e){ console.error(e); }   // ท่องแดนรูน: map records + boss timers (62)
+  if(r.mode==='boss'&&typeof bsCommit==='function') try{ bsCommit(ch,r,A); }catch(e){ console.error(e); }    // ล่าบอส: today's full rewards + best times (67)
   r.committed=true; const S0=SAVE; pgSave(ch,'reward',true); if(SAVE===S0) pgItemsNote(r);
   // the write found another tab's save and reloaded instead (svlWrite): the reward is in neither memory nor storage. Paid once more
   // onto the reloaded save (its runIds do not hold this runId, so it is not a second payment) · a second race in a row → not paid
@@ -10860,19 +10895,305 @@ for(const id of FD_ORDER){ const z=ZONES[id];
 // own markup (60-field.html) · wired once at load (§7.4)
 if(typeof document!=='undefined'&&document.getElementById){ const g=document.getElementById('wmGo'), q=document.getElementById('wmHelp');
   if(g&&g.addEventListener) g.addEventListener('click',wmGo); if(q&&q.addEventListener) q.addEventListener('click',()=>{ if(typeof tfHelp==='function') tfHelp('world'); }); }
-/* ================= 66-boss-data.js · lane H · pure · arena bosses (EN, EDRAW, BOSSAI) ================= */
-/* M0 stub: frozen signatures from DESIGN §7.8, neutral values — classic never calls these. Lane H writes the real body. */
-const BOSS_LIST=[];
+/* ================= 66-boss-data.js · lane H · pure · arena bosses (BOSS_LIST, EN of the old field bosses, vector painters) ================= */
+// DESIGN §2.4 · §7.8. One row per boss of the arena (ล่าบอส):
+//   classic  colossus / lich / king           core AI (20 bossAI)       unlocked by acct.bossUnlock (survival waves 5 / 10 / 20)
+//   field    gb_king / sb_queen / ob_warlord  BOSS_PAT moves (64)        unlocked once killed on its map (acct.fboss[zone].kills / ch.fz[zone].b)
+//   old      fb_ramking / fb_vinemother / fb_isleback · art only so far · new BOSS_PAT moves in 67 · unlocked by the character's level
+// lv = base level (difficulty adds BAL.BOSS.diff[d].lv) · k = HP weight on BAL.BOSS.hp · par = medal S time per difficulty (s)
+// biome = the arena floor (29a TER_BIOME look) · drop = what its chest holds on a full reward (rollDrops format, 34) · nothing here touches the DOM.
+const BOSS_LIST=[
+  {id:'fb_ramking', en:'fb_ramking', n:'ราชาแพะเขาหิน', i:'🐏', lv:10, k:.7, src:'old', unlock:{lv:8}, biome:'meadow', par:[50,65,100]},
+  {id:'gb_king', en:'gb_king', n:'ราชาก็อบลินมงกุฎสนิม', i:'👑', lv:12, k:.75, src:'field', unlock:{zone:'g1'}, biome:'forest', par:[55,70,110]},
+  {id:'fb_vinemother', en:'fb_vinemother', n:'แม่เถาวัลย์พันปี', i:'🌿', lv:18, k:.9, src:'old', unlock:{lv:15}, biome:'ruins', par:[55,70,110]},
+  {id:'colossus', en:'colossus', n:'ยักษ์กระดูกทมิฬ', i:'💀', lv:20, k:1.1, src:'classic', unlock:{bu:'colossus', wave:5}, biome:'haunted', par:[60,75,120]},
+  {id:'sb_queen', en:'sb_queen', n:'ราชินีวุ้นหกสี', i:'🫧', lv:22, k:1.05, src:'field', unlock:{zone:'s1'}, biome:'swamp', par:[60,75,120]},
+  {id:'fb_isleback', en:'fb_isleback', n:'เต่ายักษ์หลังเกาะ', i:'🐢', lv:26, k:.8, src:'old', unlock:{lv:22}, biome:'swamp', par:[65,80,125]},
+  {id:'lich', en:'lich', n:'ลิชไร้วิญญาณ', i:'🧙', lv:30, k:1.1, src:'classic', unlock:{bu:'lich', wave:10}, biome:'haunted', par:[60,75,120]},
+  {id:'ob_warlord', en:'ob_warlord', n:'แม่ทัพออร์คเขี้ยวเหล็ก', i:'🪓', lv:34, k:1.05, src:'field', unlock:{zone:'o1'}, biome:'canyon', par:[70,85,130]},
+  {id:'king', en:'king', n:'จักรพรรดิแห่งความตาย', i:'☠️', lv:45, k:1.15, src:'classic', unlock:{bu:'king', wave:20}, biome:'haunted', par:[80,95,140]}];
+// tuning of the arena (measured with the RG.sim bot: rewards per minute vs survival, docs report of lane H)
+//   R arena radius · spawn s after entering · HP × BAL.BOSS.hp (§2.4's 900 dies in 3–10 s to a character with ★5 skills) · HPD per difficulty · FULL full rewards per boss per local day (acct.daily.boss '<id>:<n>') · CUT what a fight
+//   pays after that (gold / EXP ×CUT, no marks, a small dust chance) · GOLD / EXP on top of BAL.BOSS.gold / exp · MIN = minion level
+//   floor below the boss · rushGap s between bosses of the rush (25 % heal + one card)
+const BS={R:700, CX:3000, CY:3000, spawn:2, HP:8, HPD:[1,.7,.55], FULL:3, CUT:.15, GOLD:.22, EXP:.55, MIN:6, rushGap:3, rushMin:2,
+  diffWin:[0,0,1],                                                       // ยาก opens after a win on ปกติ · ฝันร้าย after a win on ยาก
+  tier(lv){ return Math.max(1,Math.min(5,1+Math.floor(lv/10))); }};
+const BOSS_BY={}; for(const b of BOSS_LIST) BOSS_BY[b.id]=b;
+function bsDef(id){ return typeof id==='string'&&Object.prototype.hasOwnProperty.call(BOSS_BY,id)?BOSS_BY[id]:null; }
+function bsDiff(d){ const D=BAL.BOSS.diff, i=Math.floor(+d||0); return D[i<0?0:i>=D.length?D.length-1:i]; }
+function bsDi(d){ const n=BAL.BOSS.diff.length, i=Math.floor(+d||0); return i<0?0:i>=n?n-1:i; }
+function bsLv(id,d){ const B=bsDef(id); return B?B.lv+bsDiff(d).lv:1; }
+// the chest of one kill (rollDrops table) · full = one of today's full rewards · d = difficulty index
+function bsDropTable(id,d,full){ const B=bsDef(id); if(!B) return []; if(!full) return [{id:'m_dust', p:.35}];
+  const di=bsDi(d), t=BS.tier(bsLv(id,di)), R=BAL.BOSS;
+  const out=[{id:'m_dust', n:[2+di,4+2*di]}, {gear:t}, {gear:t, p:R.uniq[di]}, {id:'m_crystal', p:.35+.25*di}, {id:'m_seal', p:R.uniq[di]*.5}, {id:'u_potion_l', p:.5}];
+  if(B.src==='classic') out.push({id:'rn_'+B.id, p:R.rune[di]}, {id:'m_shard_'+B.id, n:[1,1+di]});
+  else out.push({shard:'survBoss', p:R.rune[di]*2}, {shard:'surv', n:[1,1+di]});
+  return out; }
+// medal of a time (s) on difficulty d: S ≤ par · A ≤ 1.5 par · B = a win
+function bsMedal(id,d,sec){ const B=bsDef(id); if(!B) return 'B'; const par=B.par[bsDi(d)]||BAL.BOSS.par[bsDi(d)]; return sec<=par?'S':sec<=par*BAL.BOSS.medalA?'A':'B'; }
 
-/* ================= 67-boss-mode.js · lane H · MODES.boss: pick a boss, boss rush, rewards ================= */
-/* M0 stub: frozen signatures from DESIGN §7.8, neutral values — classic never calls these. Lane H writes the real body. */
-function bossStart(id,diff){}
-function bossRushStart(){}
+/* ---- the three old field bosses: painted art (12a fb_*) + a vector look until it loads (61 FD_PAINT, looked up at draw time) ---- */
+// vector look per type: [FD_PAINT family, its unit radius, colour, extra] scaled to the type's own r
+function bsVec(fam,unit,r,col,x){ return (c,f)=>{ const P2=typeof FD_PAINT!=='undefined'?FD_PAINT[fam]:null; if(!P2) return; c.save(); c.scale(r/unit,r/unit); P2(c,f,col,x); c.restore(); }; }
+if(typeof EDRAW!=='undefined'){ EDRAW.bs_ramking=bsVec('rhino',20,42); EDRAW.bs_vinemother=bsVec('slime',12,46,'#5a9a48','crown'); EDRAW.bs_isleback=bsVec('crab',15,48); }
+const BS_EN={
+  fb_ramking:{boss:1, lazy:1, n:'ราชาแพะเขาหิน', lv:10, el:'earth', ai:'bs_ramking', base:'bs_ramking', art:'fb_ramking', hp:1000, speed:70, r:42, dmg:19, mass:70, xp:110, goo:'#b0a890', fam:'beast',
+    d:'พุ่งชนเป็นเส้นตรง (เตือน 0.9 วิ) แล้วกระทืบพื้น r 160 · HP ต่ำกว่า 50% เรียกกระรอกหางถ่าน'},
+  fb_vinemother:{boss:1, lazy:1, n:'แม่เถาวัลย์พันปี', lv:18, el:'wind', ai:'bs_vinemother', base:'bs_vinemother', art:'fb_vinemother', hp:1050, speed:46, r:46, dmg:20, mass:80, xp:150, goo:'#7fbf5a',
+    d:'ยิงหนามรอบตัว 12 ลูกทุก 3 วิ · เรียกผึ้งอำพันทุก 10 วิ · รากพันธนาการ r 150 โดนแล้วเดินช้า'},
+  fb_isleback:{boss:1, lazy:1, n:'เต่ายักษ์หลังเกาะ', lv:26, el:'water', ai:'bs_isleback', base:'bs_isleback', art:'fb_isleback', hp:1150, speed:40, r:48, dmg:23, mass:120, xp:200, goo:'#7ab8d8', fam:'beast', def:.2,
+    d:'กระดองแข็ง (ลดดาเมจ 20%) · กระแทกพื้น r 200 ถี่ · พ่นลูกน้ำ 18 ลูก · เรียกปูที่ HP 66% และ 33%'}};
+if(typeof EN!=='undefined') Object.assign(EN,BS_EN);   // EN absent: a pure test load without 08
+/* ================= 67-boss-mode.js · lane H · MODES.boss (ล่าบอส): one boss or the rush, the arena, rewards + daily cap ================= */
+// DESIGN §2.4 · §7.6 · §7.8. A run = an arena (a circle r 700 with a ring of pillars for its wall, 4 pillars of cover, the boss's floor)
+// and one boss that appears 2 s after entering · its minions come only from its own moves. Rush = every unlocked boss in level order
+// (ปกติ): between two bosses 25 % HP + one free card. The character plays with its ★ skills (prepareRun 'rank') + proficiency cards
+// from the gems (P.sx stat cards are uncapped). Field bosses (64) and their minions run with a small G.fd (shots / ground hazards ·
+// no map, no nest: no leash, no "stuck → home" reset). Rewards: onRunEnd → mode.rewards (gold / EXP / marks of every kill + its chest
+// picked up into G.loot) · the first BS.FULL kills of a boss each local day pay in full, later ones BS.CUT (svDayCur rule like the
+// daily dungeons) · grantRewards → bsCommit counts them (acct.daily.boss '<id>:<n>') and keeps the best time (acct.records.boss).
+// Logic of the core stays untouched: everything here runs only when G.mode is MODES.boss.
 
-/* ================= 68-ui-boss.js · lane H · scrBossSel, conqueror-mark shop ================= */
-/* M0 stub: frozen signatures from DESIGN §7.8, neutral values — classic never calls these. Lane H writes the real body. */
-// M0: nothing yet
+/* ---- the three old field bosses: moves on BOSS_PAT (64) ---- */
+const BS_RAM={charge:{sp:800, wind:.9, dur:.55, cd:5}, slam:{r:160, wind:.9, cd:5, near:220, dmg:1.3, c:'#d8c8a0'},
+  summon:[{at:.5, list:[['m_embersquirrel',4]], say:'เรียกกระรอกหางถ่าน 4 ตัว!'}]};
+const BS_VINE={ring:{n:12, sp:200, cd:3, dmg:.4}, keep:170, slam:{r:150, wind:1, cd:5.5, near:200, dmg:1.1, c:'#7fbf5a'},
+  extra(e,A,dt){
+    if(A.vs>0&&!(A.slam>0)&&(P.x-e.x)**2+(P.y-e.y)**2<(150+P.r)**2) bsSlowP(1.4,.6,'รากพันธนาการ!');   // the root slam that just landed binds
+    A.vs=A.slam||0;
+    A.sumT=(A.sumT==null?6:A.sumT)-dt; if(A.sumT<=0){ A.sumT=10; if(bsMinions()<9){ BOSS_PAT.summon(e,[['m_amberbee',3]],130); addText(e.x,e.y-e.r-24,'เรียกผึ้งอำพัน!','#ffd36a',true); } }
+    return false; }};
+const BS_ISLE={ring:{n:18, sp:175, cd:3.6, dmg:.42}, slam:{r:200, wind:1.1, cd:3.6, near:260, dmg:1.25, c:'#9fd8ff'},
+  summon:[{at:.66, list:[['m_mistcrab',4]], say:'เรียกปูเปลือกหมอก 4 ตัว!'}, {at:.33, list:[['m_mistcrab',4]], say:'ปูอีกระลอก!'}]};
+BOSSAI.bs_ramking=(e,dt,d,dx,dy)=>bossPattern(e,dt,d,dx,dy,BS_RAM);
+BOSSAI.bs_vinemother=(e,dt,d,dx,dy)=>bossPattern(e,dt,d,dx,dy,BS_VINE);
+BOSSAI.bs_isleback=(e,dt,d,dx,dy)=>bossPattern(e,dt,d,dx,dy,BS_ISLE);
+// ราชินีวุ้น in the arena: the same moves, but the split needs no nest (the field split copies e.fb) · field bosses keep 64 as it is
+const BS_QUEEN=Object.assign({},FB_QUEEN,{extra(e,A,dt,d,dx,dy,k){ if(!A.split&&e.hp<e.maxHp*.5){ A.split=1; bsQueenSplit(e); return true; } return FB_QUEEN.extra(e,A,dt,d,dx,dy,k); }});
+{ const q0=BOSSAI.fb_queen; BOSSAI.fb_queen=(e,dt,d,dx,dy)=>e.bsA?bossPattern(e,dt,d,dx,dy,BS_QUEEN):q0(e,dt,d,dx,dy); }
+function bsQueenSplit(e){ const i=FB_Q_EL.indexOf(e.el), els=[e.el||'fire',FB_Q_EL[(i+2+6)%6],FB_Q_EL[(i+4+6)%6]], hp=Math.max(1,e.hp/3*1.15), out=[];
+  for(let k=0;k<3;k++){ const a=-PI/2+k*TAU/3, s=bsMake('sb_shard',e.x+Math.cos(a)*70,e.y+Math.sin(a)*70); s.el=els[k]; s.hp=s.maxHp=hp; s.kx=Math.cos(a)*300; s.ky=Math.sin(a)*300; out.push(s); }
+  burst(e.x,e.y,40,'#c8a0ff',340,.7,5); G.shake=Math.max(G.shake,12); sfx('boss'); banner('ราชินีแยกร่าง!','3 ร่าง 3 ธาตุ: '+els.map(q=>EL[q].i+EL[q].n).join(' · '));
+  fdVanish(e); G.bosses=G.bosses.concat(out); }
+// the player slowed for t s by v (field curse of G.fd: 62 fdUpdate reads it the same way)
+function bsSlowP(t,v,say){ const F=G.fd; if(!F||G.over) return; F.curseT=Math.max(F.curseT||0,G.t+t); F.curseV=Math.max(F.curseV||0,v); if(say) addText(P.x,P.y-50,say,'#9fe08a',true); }
+function bsMinions(){ let n=0; for(const e of G.enemies) if(!e.dead&&!e.boss) n++; return n; }
 
+/* ---- account state: unlocks, today's full rewards, records ---- */
+function bsAcct(){ return typeof pgAcct==='function'?pgAcct():null; }
+function bsKilledOnMap(z){ const A=bsAcct(); if(A&&svObj(A.fboss)&&svHas(A.fboss,z)&&(A.fboss[z].kills|0)>0) return true;
+  for(const c of SAVE&&Array.isArray(SAVE.chars)?SAVE.chars:[]) if(c&&svObj(c.fz)&&svHas(c.fz,z)&&(c.fz[z].b|0)>0) return true;
+  return false; }
+// why boss id is still locked for ch ('' = open)
+function bsLockWhy(id,ch){ const B=bsDef(id); if(!B) return 'ไม่พบบอส'; const u=B.unlock, A=bsAcct();
+  if(u.bu) return A&&A.bossUnlock&&A.bossUnlock[u.bu]?'':'ไปให้ถึงคลื่น '+u.wave+' ในโหมดเอาชีวิตรอดก่อน';
+  if(u.zone) return bsKilledOnMap(u.zone)?'':'ล้ม'+B.n+'ในแผนที่'+(typeof ZONES!=='undefined'&&ZONES[u.zone]?ZONES[u.zone].n:'')+'ก่อน';
+  if(u.lv) return ch&&(ch.lv|0)>=u.lv?'':'ต้องเลเวลตัวละคร '+u.lv+' ขึ้นไป';
+  return ''; }
+function bsRec(id,d){ const A=bsAcct(), m=A&&A.records&&svObj(A.records.boss)&&svHas(A.records.boss,id)?A.records.boss[id]:null, k=String(bsDi(d));
+  return m&&svHas(m,k)&&m[k]&&m[k].sec>0?m[k]:null; }
+// difficulty d of boss id: '' = open · ยาก needs a win on ปกติ, ฝันร้าย a win on ยาก
+function bsDiffWhy(id,d){ const di=bsDi(d); if(!di) return ''; return bsRec(id,di-1)?'':'ชนะระดับ'+BAL.BOSS.diff[di-1].n+'ก่อน'; }
+function bsWhy(id,d,ch){ if(!ch) return 'ต้องมีตัวละครก่อน'; if(typeof pgRO==='function'&&pgRO()) return 'ข้อมูลเป็นเวอร์ชันใหม่กว่าแอป แก้ไขไม่ได้';
+  return bsLockWhy(id,ch)||bsDiffWhy(id,d); }
+// today's full rewards used on boss id: acct.daily.boss holds one key '<id>:<n>' per boss (flag map · validateSave keeps 1/0 only)
+function bsUsed(id,A){ A=A||bsAcct(); if(!A||!A.daily||!svDayCur(A.daily.day)||!svObj(A.daily.boss)) return 0; const p=id+':';
+  for(const k in A.daily.boss) if(k.indexOf(p)===0&&A.daily.boss[k]){ const n=+k.slice(p.length); if(Number.isInteger(n)&&n>0) return Math.min(99,n); } return 0; }
+function bsFullLeft(id){ return Math.max(0,BS.FULL-bsUsed(id)); }
+function bsCountAdd(A,id){ if(!svObj(A.daily.boss)) A.daily.boss={}; const n=bsUsed(id,A), p=id+':';
+  for(const k of Object.keys(A.daily.boss)) if(k.indexOf(p)===0) delete A.daily.boss[k];
+  A.daily.boss[p+Math.min(99,n+1)]=1; }
+function bsUnlocked(ch){ return BOSS_LIST.filter(B=>!bsLockWhy(B.id,ch)).map(B=>B.id); }
+function bsRushFree(){ const A=bsAcct(); return !!A&&A.daily&&A.daily.rushWeek!==svWeek(); }
+// grantRewards (42) → once per runId: today's full-reward count of every boss paid in full + best time + medal + the weekly rush bonus
+function bsCommit(ch,r,A){ const b=r&&r.boss; if(!b||!A||!Array.isArray(b.kills)||r.unpaid) return;
+  if(!svObj(A.records)) return; if(!svObj(A.records.boss)) A.records.boss={};
+  for(const k of b.kills.slice(0,BOSS_LIST.length)){ if(!k||!bsDef(k.id)) continue; const di=bsDi(k.d), sec=svNum(+k.sec,0,1e6,0); if(!(sec>0)) continue;
+    if(k.full) bsCountAdd(A,k.id);
+    const m=svObj(A.records.boss[k.id])?A.records.boss[k.id]:(A.records.boss[k.id]={}), o=m[di];
+    if(!o||!(o.sec>0)||sec<o.sec) m[di]={sec:Math.round(sec*10)/10, medal:bsMedal(k.id,di,sec)}; }
+  if(b.rushBonus) A.daily.rushWeek=svWeek(); }
+
+/* ---- the arena ---- */
+// a fixed terrain (29a look, G.terrain.fixed like the maps): pillars around the edge + 4 pillars of cover + 4 bushes
+function bsArena(biome){ const b=TER_BIOME[biome]?biome:'ruins', B=TER_BIOME[b], T=G.terrain={b, seed:1, chunks:new Map(), t:0, fixed:true}, cx=BS.CX, cy=BS.CY, R=BS.R;
+  G.obstacles={list:null, grid:new Map()};
+  const add=f=>{ const kx=Math.floor(f.x/TER.CH), ky=Math.floor(f.y/TER.CH), key=kx+','+ky; let C=T.chunks.get(key); if(!C) T.chunks.set(key,C={cx:kx, cy:ky, list:[]});
+    f.ch=key; C.list.push(f); terCellsOf(f,g=>{ const a=G.obstacles.grid.get(g); if(a) a.push(f); else G.obstacles.grid.set(g,[f]); }); };
+  for(let i=0;i<24;i++){ const a=i*TAU/24; add({k:'rock', rk:'pillar', hard:1, v:i%3, r:26, x:cx+Math.cos(a)*(R+42), y:cy+Math.sin(a)*(R+42)}); }
+  for(let i=0;i<4;i++){ const a=PI/4+i*PI/2; add({k:'rock', rk:'pillar', hard:1, v:(i+1)%3, r:28, x:cx+Math.cos(a)*380, y:cy+Math.sin(a)*380}); }
+  for(let i=0;i<4;i++){ const a=i*PI/2; add({k:'bush', bk:B.bk, soft:TER.slowBush, v:i%3, r:30, x:cx+Math.cos(a)*500, y:cy+Math.sin(a)*500}); }
+  if(typeof artPreload==='function') artPreload(terArtKeys(b)); }
+// one boss of the arena at the run's level and difficulty (BAL.BOSS: HP 900 · hpByLv · HP× · k · damage dmgByLv · dmg×)
+function bsMake(type,x,y){ const S=G.bs, d=EN[type], lv=S.lv, F=BAL.FIELD;
+  const e=spawnEnemy(type,x,y,{hp:Math.max(1,Math.round(BAL.BOSS.hp(lv,S.di)*S.B.k*BS.HP*BS.HPD[S.di]))}); e.boss=true; e.bsA=1; e.lv=lv;
+  e.dmg=d.dmg*F.dmgByLv(lv)*S.D.dmg; e.fdK=F.dmgByLv(lv)*S.D.dmg; e.el=d.el||null; e.def=d.def||0; e.xp=d.xp; return e; }
+// set the run up for boss id (rush: again for every boss) · minions spawned by the core AI read G.cfg
+function bsSetup(id){ const S=G.bs, F=BAL.FIELD; S.B=bsDef(id); S.lv=bsLv(id,S.di); S.D=bsDiff(S.di);
+  G.defK=22+.8*S.lv; G.cfg={W:{}, rate:0, hpMul:F.hpByLv(S.lv)*Math.sqrt(S.D.hp), dmgMul:F.dmgByLv(S.lv)*S.D.dmg, spdMul:1};
+  try{ getSpr(S.B.en); if(S.B.id==='sb_queen') getSpr('sb_shard'); if(typeof artPreload==='function'&&EN[S.B.en].art) artPreload([EN[S.B.en].art]); }catch(e){ console.error(e); } }
+function bsSpawn(){ const S=G.bs, cx=BS.CX, cy=BS.CY; let a=Math.atan2(cy-P.y,cx-P.x); if((P.x-cx)**2+(P.y-cy)**2<120*120) a=-PI/2;
+  const x=cx+Math.cos(a)*320, y=cy+Math.sin(a)*320, e=bsMake(S.B.en,x,y);
+  G.bosses=[e]; G.boss=true; S.phase='fight'; S.t0=G.t;
+  burst(x,y,30,e.d.goo||'#e8d6a8',300,.7,4); G.shake=Math.max(G.shake,10); sfx('boss');
+  banner(S.B.i+' '+S.B.n,'Lv '+S.lv+' · '+S.D.n+(S.rush?' · ฝ่าด่าน '+(S.i+1)+'/'+S.list.length:'')); return e; }
+// field minions (BOSS_PAT.summon → fdExtra) come at their own level: lift them to the boss's level − BS.MIN, never leash home
+function bsScale(e){ const S=G.bs, F=BAL.FIELD, l0=Math.max(1,e.lv|0), lv=Math.max(l0,S.lv-BS.MIN);
+  const kh=F.hpByLv(lv)/F.hpByLv(l0)*Math.sqrt(S.D.hp), kd=F.dmgByLv(lv)/F.dmgByLv(l0)*S.D.dmg;
+  e.hp*=kh; e.maxHp*=kh; e.dmg*=kd; e.fdK=(e.fdK||1)*kd; e.lv=lv; e.bsK=1; if(e.fm){ e.fm.free=1e9; e.fm.st=1; } }
+// every chest left on the ground → picked up (rush: before the next boss · and when the run ends)
+function bsCollect(){ if(!Array.isArray(G.gems)) return; for(const g of G.gems) if(!g.dead&&g.kind==='bosschest'){ ITEMKIND.bosschest.collect(g); g.dead=true; } }
+function bsDown(){ const S=G.bs, B=S.B, sec=Math.max(.1,G.t-S.t0), last=G.bosses.filter(b=>!b.gone).pop()||G.bosses[0]||{x:BS.CX, y:BS.CY};
+  const used=S.kills.filter(k=>k.id===B.id).length, full=S.paid&&bsFullLeft(B.id)-used>0, medal=bsMedal(B.id,S.di,sec);
+  S.kills.push({id:B.id, d:S.di, sec:Math.round(sec*100)/100, full, medal});
+  if(S.paid){ const list=rollDrops(bsDropTable(B.id,S.di,full),1+(P.drop||0)); if(list.length) ltDropChest(last.x,last.y,list,0); }
+  G.boss=false; G.bosses=[];
+  for(const e of G.enemies) if(!e.dead&&!e.boss){ e.dead=true; e.gone=true; burst(e.x,e.y,6,e.d.goo||'#c8c0b0',120,.4,3); }   // its minions leave with it (no kill, no reward)
+  G.eprojs.length=0; if(G.fd){ G.fd.shots.length=0; G.fd.haz.length=0; }
+  banner('ปราบ'+B.n+'แล้ว!','เวลา '+fmtClock(sec)+' · เหรียญ '+medal+(S.paid&&!full?' · วันนี้รางวัลเต็มครบแล้ว':''));
+  if(S.i+1<S.list.length){ S.phase='gap'; S.at=G.t+BS.rushGap; healP(P.maxHp*BAL.BOSS.rush.heal); G.pendingLv++; sfx('level'); return; }
+  S.phase='done'; G.waveEnding=true; healP(P.maxHp*.25); sfx('win'); later(1.6,()=>{ if(G&&!G.over&&G.modeId==='boss') endRun(true); }); }
+// RG.sim bot: the core bot (undead shots + boss tells) + the field shots / fire of G.fd + stay off the wall
+function bsBot(){ let b=botInput(), x=b[0], y=b[1]; const F=G.fd;
+  if(F){ for(const s of F.shots){ if(s.dead) continue; const dx=P.x-s.x, dy=P.y-s.y, d2=dx*dx+dy*dy+50; if(d2<130*130){ x+=dx/d2*60; y+=dy/d2*60; } }
+    for(const h of F.haz){ if(h.dead||h.k!=='fire') continue; const dx=P.x-h.x, dy=P.y-h.y, d2=dx*dx+dy*dy+50; if(d2<(h.r+40)**2){ x+=dx/d2*40; y+=dy/d2*40; } } }
+  const cx=BS.CX-P.x, cy=BS.CY-P.y, c=Math.hypot(cx,cy)||1; if(c>BS.R-90){ x+=cx/c*.8; y+=cy/c*.8; }
+  const l=Math.hypot(x,y); return l>1?[x/l,y/l]:[x,y]; }
+
+MODES.boss={
+  id:'boss', n:'ล่าบอส', cards:'auto', relocate:false,
+  init(opts){ opts=opts||{}; const ch=G.char, S=G.bs={rush:!!opts.rush, di:opts.rush?0:bsDi(opts.diff), list:[], i:0, kills:[], phase:'wait', at:BS.spawn, t0:0, paid:true, B:null};
+    if(S.rush){ S.list=bsUnlocked(ch).sort((a,b)=>bsDef(a).lv-bsDef(b).lv); if(S.list.length<BS.rushMin&&!opts.dev) S.paid=false; if(!S.list.length) S.list=['colossus']; }
+    else { const id=bsDef(opts.boss)?opts.boss:'colossus'; S.list=[id]; if(!opts.dev&&bsWhy(id,S.di,ch)) S.paid=false; }   // only bossStart / the dev hook start a paid fight
+    G.wave=1; bsSetup(S.list[0]);
+    G.bounds={k:'circle', x:BS.CX, y:BS.CY, r:BS.R};
+    G.fd={id:'arena', z:{id:'arena', n:'ลานประลอง', w:BS.CX*2, h:BS.CY*2}, shots:[], haz:[], portals:[], chests:[], recs:[], boss:null, rc:null, curseT:0, curseV:0, ramp:{on:null}};
+    bsArena(S.rush?'ruins':S.B.biome);
+    P.x=BS.CX; P.y=BS.CY+260; P.vx=P.vy=P.kx=P.ky=0; cam.x=P.x; cam.y=P.y;
+    banner(S.rush?'⚔ ฝ่าด่านบอส':'👑 ล่าบอส',S.rush?S.list.length+' ตัวต่อเนื่อง · ระหว่างตัวฟื้น 25% + การ์ด 1 ใบ':S.B.n+' · '+S.D.n+' · จะปรากฏใน '+BS.spawn+' วิ'); },
+  update(dt){ const S=G.bs, F=G.fd;
+    if(F.curseT>G.t) P.tSlow=(P.tSlow||1)*(1-F.curseV);                 // before core updatePlayer reads it (as 62 fdUpdate)
+    fdHazTick(dt); if(G.over) return; fdShotTick(dt); if(G.over) return;
+    for(const e of G.enemies) if(e.fm&&!e.bsK&&!e.dead) bsScale(e);
+    if(S.phase==='wait'){ if(G.t>=S.at) bsSpawn(); }
+    else if(S.phase==='fight'){ if(G.bosses.length&&G.bosses.every(b=>b.dead)) bsDown(); }
+    else if(S.phase==='gap'&&G.t>=S.at){ bsCollect(); S.i++; bsSetup(S.list[S.i]); S.phase='wait'; S.at=G.t+1; } },
+  steer:fdSteer, bot(){ return bsBot(); },
+  onDeath(){ if(G.bs&&G.bs.phase==='done'){ P.hp=1; return true; } return false; },   // the last boss is down: a parting hit cannot turn it into a loss
+  hud(){ const S=G.bs, cls=P.adv?P.adv.n:P.cls.n;
+    return {lv:'ชำนาญ Lv '+P.lv+' · '+cls, wave:(S.rush?'⚔ '+(S.i+1)+'/'+S.list.length+' · ':'👑 ')+S.B.n+' · '+S.D.n,
+      time:S.phase==='fight'?fmtClock(G.t-S.t0):S.phase==='wait'?'เตรียมตัว '+fmtTime(S.at-G.t):S.phase==='gap'?'ตัวถัดไป '+fmtTime(S.at-G.t):'ชนะ!'}; },
+  pauseTitle(){ const S=G.bs; return (S.rush?'ฝ่าด่านบอส '+(S.i+1)+'/'+S.list.length+' · ':'ล่าบอส · ')+S.B.n+' Lv '+S.lv+' · '+S.D.n+' · เวลา '+fmtClock(G.t); },
+  end(won){ bsCollect(); const S=G.bs, B=S.B, k=S.kills, last=k[k.length-1], one=!S.rush;
+    const prev=one&&last?bsRec(last.id,last.d):null, best=!!(one&&won&&last&&(!prev||last.sec<prev.sec));
+    const left=one?bsFullLeft(B.id)-k.filter(q=>q.full).length:0;
+    return {eyebrow:(S.rush?'ฝ่าด่านบอส · ปราบ '+k.length+'/'+S.list.length:'ล่าบอส · '+B.n+' · '+S.D.n)+(S.paid?'':' · ไม่ได้รับรางวัล'),
+      title:won?(S.rush?'ฝ่าด่านสำเร็จ!':'ปราบสำเร็จ!'):G.retreat?'ถอยทัพ':'พ่ายแพ้',
+      rows:()=>{ const R=[];
+        if(one) R.push(['บอส',B.n+' · Lv '+S.lv],['ความยาก',S.D.n],['เวลา',won&&last?fmtClock(last.sec)+' · เหรียญ '+last.medal+(best?' · สถิติใหม่!':''):fmtClock(G.t)]);
+        else { R.push(['ปราบได้',k.length+'/'+S.list.length+' ตัว'],['เวลารวม',fmtClock(G.t)]); if(k.length) R.push(['ตัวล่าสุด',bsDef(last.id).n+' · '+fmtClock(last.sec)+' · '+last.medal]); }
+        if(S.paid&&k.length){ const nf=k.filter(q=>q.full).length; R.push(['รางวัลเต็ม',nf+'/'+k.length+' ตัว'+(nf<k.length?' (ที่เหลือได้ '+Math.round(BS.CUT*100)+'%)':'')]); }
+        if(one&&S.paid) R.push(['รางวัลเต็มวันนี้','เหลือ '+Math.max(0,left)+'/'+BS.FULL+' ครั้ง']);
+        R.push(['สังหาร',fmtNum(G.kills)],['ชำนาญ','Lv '+P.lv]); return R; }}; },
+  rewards(r,won){ const S=G.bs, ch=G.char; r.boss={kills:[], rush:S.rush, rushBonus:false};
+    if(!S.paid){ r.baseXp=0; r.gold=0; r.items=[]; r.unpaid=true; return; }
+    let gold=0, exp=0, marks=0;
+    for(const k of S.kills){ const lv=bsLv(k.id,k.d), m=(k.full?1:BS.CUT)*BAL.SURV.overLv((ch&&ch.lv)|0,lv);   // a boss far below the character pays less (as survival)
+      gold+=BAL.BOSS.gold(lv,k.d)*BS.GOLD*m; exp+=BAL.BOSS.exp(lv,k.d)*BS.EXP*m; if(k.full) marks+=BAL.BOSS.marks[k.d];
+      r.boss.kills.push({id:k.id, d:k.d, sec:k.sec, full:k.full, medal:k.medal}); }
+    if(S.rush&&won&&S.kills.length===S.list.length&&S.list.length>=BS.rushMin&&bsRushFree()){ marks+=BAL.BOSS.rush.marks; r.boss.rushBonus=true; }
+    r.gold=(r.gold|0)+Math.round(gold); r.baseXp=Math.round(exp); r.marks=marks; },
+  pauseExtra(box){ const S=G.bs; if(!S||!S.rush||!S.kills.length||!box||typeof shBtn!=='function') return;   // the rush: leave with what is already won
+    box.append(shBtn('🏳️ ถอยทัพ · รับรางวัล '+S.kills.length+' ตัวที่ปราบแล้ว','btn ghost sh-wide',()=>{ if(!G||G.over||G.ui!=='pause') return; G.retreat=true; G.ui=null; show(null); endRun(false); })); },
+  drawGround(L,T,R,B){ if(typeof artGround==='function') artGround(L,T,R,B); else { ctx.fillStyle=groundPat; ctx.fillRect(L,T,R-L,B-T); } },
+  drawWorld(L,T,R,B){ const A=G.bounds; ctx.save(); ctx.beginPath(); ctx.rect(L,T,R-L,B-T); ctx.arc(A.x,A.y,A.r,0,TAU); ctx.fillStyle='rgba(6,5,8,.58)'; ctx.fill('evenodd');
+    ctx.beginPath(); ctx.arc(A.x,A.y,A.r,0,TAU); ctx.setLineDash([22,12]); ctx.lineDashOffset=-G.t*10; ctx.lineWidth=5; ctx.strokeStyle='rgba(240,181,69,.55)'; ctx.stroke();
+    ctx.setLineDash([]); ctx.lineWidth=2; ctx.strokeStyle='rgba(240,181,69,.18)'; ctx.beginPath(); ctx.arc(A.x,A.y,A.r*.18,0,TAU); ctx.stroke(); ctx.restore();
+    fdDrawWorld(L,T,R,B); },
+  drawOver(L,T,R,B){ fdDrawOver(L,T,R,B); }};
+// after the run the router lands on scrBoss again (50 SH_RET · lane B's map, filled by the mode that owns the screen)
+if(typeof SH_RET!=='undefined') SH_RET.boss='scrBoss';
+
+/* ---- API (§7.8) ---- */
+function bsGo(opts){ if(typeof svlFresh==='function') try{ svlFresh(); }catch(e){}
+  const ch=typeof pgFresh==='function'?pgFresh(curChar()):curChar(); if(!ch) return false;
+  if(typeof closeSheet==='function') closeSheet(); if(typeof shChrome==='function') shChrome(null);
+  startRun(ch.cls,'boss',Object.assign({char:ch},opts)); return true; }
+function bossStart(id,diff){ const ch=curChar(), why=bsWhy(id,diff,ch); if(why){ if(typeof toast==='function') toast(why,'bad'); return false; }
+  return bsGo({boss:id, diff:bsDi(diff)}); }
+function bossRushStart(){ const ch=curChar(); if(!ch){ if(typeof toast==='function') toast('ต้องมีตัวละครก่อน','bad'); return false; }
+  const n=bsUnlocked(ch).length; if(n<BS.rushMin){ if(typeof toast==='function') toast('ปลดบอสอย่างน้อย '+BS.rushMin+' ตัวก่อน','bad'); return false; }
+  if(typeof pgRO==='function'&&pgRO()){ if(typeof toast==='function') toast('ข้อมูลเป็นเวอร์ชันใหม่กว่าแอป แก้ไขไม่ได้','bad'); return false; }
+  return bsGo({rush:true}); }
+
+/* ---- dev (§7.9): RG.boss.* · 90 merges DEV into window.RG only on localhost / 127.0.0.1 with #dev ---- */
+DEV.boss={
+  start(id,d){ if(!bsDef(id)) return 'no boss'; if(!curChar()) return 'no char'; bsGo({boss:id, diff:bsDi(d), dev:true}); return this.state(); },
+  rush(){ if(!curChar()) return 'no char'; bsGo({rush:true, dev:true}); return this.state(); },
+  kill(){ if(!G||G.modeId!=='boss') return 0; let n=0; for(const b of G.bosses) if(!b.dead){ killEnemy(b); n++; } return n; },
+  list(){ const ch=curChar(); return BOSS_LIST.map(B=>({id:B.id, lv:B.lv, lock:bsLockWhy(B.id,ch), used:bsUsed(B.id), best:[0,1,2].map(d=>bsRec(B.id,d))})); },
+  state(){ const S=G&&G.modeId==='boss'&&G.bs; if(!S) return null; const b=G.bosses.find(q=>!q.dead);
+    return {boss:S.B.id, lv:S.lv, diff:S.di, phase:S.phase, i:S.i, n:S.list.length, kills:S.kills.slice(), paid:S.paid, t:+G.t.toFixed(1), hp:b?Math.round(b.hp)+'/'+Math.round(b.maxHp):null,
+      bosses:G.bosses.filter(q=>!q.dead).length, minions:bsMinions(), shots:G.fd.shots.length, me:Math.round(P.hp)+'/'+Math.round(P.maxHp), over:G.over, won:G.won}; }};
+/* ================= 68-ui-boss.js · lane H · scrBoss (ล่าบอส): difficulty, boss list, rush, help (?) ================= */
+// The fort's "ล่าบอส" button → scrBoss: 3 difficulties (ปกติ · ยาก · ฝันร้าย · the next one opens with a win on the one before),
+// every boss of BOSS_LIST with its level, best time + medal and today's full rewards, or why it is still locked · the rush below.
+// Names come from data (textContent only) · after a fight the router comes back here (SH_RET.boss, 67).
+const BSU={di:0, wired:false};
+regScreen('scrBoss');
+UIKEY.scrBoss=bsuKey;
+BUS.on('screen',id=>{ if(id==='scrBoss') bsuRender(); });
+HUB.push({id:'boss', n:'ล่าบอส', i:'👑', order:25, badge:bsuBadge, open(){ if(!curChar()){ toast('สร้างตัวละครก่อน','info'); UI.go('scrNew'); return; } UI.go('scrBoss'); }});
+function bsuBadge(){ const ch=curChar(); if(!ch) return 'ต้องมีตัวละครก่อน'; const open=bsUnlocked(ch); let full=0; for(const id of open) full+=bsFullLeft(id);
+  return 'ปลดแล้ว '+open.length+'/'+BOSS_LIST.length+' ตัว'+(open.length?' · รางวัลเต็มวันนี้ '+full:''); }
+function bsuKey(e){ if(!G&&!SH.sheet&&!SH.conf&&(e.code==='ArrowLeft'||e.code==='ArrowRight')){ const n=BAL.BOSS.diff.length, d=clamp(BSU.di+(e.code==='ArrowLeft'?-1:1),0,n-1);
+    if(d!==BSU.di){ BSU.di=d; bsuRender(); } e.preventDefault(); return true; }
+  return shKey(e); }
+function bsuWire(){ if(BSU.wired) return; BSU.wired=true;
+  const h=shEl('bsHelp'); if(h) h.addEventListener('click',()=>tfHelp('boss'));
+  const d=shEl('bsDiff'); if(d) d.addEventListener('click',e=>{ const b=e.target.closest('[data-d]'); if(!b) return; BSU.di=+b.dataset.d|0; bsuRender(); });
+  const l=shEl('bsList'); if(l) l.addEventListener('click',e=>{ const b=e.target.closest('[data-go]'); if(!b||b.disabled) return; bossStart(b.dataset.go,BSU.di); });
+  const r=shEl('bsRush'); if(r) r.addEventListener('click',e=>{ const b=e.target.closest('[data-rush]'); if(!b||b.disabled) return;
+    Promise.resolve(confirmBox('เริ่มฝ่าด่านบอส '+bsUnlocked(curChar()).length+' ตัวต่อเนื่อง (ระดับปกติ)?',{okText:'เริ่ม'})).then(ok=>{ if(ok) bossRushStart(); }).catch(er=>console.error(er)); }); }
+function bsuRender(){ bsuWire(); const ch=curChar(), A=SAVE&&SAVE.acct, who=shEl('bsWho'), dv=shEl('bsDiff'), list=shEl('bsList'), rush=shEl('bsRush'); if(!list||!dv) return;
+  const mk=shEl('bsMarks'); if(mk) mk.textContent='🏅 '+((A&&A.marks)|0).toLocaleString('en-US');
+  if(who){ who.textContent=''; if(ch){ const t=shMk('span',''); t.append(shMk('b','',ch.name),shMk('small','',shJobName(ch)+' · Lv '+ch.lv+' · Job '+ch.jlv));
+    who.append(shPortrait(ch,40),t,shBtn('เปลี่ยน','btn ghost',()=>UI.go('scrChars'))); } }
+  const D=BAL.BOSS.diff; BSU.di=clamp(BSU.di|0,0,D.length-1);
+  if(dv.childElementCount!==D.length){ dv.textContent=''; D.forEach((q,i)=>{ const b=shBtn('','bs-d'); b.dataset.d=String(i); b.append(shMk('b','',q.n),shMk('small','')); dv.append(b); }); }
+  D.forEach((q,i)=>{ const b=dv.children[i]; b.setAttribute('aria-pressed',String(i===BSU.di)); b.children[1].textContent=(q.lv?'Lv +'+q.lv+' · ':'')+'ตรา '+BAL.BOSS.marks[i]; });
+  list.textContent='';
+  for(const B of BOSS_LIST){ const lock=bsLockWhy(B.id,ch), dw=lock?'':bsDiffWhy(B.id,BSU.di), why=!ch?'ต้องมีตัวละครก่อน':lock||dw, row=shMk('div','bs-it'+(lock?' lk':'')), t=shMk('div','bs-t');
+    row.setAttribute('role','listitem');
+    row.append(shMk('span','bs-ic',lock?'🔒':B.i));
+    t.append(shMk('b','',B.n+' · Lv '+bsLv(B.id,BSU.di)));
+    if(lock) t.append(shMk('small','bs-lock',lock));
+    else { const rec=bsRec(B.id,BSU.di), s=shMk('small','');
+      if(rec){ s.append(shMk('span','bs-md '+rec.medal,rec.medal),document.createTextNode(' ดีสุด '+fmtClock(rec.sec)+' · S ≤ '+fmtClock(B.par[BSU.di]))); }
+      else s.textContent=dw||'ยังไม่เคยชนะระดับนี้ · S ≤ '+fmtClock(B.par[BSU.di]);
+      t.append(s); const left=bsFullLeft(B.id); t.append(shMk('small','bs-full'+(left?'':' none'),left?'✦ รางวัลเต็มวันนี้ '+left+'/'+BS.FULL:'วันนี้รางวัลเต็มครบแล้ว · ต่อจากนี้ได้ '+Math.round(BS.CUT*100)+'%')); }
+    row.append(t);
+    const b=shBtn('สู้','btn primary bs-go'); b.dataset.go=B.id; if(why){ b.disabled=true; b.title=why; b.className='btn ghost bs-go'; }
+    b.setAttribute('aria-label','สู้กับ'+B.n+(why?' · '+why:'')); row.append(b); list.append(row); }
+  if(rush){ const n=ch?bsUnlocked(ch).length:0, ok=!!ch&&n>=BS.rushMin; rush.textContent='';
+    rush.append(shMk('h3','','⚔ ฝ่าด่านบอส'+(n?' · '+n+' ตัว':'')),
+      shMk('p','','สู้ทุกตัวที่ปลดแล้วต่อเนื่อง เรียงตามเลเวล (ระดับปกติ) · ระหว่างตัวฟื้น HP 25% + การ์ด 1 ใบ · แต่ละตัวได้รางวัลตามปกติ (นับสิทธิ์รางวัลเต็มด้วย) · ครบทุกตัวได้ตรา +'+BAL.BOSS.rush.marks+(bsRushFree()?' (สัปดาห์นี้ยังไม่ได้รับ)':' (สัปดาห์นี้รับแล้ว)')));
+    const b=shBtn(ok?'เริ่มฝ่าด่าน':'ปลดบอสอย่างน้อย '+BS.rushMin+' ตัวก่อน',ok?'btn primary sh-wide':'btn ghost sh-wide'); b.dataset.rush='1'; b.disabled=!ok; rush.append(b); }
+  shChrome('scrBoss'); }
+
+if(typeof TF_HELP!=='undefined'){                                      // help pages (59) · absent in pure test loads
+TF_HELP.boss=['ล่าบอส',()=>`<p>สู้กับบอสตัวเดียวในลานประลองวงกลม (ขอบคือแนวเสา ออกนอกวงไม่ได้) · บอสโผล่หลังเข้าลาน ${BS.spawn} วิ · ลูกน้องมาจากท่าของบอสเท่านั้น ·
+  สกิลในช่องติดตัวเริ่มที่ ★ ที่ฝึกไว้ · เก็บ EXP จากบอส/ลูกน้องได้การ์ดความชำนาญ (การ์ดสถานะไม่มีเพดาน) · ตายก็แค่แพ้ ไม่เสียอะไร</p>
+  <h4>ความยาก</h4><table>${BAL.BOSS.diff.map((q,i)=>tfRow(q.n,'Lv บอส +'+q.lv+' · HP ×'+(Math.round(q.hp*BS.HPD[i]*10)/10)+' · ดาเมจ ×'+q.dmg+' · ตรา '+BAL.BOSS.marks[i]+(i?' · เปิดเมื่อชนะระดับ'+BAL.BOSS.diff[i-1].n:''))).join('')}</table>
+  <h4>รางวัล</h4><p>ชนะแล้วได้ทอง Base/Job EXP ตราผู้พิชิต และกล่องของ (อุปกรณ์ตามเลเวลบอส ผงรูน ผลึก รูนบอส/เศษรูน) ·
+  <b>รางวัลเต็มวันละ ${BS.FULL} ครั้งต่อบอส</b> (นับทุกความยาก · รีเซ็ตเที่ยงคืนตามเวลาเครื่อง) · ครั้งต่อไปของวันได้ทองและ EXP ${Math.round(BS.CUT*100)}% ไม่มีตรา และกล่องมีแค่ผงรูนบางครั้ง ·
+  บอสที่ต่ำกว่าตัวละครเกิน 5 เลเวลให้รางวัลลดลงเหมือนเอาชีวิตรอด</p>
+  <h4>เหรียญเวลา</h4><table>${tfRow('S','ไม่เกินเวลาเป้า (แสดงใต้ชื่อบอส)')}${tfRow('A','ไม่เกิน '+BAL.BOSS.medalA+' เท่าของเวลาเป้า')}${tfRow('B','ชนะ')}</table><p>เก็บเวลาที่ดีที่สุดของแต่ละบอสแต่ละความยาก</p>
+  <h4>ปลดบอส</h4><table>${tfRow('💀🧙☠️ บอสอันเดด','ถึงคลื่น 5 / 10 / 20 ในเอาชีวิตรอด')}${tfRow('👑🫧🪓 จ้าวถิ่น','ล้มได้ในแผนที่ของมันสักครั้ง (ท่องแดนรูน)')}${tfRow('🐏🌿🐢 จ้าวถิ่นรุ่นเก่า','เลเวลตัวละคร 8 / 15 / 22')}</table>
+  <h4>ฝ่าด่านบอส</h4><p>สู้ทุกตัวที่ปลดแล้วต่อกันที่ระดับปกติ · ระหว่างตัวฟื้น HP ${Math.round(BAL.BOSS.rush.heal*100)}% และเลือกการ์ด 1 ใบ · ถอยทัพจากเมนูพักได้พร้อมรางวัลของตัวที่ปราบแล้ว · ครบทุกตัวได้ตรา +${BAL.BOSS.rush.marks} สัปดาห์ละครั้ง</p>
+  <p><button type="button" class="btn ghost" data-help="elements">ดูวงล้อธาตุ</button></p>`]; }
 /* ================= 69-mode-daily.js · lane D · daily dungeons (docs/PROPOSAL-maps-daily.md §6 · phase A) ================= */
 // Three short runs from the fort, counted per local day in acct.daily.dg (taken when the run STARTS, saved at once):
 //   dexp  ลานวิญญาณประสบการณ์ · 2/day · chase fleeing wisps 3 min → Base/Job EXP ×10 of the dungeon's own EXP
