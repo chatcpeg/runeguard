@@ -281,6 +281,7 @@ function grantRewards(ch,r,again){
     else if(k==='survTier') A.survTier=Math.max(A.survTier,Math.min(BAL.SURV.maxT,v|0));
     else if(k==='boss'&&SV_ID.test(v||'')) A.bossUnlock[v]=1; }
   if(r.mode==='field'&&typeof fdCommit==='function') try{ fdCommit(ch,r,A); }catch(e){ console.error(e); }   // ท่องแดนรูน: map records + boss timers (62)
+  if(r.mode==='boss'&&typeof bsCommit==='function') try{ bsCommit(ch,r,A); }catch(e){ console.error(e); }    // ล่าบอส: today's full rewards + best times (67)
   r.committed=true; const S0=SAVE; pgSave(ch,'reward',true); if(SAVE===S0) pgItemsNote(r);
   // the write found another tab's save and reloaded instead (svlWrite): the reward is in neither memory nor storage. Paid once more
   // onto the reloaded save (its runIds do not hold this runId, so it is not a second payment) · a second race in a row → not paid
