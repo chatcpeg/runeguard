@@ -316,6 +316,8 @@ button.hb-st{padding:0;border:0;background:none;text-decoration:underline dotted
 .sv-c.lk b{color:var(--ash)}
 .sv-c[aria-pressed="true"]{border-color:var(--rune);box-shadow:inset 0 0 0 1px var(--rune);background:rgba(240,181,69,.12)}
 .sv-row.bad b{color:#ff9aa0}
+.hd-el{pointer-events:auto;min-height:40px;min-width:48px;padding:0 10px;border-radius:999px;border:2px solid var(--line-hi);background:var(--glass);color:var(--bone);font-size:16px;font-weight:700;cursor:pointer}
+.hd-el[hidden]{display:none}
 .hd-bag{padding:4px 12px;border-radius:999px;background:var(--glass);border:1px solid var(--line);font-size:13px;font-weight:700;font-variant-numeric:tabular-nums;white-space:nowrap}
 .hd-bag.bad{border-color:var(--blood);color:#ff9aa0}
 .hd-bag.warn{border-color:var(--rune);color:var(--rune)}
@@ -452,6 +454,7 @@ button.hb-st{padding:0;border:0;background:none;text-decoration:underline dotted
 .uc-pt{border-radius:14px;background:var(--well)}
 .uc-sum{display:flex;flex-direction:column;gap:4px;font-size:12.5px;line-height:1.55;color:var(--ash);overflow-wrap:anywhere}
 .uc-sum b{font-size:13px;color:var(--spirit)}
+.uc-el{display:flex;align-items:center;gap:8px;flex-wrap:wrap;color:var(--bone)}
 .uc-slots{display:flex;flex-direction:column;gap:6px}
 .uc-slot{display:grid;grid-template-columns:30px 64px minmax(0,1fr) 14px;gap:8px;align-items:center;min-height:52px;padding:6px 12px;border-radius:12px;border:1px solid var(--line);background:var(--card);color:var(--bone);font-size:14px;text-align:left;cursor:pointer}
 .uc-st2{display:flex;flex-direction:column;min-width:0}
@@ -751,6 +754,10 @@ button.pjb-card{cursor:pointer}
 .fd-rc{padding:0 14px;font-size:14.5px;white-space:nowrap;font-variant-numeric:tabular-nums}
 .fd-rc.on{border-color:var(--rune);color:var(--rune);background:rgba(40,30,8,.85)}
 .fd-pz{display:grid;gap:8px;margin-bottom:10px;text-align:left}
+.wm-el{display:flex;align-items:center;gap:10px;margin:10px 0;padding:8px 12px;border-radius:12px;border:1px solid var(--line);background:var(--glass);font-size:13px;line-height:1.5;color:var(--bone)}
+.wm-el.bad{border-color:var(--blood);color:#ffb0a0}
+.wm-el span{flex:1}
+.wm-elq{flex:none;width:40px;min-height:40px}
 /* 66-boss.css · lane H · M0 stub (empty) */
 </style>
 
@@ -1917,16 +1924,18 @@ function killEnemy(e,dirX){
     G.shake=Math.max(G.shake,14); G.fx.push({k:'boom',x:e.x,y:e.y,r:e.r*3,t:0,dur:.7,c:'#ffe7a8',dead:false}); sfx('boom'); G.score+=1000; if(!G.auto) G.hitStop=.28; }
   else { dropGem(e.x,e.y,e.xp); if(e.elite){ dropItem(e.x,e.y,'chest'); if(!G.auto) G.hitStop=Math.max(G.hitStop,.07); } else { const r=Math.random(); if(r<.0045) dropItem(e.x,e.y,'heart'); else if(r<.006) dropItem(e.x,e.y,'magnet'); else if(r<.0075) dropItem(e.x,e.y,'bomb'); } }
   if(e.d.blast){ const b=e.d.blast; G.fx.push({k:'boom',x:e.x,y:e.y,r:b.r,t:0,dur:.4,c:'#a8d14f',dead:false}); burst(e.x,e.y,12,'#c8e86a',240,.5,4); addDecal(splatTex('#5f7a2a',1),e.x,e.y,b.r*.9,8,.6); sfx('boom');
-    const dx=P.x-e.x,dy=P.y-e.y; if(dx*dx+dy*dy<(b.r+P.r)*(b.r+P.r)) hurtPlayer(b.dmg*G.cfg.dmgMul);
+    const dx=P.x-e.x,dy=P.y-e.y; if(dx*dx+dy*dy<(b.r+P.r)*(b.r+P.r)) hurtPlayer(b.dmg*G.cfg.dmgMul,e);
     for(const o of query(e.x,e.y,b.r+60)){ if(o.dead||o===e) continue; const ex=o.x-e.x,ey=o.y-e.y,d=Math.hypot(ex,ey); if(d-o.r>b.r) continue; damageEnemy(o,b.dmg*3,null,{knock:300,nx:d?ex/d:1,ny:d?ey/d:0,quiet:true}); } }
   if(P.steal) healP(P.steal,true);
   if(G.mode.onKill) G.mode.onKill(e);
   sfx('kill');
 }
 function healP(a,quiet){ if(G.over) return; const before=P.hp; P.hp=Math.min(P.maxHp,P.hp+a); const got=P.hp-before; if(!quiet&&got>=3){ addNum(P.x,P.y-40,'+'+Math.round(got),'g'); for(let i=0;i<5;i++) part({x:P.x+rand(-12,12),y:P.y+rand(-10,6),vx:rand(-8,8),vy:rand(-70,-40),life:rand(.5,.8),s:3,c:'#7dffa8',g:0,drag:1,k:'plus',add:true}); } }
-function hurtPlayer(dmg){
+// src = what hit (a monster, a shot / hazard with .el, or an element id): its element vs the armour element (29 elHurtMul)
+function hurtPlayer(dmg,src){
   if(G.over||G.god) return;
   if(P.dodge>0&&Math.random()<P.dodge){ addText(P.x,P.y-34,'หลบ!','#c9b6ff'); if(P.dodgeCd<=0){ P.dodgeCd=.6; shadowBurst(); } return; }
+  if(src&&(P.armorEl||P.armorCyc)){ const m=elHurtMul(src); if(m!==1){ dmg*=m; if(G.t>=(G.elHurtT||0)){ G.elHurtT=G.t+.7; addText(P.x,P.y-52,m>1?'แพ้ธาตุ!':'ต้าน','#'+(m>1?'ff9a6a':'9fd8ff')); } } }   // character runs only
   dmg*=1-P.armor/(P.armor+(G.defK||22));
   if(P.shield>0){ const a=Math.min(P.shield,dmg); P.shield-=a; dmg-=a; if(P.shield<=.01){ P.shield=0; shieldBreak(); } }
   if(dmg<=0) return;
@@ -1938,7 +1947,7 @@ function hurtPlayer(dmg){
 }
 function shieldBreak(){ const s=P.shieldSrc; if(!s) return; const r=pv(s,'r')*P.area; aoe(P.x,P.y,r,pv(s,'nova'),s,{knock:380}); G.fx.push({k:'ring',x:P.x,y:P.y,r0:20,r1:r,t:0,dur:.4,c:s.def.c,w:10,follow:true,dead:false}); burst(P.x,P.y-6,12,'#dff2ff',260,.4,3,'shard'); G.shake=Math.max(G.shake,6); sfx('boom'); s.st.t=cdOf(s); }
 function shadowBurst(){ const s=P.skills.find(k=>k.id==='shadow'); if(!s) return; const r=pv(s,'r')*P.area; aoe(P.x,P.y,r,pv(s,'nova'),s,{knock:260}); G.fx.push({k:'ring',x:P.x,y:P.y,r0:10,r1:r,t:0,dur:.35,c:'#a58bff',w:8,follow:true,dead:false}); G.fx.push({k:'after',x:P.x,y:P.y,t:0,dur:.4,dead:false}); sfx('slice'); }
-function enemyShoot(e,a,sp,dmg,kind){ G.eprojs.push({x:e.x,y:e.y-(e.boss?10:6),vx:Math.cos(a)*sp,vy:Math.sin(a)*sp,r:kind==='orb'?7:5,dmg,life:4.5,kind,rot:0,dead:false}); }
+function enemyShoot(e,a,sp,dmg,kind){ G.eprojs.push({x:e.x,y:e.y-(e.boss?10:6),vx:Math.cos(a)*sp,vy:Math.sin(a)*sp,r:kind==='orb'?7:5,dmg,life:4.5,kind,rot:0,dead:false}); if(e.el) G.eprojs[G.eprojs.length-1].el=e.el; }
 
 /* ================= skill behaviours ================= */
 function fireProj(s,a){ const sp=pv(s,'speed'),life=(pv(s,'life')||1)*(P.sx&&P.rangeMul||1),size=(pv(s,'size')||6)*(1+(P.area-1)*.5);   // character runs: DEX range · no homing (aimed once, straight)
@@ -2221,7 +2230,7 @@ function bossAI(e,dt,d,dx,dy){
     A.slamCd=(A.slamCd??3)-dt;
     if(A.slam>0){ A.slam-=dt; sp=0;
       if(A.slam<=0){ const R=170; G.fx.push({k:'ring',x:e.x,y:e.y,r0:20,r1:R,t:0,dur:.45,c:'#e8d6a8',w:14,dead:false}); G.shake=Math.max(G.shake,10); sfx('boom'); burst(e.x,e.y+20,20,'#bfae8a',300,.6,5,'rock'); addDecal(crackTex(),e.x,e.y+20,R*.8,6,.8);
-        const px=P.x-e.x,py=P.y-e.y,pl=Math.hypot(px,py)||1; if(pl<R+P.r){ hurtPlayer(e.dmg*1.3); P.kx+=px/pl*520; P.ky+=py/pl*520; }
+        const px=P.x-e.x,py=P.y-e.y,pl=Math.hypot(px,py)||1; if(pl<R+P.r){ hurtPlayer(e.dmg*1.3,e); P.kx+=px/pl*520; P.ky+=py/pl*520; }
         for(const o of query(e.x,e.y,R)){ if(o.boss||o.dead) continue; const l=Math.hypot(o.x-e.x,o.y-e.y)||1; o.kx+=(o.x-e.x)/l*300; o.ky+=(o.y-e.y)/l*300; }
         A.slamCd=4.5; } }
     else if(A.slamCd<=0&&d<260){ A.slam=1; A.tele={k:'circle',r:170,t:0,dur:1}; }
@@ -2233,7 +2242,7 @@ function bossAI(e,dt,d,dx,dy){
   } else if(ai==='king'){
     if(A.charge>0){ A.charge-=dt; e.x+=A.cx*880*dt; e.y+=A.cy*880*dt;
       for(const o of query(e.x,e.y,e.r+40)){ if(o.boss||o.dead) continue; const l=Math.hypot(o.x-e.x,o.y-e.y)||1; o.kx+=(o.x-e.x)/l*60; o.ky+=(o.y-e.y)/l*60; }
-      const px=P.x-e.x,py=P.y-e.y; if(!A.hitP&&px*px+py*py<(e.r+P.r)*(e.r+P.r)){ A.hitP=true; hurtPlayer(e.dmg*1.5); P.kx+=A.cx*620; P.ky+=A.cy*620; }
+      const px=P.x-e.x,py=P.y-e.y; if(!A.hitP&&px*px+py*py<(e.r+P.r)*(e.r+P.r)){ A.hitP=true; hurtPlayer(e.dmg*1.5,e); P.kx+=A.cx*620; P.ky+=A.cy*620; }
       if(Math.random()<.6) part({x:e.x+rand(-20,20),y:e.y+e.r*.8,vx:-A.cx*60,vy:rand(-30,-5),life:.6,s:8,grow:22,c:'#6a5a4a',g:0,drag:2,k:'puff',add:false,a:.5});
       if(A.charge<=0) A.chargeCd=5.5;
       e.face=A.cx<0?-1:1; return; }
@@ -2265,7 +2274,7 @@ function playerCollide(){
     const dx=e.x-P.x,dy=e.y-P.y,rr=P.r+e.r,d2=dx*dx+dy*dy; if(d2>=rr*rr) continue;
     const d=Math.sqrt(d2)||.01,nx=dx/d,ny=dy/d,ov=rr-d;
     if(!e.d.phase){ const pm=e.boss?.6:Math.min(.35,e.mass*.04); e.x+=nx*ov*(1-pm); e.y+=ny*ov*(1-pm); P.x-=nx*ov*pm; P.y-=ny*ov*pm; }
-    if(e.atkCd<=0&&e.freezeT<=0&&e.stunT<=0){ e.atkCd=.75; hurtPlayer(e.dmg); if(G.over) return; }
+    if(e.atkCd<=0&&e.freezeT<=0&&e.stunT<=0){ e.atkCd=.75; hurtPlayer(e.dmg,e); if(G.over) return; }
   }
 }
 function updateProjs(dt){
@@ -2304,7 +2313,7 @@ function projHit(p,e){
 }
 function updateEProjs(dt){
   for(const b of G.eprojs){ b.life-=dt; b.x+=b.vx*dt; b.y+=b.vy*dt; b.rot+=dt*10; if(b.life<=0||G.obstacles&&terBlocks(b.x,b.y,b.r)){ b.dead=true; continue; }
-    const dx=b.x-P.x,dy=b.y-(P.y-6),rr=b.r+P.r*.8; if(dx*dx+dy*dy<rr*rr){ b.dead=true; hurtPlayer(b.dmg); if(G.over) break; } }
+    const dx=b.x-P.x,dy=b.y-(P.y-6),rr=b.r+P.r*.8; if(dx*dx+dy*dy<rr*rr){ b.dead=true; hurtPlayer(b.dmg,b); if(G.over) break; } }
   compact(G.eprojs);
 }
 function updateZones(dt){
@@ -4797,6 +4806,23 @@ function elChip(el){ const E=el&&EL[el]; return E?E.i:''; }
 // damageEnemy calls this only when the monster has an element · remembers the last result for the label over its head
 function elHit(e,s){ const m=elMul(skEl(s),e.el); if(m>1||m===EL_MUL.weak){ e.elM=m; e.elT=G.t; } return m; }
 
+/* ---- armour element (§1.2 "มอนตีเรา" · ธาตุชุดเกราะ): the same wheel, the monster's hit is the attacker ---- */
+// P.armorEl = the element rune in the worn body (34 gearElement, set by 42 prepareRun: character runs only) · P.armorCyc = มงกุฎวุ้นหกสี
+// with no element rune: the element turns every 12 s in ราชินีวุ้น's order. A fire monster vs water armour ×0.6 (ต้าน) · vs wind
+// armour ×1.5 (แพ้ธาตุ) · vs fire armour ×0.75 · a monster with no element, or no armour element (classic: P has neither) ×1.
+// Pure arithmetic: no random number is drawn, so classic / golden never change.
+const EL_CYC=['fire','wind','earth','water','light','dark'], EL_CYC_T=12;
+function elArmor(){ if(typeof P==='undefined'||!P) return null; if(P.armorEl&&EL[P.armorEl]) return P.armorEl;
+  if(P.armorCyc){ const t=typeof G!=='undefined'&&G?G.t||0:0; return EL_CYC[Math.floor(t/EL_CYC_T)%EL_CYC.length]; } return null; }
+function elSrcOf(src){ const k=typeof src==='string'?src:src&&typeof src==='object'?src.el:null; return typeof k==='string'&&Object.prototype.hasOwnProperty.call(EL,k)?k:null; }
+function elHurtMul(src){ const a=elArmor(); if(!a) return 1; const k=elSrcOf(src); return k?elMul(k,a):1; }
+// what armour element a resists / fears: {res:[els at ×0.6], same:[×0.75], weak:[×1.5]}
+function elArmorVs(a){ const o={res:[], same:[], weak:[]}; if(!a||!EL[a]) return o;
+  for(const k in EL){ const m=elMul(k,a); if(m===EL_MUL.weak) o.res.push(k); else if(m===EL_MUL.same) o.same.push(k); else if(m>1) o.weak.push(k); } return o; }
+// the best armour element against a map whose monsters have these elements (lowest total ×) · null when several tie (no advice)
+function elBestArmor(els){ let best=null, bs=1e9, tie=false; if(!Array.isArray(els)||!els.length) return null;
+  for(const a in EL){ let s=0; for(const k of els) s+=elMul(k,a); if(s<bs-1e-9){ bs=s; best=a; tie=false; } else if(Math.abs(s-bs)<1e-9) tie=true; } return tie?null:best; }
+
 /* ---- rank colours (§2) ---- */
 const RANK=[
   {n:'', c:'', hp:1, dmg:1, r:1, xp:1, sp:1},
@@ -5053,8 +5079,11 @@ const BAL={ CAP:{base:60, job1:20, job2:25, stat:50, chars:3, bag:120, stash:120
     combine:300, shardsPerRune:4, unsocket(tier){ return 100*tier; }, stack:{use:99, mat:999} },
   // §4.12 drop rates. surv: MODES.survival.onKill looks up surv.elite / surv['boss'+wave] and passes it to rollDrops, which
   // resolves the name in DROPS (33-items-data.js: §2.2 item table, gear tier = SURV.gearTier). No key = nothing drops.
-  DROP:{ field:{gold:1, gem:1, dust:.03, crystal2:.003, crystal4:.006, shard:.01, gear:.006, potion:.02},
-    fboss:{gold(L){ return 150+15*L; }, dust:[4,8], crystal:[1,3], gear:[1,2], uniq:.25, rune:.12, seal:.10},
+  // ท่องแดนรูน (PROPOSAL-maps-daily §1/§3–5): elShard = the element rune's shard from the slimes of บึงวุ้นหกสี · elShardX = from the
+  // other elemental field monsters · named = the map's goods (rar 1) per kill · chestNamed = per camp chest / gold-rank chest
+  // fboss: uniq = the boss's ★ piece · rune = its own rune (sure on the account's first kill) · shard = 1 of its rune shards · named = goods
+  DROP:{ field:{gold:1, gem:1, dust:.03, crystal2:.003, crystal4:.006, shard:.01, gear:.006, potion:.02, elShard:.015, elShardX:.005, named:.0015, chestNamed:.05},
+    fboss:{gold(L){ return 150+15*L; }, dust:[4,8], crystal:[1,3], gear:[1,2], uniq:.25, rune:.12, seal:.10, shard:.5, named:.15, elShard:.5},
     rampage:{dust:2, gold(L){ return 8*L; }},
     surv:{elite:'surv.elite', boss5:'surv.boss5', boss10:'surv.boss10', boss15:'surv.boss15', boss20:'surv.boss20'} },
   RESET:{gold:2000, marks:40, freeBelow:20},
@@ -5243,7 +5272,17 @@ const RUNES={
   rn_wraith:{n:'รูนวิญญาณ', g:'cloak', st:{dodge:.03}, mob:'wraith', sn:'เศษรูนวิญญาณ'},
   rn_colossus:{n:'รูนยักษ์กระดูกทมิฬ', g:'weapon', st:{might:.06, boss:.05}, mob:'colossus', sn:'เศษรูนยักษ์กระดูกทมิฬ', boss:1},
   rn_lich:{n:'รูนลิชไร้วิญญาณ', g:'head', st:{cd:.95}, mob:'lich', sn:'เศษรูนลิชไร้วิญญาณ', boss:1},
-  rn_king:{n:'รูนจักรพรรดิแห่งความตาย', g:'acc', st:{might:.04, hp:30, crit:.02}, mob:'king', sn:'เศษรูนจักรพรรดิแห่งความตาย', boss:1}};
+  rn_king:{n:'รูนจักรพรรดิแห่งความตาย', g:'acc', st:{might:.04, hp:30, crit:.02}, mob:'king', sn:'เศษรูนจักรพรรดิแห่งความตาย', boss:1},
+  // ท่องแดนรูน (docs/PROPOSAL-maps-daily.md §3–5): the runes of the three field bosses · shards only from their own box (60 FD_BOSSDROP)
+  rn_gbking:{n:'รูนราชาก็อบลิน', g:'acc', st:{hp:20, gold:.06}, mob:'gb_king', sn:'เศษรูนราชาก็อบลิน', boss:1},
+  rn_sbqueen:{n:'รูนราชินีวุ้น', g:'weapon', st:{area:.04, might:.03}, mob:'sb_queen', sn:'เศษรูนราชินีวุ้น', boss:1},
+  rn_obwarlord:{n:'รูนแม่ทัพออร์ค', g:'armor', st:{armor:2, hp:25}, mob:'ob_warlord', sn:'เศษรูนแม่ทัพออร์ค', boss:1}};
+// §1.2 "ธาตุชุดเกราะ": 6 element runes, body only (group elem) · one per piece (34 socketRune) · the body's rune = the character's
+// armour element (34 gearElement → 42 P.armorEl → 18 hurtPlayer × elMul(monster el, armour el)) · shards from monsters of that
+// element in the maps (62 fdDropTable: the slimes of บึงวุ้นหกสี 1.5% · other elemental field monsters 0.5%)
+RUNE_GROUP.elem={n:'ธาตุเสื้อ', slots:['body']};
+const IT_EL_RUNE={fire:['ไฟ','🔥'], water:['น้ำ','💧'], wind:['ลม','🌪️'], earth:['ดิน','🪨'], light:['แสง','✨'], dark:['มืด','🌑']};   // = 29 EL (pure: 29 may not be loaded)
+for(const k in IT_EL_RUNE) RUNES['rn_el_'+k]={n:'รูนธาตุ'+IT_EL_RUNE[k][0], g:'elem', st:{hp:10}, el:k, mob:'el_'+k, sn:'เศษรูนธาตุ'+IT_EL_RUNE[k][0]};
 for(const id in RUNES) RUNES[id].shard='m_shard_'+RUNES[id].mob;
 // §4.6 consumables and materials: [id, name, icon, kind, stack, extra]
 const IT_DYES=[['red','แดง','#c8343c'],['orange','ส้ม','#e07a2a'],['yellow','เหลือง','#e8c23a'],['green','เขียว','#3f9a4a'],
@@ -5257,6 +5296,18 @@ const IT_STACK=[
   ['u_forget','ม้วนลืมเลือน','📜','use',9,{d:'รีเซ็ตแต้มสถานะหรือแต้มสกิล 1 ครั้ง'}],
   ['u_bag10','ถุงขยายกระเป๋า','👝','use',9,{use:{bag:10}, d:'กระเป๋า +10 ช่อง (สูงสุด 120)'}]];
 
+// ท่องแดนรูน named pieces (PROPOSAL-maps-daily §3–5 "ของดี" · DESIGN §4.2 / §4.7): [id, slot, name, lv, tier, rar, stats, look, extra]
+// rar 1 (ดี) = the map's own goods: zone = the map (62 field drops 0.15% · camp chests 5% · its boss box 15%) · rar 3 (ตำนาน) = the
+// field boss's piece: from = its boss (25% of its box, BAL.DROP.fboss.uniq) · fixed sockets (no roll) · never in IT_POOL or a shop
+const IT_NAMED=[
+  ['w_gobsling','weapon','หนังสติ๊กก็อบลิน',8,2,1,{might:.16, crit:.03},{weapon:'bow', wc:'#9a6a3a'},{cls:['archer'], i:'🏹', zone:'g1', d:'ของดีประจำป่าหนามก็อบลิน · ยางเหนียวจากเถาวัลย์ป่า ดีดไวกว่าธนูเหล็ก'}],
+  ['h_thiefwrap','head','ผ้าโพกหัวโจร',5,1,1,{armor:1, gold:.1},{hat:'bandana', hatC:'#8a2a2a', orn:''},{i:'🧣', zone:'g1', d:'ของดีประจำป่าหนามก็อบลิน · ทองจากมอนในแผนที่ +10%'}],
+  ['h_rustcrown','head','มงกุฎสนิมราชา',12,2,3,{armor:3, hp:35, might:.03},{hat:'crown', hatC:'#b0703a', orn:'', ornC:'#7fd06a'},{i:'👑', zone:'g1', from:'gb_king', sock:1, d:'ของดีของราชาก็อบลินมงกุฎสนิม · สนิมเกาะแต่ยังแข็ง'}],
+  ['w_jellystaff','weapon','ไม้เท้าแกนวุ้น',16,2,1,{might:.18, area:.06},{weapon:'staff', wc:'#7fe0d0'},{cls:['mage'], i:'🪄', zone:'s1', d:'ของดีประจำบึงวุ้นหกสี · แกนรูนจากวุ้นยักษ์ฝังที่หัวไม้เท้า'}],
+  ['h_jellycrown','head','มงกุฎวุ้นหกสี',22,3,3,{armor:3, hp:30, area:.03},{hat:'crown', hatC:'#c8a0ff', orn:'', ornC:'#7fe0ff'},{i:'👑', zone:'s1', from:'sb_queen', sock:1, elCycle:1, d:'ของดีของราชินีวุ้นหกสี · ถ้าเสื้อไม่มีรูนธาตุ ธาตุเกราะจะสลับทุก 12 วิ ไฟ → ลม → ดิน → น้ำ → แสง → มืด เหมือนราชินี'}],
+  ['b_orchide','body','เกราะหนังออร์ค',26,3,1,{hp:60, armor:2},{body:'#6a4a2a', trim:'#4a5a2a'},{i:'🥋', zone:'o1', d:'ของดีประจำค่ายออร์คผาเหล็ก · หนังหนาเย็บด้วยเอ็น'}],
+  ['r_shamanbone','ring','กำไลกระดูกหมอผี',26,3,1,{crit:.02, hp:15},null,{i:'📿', zone:'o1', d:'ของดีประจำค่ายออร์คผาเหล็ก · กระดูกสลักลายสาปของหมอผีออร์ค'}],
+  ['w_ironfang','weapon','ขวานเขี้ยวเหล็ก',34,4,3,{might:.48, hp:30, crit:.02},{weapon:'axe', wc:'#c8d0d8'},{cls:['swordsman','cleric'], i:'🪓', zone:'o1', from:'ob_warlord', sock:2, d:'ของดีของแม่ทัพออร์คเขี้ยวเหล็ก · ใบขวานตีจากเขี้ยวเหล็กของแม่ทัพ (นักดาบ / นักบวช)'}]];
 const ITEMS=itdBuild();
 function itdR6(v){ return Math.round(v*1e6)/1e6; }
 function itdSt(o){ const r={}; for(const k in o) r[k]=itdR6(o[k]); return r; }
@@ -5271,10 +5322,12 @@ function itdBuild(){
     o[id]=Object.assign({n, i:x&&x.i||IT_SLOT_I[slot], slot, lv:t.lv, tier:T, rar:0, st:itdSt(st), sock:t.sock, sockRoll:t.roll||null,
       look:look||null, refine:!acc}, x||{}); }
   for(const [id,n,i,kind,stack,x] of IT_STACK) o[id]=Object.assign({n, i, kind, stack:Math.min(stack,kind==='mat'?P.mat:P.use)},x||{});
+  for(const [id,slot,n,lv,T,rar,st,look,x] of IT_NAMED){ const t=IT_TIER[T], acc=slot==='neck'||slot==='ring';
+    o[id]=Object.assign({n, i:IT_SLOT_I[slot], slot, lv, tier:T, rar, st:itdSt(st), sock:t.sock, sockRoll:null, look:look||null, refine:!acc}, x||{}); }
   for(const [c,th,hex] of IT_DYES) o['u_dye_'+c]={n:'สีย้อม'+th, i:'🎨', kind:'dye', stack:9, dye:hex, d:'ย้อมสีเสื้อ ขอบเสื้อ ผ้าคลุม หรือหมวก'};
   for(const id in RUNES){ const r=RUNES[id];
     o[r.shard]={n:r.sn, i:'🔹', kind:'mat', stack:P.mat, makes:id, d:'รวม '+BAL.PRICE.shardsPerRune+' ชิ้นเป็น'+r.n+' ที่แม่หมอศิลา'};
-    o[id]={n:r.n, i:'🔷', kind:'rune', stack:P.use, rune:id, d:'ฝังในช่องรูนกลุ่ม'+RUNE_GROUP[r.g].n}; }
+    o[id]={n:r.n, i:r.el?IT_EL_RUNE[r.el][1]:'🔷', kind:'rune', stack:P.use, rune:id, d:r.el?'ฝังที่เสื้อเกราะ → ธาตุเกราะ'+IT_EL_RUNE[r.el][0]+' '+IT_EL_RUNE[r.el][1]+' (มอนธาตุต่าง ๆ ตีเราแรงหรือเบาลงตามวงล้อธาตุ) · เสื้อ 1 ตัวใส่รูนธาตุได้ 1 อัน · มีผลเฉพาะโหมดที่ใช้ตัวละคร':'ฝังในช่องรูนกลุ่ม'+RUNE_GROUP[r.g].n}; }
   return o; }
 // gear by tier (drop pools) · unique / legendary pieces never drop
 const IT_POOL={}; for(const id in ITEMS){ const d=ITEMS[id]; if(!d.slot||d.unique||d.rar) continue; (IT_POOL[d.tier]||(IT_POOL[d.tier]=[])).push(id); }
@@ -5313,7 +5366,7 @@ const IT_RO='ข้อมูลเป็นเวอร์ชันใหม่�
 const IT_PITY_N=Math.round(BAL.REFINE.pityMax/BAL.REFINE.pity);   // 5 failures in a row = the +20% cap
 const IT_RUNE_SELL=80;                                             // a rune sells for less than 4 shards + the combine fee (lane E decision)
 const IT_STAT_TH={might:'พลังโจมตี', hp:'HP', armor:'เกราะ', crit:'คริติคอล', critMult:'แรงคริ', speed:'ความเร็ว', area:'พื้นที่สกิล',
-  cd:'คูลดาวน์', regen:'ฟื้น HP/วิ', dodge:'หลบหลีก', xp:'EXP', drop:'ดรอป', magnet:'ระยะดูดของ', boss:'ดาเมจต่อบอส', dur:'ระยะเวลาสกิล', proj:'กระสุน'};
+  cd:'คูลดาวน์', regen:'ฟื้น HP/วิ', dodge:'หลบหลีก', xp:'EXP', drop:'ดรอป', gold:'ทองจากมอน', magnet:'ระยะดูดของ', boss:'ดาเมจต่อบอส', dur:'ระยะเวลาสกิล', proj:'กระสุน'};
 const IT_FAM_TH={beast:'สัตว์', plant:'พืช', insect:'แมลง', spirit:'ภูต', ore:'แร่', undead:'อันเดด'};
 const IT_DYE_PARTS=['body','trim','cape','hatC'];
 function itRngR(){ return itRefineRng?itRefineRng():rngUnit(); }
@@ -5556,8 +5609,18 @@ function socketRune(ch,uid,runeId,i){
   if(!itHas(RUNES,runeId)) return 'ไม่พบรูนนี้';
   if(inst.s[i]) return 'ช่องนี้มีรูนอยู่แล้ว · ถอดออกก่อน';
   const R=RUNES[runeId]; if(!itRuneFits(runeId,itemDef(inst.id))) return R.n+'ใส่ได้เฉพาะช่องกลุ่ม'+RUNE_GROUP[R.g].n;
+  if(R.el&&itSockets(inst).some(v=>v&&RUNES[v].el)) return 'ชิ้นนี้มีรูนธาตุอยู่แล้ว · เสื้อ 1 ตัวใส่รูนธาตุได้ 1 อัน';
   if(invCount(ch,runeId)<1) return 'ไม่มี'+R.n+'ในกระเป๋า';
   invRemove(ch,runeId,1); inst.s[i]=runeId; return itCommit(ch,'socket'); }
+// rune text for lists: its stats + the armour element of an element rune ('HP +10 · ธาตุเกราะ 💧 น้ำ')
+function itRuneText(rid){ if(!itHas(RUNES,rid)) return ''; const R=RUNES[rid], t=itStatLines(R.st).map(([k,v])=>k+' '+v).join(' · ');
+  return R.el&&itHas(IT_EL_RUNE,R.el)?(t?t+' · ':'')+'ธาตุเกราะ '+IT_EL_RUNE[R.el][1]+' '+IT_EL_RUNE[R.el][0]:t; }
+// the character's armour element (§1.2 "ธาตุชุดเกราะ"): the first element rune in the worn body's sockets · none there + a worn piece
+// with elCycle (มงกุฎวุ้นหกสี) → cyc: it turns every 12 s like ราชินีวุ้น (29 elArmor) · {el, cyc, src} · el null = none (×1)
+function gearElement(ch){ let el=null, src='', cyc=false;
+  for(const [k,inst,d] of itWorn(ch)){ if(d.elCycle) cyc=true;
+    if(k==='body'&&!el) for(const rid of itSockets(inst)) if(rid&&RUNES[rid].el&&itRuneFits(rid,d)){ el=RUNES[rid].el; src=rid; break; } }
+  return {el, cyc:!el&&cyc, src}; }
 function itUnsocketFee(inst){ const d=itemDef(inst&&inst.id); return BAL.PRICE.unsocket(d&&d.tier|0||1); }
 // take a rune out: fee 100·tier gold · the rune comes back to the bag (refused when the bag cannot take it)
 function unsocketRune(ch,uid,i){
@@ -5610,11 +5673,16 @@ function rollDrops(table,luckMul,o){
       else if(e.gear!=null){ const pool=IT_POOL[itGearTier(e.gear,o)]; if(pool&&pool.length) give(one(pool)); } } }
   return out; }
 // §4.12 field mob table (lane F, M4): dust 3% · crystal (zone ≥ 2: 0.3%, ≥ 4: 0.6%) · own shard 1% · zone gear 0.6% · small potion 2%
-function itFieldTable(mobId,zoneN,gearIds){ const F=BAL.DROP.field, t=[{id:'m_dust', p:F.dust}, {id:'u_potion_s', p:F.potion}];
+// o (ท่องแดนรูน): {el, elP} = the shard of that element's rune at elP · {named, namedP} = one of the map's own goods (rar 1) at namedP
+function itFieldTable(mobId,zoneN,gearIds,o){ const F=BAL.DROP.field, t=[{id:'m_dust', p:F.dust}, {id:'u_potion_s', p:F.potion}];
   const cr=zoneN>=4?F.crystal4:zoneN>=2?F.crystal2:0; if(cr) t.push({id:'m_crystal', p:cr});
   if(itemDef('m_shard_'+mobId)) t.push({id:'m_shard_'+mobId, p:F.shard});
   if(Array.isArray(gearIds)&&gearIds.length) t.push({pick:gearIds.filter(id=>itGear(itemDef(id))), p:F.gear});
+  if(o&&typeof o.el==='string'&&o.elP>0&&itemDef('m_shard_el_'+o.el)) t.push({id:'m_shard_el_'+o.el, p:o.elP});
+  if(o&&Array.isArray(o.named)&&o.namedP>0){ const L=o.named.filter(id=>itGear(itemDef(id))); if(L.length) t.push({pick:L, p:o.namedP}); }
   return t; }
+// the goods (rar 1) of one map (33 IT_NAMED zone) · boss pieces (rar 3) come only from the boss box
+function itZoneGoods(zid){ const out=[]; for(const id in ITEMS){ const d=ITEMS[id]; if(d.slot&&d.zone===zid&&d.rar===1) out.push(id); } return out; }
 
 /* ---- shop, stash, consumables (§4.6 · §4.8 · §4.11) ---- */
 // buy price of one (0 = not sold for that currency) · cur 'gold' (ร้านป้านวล) | 'marks' (ร้านตราผู้พิชิต)
@@ -5798,6 +5866,17 @@ HAT_EXT.leafcrown=function(c,L,t){
     c.save(); c.translate(x,y); c.rotate((a-PI*1.5)*.8+sw); c.fillStyle=D; c.beginPath(); c.ellipse(0,-3.2,2.3,4.1,0,0,TAU); c.fill();
     c.fillStyle=C; c.beginPath(); c.ellipse(0,-3.3,1.4,3.2,0,0,TAU); c.fill(); c.restore(); }
   circ(c,'#9fd8ff',8.5,-21,1.9); circ(c,'#ffffff',8,-21.6,.7); };
+
+// ท่องแดนรูน boss crowns (look hat 'crown': มงกุฎสนิมราชา · มงกุฎวุ้นหกสี): a band with 5 points over the hair · hatC metal · ornC gems
+HAT_EXT.crown=function(c,L,t){
+  const C=L.hatC||'#d9a93a', D=shade(C,-.45), G2=L.ornC||'#ff5a6a';
+  c.fillStyle=D; c.beginPath(); c.moveTo(-9.5,-17); c.lineTo(11.5,-17); c.lineTo(11,-21); c.lineTo(-9,-21); c.closePath(); c.fill();
+  c.fillStyle=C; c.beginPath(); c.moveTo(-9,-17.6);
+  for(let i=0;i<5;i++){ const x=-9+i*5, h=i===2?9:i===1||i===3?7:5.5; c.lineTo(x+1.2,-20.5); c.lineTo(x+2.5,-20.5-h); c.lineTo(x+3.8,-20.5); }
+  c.lineTo(11,-20.5); c.lineTo(11,-17.6); c.closePath(); c.fill();
+  c.fillStyle=shade(C,.25); c.fillRect(-9,-19.6,20,1.2);
+  const tw=.75+.25*Math.sin(t*3);
+  for(const [x,y,r] of [[1,-19,1.9],[-5,-18.8,1.3],[7,-18.8,1.3]]){ circ(c,G2,x,y,r); c.globalAlpha*=tw; circ(c,'#ffffff',x-.5,y-.6,r*.4); c.globalAlpha/=tw; } };
 
 // potion in a character run (useConsumable → here): heal % of max HP · shared cooldown BAL.FIELD.potCd (G.potT) · 1 from the bag
 function ltPotion(ch,id,pct){
@@ -6618,6 +6697,8 @@ function prepareRun(G,P,ch,modeId){
   P.adv=a; P.advOffered=true;                                           // never the Lv15 job pick (G.ui never 'adv')
   P.look=Object.assign({},P.cls.look,a?a.look:null,typeof gearLook==='function'?gearLook(ch):null);
   P.bonus=buildRunBonus(ch);
+  const ge=typeof gearElement==='function'?gearElement(ch):null;       // ธาตุชุดเกราะ (34 · 29 elHurtMul): character runs only, never classic
+  P.armorEl=ge&&ge.el||null; P.armorCyc=!!(ge&&ge.cyc);
   P.sx=true; P.permSt=Object.assign({},ch.st||{});                     // uncapped stat cards + main-stat power (26-stat-scaling)
   P.rank={}; for(const id of pgSkillPool(ch)){ const r=(ch.sk||{})[id]|0; if(r>0) P.rank[id]=Math.min(rankCap(ch,id),r); }
   P.tree=tfRunTree(ch);                                                  // skill trees (27): numbers + effects through sxMods
@@ -8245,7 +8326,7 @@ function ucEquipTab(root,ch){
   UC.tab='equip'; UC.root=root; root.textContent=''; if(!ch) return;
   const box=ucMk('div','uc'); box.dataset.uc='equip'; ucNote(box);
   const top=ucMk('div','uc-top'), sum=ucMk('div','uc-sum'), lines=itStatLines(gearBonus(ch));
-  sum.append(ucMk('b','','ค่าจากอุปกรณ์'),ucMk('span','',lines.length?lines.map(([k,v])=>k+' '+v).join(' · '):'ยังไม่ได้สวมอะไรที่มีค่าเสริม'));
+  sum.append(ucMk('b','','ค่าจากอุปกรณ์'),ucMk('span','',lines.length?lines.map(([k,v])=>k+' '+v).join(' · '):'ยังไม่ได้สวมอะไรที่มีค่าเสริม'),ucElLine(ch));
   top.append(ucPortrait(ch,96),sum); box.append(top);
   const list=ucMk('div','uc-slots');
   for(const s of IT_SLOTS){ const inst=itEquipped(ch,s), b=ucBtn('','uc-slot'), t=ucMk('span','uc-st2'); b.dataset.s=s;
@@ -8255,6 +8336,13 @@ function ucEquipTab(root,ch){
     b.setAttribute('aria-label',IT_SLOT_TH[s]+': '+(inst?ucName(inst):'ว่าง')); list.append(b); }
   list.addEventListener('click',e=>{ const b=e.target.closest('[data-s]'); if(b) ucSlotTap(b.dataset.s); });
   box.append(list,ucMk('p','uc-hint','แตะช่องเพื่อดู ถอด หรือเปลี่ยนของ · ของในกระเป๋าดูที่แท็บกระเป๋า')); root.append(box); }
+// ธาตุเกราะ (34 gearElement · 29 elArmorVs) + ? → the help page (65 TF_HELP.armorEl)
+function ucElLine(ch){ const w=ucMk('span','uc-el'), g=gearElement(ch), E=g.el&&EL[g.el];
+  let t; if(E){ const v=elArmorVs(g.el); t='🛡 ธาตุเกราะ '+E.i+' '+E.n+' · ต้าน '+v.res.concat(v.same).map(k=>EL[k].i).join('')+' · แพ้ '+(v.weak.map(k=>EL[k].i).join('')||'-'); }
+  else if(g.cyc) t='🛡 ธาตุเกราะสลับทุก '+EL_CYC_T+' วิ (มงกุฎวุ้นหกสี) '+EL_CYC.map(k=>EL[k].i).join('');
+  else t='🛡 ธาตุเกราะ: ไม่มี (×1 ทุกธาตุ) · ฝังรูนธาตุที่เสื้อเกราะ';
+  const q=ucBtn('?','uc-b uc-sq',()=>{ if(typeof tfHelp==='function') tfHelp('armorEl'); }); q.setAttribute('aria-label','ธาตุเกราะคืออะไร');
+  w.append(ucMk('span','',t),q); return w; }
 function ucSlotTap(s){ const ch=ucCh(); if(!ch) return; const inst=itEquipped(ch,s); if(inst) openItemSheet(inst.u); else ucPickSlot(s); }
 // choose a piece from the bag for one slot: tap = wear · ⓘ = details
 function ucPickSlot(s){ const ch=ucCh(); if(!ch||IT_SLOTS.indexOf(s)<0) return;
@@ -8337,7 +8425,7 @@ function ucGearFill(box,ch,inst){
   const info=[]; if(d.refine) info.push('ตีบวก +'+(inst.r|0)+' / +'+BAL.REFINE.max+(itPityN(inst)?' · ความเพียร +'+ucPc(itPityN(inst)*BAL.REFINE.pity):'')); else info.push('ตีบวกไม่ได้');
   const ps=itSellPrice(inst); info.push(ps?'ขายได้ '+ucN(ps)+' ทอง':inst.b?'ของติดตัวเริ่มต้น · ขายไม่ได้':'ขายไม่ได้'); box.append(ucMk('p','uc-hint uc-left',info.join(' · ')));
   const sk=itSockets(inst); if(sk.length){ const s=ucMk('div','uc-socks'); s.append(ucMk('span','','ช่องรูน'));
-    sk.forEach(rid=>s.append(ucMk('span',rid?'uc-sock on':'uc-sock',rid?RUNES[rid].n+' ('+ucStatText(RUNES[rid].st)+')':'ว่าง'))); box.append(s); }
+    sk.forEach(rid=>s.append(ucMk('span',rid?'uc-sock on':'uc-sock',rid?RUNES[rid].n+' ('+itRuneText(rid)+')':'ว่าง'))); box.append(s); }
   if(d.d) box.append(ucMk('p','uc-hint uc-left',d.d));
   const acts=ucMk('div','uc-acts'), ro=ucRO();
   if(slot){ acts.append(ucBtn('ถอด','uc-b',()=>ucDoUnequip(slot),ro),ucBtn('เปลี่ยน','uc-b',()=>ucPickSlot(slot),ro)); }
@@ -8360,7 +8448,7 @@ function ucStackFill(box,ch,id){
   if(d.d) box.append(ucMk('p','uc-hint uc-left',d.d));
   if(d.kind==='rune'&&itHas(RUNES,d.rune)){ const R=RUNES[d.rune], g=RUNE_GROUP[R.g];
     box.append(ucStats(R.st,null),ucMk('p','uc-hint uc-left','ใส่ได้ในช่องกลุ่ม'+g.n+' ('+g.slots.map(s=>IT_SLOT_TH[s]).join(' / ')+') · ฝังฟรี · ถอดได้และได้รูนคืน')); }
-  if(d.makes&&itHas(RUNES,d.makes)) box.append(ucMk('p','uc-hint uc-left','มี '+n+'/'+BAL.PRICE.shardsPerRune+' → '+RUNES[d.makes].n+' ('+ucStatText(RUNES[d.makes].st)+')'));
+  if(d.makes&&itHas(RUNES,d.makes)) box.append(ucMk('p','uc-hint uc-left','มี '+n+'/'+BAL.PRICE.shardsPerRune+' → '+RUNES[d.makes].n+' ('+itRuneText(d.makes)+')'));
   const acts=ucMk('div','uc-acts'), ro=ucRO();
   if(d.use||d.kind==='dye'||id==='u_forget'){
     const part=box.dataset.part||'', who=ucRun()?G.char:ch, why=itCanUse(who,id,{part});
@@ -8489,7 +8577,7 @@ function ucRsFill(box){
     const runes=groups.filter(g=>!g.unk&&!g.inst&&itemDef(g.id).kind==='rune'), fit=runes.filter(g=>itRuneFits(g.id,d));
     if(!fit.length) box.append(ucMk('p','uc-hint',runes.length?'รูนที่มีอยู่ใส่ช่องนี้ไม่ได้':'ยังไม่มีรูน · รวมจากเศษที่แท็บ [รวมเศษ]'));
     for(const g of fit){ const R=RUNES[g.id];
-      box.append(ucRow(g.id,{n:g.n, sub:ucStatText(R.st), right:[ucBtn('ฝัง','uc-b pri',()=>{ const r=socketRune(ucCh(),S.uid,g.id,e); if(r) toast(r,'bad'); else { toast('ฝัง '+R.n+' แล้ว','good'); ucSnd('ok'); } ucRsFill(box); ucAfter(); },!fort)]})); }
+      box.append(ucRow(g.id,{n:g.n, sub:itRuneText(g.id), right:[ucBtn('ฝัง','uc-b pri',()=>{ const r=socketRune(ucCh(),S.uid,g.id,e); if(r) toast(r,'bad'); else { toast('ฝัง '+R.n+' แล้ว','good'); ucSnd('ok'); } ucRsFill(box); ucAfter(); },!fort)]})); }
     for(const g of runes) if(!itRuneFits(g.id,d)) box.append(ucRow(g.id,{n:g.n, cls:'uc-off', sub:'ใส่ได้เฉพาะกลุ่ม'+RUNE_GROUP[RUNES[g.id].g].n}));
     return; }
   const L=ucSockList(ch,false);
@@ -8797,6 +8885,7 @@ function hdTick(){
   if(HD.bars) hdBars();
   if(HD.manual) hdCardBtn();
   if(HD.pot[0]||HD.pot[1]) hdPots(false);
+  if(HD.el) hdElTick();
   if(G.mode.hudTick) try{ G.mode.hudTick(); }catch(e){ console.error(e); } }   // a mode's own HUD bits (ท่องแดนรูน: กลับป้อม · 65)
 function hdStart(){   // first HUD frame of a run
   HD.g=G; HD.cards=null; HD.n=-1; HD.xr=HD.jr=-1; HD.loot=G.loot?G.loot.length:0; SH.lastMode=G.modeId; shChrome(null);
@@ -8807,8 +8896,15 @@ function hdStart(){   // first HUD frame of a run
   HD.auto=HD.manual&&!!loadSettings().cardAuto;
   if(box){ box.hidden=!(HD.bars||HD.manual); shEl('hdBars').hidden=!HD.bars; shEl('hdCard').hidden=true;
     if(!HD.wired){ HD.wired=true; shEl('hdCard').addEventListener('click',()=>{ if(G&&!G.ui&&!G.over) G.cardReq=true; }); } }
-  hdPotStart(ch);
+  hdPotStart(ch); hdElStart();
   if(ch&&G.charTip&&!G.auto) toast(G.charTip,'info'); }
+// 🛡 armour element chip (29 elArmor · ธาตุชุดเกราะ): character runs with an element rune in the body (or มงกุฎวุ้นหกสี) · tap = help
+function hdElStart(){ const box=shEl('hdBox'); HD.el=!!(G.char&&P&&(P.armorEl||P.armorCyc)&&!G.auto); HD.elK='';
+  let b=shEl('hdEl'); if(!b){ if(!HD.el||!box) return; b=shBtn('','hd-el',()=>{ if(G&&!G.over&&!G.ui&&typeof pauseGame==='function') pauseGame(); if(typeof tfHelp==='function') tfHelp('armorEl'); }); b.id='hdEl'; }
+  if(box&&b.parentNode!==box) box.prepend(b);
+  b.hidden=!HD.el; if(HD.el){ if(box) box.hidden=false; hdElTick(); } }
+function hdElTick(){ const b=shEl('hdEl'), k=typeof elArmor==='function'?elArmor():null; if(!b||k===HD.elK) return; HD.elK=k; const E=k&&EL[k];
+  b.textContent='🛡'+(E?E.i:'⚪'); b.style.borderColor=E?E.c:''; b.setAttribute('aria-label','ธาตุเกราะ'+(E?E.n:'ไม่มี')+(P&&P.armorCyc?' (สลับทุก '+EL_CYC_T+' วิ)':'')+' · แตะเพื่อดูคำอธิบาย'); }
 // one loot entry → a log line (a stack of the same id within 4 s grows ×n on the same line) + the bag estimate:
 // gear needs an entry, a stack only when neither the bag nor this run has that id yet. Past the bag's free entries at the start
 // → one line "goes to the stash"; past the stash too → one line "will be dropped" (lane C pgCommitItems: bag → stash → lost).
@@ -9632,11 +9728,18 @@ const MOBS={
   ob_warlord:{boss:1, n:'แม่ทัพออร์คเขี้ยวเหล็ก', lv:34, el:'fire', ai:'fb_warlord', hp:1150, speed:70, r:46, dmg:24, mass:90, xp:260, goo:'#c86a4a', fam:'orc', pv:['orc','warlord'], d:'ชาร์จ 3 ครั้งติด · ขวานคู่ r 200 · เรียกทหารที่ HP 70% / 40% · คลั่งที่ 25% (ทิ้งรอยไฟ)'}};
 for(const id in MOBS){ const m=MOBS[id]; m.lazy=1; if(!m.art&&!m.struct) m.art=id; if(m.aggro==null) m.aggro=260; if(typeof EN!=='undefined') EN[id]=m; }   // EN absent: a pure test load without 08
 // the field boss of each map (one nest, one timer · §5.5) and the drops that only it gives (rollDrops format, 34)
+// first:1 = sure on the account's first kill of that boss (62 fdBossDone) · + the boss's ★ piece, its rune / rune shard and the map's
+// goods (33 IT_NAMED · rates BAL.DROP.fboss) · s1 also gives one element-rune shard at elShard
+const FD_BD=BAL.DROP.fboss, FD_ELSHARDS=['fire','water','wind','earth','light','dark'].map(k=>'m_shard_el_'+k);
 const FD_BOSSDROP={
-  g1:[{id:'m_dust', n:[4,8]}, {gear:2, n:[1,2]}, {pick:['rn_brute','rn_runner','rn_shambler'], p:.35}, {id:'m_seal', p:.1}, {id:'u_potion_s', n:[1,3]}],
-  s1:[{id:'m_dust', n:[4,8]}, {id:'m_crystal', n:[1,2]}, {gear:3, n:[1,2]}, {pick:['rn_wraith','rn_bat','rn_bloater'], p:.35}, {id:'m_seal', p:.1}, {id:'u_potion_l', n:[1,2]}],
-  o1:[{id:'m_dust', n:[5,9]}, {id:'m_crystal', n:[1,3]}, {gear:4, n:[1,2]}, {pick:['rn_brute','rn_spitter','rn_colossus'], p:.35}, {id:'m_seal', p:.12}, {id:'u_potion_l', n:[1,2]}]};
-const FD_CHESTDROP=[{id:'m_dust', n:[1,2]}, {id:'u_potion_s', p:.5}, {gear:'Z', p:.3}];   // camp chests + gold-rank monsters (Z = the map's gear tier)
+  g1:[{id:'m_dust', n:[4,8]}, {gear:2, n:[1,2]}, {pick:['rn_brute','rn_runner','rn_shambler'], p:.35, first:1}, {id:'m_seal', p:.1}, {id:'u_potion_s', n:[1,3]},
+    {id:'h_rustcrown', p:FD_BD.uniq}, {id:'rn_gbking', p:FD_BD.rune, first:1}, {id:'m_shard_gb_king', p:FD_BD.shard}, {pick:['w_gobsling','h_thiefwrap'], p:FD_BD.named}],
+  s1:[{id:'m_dust', n:[4,8]}, {id:'m_crystal', n:[1,2]}, {gear:3, n:[1,2]}, {pick:['rn_wraith','rn_bat','rn_bloater'], p:.35, first:1}, {id:'m_seal', p:.1}, {id:'u_potion_l', n:[1,2]},
+    {id:'h_jellycrown', p:FD_BD.uniq}, {id:'rn_sbqueen', p:FD_BD.rune, first:1}, {id:'m_shard_sb_queen', p:FD_BD.shard}, {pick:['w_jellystaff'], p:FD_BD.named}, {pick:FD_ELSHARDS, p:FD_BD.elShard}],
+  o1:[{id:'m_dust', n:[5,9]}, {id:'m_crystal', n:[1,3]}, {gear:4, n:[1,2]}, {pick:['rn_brute','rn_spitter','rn_colossus'], p:.35, first:1}, {id:'m_seal', p:.12}, {id:'u_potion_l', n:[1,2]},
+    {id:'w_ironfang', p:FD_BD.uniq}, {id:'rn_obwarlord', p:FD_BD.rune, first:1}, {id:'m_shard_ob_warlord', p:FD_BD.shard}, {pick:['b_orchide','r_shamanbone'], p:FD_BD.named}]};
+// camp chests + gold-rank monsters (Z = the map's gear tier · pick 'Z' = one of the map's goods, 62 fdChestTable)
+const FD_CHESTDROP=[{id:'m_dust', n:[1,2]}, {id:'u_potion_s', p:.5}, {gear:'Z', p:.3}, {pick:'Z', p:BAL.DROP.field.chestNamed}];
 /* ================= 61-mob-sprites.js · lane F · vector painters of the field monsters → EDRAW ================= */
 // The painted chibi art (12b · d.art) replaces these once it has loaded. Until then — or with the art switched off — each
 // monster gets its own vector look: one painter family (goblin / orc / slime / beast …) + the item it carries, drawn at a
@@ -9919,10 +10022,15 @@ function fdCollectGround(all){ if(!Array.isArray(G.gems)) return; const R2=600*6
 
 /* ---- kills: the spawn point waits, kit death effects, then EXP / gold / drops ---- */
 const FD_DROPT={};
-function fdDropTable(type){ const F=G.fd, key=F.id+':'+type; let t=FD_DROPT[key]; if(t) return t;
+// el = the monster's element when it died (วุ้นแฝด swaps · วุ้นยักษ์ takes its corner's): the shard of that element's rune —
+// slimes 1.5% (elShard), any other elemental field monster 0.5% (elShardX) · + the map's own goods (33 IT_NAMED zone) at 0.15%
+function fdDropTable(type,el){ const F=G.fd, key=F.id+':'+type+':'+(el||''); let t=FD_DROPT[key]; if(t) return t;
   const ids=[]; for(const tt of F.z.gearT) for(const id of (typeof IT_POOL!=='undefined'&&IT_POOL[tt])||[]) ids.push(id);
-  t=FD_DROPT[key]=typeof itFieldTable==='function'?itFieldTable(type,F.z.zn,ids):[]; return t; }
-function fdChestTable(){ const z=G.fd.z; return FD_CHESTDROP.map(e=>e.gear==='Z'?Object.assign({},e,{gear:z.gearT[0]}):e); }
+  const D=BAL.DROP.field, d=EN[type], elP=el&&svHas(EL,el)&&!(d&&d.struct)?(d&&d.fam==='slime'?D.elShard:D.elShardX):0;
+  t=FD_DROPT[key]=typeof itFieldTable==='function'?itFieldTable(type,F.z.zn,ids,{el:elP?el:null, elP, named:fdGoods(F.id), namedP:D.named}):[]; return t; }
+const FD_GOODS={};
+function fdGoods(zid){ return FD_GOODS[zid]||(FD_GOODS[zid]=typeof itZoneGoods==='function'?itZoneGoods(zid):[]); }
+function fdChestTable(){ const z=G.fd.z; return FD_CHESTDROP.map(e=>e.gear==='Z'?Object.assign({},e,{gear:z.gearT[0]}):e.pick==='Z'?Object.assign({},e,{pick:fdGoods(z.id)}):e); }
 function fdOnKill(e){ if(e.boss) return; const M=e.fm; if(!M) return; const R=G.fdRun, F=G.fd, d=e.d;
   if(M.rec){ const r=M.rec; r.e=null; r.st='dead'; r.t=G.t+(d.struct?240:rand(BAL.FIELD.respawn[0],BAL.FIELD.respawn[1])); r.rank=null; r.hpF=1; }
   const K=d.kit; if(K) for(const k in K){ const f=FK[k]; if(f&&f.death) try{ f.death(e,M,K[k]); }catch(er){ console.error(er); } }
@@ -9933,8 +10041,8 @@ function fdOnKill(e){ if(e.boss) return; const M=e.fm; if(!M) return; const R=G.
   R.exp+=Math.round(x.base*mul); R.kills[e.type]=(R.kills[e.type]|0)+1; if(R.zones[F.id]) R.zones[F.id].k++;
   if(e.rank>=1&&!G.auto) addText(e.x,e.y-e.r-26,'+'+fmtNum(Math.round(x.base*mul))+' EXP','#bfe6ff');
   const gl=BAL.FIELD.goldF(e.lv)*(Z.gold||1), minor=M.child||M.sum;      // split bodies / summoned ones: no gold (they were a free multiplier)
-  if(!minor) fdCoins(e.x,e.y,gl*(1+(e.rank|0)*.6));
-  if(!minor){ const list=rollDrops(fdDropTable(e.type),(1+(P.drop||0))*(1+(e.rank|0)*.5)); if(list.length) dropLoot(e.x,e.y,list); }
+  if(!minor) fdCoins(e.x,e.y,gl*(1+(e.rank|0)*.6)*(1+Math.max(0,Math.min(1,+(P.bonus&&P.bonus.gold)||0))));   // gear "ทองจากมอน" (ผ้าโพกหัวโจร · รูนราชาก็อบลิน)
+  if(!minor){ const list=rollDrops(fdDropTable(e.type,e.el),(1+(P.drop||0))*(1+(e.rank|0)*.5)); if(list.length) dropLoot(e.x,e.y,list); }
   if(e.rank===3&&!minor) ltDropChest(e.x,e.y,rollDrops(fdChestTable(),1+(P.drop||0)),Math.round(gl*4));
   if(K&&K.potion&&rngUnit()<K.potion.p) dropLoot(e.x,e.y,[{id:F.z.zn>=2?'u_potion_l':'u_potion_s', n:1}]);
   if(K&&K.gems) for(let i=1;i<K.gems.mul;i++) dropGem(e.x+rand(-14,14),e.y+rand(-14,14),e.xp); }
@@ -9962,7 +10070,7 @@ function fdBossDone(){ const F=G.fd, B=F.boss, z=F.z, R=G.fdRun, list=G.bosses.f
   B.at=G.t+B.every*rand(BAL.FIELD.boss.jitter[0],BAL.FIELD.boss.jitter[1]);
   const rb=R.boss[z.id]||(R.boss[z.id]={n:0, rem:null}); rb.n++; if(R.zones[z.id]) R.zones[z.id].b++;
   const ch=G.char, lv=EN[B.id].lv; R.exp+=Math.round(BAL.BOSS.exp(lv,0)*BAL.diffMul(lv-((ch&&ch.lv)|0)));
-  const first=fdBossKills(z.id)===0&&rb.n===1, t=FD_BOSSDROP[z.id].map(e=>e.pick&&first?Object.assign({},e,{p:1}):e);   // first kill on this account: the rune for sure
+  const first=fdBossKills(z.id)===0&&rb.n===1, t=FD_BOSSDROP[z.id].map(e=>e.first&&first?Object.assign({},e,{p:1}):e);   // first kill on this account: the runes marked first for sure
   ltDropChest(last.x,last.y,rollDrops(t,1+(P.drop||0)),BAL.DROP.fboss.gold(lv));
   for(const p of F.portals) if(p.to!=='fort') p.lock=!!fdLockWhy(G.char,p.to);                           // the next map may have opened
   banner('ล้ม'+EN[B.id].n+'แล้ว!','กล่องจ้าวถิ่นหล่นอยู่ · จะเกิดใหม่ในราว '+Math.round(B.every/60)+' นาที'); sfx('win'); }
@@ -10137,7 +10245,7 @@ FK.keep={tick(e,F,K,dt,d,dx,dy,M){ if(F.st!==1) return false;
 FK.charge={tick(e,F,K,dt,d,dx,dy,M){
   const C=F.ch||(F.ch={s:0, cd:rand(1,2.5), t:0, cx:0, cy:0, hit:0});
   if(C.s===2){ C.t-=dt; const sp=K.sp*(F.spdMul||1), ox=e.x, oy=e.y; e.x+=C.cx*sp*dt; e.y+=C.cy*sp*dt; e.face=C.cx<0?-1:1; e.walk+=dt*12; fdKeepIn(e);
-    if(!C.hit){ const px=P.x-e.x, py=P.y-e.y; if(px*px+py*py<(e.r+P.r+4)**2){ C.hit=1; hurtPlayer(e.dmg*K.dmg); P.kx+=C.cx*420; P.ky+=C.cy*420; if(G.over) return true; } }
+    if(!C.hit){ const px=P.x-e.x, py=P.y-e.y; if(px*px+py*py<(e.r+P.r+4)**2){ C.hit=1; hurtPlayer(e.dmg*K.dmg,e); P.kx+=C.cx*420; P.ky+=C.cy*420; if(G.over) return true; } }
     if(K.stun&&Math.hypot(e.x-ox,e.y-oy)<sp*dt*.35){ e.stunT=K.stun; C.s=0; C.cd=K.cd; G.shake=Math.max(G.shake,5); addText(e.x,e.y-e.r-14,'มึน!','#ffe14a'); sfx('hit'); return true; }   // ran into a rock / wall
     e.vx=C.cx*sp*.3; e.vy=C.cy*sp*.3; if(C.t<=0){ C.s=0; C.cd=K.cd*rand(.85,1.15); } return true; }
   if(F.st!==1){ C.s=0; return false; }
@@ -10172,7 +10280,7 @@ FK.buff={tick(e,F,K,dt){ F.bf=(F.bf||0)-dt; if(F.bf>0) return false; F.bf=.5; if
   return false; }};
 FK.trap={tick(e,F,K,dt){ if(F.st!==1) return false; F.tc=(F.tc==null?rand(1,2):F.tc)-dt; if(F.tc>0) return false; F.tc=K.cd*rand(.9,1.2);
   let mine=0; for(const h of G.fd.haz) if(h.k==='trap'&&h.own===e.id) mine++; if(mine>=K.max) return false;
-  const x=e.x+(P.x-e.x)*.35, y=e.y+(P.y-e.y)*.35; G.fd.haz.push({k:'trap', x, y, r:15, t:0, arm:.6, life:30, dmg:K.dmg*e.fdK, own:e.id}); return false; }};
+  const x=e.x+(P.x-e.x)*.35, y=e.y+(P.y-e.y)*.35; G.fd.haz.push({k:'trap', x, y, r:15, t:0, arm:.6, life:30, dmg:K.dmg*e.fdK, own:e.id, el:e.el}); return false; }};
 FK.shield={tick(e,F,K,dt,d,dx,dy){ const a=Math.atan2(dy,dx); if(F.ang==null) F.ang=a; const mx=K.turn*dt; F.ang+=clamp(angDiff(a,F.ang),-mx,mx);
   e.def=(e.stunT>0||e.freezeT>0)?0:K.red; e.shArc=1; return false; }};
 FK.row={tick(e,F,K,dt,d,dx,dy,M){ if(F.st!==1||F.slot==null) return false;
@@ -10187,7 +10295,7 @@ FK.skitter={tick(e,F,K,dt,d,dx,dy,M,atk,hurt){ if(hurt){ const a=rand(0,TAU); F.
 FK.hide={tick(e,F,K,dt,d){ const hid=F.st===0&&d>K.r&&e.hp>=e.maxHp; e.alpha=hid?.16:undefined; if(F.hid&&!hid&&!G.auto) addText(e.x,e.y-e.r-10,'!','#9fe08a'); F.hid=hid; return false; }};
 FK.ghost={tick(e,F,K){ e.alpha=K.a; return false; }};
 FK.swap={tick(e,F,K,dt){ F.sw=(F.sw==null?K.every:F.sw)-dt; if(F.sw>0) return false; F.sw=K.every; const i=K.els.indexOf(e.el); e.el=K.els[(i+1)%K.els.length]; F.swT=G.t; return false; }};
-FK.trail={tick(e,F,K,dt){ F.tr=(F.tr||0)-dt; if(F.tr>0) return false; F.tr=K.every; if(Math.hypot(e.vx,e.vy)<12) return false; fdFire(e.x,e.y+e.r*.5,K.r,K.dmg*e.fdK,K.life); return false; }};
+FK.trail={tick(e,F,K,dt){ F.tr=(F.tr||0)-dt; if(F.tr>0) return false; F.tr=K.every; if(Math.hypot(e.vx,e.vy)<12) return false; fdFire(e.x,e.y+e.r*.5,K.r,K.dmg*e.fdK,K.life,e.el); return false; }};
 FK.gems={}; FK.potion={};                                              // handled by the kill reward (62 fdOnKill): extra XP gems · a potion drop
 FK.hop={tick(e,F,K,dt,d,dx,dy,M){ M.sp*=.35+1.3*Math.max(0,Math.sin(G.t*6.5+e.id)); return false; }};
 FK.merge={tick(e,F,K,dt){ if(F.merged||F.st===2) return false; F.mg=(F.mg||0)-dt; if(F.mg>0) return false; F.mg=.5;
@@ -10213,19 +10321,19 @@ FK.boom={tick(e,F,K,dt,d,dx,dy,M){
 function fdBoom(e,F,K,self){ F.blown=1; const R=K.r, dmg=K.dmg*e.fdK;
   G.fx.push({k:'boom', x:e.x, y:e.y, r:R, t:0, dur:.45, c:'#ff8a3a', dead:false}); G.fx.push({k:'ring', x:e.x, y:e.y, r0:R*.3, r1:R*1.2, t:0, dur:.32, c:'#fff2d0', w:6, dead:false});
   burst(e.x,e.y,14,'#ffb050',260,.5,4); G.shake=Math.max(G.shake,8); sfx('boom');
-  if(self){ const px=P.x-e.x, py=P.y-e.y; if(px*px+py*py<(R+P.r)**2) hurtPlayer(dmg); }
+  if(self){ const px=P.x-e.x, py=P.y-e.y; if(px*px+py*py<(R+P.r)**2) hurtPlayer(dmg,e); }
   for(const o of query(e.x,e.y,R+60)){ if(o.dead||o===e) continue; const ox=o.x-e.x, oy=o.y-e.y, l=Math.hypot(ox,oy); if(l-o.r>R) continue;
     damageEnemy(o,(self?1:3)*dmg/Math.max(.5,P.might),null,{knock:260, nx:l?ox/l:1, ny:l?oy/l:0, quiet:true}); }
   if(self&&!e.dead){ e.fdNoLoot=1; e.xp=0; killEnemy(e); } }
 FK.quake={tick(e,F,K,dt,d,dx,dy,M){ const Q=F.qk||(F.qk={cd:rand(2,K.cd), t:0, a:0});
   if(Q.t>0){ Q.t-=dt; M.sp=0; if(e.stunT>0||e.freezeT>0){ Q.t=0; F.tele=null; Q.cd=1.5; return false; }
-    if(Q.t<=0){ G.fd.haz.push({k:'quake', x:e.x, y:e.y, ang:Q.a, len:K.len, w:K.w, t:0, sp:640, dmg:e.dmg*K.dmg, hit:0}); G.shake=Math.max(G.shake,7); sfx('boom'); F.tele=null; Q.cd=K.cd; } return false; }
+    if(Q.t<=0){ G.fd.haz.push({k:'quake', x:e.x, y:e.y, ang:Q.a, len:K.len, w:K.w, t:0, sp:640, dmg:e.dmg*K.dmg, hit:0, el:e.el}); G.shake=Math.max(G.shake,7); sfx('boom'); F.tele=null; Q.cd=K.cd; } return false; }
   if(F.st!==1) return false; Q.cd-=dt;
   if(Q.cd<=0&&d<K.len*.9){ Q.t=K.aim; Q.a=Math.atan2(dy,dx); F.tele={k:'line', ang:Q.a, len:K.len, t:0, dur:K.aim, w:K.w}; M.sp=0; } return false; }};
 // gold-rank (ยอดฝีมือ) monsters: one extra move — a ground slam ring (telegraphed)
 function fdEliteSlam(e,F,dt,d,M){ const S=F.es||(F.es={cd:rand(3,5), t:0});
   if(S.t>0){ S.t-=dt; M.sp=0; fdMove(e,dt,M); if(S.t<=0){ const R=125; G.fx.push({k:'ring', x:e.x, y:e.y, r0:20, r1:R, t:0, dur:.4, c:'#f0c75a', w:12, dead:false}); G.shake=Math.max(G.shake,6); sfx('boom');
-      const px=P.x-e.x, py=P.y-e.y, pl=Math.hypot(px,py)||1; if(pl<R+P.r){ hurtPlayer(e.dmg*1.2); P.kx+=px/pl*380; P.ky+=py/pl*380; } S.cd=6; F.tele=null; } return true; }
+      const px=P.x-e.x, py=P.y-e.y, pl=Math.hypot(px,py)||1; if(pl<R+P.r){ hurtPlayer(e.dmg*1.2,e); P.kx+=px/pl*380; P.ky+=py/pl*380; } S.cd=6; F.tele=null; } return true; }
   S.cd-=dt; if(S.cd<=0&&d<200&&!(e.stunT>0||e.freezeT>0)){ S.t=.9; F.tele={k:'circle', r:125, t:0, dur:.9}; } return false; }
 // an archer on a watch tower: stays up there, shoots further, takes half damage · the tower falls → it drops down (stunned, hurt)
 function fdOnTower(e,F,K,dt,d,dx,dy,hurt){ const T=F.tower;
@@ -10239,27 +10347,27 @@ function fdOnTower(e,F,K,dt,d,dx,dy,hurt){ const T=F.tower;
 /* ---- monster attacks: shots (straight / boomerang) and ground hazards (lobbed rock, trap, fire, quake wave, tossed meat) ---- */
 const FD_SHOT_C={fire:'#ff8a3a', arrow:'#e8d8b0', curse:'#a46bff', rock:'#a49a86', crown:'#d8a050', orb:'#c39cff'};
 function fdShoot(e,K){ const F=G.fd; if(!F) return; const sh=F.shots.length<160;
-  if(K.kind==='lob'){ const t=K.t||1, lx=P.x+P.vx*t*.45, ly=P.y+P.vy*t*.45; F.haz.push({k:'lob', x0:e.x, y0:e.y-8, x:lx, y:ly, t:0, dur:t, r:K.r||32, dmg:K.dmg*e.fdK}); return; }
+  if(K.kind==='lob'){ const t=K.t||1, lx=P.x+P.vx*t*.45, ly=P.y+P.vy*t*.45; F.haz.push({k:'lob', x0:e.x, y0:e.y-8, x:lx, y:ly, t:0, dur:t, r:K.r||32, dmg:K.dmg*e.fdK, el:e.el}); return; }
   if(!sh) return; const a=Math.atan2(P.y-e.y,P.x-e.x)+(K.burst>1?rand(-.09,.09):0), sp=K.sp||220;
   F.shots.push({x:e.x, y:e.y-(e.lift||0)*.4-6, vx:Math.cos(a)*sp, vy:Math.sin(a)*sp, r:K.kind==='arrow'?5:7, dmg:K.dmg*e.fdK, life:3.5, kind:K.kind, el:e.el, slow:K.slow||0, slowT:K.slowT||0}); }
 function fdShot(x,y,a,sp,dmg,kind,o){ const F=G.fd; if(!F||F.shots.length>=200) return null; const s=Object.assign({x, y, vx:Math.cos(a)*sp, vy:Math.sin(a)*sp, r:8, dmg, life:4, kind},o||{}); F.shots.push(s); return s; }
-function fdFire(x,y,r,dmg,life){ const F=G.fd; if(!F) return; let n=0; for(const h of F.haz) if(h.k==='fire') n++; if(n>=90) return; F.haz.push({k:'fire', x, y, r, dmg, t:0, life, tick:0}); }
+function fdFire(x,y,r,dmg,life,el){ const F=G.fd; if(!F) return; let n=0; for(const h of F.haz) if(h.k==='fire') n++; if(n>=90) return; F.haz.push({k:'fire', x, y, r, dmg, t:0, life, tick:0, el:el||'fire'}); }
 function fdShotTick(dt){ const F=G.fd, pr=P.r*.8;
   for(const s of F.shots){ if(s.dead) continue; s.life-=dt; s.t=(s.t||0)+dt;
     if(s.ret){ const o=s.ret; if(s.t>s.out&&o&&!o.dead){ const ax=o.x-s.x, ay=o.y-s.y, l=Math.hypot(ax,ay)||1; s.vx+=(ax/l*s.sp-s.vx)*Math.min(1,dt*4); s.vy+=(ay/l*s.sp-s.vy)*Math.min(1,dt*4); if(l<o.r) s.dead=true; } s.rot=(s.rot||0)+dt*14; }
     s.x+=s.vx*dt; s.y+=s.vy*dt;
     if(s.life<=0||(!s.ret&&G.obstacles&&terBlocks(s.x,s.y,s.r))){ s.dead=true; continue; }
-    const dx=s.x-P.x, dy=s.y-(P.y-6); if(dx*dx+dy*dy<(s.r+pr)**2&&!s.hitP){ if(s.ret) s.hitP=1; else s.dead=true; hurtPlayer(s.dmg); if(s.slow&&!G.over){ F.curseT=G.t+s.slowT; F.curseV=s.slow; } if(G.over) return; } }
+    const dx=s.x-P.x, dy=s.y-(P.y-6); if(dx*dx+dy*dy<(s.r+pr)**2&&!s.hitP){ if(s.ret) s.hitP=1; else s.dead=true; hurtPlayer(s.dmg,s); if(s.slow&&!G.over){ F.curseT=G.t+s.slowT; F.curseV=s.slow; } if(G.over) return; } }
   compact(F.shots); }
 function fdHazTick(dt){ const F=G.fd;
   for(const h of F.haz){ if(h.dead) continue; h.t+=dt;
     switch(h.k){
-      case 'lob': if(h.t>=h.dur){ h.dead=true; burst(h.x,h.y,8,'#8a7a5a',150,.4,3,'rock'); if((P.x-h.x)**2+(P.y-h.y)**2<(h.r+P.r*.5)**2) hurtPlayer(h.dmg); } break;
-      case 'trap': if(h.t>h.life){ h.dead=true; break; } if(h.t>h.arm&&(P.x-h.x)**2+(P.y-h.y)**2<(h.r+P.r*.6)**2){ h.dead=true; hurtPlayer(h.dmg); F.curseT=Math.max(F.curseT||0,G.t+.8); F.curseV=Math.max(F.curseV||0,.5); burst(h.x,h.y,8,'#c9a57a',140,.4,3,'rock'); sfx('hit'); }
+      case 'lob': if(h.t>=h.dur){ h.dead=true; burst(h.x,h.y,8,'#8a7a5a',150,.4,3,'rock'); if((P.x-h.x)**2+(P.y-h.y)**2<(h.r+P.r*.5)**2) hurtPlayer(h.dmg,h); } break;
+      case 'trap': if(h.t>h.life){ h.dead=true; break; } if(h.t>h.arm&&(P.x-h.x)**2+(P.y-h.y)**2<(h.r+P.r*.6)**2){ h.dead=true; hurtPlayer(h.dmg,h); F.curseT=Math.max(F.curseT||0,G.t+.8); F.curseV=Math.max(F.curseV||0,.5); burst(h.x,h.y,8,'#c9a57a',140,.4,3,'rock'); sfx('hit'); }
         break;
-      case 'fire': if(h.t>h.life){ h.dead=true; break; } h.tick-=dt; if(h.tick<=0&&(P.x-h.x)**2+(P.y-h.y)**2<(h.r+P.r*.5)**2){ h.tick=.5; hurtPlayer(h.dmg); } break;
+      case 'fire': if(h.t>h.life){ h.dead=true; break; } h.tick-=dt; if(h.tick<=0&&(P.x-h.x)**2+(P.y-h.y)**2<(h.r+P.r*.5)**2){ h.tick=.5; hurtPlayer(h.dmg,h); } break;
       case 'quake': { const f=h.t*h.sp; if(f>h.len+40){ h.dead=true; break; } if(!h.hit){ const c=Math.cos(h.ang), s=Math.sin(h.ang), px=P.x-h.x, py=P.y-h.y, al=px*c+py*s, lat=Math.abs(-px*s+py*c);
-          if(al>f-40&&al<f+10&&lat<h.w+P.r){ h.hit=1; hurtPlayer(h.dmg); P.kx+=c*300; P.ky+=s*300; } }
+          if(al>f-40&&al<f+10&&lat<h.w+P.r){ h.hit=1; hurtPlayer(h.dmg,h); P.kx+=c*300; P.ky+=s*300; } }
         if(!G.auto&&Math.random()<dt*30){ const c=Math.cos(h.ang), s=Math.sin(h.ang); burst(h.x+c*f,h.y+s*f,2,'#8a6e4e',120,.4,3,'rock'); } break; }
       case 'meat': { const o=h.tg; if(o&&!o.dead){ h.x=o.x; h.y=o.y; } if(h.t>=h.dur){ h.dead=true; if(o&&!o.dead){ o.hp=Math.min(o.maxHp,o.hp+o.maxHp*h.pct); addText(o.x,o.y-o.r-8,'+','#7dffa8'); burst(o.x,o.y,5,'#ffcf8a',90,.4,2.5); } } break; } } }
   compact(F.haz); }
@@ -10564,8 +10672,8 @@ const BOSS_PAT={
   charge(e,A,dt,d,dx,dy,o,k){
     if(A.charge>0){ A.charge-=dt; const sp=o.sp*(A.rage?1.2:1); e.x+=A.cx*sp*dt; e.y+=A.cy*sp*dt; e.face=A.cx<0?-1:1;
       for(const q of query(e.x,e.y,e.r+40)){ if(q.boss||q.dead) continue; const l=Math.hypot(q.x-e.x,q.y-e.y)||1; q.kx+=(q.x-e.x)/l*60; q.ky+=(q.y-e.y)/l*60; }
-      const px=P.x-e.x, py=P.y-e.y; if(!A.hitP&&px*px+py*py<(e.r+P.r)**2){ A.hitP=1; hurtPlayer(e.dmg*1.5); P.kx+=A.cx*620; P.ky+=A.cy*620; }
-      if(A.rage&&Math.random()<dt*14) fdFire(e.x,e.y+e.r*.6,26,e.fdK*9,2.2);
+      const px=P.x-e.x, py=P.y-e.y; if(!A.hitP&&px*px+py*py<(e.r+P.r)**2){ A.hitP=1; hurtPlayer(e.dmg*1.5,e); P.kx+=A.cx*620; P.ky+=A.cy*620; }
+      if(A.rage&&Math.random()<dt*14) fdFire(e.x,e.y+e.r*.6,26,e.fdK*9,2.2,e.el);
       if(Math.random()<.5) part({x:e.x+rand(-20,20), y:e.y+e.r*.8, vx:-A.cx*60, vy:rand(-30,-5), life:.6, s:8, grow:22, c:'#6a5a4a', g:0, drag:2, k:'puff', add:false, a:.5});
       if(A.charge<=0){ A.left=(A.left|0)-1; if(A.left>0) A.chGap=o.gap||.35; else A.chargeCd=o.cd*k; } return true; }
     if(A.chGap>0){ A.chGap-=dt; if(A.chGap<=0){ A.wind=o.wind*.7; A.cx=dx; A.cy=dy; A.tele={k:'line', len:o.sp*o.dur, t:0, dur:A.wind, ang:Math.atan2(dy,dx)}; } BOSS_PAT.move(e,dt,0,0,0); return true; }
@@ -10577,7 +10685,7 @@ const BOSS_PAT={
   slam(e,A,dt,d,o,k){
     if(A.slam>0){ A.slam-=dt; if(A.slam<=0){ const R=o.r; G.fx.push({k:'ring', x:e.x, y:e.y, r0:20, r1:R, t:0, dur:.45, c:o.c||'#e8d6a8', w:14, dead:false}); G.shake=Math.max(G.shake,10); sfx('boom');
         burst(e.x,e.y+20,18,'#bfae8a',300,.6,5,'rock'); addDecal(crackTex(),e.x,e.y+20,R*.8,6,.8);
-        const px=P.x-e.x, py=P.y-e.y, pl=Math.hypot(px,py)||1; if(pl<R+P.r){ hurtPlayer(e.dmg*(o.dmg||1.3)); P.kx+=px/pl*520; P.ky+=py/pl*520; }
+        const px=P.x-e.x, py=P.y-e.y, pl=Math.hypot(px,py)||1; if(pl<R+P.r){ hurtPlayer(e.dmg*(o.dmg||1.3),e); P.kx+=px/pl*520; P.ky+=py/pl*520; }
         A.slamCd=o.cd*k; } return true; }
     A.slamCd=(A.slamCd==null?2.5:A.slamCd)-dt; if(A.slamCd<=0&&d<o.near){ A.slam=o.wind*k; A.tele={k:'circle', r:o.r, t:0, dur:A.slam}; return true; } return false; },
   ring(e,o,el,off){ const n=o.n, sp=o.sp, dmg=e.dmg*(o.dmg||.45); off=off==null?rand(0,TAU):off; for(let i=0;i<n;i++) fdShot(e.x,e.y-8,off+i*TAU/n,sp,dmg,'orb',{el:el||e.el, r:o.r||8}); sfx('zap'); },
@@ -10603,7 +10711,7 @@ function bossPattern(e,dt,d,dx,dy,cfg){ const A=e.ai; BOSS_PAT.tele(A,dt); BOSS_
 const FB_KING={charge:{sp:760, wind:.9, dur:.6, cd:5}, slam:{r:170, wind:1, cd:4.5, near:240, dmg:1.3},
   summon:[{at:.6, list:[['g_sprout',6],['g_shaman',1]], say:'เรียกก็อบลินจิ๋ว 6 ตัว + หมอผี!'}, {at:.3, list:[['g_sprout',6],['g_shaman',1]], say:'เรียกลูกน้องอีกระลอก!'}],
   extra(e,A,dt,d,dx,dy){ if(e.hp>=e.maxHp*.25) return false; A.crown=(A.crown==null?1:A.crown)-dt;
-    if(A.crown<=0&&!A.wind&&!(A.charge>0)&&!(A.slam>0)){ A.crown=4.2; const a=Math.atan2(dy,dx); fdShot(e.x,e.y-30,a,520,e.dmg*.8,'crown',{r:14, ret:e, out:.6, sp:560, life:3.2});
+    if(A.crown<=0&&!A.wind&&!(A.charge>0)&&!(A.slam>0)){ A.crown=4.2; const a=Math.atan2(dy,dx); fdShot(e.x,e.y-30,a,520,e.dmg*.8,'crown',{el:e.el, r:14, ret:e, out:.6, sp:560, life:3.2});
       if(!A.crownSaid){ A.crownSaid=1; banner('ปามงกุฎ!','บูมเมอแรงโค้งกลับ · หลบทั้งขาไปและขากลับ'); } sfx('swing'); } return false; }};
 BOSSAI.fb_king=(e,dt,d,dx,dy)=>bossPattern(e,dt,d,dx,dy,FB_KING);
 
@@ -10626,7 +10734,7 @@ BOSSAI.fb_shard=(e,dt,d,dx,dy)=>bossPattern(e,dt,d,dx,dy,FB_SHARD);
 const FB_WARLORD={charge:{sp:820, wind:.75, dur:.5, cd:6.5, n:3, gap:.35}, slam:{r:200, wind:1, cd:5, near:270, dmg:1.4, c:'#ffb07a'},
   summon:[{at:.7, list:[['o_grunt',6],['o_archer',2]], say:'เป่าแตรเรียกทหาร 6 + นักธนู 2!'}, {at:.4, list:[['o_grunt',6],['o_archer',2]], say:'กองหนุนมาแล้ว!'}],
   rage:{at:.25, say:'ตัวแดง · ทุกท่าเร็วขึ้น · ทิ้งรอยไฟ'},
-  extra(e,A,dt){ if(A.rage){ A.tr=(A.tr||0)-dt; if(A.tr<=0&&Math.hypot(e.vx,e.vy)>20){ A.tr=.3; fdFire(e.x,e.y+e.r*.6,26,e.fdK*9,2.4); } } return false; }};
+  extra(e,A,dt){ if(A.rage){ A.tr=(A.tr||0)-dt; if(A.tr<=0&&Math.hypot(e.vx,e.vy)>20){ A.tr=.3; fdFire(e.x,e.y+e.r*.6,26,e.fdK*9,2.4,e.el); } } return false; }};
 BOSSAI.fb_warlord=(e,dt,d,dx,dy)=>bossPattern(e,dt,d,dx,dy,FB_WARLORD);
 /* ================= 65-ui-worldmap.js · lane F · scrWorld (แผนที่โลก) + field HUD buttons, pause sheet, help pages (?) ================= */
 // The fort's "ท่องแดนรูน" button → scrWorld: the 3 maps on one path (ป้อม → ป่า → บึง → ค่าย), each with its level range, main
@@ -10668,15 +10776,31 @@ function wmRender(){ const ch=curChar(), who=shEl('wmWho'), map=shEl('wmMap'), b
     ['👑 จ้าวถิ่น',B?B.n+' · Lv '+B.lv+' · ทุก '+Math.round(z.boss.every/60)+' นาที':'-'],
     ['สถานะจ้าวถิ่น',bs.seen?(bs.ready?'พร้อมแล้ว · ปรากฏหลังเข้าแผนที่ 10 วิ':'อีก '+fmtClock(bs.inSec)):'ยังไม่เคยล้ม · ปรากฏหลังเข้าแผนที่ '+fmtClock(bs.inSec)],
     ['ฝูงอาละวาด',z.rampage?z.rampage.n+' (ทุก ~2.5 นาที)':'-'],
-    ['ของที่ดรอป','อุปกรณ์ขั้น '+z.gearT.join('–')+' · ผงรูน · ยา'+(z.zn>=2?' · ผลึกรูน':'')+' · กล่องจ้าวถิ่น (รูน)'],
+    ['ของที่ดรอป','อุปกรณ์ขั้น '+z.gearT.join('–')+' · ผงรูน · ยา'+(z.zn>=2?' · ผลึกรูน':'')+' · เศษรูนธาตุ (มอนที่มีธาตุ'+(WM.sel==='s1'?' · วุ้นได้บ่อยกว่า':'')+') · กล่องจ้าวถิ่น (รูน)'],
+    ['ของดีประจำแผนที่',wmGoods(WM.sel)],
     ['สถิติตัวนี้',fz?'สังหาร '+fmtNum(fz.k|0)+' · ล้มจ้าวถิ่น '+(fz.b|0)+' · เวลา '+Math.round((fz.t|0)/60)+' นาที':'ยังไม่เคยมา']];
   const tbl=shMk('div','sv-tbl'); for(const [k,v] of rows){ const r=shMk('div','sv-row'); r.append(shMk('span','',k),shMk('b','',v)); tbl.append(r); } body.append(tbl);
+  body.append(wmElWarn(ch,z));
   const mobs=shMk('div','wm-mobs'); mobs.append(shMk('h3','','มอนในแผนที่'));
   for(const id of wmMobs(WM.sel)){ const d=EN[id], c=shBtn('','wm-mob'+(d.aggro===0?' calm':''),()=>tfHelp('fz_'+WM.sel)); c.append(shMk('span','',(d.el?EL[d.el].i+' ':'')+d.n),shMk('small','','Lv '+d.lv+(d.aggro===0?' · ไม่ตีก่อน':''))); mobs.append(c); }
   body.append(mobs);
   body.append(shMk('p','hint','ตายหรือกลับป้อม = จบรอบ ได้ EXP ทอง ของที่เก็บไว้ทั้งหมด (ตาย: EXP −1% ของเลเวล) · ประตูรูนพาไปแผนที่ข้างเคียงได้โดยไม่จบรอบ'));
   go.disabled=!ch||!!lock; go.textContent=!ch?'สร้างตัวละครก่อน':lock?'🔒 ยังเข้าไม่ได้':'เข้า'+z.n;
   if(!WM.timer) WM.timer=setInterval(()=>{ if(curScreen()!=='scrWorld'){ wmStop(); return; } const c2=curChar(); for(const zid in WM.nodes) WM.nodes[zid].textContent=fdLockWhy(c2,zid)?'🔒':wmBossText(zid); },1000); }
+// "ของดี" of a map: its goods (rar 1 · monsters, camp chests, boss box) + the boss's ★ piece and rune (boss box only)
+function wmGoods(zid){ const g=itZoneGoods(zid).map(id=>ITEMS[id].n), b=[]; for(const id in ITEMS){ const d=ITEMS[id]; if(d.slot&&d.zone===zid&&d.from) b.push('★ '+d.n); }
+  const z=ZONES[zid], r=Object.keys(RUNES).find(k=>RUNES[k].mob===(z.boss&&z.boss.id));
+  return g.concat(b,r?[RUNES[r].n]:[]).join(' · ')+(zid==='s1'?' · รูนธาตุ 6 ชนิด':'')||'-'; }
+// the character's armour element vs the map's main elements (29 elArmorVs / elBestArmor) + ? → TF_HELP.armorEl
+function wmElWarn(ch,z){ const w=shMk('div','wm-el'), g=ch?gearElement(ch):{el:null, cyc:false}, E=g.el&&EL[g.el], best=elBestArmor(z.el);
+  let t, bad=false;
+  if(E){ const v=elArmorVs(g.el), weak=z.el.filter(k=>v.weak.indexOf(k)>=0), res=z.el.filter(k=>v.res.indexOf(k)>=0||v.same.indexOf(k)>=0); bad=weak.length>0;
+    t='🛡 ธาตุเกราะ '+E.i+' '+E.n+(res.length?' · ต้าน '+res.map(k=>EL[k].i+EL[k].n).join(' '):'')+(weak.length?' · ⚠ แพ้ '+weak.map(k=>EL[k].i+EL[k].n).join(' ')+' (โดนตี ×1.5)':' · ไม่แพ้ธาตุเด่นของแผนที่นี้'); }
+  else if(g.cyc) t='🛡 ธาตุเกราะสลับทุก '+EL_CYC_T+' วิ (มงกุฎวุ้นหกสี) · บางช่วงจะแพ้ธาตุของแผนที่';
+  else t='🛡 ยังไม่มีธาตุเกราะ (โดนตี ×1 ทุกธาตุ)';
+  if(best&&(!E||g.el!==best)) t+=' · แนะนำรูน'+EL[best].n+' '+EL[best].i+' สำหรับแผนที่นี้';
+  w.classList.toggle('bad',bad); w.append(shMk('span','',t));
+  const q=shBtn('?','fd-q wm-elq',()=>{ if(typeof tfHelp==='function') tfHelp('armorEl'); }); q.setAttribute('aria-label','ธาตุเกราะคืออะไร'); w.append(q); return w; }
 function wmMobs(zid){ const z=ZONES[zid], s=new Set(); for(const r of z.regions||[]) for(const m of r.mix) s.add(m[0]); for(const c of z.camps||[]) for(const g of c.guards) s.add(g[0]);
   if(z.fort) s.add('o_archer').add('o_tower'); for(const t of [...s]){ const K=EN[t].kit; if(K&&K.summon) s.add(K.summon.type); if(K&&K.split) s.add(K.split.into); if(K&&K.dismount) s.add(K.dismount.mount); }
   return [...s].filter(t=>EN[t]).sort((a,b)=>(EN[a].lv-EN[b].lv)||(a<b?-1:1)); }
@@ -10720,6 +10844,15 @@ TF_HELP.field=['ในแผนที่',()=>`<table>${tfRow('เดิน','WA
   <h4>มอน</h4><p>ป้ายบนหัว: ธาตุ · Lv · ชั้นสี · มอนสัตว์ป่า/บางชนิด "ไม่ตีก่อน" จนกว่าจะโดนตี · ฝูงเดียวกันช่วยกันไล่ · เส้นแดงบนพื้น = จะพุ่ง · วงทอง = จะกระแทก · เงาบนพื้น = หินกำลังตก</p>
   <h4>ฝูงอาละวาด</h4><p>ทุก ~2.5 นาที เตือนก่อน 5 วิ (ลูกศรขอบจอ) ฝูงใหญ่บุกจากทิศเดียว · ฆ่าหมดใน 30 วิ ได้กล่องรางวัล</p>
   <p>${FD_ORDER.map(id=>`<button type="button" class="btn ghost" data-help="fz_${id}">มอน${tfE(ZONES[id].n)}</button>`).join(' ')} <button type="button" class="btn ghost" data-help="elements">วงล้อธาตุ</button></p>`];
+TF_HELP.armorEl=['ธาตุเกราะ',()=>{ const ch=typeof curChar==='function'?curChar():null, g=ch?gearElement(ch):null, E=g&&g.el&&EL[g.el];
+  return `<p>ฝัง<b>รูนธาตุ</b>ในช่องรูนของ<b>เสื้อเกราะ</b> ตัวละครจะมีธาตุนั้น · มอนที่มีธาตุตีเรา แรงหรือเบาลงตามวงล้อธาตุเดียวกับตอนเราตีมอน</p>
+  <p>🔥 ไฟ → 🌪️ ลม → 🪨 ดิน → 💧 น้ำ → 🔥 ไฟ (ลูกศร = ชนะ) · ✨ แสง ⇄ 🌑 มืด</p>
+  <table>${tfRow('ธาตุเกราะชนะธาตุมอน','โดนตี ×0.6 · ขึ้นคำว่า ต้าน')}${tfRow('ธาตุเดียวกัน','โดนตี ×0.75')}${tfRow('ธาตุมอนชนะธาตุเกราะ','โดนตี ×1.5 · ขึ้นคำว่า แพ้ธาตุ!')}${tfRow('มอนไม่มีธาตุ / ไม่มีธาตุเกราะ','×1')}</table>
+  <h4>ธาตุเกราะแต่ละแบบ</h4><table>${Object.keys(EL).map(k=>{ const v=elArmorVs(k); return tfRow(EL[k].i+' '+EL[k].n,(v.res.length?'ต้าน '+v.res.map(x=>EL[x].i+EL[x].n).join(' ')+' (×0.6) · ':'')+EL[k].i+EL[k].n+' (×0.75) · แพ้ '+v.weak.map(x=>EL[x].i+EL[x].n).join(' ')+' (×1.5)'); }).join('')}</table>
+  <h4>หารูนธาตุ</h4><p>เศษรูนธาตุดรอปจากมอนที่มีธาตุนั้น: วุ้นในบึงวุ้นหกสี ${Math.round(BAL.DROP.field.elShard*1000)/10}% · มอนธาตุอื่นในแผนที่ ${Math.round(BAL.DROP.field.elShardX*1000)/10}% · กล่องราชินีวุ้น · รวม ${BAL.PRICE.shardsPerRune} ชิ้นเป็นรูนที่แม่หมอศิลา (${BAL.PRICE.combine} ทอง)</p>
+  <h4>กติกา</h4><p>เสื้อ 1 ตัวใส่รูนธาตุได้ 1 อัน (ช่องที่เหลือใส่รูนอื่นได้) · ถอดได้และได้รูนคืน · มงกุฎวุ้นหกสีทำให้ธาตุเกราะสลับทุก ${EL_CYC_T} วิ เมื่อเสื้อไม่มีรูนธาตุ · มีผลทุกโหมดที่ใช้ตัวละคร (ท่องแดนรูน ด่านรายวัน ฯลฯ) · ไม่มีผลกับคลาสสิก · มอนอันเดดไม่มีธาตุ · ดูธาตุเด่นของแต่ละแผนที่ได้ที่แผนที่โลก</p>
+  <p>ตอนนี้: ${E?E.i+' '+tfE(E.n):g&&g.cyc?'สลับตามมงกุฎวุ้นหกสี':'ไม่มีธาตุเกราะ'}</p>
+  <p><button type="button" class="btn ghost" data-help="elements">วงล้อธาตุ (ตอนเราตีมอน)</button></p>`; }];
 for(const id of FD_ORDER){ const z=ZONES[id];
   TF_HELP['fz_'+id]=[z.i+' '+z.n,()=>`<p>${tfE(z.d)}</p><table>${wmMobs(id).map(t=>{ const d=EN[t]; return tfRow((d.el?EL[d.el].i+' ':'')+tfE(d.n)+'<br><small>Lv '+d.lv+'</small>',tfE(d.d||'')); }).join('')}</table>
     <h4>👑 ${tfE(EN[z.boss.id].n)} · Lv ${EN[z.boss.id].lv}</h4><p>${tfE(EN[z.boss.id].d)} · รัง: ${tfE(z.boss.place)} · เกิดทุก ${Math.round(z.boss.every/60)} นาที</p>

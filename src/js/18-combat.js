@@ -49,16 +49,18 @@ function killEnemy(e,dirX){
     G.shake=Math.max(G.shake,14); G.fx.push({k:'boom',x:e.x,y:e.y,r:e.r*3,t:0,dur:.7,c:'#ffe7a8',dead:false}); sfx('boom'); G.score+=1000; if(!G.auto) G.hitStop=.28; }
   else { dropGem(e.x,e.y,e.xp); if(e.elite){ dropItem(e.x,e.y,'chest'); if(!G.auto) G.hitStop=Math.max(G.hitStop,.07); } else { const r=Math.random(); if(r<.0045) dropItem(e.x,e.y,'heart'); else if(r<.006) dropItem(e.x,e.y,'magnet'); else if(r<.0075) dropItem(e.x,e.y,'bomb'); } }
   if(e.d.blast){ const b=e.d.blast; G.fx.push({k:'boom',x:e.x,y:e.y,r:b.r,t:0,dur:.4,c:'#a8d14f',dead:false}); burst(e.x,e.y,12,'#c8e86a',240,.5,4); addDecal(splatTex('#5f7a2a',1),e.x,e.y,b.r*.9,8,.6); sfx('boom');
-    const dx=P.x-e.x,dy=P.y-e.y; if(dx*dx+dy*dy<(b.r+P.r)*(b.r+P.r)) hurtPlayer(b.dmg*G.cfg.dmgMul);
+    const dx=P.x-e.x,dy=P.y-e.y; if(dx*dx+dy*dy<(b.r+P.r)*(b.r+P.r)) hurtPlayer(b.dmg*G.cfg.dmgMul,e);
     for(const o of query(e.x,e.y,b.r+60)){ if(o.dead||o===e) continue; const ex=o.x-e.x,ey=o.y-e.y,d=Math.hypot(ex,ey); if(d-o.r>b.r) continue; damageEnemy(o,b.dmg*3,null,{knock:300,nx:d?ex/d:1,ny:d?ey/d:0,quiet:true}); } }
   if(P.steal) healP(P.steal,true);
   if(G.mode.onKill) G.mode.onKill(e);
   sfx('kill');
 }
 function healP(a,quiet){ if(G.over) return; const before=P.hp; P.hp=Math.min(P.maxHp,P.hp+a); const got=P.hp-before; if(!quiet&&got>=3){ addNum(P.x,P.y-40,'+'+Math.round(got),'g'); for(let i=0;i<5;i++) part({x:P.x+rand(-12,12),y:P.y+rand(-10,6),vx:rand(-8,8),vy:rand(-70,-40),life:rand(.5,.8),s:3,c:'#7dffa8',g:0,drag:1,k:'plus',add:true}); } }
-function hurtPlayer(dmg){
+// src = what hit (a monster, a shot / hazard with .el, or an element id): its element vs the armour element (29 elHurtMul)
+function hurtPlayer(dmg,src){
   if(G.over||G.god) return;
   if(P.dodge>0&&Math.random()<P.dodge){ addText(P.x,P.y-34,'หลบ!','#c9b6ff'); if(P.dodgeCd<=0){ P.dodgeCd=.6; shadowBurst(); } return; }
+  if(src&&(P.armorEl||P.armorCyc)){ const m=elHurtMul(src); if(m!==1){ dmg*=m; if(G.t>=(G.elHurtT||0)){ G.elHurtT=G.t+.7; addText(P.x,P.y-52,m>1?'แพ้ธาตุ!':'ต้าน','#'+(m>1?'ff9a6a':'9fd8ff')); } } }   // character runs only
   dmg*=1-P.armor/(P.armor+(G.defK||22));
   if(P.shield>0){ const a=Math.min(P.shield,dmg); P.shield-=a; dmg-=a; if(P.shield<=.01){ P.shield=0; shieldBreak(); } }
   if(dmg<=0) return;
@@ -70,5 +72,5 @@ function hurtPlayer(dmg){
 }
 function shieldBreak(){ const s=P.shieldSrc; if(!s) return; const r=pv(s,'r')*P.area; aoe(P.x,P.y,r,pv(s,'nova'),s,{knock:380}); G.fx.push({k:'ring',x:P.x,y:P.y,r0:20,r1:r,t:0,dur:.4,c:s.def.c,w:10,follow:true,dead:false}); burst(P.x,P.y-6,12,'#dff2ff',260,.4,3,'shard'); G.shake=Math.max(G.shake,6); sfx('boom'); s.st.t=cdOf(s); }
 function shadowBurst(){ const s=P.skills.find(k=>k.id==='shadow'); if(!s) return; const r=pv(s,'r')*P.area; aoe(P.x,P.y,r,pv(s,'nova'),s,{knock:260}); G.fx.push({k:'ring',x:P.x,y:P.y,r0:10,r1:r,t:0,dur:.35,c:'#a58bff',w:8,follow:true,dead:false}); G.fx.push({k:'after',x:P.x,y:P.y,t:0,dur:.4,dead:false}); sfx('slice'); }
-function enemyShoot(e,a,sp,dmg,kind){ G.eprojs.push({x:e.x,y:e.y-(e.boss?10:6),vx:Math.cos(a)*sp,vy:Math.sin(a)*sp,r:kind==='orb'?7:5,dmg,life:4.5,kind,rot:0,dead:false}); }
+function enemyShoot(e,a,sp,dmg,kind){ G.eprojs.push({x:e.x,y:e.y-(e.boss?10:6),vx:Math.cos(a)*sp,vy:Math.sin(a)*sp,r:kind==='orb'?7:5,dmg,life:4.5,kind,rot:0,dead:false}); if(e.el) G.eprojs[G.eprojs.length-1].el=e.el; }
 

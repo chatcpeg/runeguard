@@ -32,6 +32,7 @@
 .uc-pt{border-radius:14px;background:var(--well)}
 .uc-sum{display:flex;flex-direction:column;gap:4px;font-size:12.5px;line-height:1.55;color:var(--ash);overflow-wrap:anywhere}
 .uc-sum b{font-size:13px;color:var(--spirit)}
+.uc-el{display:flex;align-items:center;gap:8px;flex-wrap:wrap;color:var(--bone)}
 .uc-slots{display:flex;flex-direction:column;gap:6px}
 .uc-slot{display:grid;grid-template-columns:30px 64px minmax(0,1fr) 14px;gap:8px;align-items:center;min-height:52px;padding:6px 12px;border-radius:12px;border:1px solid var(--line);background:var(--card);color:var(--bone);font-size:14px;text-align:left;cursor:pointer}
 .uc-st2{display:flex;flex-direction:column;min-width:0}

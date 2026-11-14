@@ -81,6 +81,17 @@ HAT_EXT.leafcrown=function(c,L,t){
     c.fillStyle=C; c.beginPath(); c.ellipse(0,-3.3,1.4,3.2,0,0,TAU); c.fill(); c.restore(); }
   circ(c,'#9fd8ff',8.5,-21,1.9); circ(c,'#ffffff',8,-21.6,.7); };
 
+// ท่องแดนรูน boss crowns (look hat 'crown': มงกุฎสนิมราชา · มงกุฎวุ้นหกสี): a band with 5 points over the hair · hatC metal · ornC gems
+HAT_EXT.crown=function(c,L,t){
+  const C=L.hatC||'#d9a93a', D=shade(C,-.45), G2=L.ornC||'#ff5a6a';
+  c.fillStyle=D; c.beginPath(); c.moveTo(-9.5,-17); c.lineTo(11.5,-17); c.lineTo(11,-21); c.lineTo(-9,-21); c.closePath(); c.fill();
+  c.fillStyle=C; c.beginPath(); c.moveTo(-9,-17.6);
+  for(let i=0;i<5;i++){ const x=-9+i*5, h=i===2?9:i===1||i===3?7:5.5; c.lineTo(x+1.2,-20.5); c.lineTo(x+2.5,-20.5-h); c.lineTo(x+3.8,-20.5); }
+  c.lineTo(11,-20.5); c.lineTo(11,-17.6); c.closePath(); c.fill();
+  c.fillStyle=shade(C,.25); c.fillRect(-9,-19.6,20,1.2);
+  const tw=.75+.25*Math.sin(t*3);
+  for(const [x,y,r] of [[1,-19,1.9],[-5,-18.8,1.3],[7,-18.8,1.3]]){ circ(c,G2,x,y,r); c.globalAlpha*=tw; circ(c,'#ffffff',x-.5,y-.6,r*.4); c.globalAlpha/=tw; } };
+
 // potion in a character run (useConsumable → here): heal % of max HP · shared cooldown BAL.FIELD.potCd (G.potT) · 1 from the bag
 function ltPotion(ch,id,pct){
   if(typeof G==='undefined'||!G||!P||G.over||!G.char||!ch||G.char.id!==ch.id) return false;

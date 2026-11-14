@@ -91,7 +91,17 @@ const RUNES={
   rn_wraith:{n:'รูนวิญญาณ', g:'cloak', st:{dodge:.03}, mob:'wraith', sn:'เศษรูนวิญญาณ'},
   rn_colossus:{n:'รูนยักษ์กระดูกทมิฬ', g:'weapon', st:{might:.06, boss:.05}, mob:'colossus', sn:'เศษรูนยักษ์กระดูกทมิฬ', boss:1},
   rn_lich:{n:'รูนลิชไร้วิญญาณ', g:'head', st:{cd:.95}, mob:'lich', sn:'เศษรูนลิชไร้วิญญาณ', boss:1},
-  rn_king:{n:'รูนจักรพรรดิแห่งความตาย', g:'acc', st:{might:.04, hp:30, crit:.02}, mob:'king', sn:'เศษรูนจักรพรรดิแห่งความตาย', boss:1}};
+  rn_king:{n:'รูนจักรพรรดิแห่งความตาย', g:'acc', st:{might:.04, hp:30, crit:.02}, mob:'king', sn:'เศษรูนจักรพรรดิแห่งความตาย', boss:1},
+  // ท่องแดนรูน (docs/PROPOSAL-maps-daily.md §3–5): the runes of the three field bosses · shards only from their own box (60 FD_BOSSDROP)
+  rn_gbking:{n:'รูนราชาก็อบลิน', g:'acc', st:{hp:20, gold:.06}, mob:'gb_king', sn:'เศษรูนราชาก็อบลิน', boss:1},
+  rn_sbqueen:{n:'รูนราชินีวุ้น', g:'weapon', st:{area:.04, might:.03}, mob:'sb_queen', sn:'เศษรูนราชินีวุ้น', boss:1},
+  rn_obwarlord:{n:'รูนแม่ทัพออร์ค', g:'armor', st:{armor:2, hp:25}, mob:'ob_warlord', sn:'เศษรูนแม่ทัพออร์ค', boss:1}};
+// §1.2 "ธาตุชุดเกราะ": 6 element runes, body only (group elem) · one per piece (34 socketRune) · the body's rune = the character's
+// armour element (34 gearElement → 42 P.armorEl → 18 hurtPlayer × elMul(monster el, armour el)) · shards from monsters of that
+// element in the maps (62 fdDropTable: the slimes of บึงวุ้นหกสี 1.5% · other elemental field monsters 0.5%)
+RUNE_GROUP.elem={n:'ธาตุเสื้อ', slots:['body']};
+const IT_EL_RUNE={fire:['ไฟ','🔥'], water:['น้ำ','💧'], wind:['ลม','🌪️'], earth:['ดิน','🪨'], light:['แสง','✨'], dark:['มืด','🌑']};   // = 29 EL (pure: 29 may not be loaded)
+for(const k in IT_EL_RUNE) RUNES['rn_el_'+k]={n:'รูนธาตุ'+IT_EL_RUNE[k][0], g:'elem', st:{hp:10}, el:k, mob:'el_'+k, sn:'เศษรูนธาตุ'+IT_EL_RUNE[k][0]};
 for(const id in RUNES) RUNES[id].shard='m_shard_'+RUNES[id].mob;
 // §4.6 consumables and materials: [id, name, icon, kind, stack, extra]
 const IT_DYES=[['red','แดง','#c8343c'],['orange','ส้ม','#e07a2a'],['yellow','เหลือง','#e8c23a'],['green','เขียว','#3f9a4a'],
@@ -105,6 +115,18 @@ const IT_STACK=[
   ['u_forget','ม้วนลืมเลือน','📜','use',9,{d:'รีเซ็ตแต้มสถานะหรือแต้มสกิล 1 ครั้ง'}],
   ['u_bag10','ถุงขยายกระเป๋า','👝','use',9,{use:{bag:10}, d:'กระเป๋า +10 ช่อง (สูงสุด 120)'}]];
 
+// ท่องแดนรูน named pieces (PROPOSAL-maps-daily §3–5 "ของดี" · DESIGN §4.2 / §4.7): [id, slot, name, lv, tier, rar, stats, look, extra]
+// rar 1 (ดี) = the map's own goods: zone = the map (62 field drops 0.15% · camp chests 5% · its boss box 15%) · rar 3 (ตำนาน) = the
+// field boss's piece: from = its boss (25% of its box, BAL.DROP.fboss.uniq) · fixed sockets (no roll) · never in IT_POOL or a shop
+const IT_NAMED=[
+  ['w_gobsling','weapon','หนังสติ๊กก็อบลิน',8,2,1,{might:.16, crit:.03},{weapon:'bow', wc:'#9a6a3a'},{cls:['archer'], i:'🏹', zone:'g1', d:'ของดีประจำป่าหนามก็อบลิน · ยางเหนียวจากเถาวัลย์ป่า ดีดไวกว่าธนูเหล็ก'}],
+  ['h_thiefwrap','head','ผ้าโพกหัวโจร',5,1,1,{armor:1, gold:.1},{hat:'bandana', hatC:'#8a2a2a', orn:''},{i:'🧣', zone:'g1', d:'ของดีประจำป่าหนามก็อบลิน · ทองจากมอนในแผนที่ +10%'}],
+  ['h_rustcrown','head','มงกุฎสนิมราชา',12,2,3,{armor:3, hp:35, might:.03},{hat:'crown', hatC:'#b0703a', orn:'', ornC:'#7fd06a'},{i:'👑', zone:'g1', from:'gb_king', sock:1, d:'ของดีของราชาก็อบลินมงกุฎสนิม · สนิมเกาะแต่ยังแข็ง'}],
+  ['w_jellystaff','weapon','ไม้เท้าแกนวุ้น',16,2,1,{might:.18, area:.06},{weapon:'staff', wc:'#7fe0d0'},{cls:['mage'], i:'🪄', zone:'s1', d:'ของดีประจำบึงวุ้นหกสี · แกนรูนจากวุ้นยักษ์ฝังที่หัวไม้เท้า'}],
+  ['h_jellycrown','head','มงกุฎวุ้นหกสี',22,3,3,{armor:3, hp:30, area:.03},{hat:'crown', hatC:'#c8a0ff', orn:'', ornC:'#7fe0ff'},{i:'👑', zone:'s1', from:'sb_queen', sock:1, elCycle:1, d:'ของดีของราชินีวุ้นหกสี · ถ้าเสื้อไม่มีรูนธาตุ ธาตุเกราะจะสลับทุก 12 วิ ไฟ → ลม → ดิน → น้ำ → แสง → มืด เหมือนราชินี'}],
+  ['b_orchide','body','เกราะหนังออร์ค',26,3,1,{hp:60, armor:2},{body:'#6a4a2a', trim:'#4a5a2a'},{i:'🥋', zone:'o1', d:'ของดีประจำค่ายออร์คผาเหล็ก · หนังหนาเย็บด้วยเอ็น'}],
+  ['r_shamanbone','ring','กำไลกระดูกหมอผี',26,3,1,{crit:.02, hp:15},null,{i:'📿', zone:'o1', d:'ของดีประจำค่ายออร์คผาเหล็ก · กระดูกสลักลายสาปของหมอผีออร์ค'}],
+  ['w_ironfang','weapon','ขวานเขี้ยวเหล็ก',34,4,3,{might:.48, hp:30, crit:.02},{weapon:'axe', wc:'#c8d0d8'},{cls:['swordsman','cleric'], i:'🪓', zone:'o1', from:'ob_warlord', sock:2, d:'ของดีของแม่ทัพออร์คเขี้ยวเหล็ก · ใบขวานตีจากเขี้ยวเหล็กของแม่ทัพ (นักดาบ / นักบวช)'}]];
 const ITEMS=itdBuild();
 function itdR6(v){ return Math.round(v*1e6)/1e6; }
 function itdSt(o){ const r={}; for(const k in o) r[k]=itdR6(o[k]); return r; }
@@ -119,10 +141,12 @@ function itdBuild(){
     o[id]=Object.assign({n, i:x&&x.i||IT_SLOT_I[slot], slot, lv:t.lv, tier:T, rar:0, st:itdSt(st), sock:t.sock, sockRoll:t.roll||null,
       look:look||null, refine:!acc}, x||{}); }
   for(const [id,n,i,kind,stack,x] of IT_STACK) o[id]=Object.assign({n, i, kind, stack:Math.min(stack,kind==='mat'?P.mat:P.use)},x||{});
+  for(const [id,slot,n,lv,T,rar,st,look,x] of IT_NAMED){ const t=IT_TIER[T], acc=slot==='neck'||slot==='ring';
+    o[id]=Object.assign({n, i:IT_SLOT_I[slot], slot, lv, tier:T, rar, st:itdSt(st), sock:t.sock, sockRoll:null, look:look||null, refine:!acc}, x||{}); }
   for(const [c,th,hex] of IT_DYES) o['u_dye_'+c]={n:'สีย้อม'+th, i:'🎨', kind:'dye', stack:9, dye:hex, d:'ย้อมสีเสื้อ ขอบเสื้อ ผ้าคลุม หรือหมวก'};
   for(const id in RUNES){ const r=RUNES[id];
     o[r.shard]={n:r.sn, i:'🔹', kind:'mat', stack:P.mat, makes:id, d:'รวม '+BAL.PRICE.shardsPerRune+' ชิ้นเป็น'+r.n+' ที่แม่หมอศิลา'};
-    o[id]={n:r.n, i:'🔷', kind:'rune', stack:P.use, rune:id, d:'ฝังในช่องรูนกลุ่ม'+RUNE_GROUP[r.g].n}; }
+    o[id]={n:r.n, i:r.el?IT_EL_RUNE[r.el][1]:'🔷', kind:'rune', stack:P.use, rune:id, d:r.el?'ฝังที่เสื้อเกราะ → ธาตุเกราะ'+IT_EL_RUNE[r.el][0]+' '+IT_EL_RUNE[r.el][1]+' (มอนธาตุต่าง ๆ ตีเราแรงหรือเบาลงตามวงล้อธาตุ) · เสื้อ 1 ตัวใส่รูนธาตุได้ 1 อัน · มีผลเฉพาะโหมดที่ใช้ตัวละคร':'ฝังในช่องรูนกลุ่ม'+RUNE_GROUP[r.g].n}; }
   return o; }
 // gear by tier (drop pools) · unique / legendary pieces never drop
 const IT_POOL={}; for(const id in ITEMS){ const d=ITEMS[id]; if(!d.slot||d.unique||d.rar) continue; (IT_POOL[d.tier]||(IT_POOL[d.tier]=[])).push(id); }

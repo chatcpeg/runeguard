@@ -153,8 +153,15 @@ const MOBS={
   ob_warlord:{boss:1, n:'แม่ทัพออร์คเขี้ยวเหล็ก', lv:34, el:'fire', ai:'fb_warlord', hp:1150, speed:70, r:46, dmg:24, mass:90, xp:260, goo:'#c86a4a', fam:'orc', pv:['orc','warlord'], d:'ชาร์จ 3 ครั้งติด · ขวานคู่ r 200 · เรียกทหารที่ HP 70% / 40% · คลั่งที่ 25% (ทิ้งรอยไฟ)'}};
 for(const id in MOBS){ const m=MOBS[id]; m.lazy=1; if(!m.art&&!m.struct) m.art=id; if(m.aggro==null) m.aggro=260; if(typeof EN!=='undefined') EN[id]=m; }   // EN absent: a pure test load without 08
 // the field boss of each map (one nest, one timer · §5.5) and the drops that only it gives (rollDrops format, 34)
+// first:1 = sure on the account's first kill of that boss (62 fdBossDone) · + the boss's ★ piece, its rune / rune shard and the map's
+// goods (33 IT_NAMED · rates BAL.DROP.fboss) · s1 also gives one element-rune shard at elShard
+const FD_BD=BAL.DROP.fboss, FD_ELSHARDS=['fire','water','wind','earth','light','dark'].map(k=>'m_shard_el_'+k);
 const FD_BOSSDROP={
-  g1:[{id:'m_dust', n:[4,8]}, {gear:2, n:[1,2]}, {pick:['rn_brute','rn_runner','rn_shambler'], p:.35}, {id:'m_seal', p:.1}, {id:'u_potion_s', n:[1,3]}],
-  s1:[{id:'m_dust', n:[4,8]}, {id:'m_crystal', n:[1,2]}, {gear:3, n:[1,2]}, {pick:['rn_wraith','rn_bat','rn_bloater'], p:.35}, {id:'m_seal', p:.1}, {id:'u_potion_l', n:[1,2]}],
-  o1:[{id:'m_dust', n:[5,9]}, {id:'m_crystal', n:[1,3]}, {gear:4, n:[1,2]}, {pick:['rn_brute','rn_spitter','rn_colossus'], p:.35}, {id:'m_seal', p:.12}, {id:'u_potion_l', n:[1,2]}]};
-const FD_CHESTDROP=[{id:'m_dust', n:[1,2]}, {id:'u_potion_s', p:.5}, {gear:'Z', p:.3}];   // camp chests + gold-rank monsters (Z = the map's gear tier)
+  g1:[{id:'m_dust', n:[4,8]}, {gear:2, n:[1,2]}, {pick:['rn_brute','rn_runner','rn_shambler'], p:.35, first:1}, {id:'m_seal', p:.1}, {id:'u_potion_s', n:[1,3]},
+    {id:'h_rustcrown', p:FD_BD.uniq}, {id:'rn_gbking', p:FD_BD.rune, first:1}, {id:'m_shard_gb_king', p:FD_BD.shard}, {pick:['w_gobsling','h_thiefwrap'], p:FD_BD.named}],
+  s1:[{id:'m_dust', n:[4,8]}, {id:'m_crystal', n:[1,2]}, {gear:3, n:[1,2]}, {pick:['rn_wraith','rn_bat','rn_bloater'], p:.35, first:1}, {id:'m_seal', p:.1}, {id:'u_potion_l', n:[1,2]},
+    {id:'h_jellycrown', p:FD_BD.uniq}, {id:'rn_sbqueen', p:FD_BD.rune, first:1}, {id:'m_shard_sb_queen', p:FD_BD.shard}, {pick:['w_jellystaff'], p:FD_BD.named}, {pick:FD_ELSHARDS, p:FD_BD.elShard}],
+  o1:[{id:'m_dust', n:[5,9]}, {id:'m_crystal', n:[1,3]}, {gear:4, n:[1,2]}, {pick:['rn_brute','rn_spitter','rn_colossus'], p:.35, first:1}, {id:'m_seal', p:.12}, {id:'u_potion_l', n:[1,2]},
+    {id:'w_ironfang', p:FD_BD.uniq}, {id:'rn_obwarlord', p:FD_BD.rune, first:1}, {id:'m_shard_ob_warlord', p:FD_BD.shard}, {pick:['b_orchide','r_shamanbone'], p:FD_BD.named}]};
+// camp chests + gold-rank monsters (Z = the map's gear tier · pick 'Z' = one of the map's goods, 62 fdChestTable)
+const FD_CHESTDROP=[{id:'m_dust', n:[1,2]}, {id:'u_potion_s', p:.5}, {gear:'Z', p:.3}, {pick:'Z', p:BAL.DROP.field.chestNamed}];

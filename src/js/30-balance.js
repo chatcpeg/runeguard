@@ -75,8 +75,11 @@ const BAL={ CAP:{base:60, job1:20, job2:25, stat:50, chars:3, bag:120, stash:120
     combine:300, shardsPerRune:4, unsocket(tier){ return 100*tier; }, stack:{use:99, mat:999} },
   // §4.12 drop rates. surv: MODES.survival.onKill looks up surv.elite / surv['boss'+wave] and passes it to rollDrops, which
   // resolves the name in DROPS (33-items-data.js: §2.2 item table, gear tier = SURV.gearTier). No key = nothing drops.
-  DROP:{ field:{gold:1, gem:1, dust:.03, crystal2:.003, crystal4:.006, shard:.01, gear:.006, potion:.02},
-    fboss:{gold(L){ return 150+15*L; }, dust:[4,8], crystal:[1,3], gear:[1,2], uniq:.25, rune:.12, seal:.10},
+  // ท่องแดนรูน (PROPOSAL-maps-daily §1/§3–5): elShard = the element rune's shard from the slimes of บึงวุ้นหกสี · elShardX = from the
+  // other elemental field monsters · named = the map's goods (rar 1) per kill · chestNamed = per camp chest / gold-rank chest
+  // fboss: uniq = the boss's ★ piece · rune = its own rune (sure on the account's first kill) · shard = 1 of its rune shards · named = goods
+  DROP:{ field:{gold:1, gem:1, dust:.03, crystal2:.003, crystal4:.006, shard:.01, gear:.006, potion:.02, elShard:.015, elShardX:.005, named:.0015, chestNamed:.05},
+    fboss:{gold(L){ return 150+15*L; }, dust:[4,8], crystal:[1,3], gear:[1,2], uniq:.25, rune:.12, seal:.10, shard:.5, named:.15, elShard:.5},
     rampage:{dust:2, gold(L){ return 8*L; }},
     surv:{elite:'surv.elite', boss5:'surv.boss5', boss10:'surv.boss10', boss15:'surv.boss15', boss20:'surv.boss20'} },
   RESET:{gold:2000, marks:40, freeBelow:20},

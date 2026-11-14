@@ -24,13 +24,13 @@ const MK = (cls, o = {}) => `(()=>{ if(SAVE.chars.length>=BAL.CAP.chars) SAVE.ch
   SAVE.acct.gold=${o.gold ?? 100000}; ${o.lv ? `r.lv=${o.lv};` : ''} saveNow('t'); return r; })()`;
 
 // ------------------------------------------------------------------------------------------------
-console.log('§4.1–4.7 ข้อมูลไอเทม');
+console.log('§4.1–4.7 ข้อมูลไอเทม');   // the M2 set only: ท่องแดนรูน named pieces (ITEMS[id].zone) have their own section below
 {
   const { X } = fresh();
-  const d = X(`(()=>{ const gear=Object.keys(ITEMS).filter(id=>ITEMS[id].slot), per={}; for(const id of gear){ const s=ITEMS[id].slot; per[s]=(per[s]||0)+1; }
+  const d = X(`(()=>{ const gear=Object.keys(ITEMS).filter(id=>ITEMS[id].slot&&!ITEMS[id].zone), per={}; for(const id of gear){ const s=ITEMS[id].slot; per[s]=(per[s]||0)+1; }
     const w=gear.filter(id=>ITEMS[id].slot==='weapon');
     return {n:gear.length, m2:gear.filter(id=>id!=='c_pioneer').length, per, w:w.length, wids:w.sort().join(),
-      runes:Object.keys(RUNES).length, tiers:[...new Set(gear.map(id=>ITEMS[id].tier))].sort().join(),
+      runes:Object.keys(RUNES).filter(r=>!/^rn_(el_|gbking$|sbqueen$|obwarlord$)/.test(r)).length, runesAll:Object.keys(RUNES).length, tiers:[...new Set(gear.map(id=>ITEMS[id].tier))].sort().join(),
       noName:Object.keys(ITEMS).filter(id=>!/^[\\u0E00-\\u0E7F][\\u0E00-\\u0E7F ]*$/.test(ITEMS[id].n)),
       look:gear.filter(id=>['weapon','head','body','cloak','feet'].includes(ITEMS[id].slot)&&!ITEMS[id].look),
       hats:[...new Set(gear.filter(id=>ITEMS[id].look&&ITEMS[id].look.hat).map(id=>ITEMS[id].look.hat))],
@@ -44,11 +44,12 @@ console.log('§4.1–4.7 ข้อมูลไอเทม');
     deq(d.per, { weapon: 20, off: 10, head: 8, face: 4, body: 8, cloak: 6, hands: 5, feet: 5, neck: 4, ring: 4 }), d.per);
   ok('ชื่อ <ชนิด><วัสดุ>: ดาบเหล็กกล้า · มีดสั้นเงินจันทร์ · ไม้เท้าฝึกหัด · ทุกชื่อเป็นภาษาไทย', d.names.sword === 'ดาบเหล็กกล้า' && d.names.dagger === 'มีดสั้นเงินจันทร์' && d.names.staff1 === 'ไม้เท้าฝึกหัด' && d.noName.length === 0, [d.names, d.noName]);
   ok('might ต่อ tier 0.05 / 0.15 / 0.28 / 0.42 · ดาบ T3 hp +30 · มีดสั้น T4 crit/speed +0.032', deq(d.might, [0.05, 0.15, 0.28, 0.42]) && d.sw.hp === 30 && d.dg.crit === 0.032 && d.dg.speed === 0.032, [d.might, d.sw, d.dg]);
-  ok('รูน 10 แบบ · ทุกรูนมีเศษ (makes) และไอเทมรูน · tier 4 สุ่มช่องรูน [1, 2, 35%] · เครื่องประดับตีบวกไม่ได้', d.runes === 10 && d.shards && deq(d.t4, [1, 2, 0.35]) && d.acc, d);
+  ok('รูน 10 แบบ · ทุกรูนมีเศษ (makes) และไอเทมรูน · tier 4 สุ่มช่องรูน [1, 2, 35%] · เครื่องประดับตีบวกไม่ได้', d.runes === 10 && d.runesAll === 19 && d.shards && deq(d.t4, [1, 2, 0.35]) && d.acc, d);
   ok('ชุดเริ่มต้น §3.8: อาวุธฝึกหัดของทุกอาชีพ (w_<type>_1 · ไม่มีช่องรูน) · ผ้าคลุมผู้บุกเบิก ขายไม่ได้ · ตำนาน', d.starter && d.pio.noSell && d.pio.rar === 3 && d.pio.unique, d.pio);
   ok('ของที่เห็นบนตัว (อาวุธ หมวก เกราะ ผ้าคลุม รองเท้า) มี look ทุกชิ้น', d.look.length === 0, d.look);
-  const painted = X(`(()=>{ const builtIn=['helm','wizard','cap','hood','bandana']; return ${JSON.stringify(d.hats)}.filter(h=>!builtIn.includes(h)&&typeof HAT_EXT[h]!=='function'); })()`);
-  ok('หมวกทุกแบบมีตัววาด (ของเดิมใน 14 หรือ HAT_EXT): ' + d.hats.join(', '), painted.length === 0, painted);
+  const hatsAll = X(`[...new Set(Object.keys(ITEMS).filter(id=>ITEMS[id].look&&ITEMS[id].look.hat).map(id=>ITEMS[id].look.hat))]`);
+  const painted = X(`(()=>{ const builtIn=['helm','wizard','cap','hood','bandana']; return ${JSON.stringify(hatsAll)}.filter(h=>!builtIn.includes(h)&&typeof HAT_EXT[h]!=='function'); })()`);
+  ok('หมวกทุกแบบมีตัววาด (ของเดิมใน 14 หรือ HAT_EXT): ' + hatsAll.join(', '), painted.length === 0, painted);
   // run the extra painter on a recording context (no canvas in node)
   const calls = X(`(()=>{ const rec=[]; const c=new Proxy({}, {get:(t,k)=>k in t?t[k]:(...a)=>{ rec.push(k); }, set:(t,k,v)=>{ t[k]=v; return true; }});
     HAT_EXT.leafcrown(c, Object.assign({}, CLS.mage.look, ITEMS.h_silverleaf.look), .5); return rec.length; })()`);
