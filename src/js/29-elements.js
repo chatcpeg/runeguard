@@ -25,6 +25,23 @@ function elChip(el){ const E=el&&EL[el]; return E?E.i:''; }
 // damageEnemy calls this only when the monster has an element · remembers the last result for the label over its head
 function elHit(e,s){ const m=elMul(skEl(s),e.el); if(m>1||m===EL_MUL.weak){ e.elM=m; e.elT=G.t; } return m; }
 
+/* ---- armour element (§1.2 "มอนตีเรา" · ธาตุชุดเกราะ): the same wheel, the monster's hit is the attacker ---- */
+// P.armorEl = the element rune in the worn body (34 gearElement, set by 42 prepareRun: character runs only) · P.armorCyc = มงกุฎวุ้นหกสี
+// with no element rune: the element turns every 12 s in ราชินีวุ้น's order. A fire monster vs water armour ×0.6 (ต้าน) · vs wind
+// armour ×1.5 (แพ้ธาตุ) · vs fire armour ×0.75 · a monster with no element, or no armour element (classic: P has neither) ×1.
+// Pure arithmetic: no random number is drawn, so classic / golden never change.
+const EL_CYC=['fire','wind','earth','water','light','dark'], EL_CYC_T=12;
+function elArmor(){ if(typeof P==='undefined'||!P) return null; if(P.armorEl&&EL[P.armorEl]) return P.armorEl;
+  if(P.armorCyc){ const t=typeof G!=='undefined'&&G?G.t||0:0; return EL_CYC[Math.floor(t/EL_CYC_T)%EL_CYC.length]; } return null; }
+function elSrcOf(src){ const k=typeof src==='string'?src:src&&typeof src==='object'?src.el:null; return typeof k==='string'&&Object.prototype.hasOwnProperty.call(EL,k)?k:null; }
+function elHurtMul(src){ const a=elArmor(); if(!a) return 1; const k=elSrcOf(src); return k?elMul(k,a):1; }
+// what armour element a resists / fears: {res:[els at ×0.6], same:[×0.75], weak:[×1.5]}
+function elArmorVs(a){ const o={res:[], same:[], weak:[]}; if(!a||!EL[a]) return o;
+  for(const k in EL){ const m=elMul(k,a); if(m===EL_MUL.weak) o.res.push(k); else if(m===EL_MUL.same) o.same.push(k); else if(m>1) o.weak.push(k); } return o; }
+// the best armour element against a map whose monsters have these elements (lowest total ×) · null when several tie (no advice)
+function elBestArmor(els){ let best=null, bs=1e9, tie=false; if(!Array.isArray(els)||!els.length) return null;
+  for(const a in EL){ let s=0; for(const k of els) s+=elMul(k,a); if(s<bs-1e-9){ bs=s; best=a; tie=false; } else if(Math.abs(s-bs)<1e-9) tie=true; } return tie?null:best; }
+
 /* ---- rank colours (§2) ---- */
 const RANK=[
   {n:'', c:'', hp:1, dmg:1, r:1, xp:1, sp:1},

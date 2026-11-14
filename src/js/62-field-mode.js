@@ -128,10 +128,15 @@ function fdCollectGround(all){ if(!Array.isArray(G.gems)) return; const R2=600*6
 
 /* ---- kills: the spawn point waits, kit death effects, then EXP / gold / drops ---- */
 const FD_DROPT={};
-function fdDropTable(type){ const F=G.fd, key=F.id+':'+type; let t=FD_DROPT[key]; if(t) return t;
+// el = the monster's element when it died (วุ้นแฝด swaps · วุ้นยักษ์ takes its corner's): the shard of that element's rune —
+// slimes 1.5% (elShard), any other elemental field monster 0.5% (elShardX) · + the map's own goods (33 IT_NAMED zone) at 0.15%
+function fdDropTable(type,el){ const F=G.fd, key=F.id+':'+type+':'+(el||''); let t=FD_DROPT[key]; if(t) return t;
   const ids=[]; for(const tt of F.z.gearT) for(const id of (typeof IT_POOL!=='undefined'&&IT_POOL[tt])||[]) ids.push(id);
-  t=FD_DROPT[key]=typeof itFieldTable==='function'?itFieldTable(type,F.z.zn,ids):[]; return t; }
-function fdChestTable(){ const z=G.fd.z; return FD_CHESTDROP.map(e=>e.gear==='Z'?Object.assign({},e,{gear:z.gearT[0]}):e); }
+  const D=BAL.DROP.field, d=EN[type], elP=el&&svHas(EL,el)&&!(d&&d.struct)?(d&&d.fam==='slime'?D.elShard:D.elShardX):0;
+  t=FD_DROPT[key]=typeof itFieldTable==='function'?itFieldTable(type,F.z.zn,ids,{el:elP?el:null, elP, named:fdGoods(F.id), namedP:D.named}):[]; return t; }
+const FD_GOODS={};
+function fdGoods(zid){ return FD_GOODS[zid]||(FD_GOODS[zid]=typeof itZoneGoods==='function'?itZoneGoods(zid):[]); }
+function fdChestTable(){ const z=G.fd.z; return FD_CHESTDROP.map(e=>e.gear==='Z'?Object.assign({},e,{gear:z.gearT[0]}):e.pick==='Z'?Object.assign({},e,{pick:fdGoods(z.id)}):e); }
 function fdOnKill(e){ if(e.boss) return; const M=e.fm; if(!M) return; const R=G.fdRun, F=G.fd, d=e.d;
   if(M.rec){ const r=M.rec; r.e=null; r.st='dead'; r.t=G.t+(d.struct?240:rand(BAL.FIELD.respawn[0],BAL.FIELD.respawn[1])); r.rank=null; r.hpF=1; }
   const K=d.kit; if(K) for(const k in K){ const f=FK[k]; if(f&&f.death) try{ f.death(e,M,K[k]); }catch(er){ console.error(er); } }
@@ -142,8 +147,8 @@ function fdOnKill(e){ if(e.boss) return; const M=e.fm; if(!M) return; const R=G.
   R.exp+=Math.round(x.base*mul); R.kills[e.type]=(R.kills[e.type]|0)+1; if(R.zones[F.id]) R.zones[F.id].k++;
   if(e.rank>=1&&!G.auto) addText(e.x,e.y-e.r-26,'+'+fmtNum(Math.round(x.base*mul))+' EXP','#bfe6ff');
   const gl=BAL.FIELD.goldF(e.lv)*(Z.gold||1), minor=M.child||M.sum;      // split bodies / summoned ones: no gold (they were a free multiplier)
-  if(!minor) fdCoins(e.x,e.y,gl*(1+(e.rank|0)*.6));
-  if(!minor){ const list=rollDrops(fdDropTable(e.type),(1+(P.drop||0))*(1+(e.rank|0)*.5)); if(list.length) dropLoot(e.x,e.y,list); }
+  if(!minor) fdCoins(e.x,e.y,gl*(1+(e.rank|0)*.6)*(1+Math.max(0,Math.min(1,+(P.bonus&&P.bonus.gold)||0))));   // gear "ทองจากมอน" (ผ้าโพกหัวโจร · รูนราชาก็อบลิน)
+  if(!minor){ const list=rollDrops(fdDropTable(e.type,e.el),(1+(P.drop||0))*(1+(e.rank|0)*.5)); if(list.length) dropLoot(e.x,e.y,list); }
   if(e.rank===3&&!minor) ltDropChest(e.x,e.y,rollDrops(fdChestTable(),1+(P.drop||0)),Math.round(gl*4));
   if(K&&K.potion&&rngUnit()<K.potion.p) dropLoot(e.x,e.y,[{id:F.z.zn>=2?'u_potion_l':'u_potion_s', n:1}]);
   if(K&&K.gems) for(let i=1;i<K.gems.mul;i++) dropGem(e.x+rand(-14,14),e.y+rand(-14,14),e.xp); }
@@ -171,7 +176,7 @@ function fdBossDone(){ const F=G.fd, B=F.boss, z=F.z, R=G.fdRun, list=G.bosses.f
   B.at=G.t+B.every*rand(BAL.FIELD.boss.jitter[0],BAL.FIELD.boss.jitter[1]);
   const rb=R.boss[z.id]||(R.boss[z.id]={n:0, rem:null}); rb.n++; if(R.zones[z.id]) R.zones[z.id].b++;
   const ch=G.char, lv=EN[B.id].lv; R.exp+=Math.round(BAL.BOSS.exp(lv,0)*BAL.diffMul(lv-((ch&&ch.lv)|0)));
-  const first=fdBossKills(z.id)===0&&rb.n===1, t=FD_BOSSDROP[z.id].map(e=>e.pick&&first?Object.assign({},e,{p:1}):e);   // first kill on this account: the rune for sure
+  const first=fdBossKills(z.id)===0&&rb.n===1, t=FD_BOSSDROP[z.id].map(e=>e.first&&first?Object.assign({},e,{p:1}):e);   // first kill on this account: the runes marked first for sure
   ltDropChest(last.x,last.y,rollDrops(t,1+(P.drop||0)),BAL.DROP.fboss.gold(lv));
   for(const p of F.portals) if(p.to!=='fort') p.lock=!!fdLockWhy(G.char,p.to);                           // the next map may have opened
   banner('ล้ม'+EN[B.id].n+'แล้ว!','กล่องจ้าวถิ่นหล่นอยู่ · จะเกิดใหม่ในราว '+Math.round(B.every/60)+' นาที'); sfx('win'); }

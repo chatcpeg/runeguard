@@ -70,7 +70,7 @@ function bossAI(e,dt,d,dx,dy){
     A.slamCd=(A.slamCd??3)-dt;
     if(A.slam>0){ A.slam-=dt; sp=0;
       if(A.slam<=0){ const R=170; G.fx.push({k:'ring',x:e.x,y:e.y,r0:20,r1:R,t:0,dur:.45,c:'#e8d6a8',w:14,dead:false}); G.shake=Math.max(G.shake,10); sfx('boom'); burst(e.x,e.y+20,20,'#bfae8a',300,.6,5,'rock'); addDecal(crackTex(),e.x,e.y+20,R*.8,6,.8);
-        const px=P.x-e.x,py=P.y-e.y,pl=Math.hypot(px,py)||1; if(pl<R+P.r){ hurtPlayer(e.dmg*1.3); P.kx+=px/pl*520; P.ky+=py/pl*520; }
+        const px=P.x-e.x,py=P.y-e.y,pl=Math.hypot(px,py)||1; if(pl<R+P.r){ hurtPlayer(e.dmg*1.3,e); P.kx+=px/pl*520; P.ky+=py/pl*520; }
         for(const o of query(e.x,e.y,R)){ if(o.boss||o.dead) continue; const l=Math.hypot(o.x-e.x,o.y-e.y)||1; o.kx+=(o.x-e.x)/l*300; o.ky+=(o.y-e.y)/l*300; }
         A.slamCd=4.5; } }
     else if(A.slamCd<=0&&d<260){ A.slam=1; A.tele={k:'circle',r:170,t:0,dur:1}; }
@@ -82,7 +82,7 @@ function bossAI(e,dt,d,dx,dy){
   } else if(ai==='king'){
     if(A.charge>0){ A.charge-=dt; e.x+=A.cx*880*dt; e.y+=A.cy*880*dt;
       for(const o of query(e.x,e.y,e.r+40)){ if(o.boss||o.dead) continue; const l=Math.hypot(o.x-e.x,o.y-e.y)||1; o.kx+=(o.x-e.x)/l*60; o.ky+=(o.y-e.y)/l*60; }
-      const px=P.x-e.x,py=P.y-e.y; if(!A.hitP&&px*px+py*py<(e.r+P.r)*(e.r+P.r)){ A.hitP=true; hurtPlayer(e.dmg*1.5); P.kx+=A.cx*620; P.ky+=A.cy*620; }
+      const px=P.x-e.x,py=P.y-e.y; if(!A.hitP&&px*px+py*py<(e.r+P.r)*(e.r+P.r)){ A.hitP=true; hurtPlayer(e.dmg*1.5,e); P.kx+=A.cx*620; P.ky+=A.cy*620; }
       if(Math.random()<.6) part({x:e.x+rand(-20,20),y:e.y+e.r*.8,vx:-A.cx*60,vy:rand(-30,-5),life:.6,s:8,grow:22,c:'#6a5a4a',g:0,drag:2,k:'puff',add:false,a:.5});
       if(A.charge<=0) A.chargeCd=5.5;
       e.face=A.cx<0?-1:1; return; }
@@ -114,7 +114,7 @@ function playerCollide(){
     const dx=e.x-P.x,dy=e.y-P.y,rr=P.r+e.r,d2=dx*dx+dy*dy; if(d2>=rr*rr) continue;
     const d=Math.sqrt(d2)||.01,nx=dx/d,ny=dy/d,ov=rr-d;
     if(!e.d.phase){ const pm=e.boss?.6:Math.min(.35,e.mass*.04); e.x+=nx*ov*(1-pm); e.y+=ny*ov*(1-pm); P.x-=nx*ov*pm; P.y-=ny*ov*pm; }
-    if(e.atkCd<=0&&e.freezeT<=0&&e.stunT<=0){ e.atkCd=.75; hurtPlayer(e.dmg); if(G.over) return; }
+    if(e.atkCd<=0&&e.freezeT<=0&&e.stunT<=0){ e.atkCd=.75; hurtPlayer(e.dmg,e); if(G.over) return; }
   }
 }
 function updateProjs(dt){
@@ -153,7 +153,7 @@ function projHit(p,e){
 }
 function updateEProjs(dt){
   for(const b of G.eprojs){ b.life-=dt; b.x+=b.vx*dt; b.y+=b.vy*dt; b.rot+=dt*10; if(b.life<=0||G.obstacles&&terBlocks(b.x,b.y,b.r)){ b.dead=true; continue; }
-    const dx=b.x-P.x,dy=b.y-(P.y-6),rr=b.r+P.r*.8; if(dx*dx+dy*dy<rr*rr){ b.dead=true; hurtPlayer(b.dmg); if(G.over) break; } }
+    const dx=b.x-P.x,dy=b.y-(P.y-6),rr=b.r+P.r*.8; if(dx*dx+dy*dy<rr*rr){ b.dead=true; hurtPlayer(b.dmg,b); if(G.over) break; } }
   compact(G.eprojs);
 }
 function updateZones(dt){

@@ -99,7 +99,7 @@ function ucEquipTab(root,ch){
   UC.tab='equip'; UC.root=root; root.textContent=''; if(!ch) return;
   const box=ucMk('div','uc'); box.dataset.uc='equip'; ucNote(box);
   const top=ucMk('div','uc-top'), sum=ucMk('div','uc-sum'), lines=itStatLines(gearBonus(ch));
-  sum.append(ucMk('b','','ค่าจากอุปกรณ์'),ucMk('span','',lines.length?lines.map(([k,v])=>k+' '+v).join(' · '):'ยังไม่ได้สวมอะไรที่มีค่าเสริม'));
+  sum.append(ucMk('b','','ค่าจากอุปกรณ์'),ucMk('span','',lines.length?lines.map(([k,v])=>k+' '+v).join(' · '):'ยังไม่ได้สวมอะไรที่มีค่าเสริม'),ucElLine(ch));
   top.append(ucPortrait(ch,96),sum); box.append(top);
   const list=ucMk('div','uc-slots');
   for(const s of IT_SLOTS){ const inst=itEquipped(ch,s), b=ucBtn('','uc-slot'), t=ucMk('span','uc-st2'); b.dataset.s=s;
@@ -109,6 +109,13 @@ function ucEquipTab(root,ch){
     b.setAttribute('aria-label',IT_SLOT_TH[s]+': '+(inst?ucName(inst):'ว่าง')); list.append(b); }
   list.addEventListener('click',e=>{ const b=e.target.closest('[data-s]'); if(b) ucSlotTap(b.dataset.s); });
   box.append(list,ucMk('p','uc-hint','แตะช่องเพื่อดู ถอด หรือเปลี่ยนของ · ของในกระเป๋าดูที่แท็บกระเป๋า')); root.append(box); }
+// ธาตุเกราะ (34 gearElement · 29 elArmorVs) + ? → the help page (65 TF_HELP.armorEl)
+function ucElLine(ch){ const w=ucMk('span','uc-el'), g=gearElement(ch), E=g.el&&EL[g.el];
+  let t; if(E){ const v=elArmorVs(g.el); t='🛡 ธาตุเกราะ '+E.i+' '+E.n+' · ต้าน '+v.res.concat(v.same).map(k=>EL[k].i).join('')+' · แพ้ '+(v.weak.map(k=>EL[k].i).join('')||'-'); }
+  else if(g.cyc) t='🛡 ธาตุเกราะสลับทุก '+EL_CYC_T+' วิ (มงกุฎวุ้นหกสี) '+EL_CYC.map(k=>EL[k].i).join('');
+  else t='🛡 ธาตุเกราะ: ไม่มี (×1 ทุกธาตุ) · ฝังรูนธาตุที่เสื้อเกราะ';
+  const q=ucBtn('?','uc-b uc-sq',()=>{ if(typeof tfHelp==='function') tfHelp('armorEl'); }); q.setAttribute('aria-label','ธาตุเกราะคืออะไร');
+  w.append(ucMk('span','',t),q); return w; }
 function ucSlotTap(s){ const ch=ucCh(); if(!ch) return; const inst=itEquipped(ch,s); if(inst) openItemSheet(inst.u); else ucPickSlot(s); }
 // choose a piece from the bag for one slot: tap = wear · ⓘ = details
 function ucPickSlot(s){ const ch=ucCh(); if(!ch||IT_SLOTS.indexOf(s)<0) return;
@@ -191,7 +198,7 @@ function ucGearFill(box,ch,inst){
   const info=[]; if(d.refine) info.push('ตีบวก +'+(inst.r|0)+' / +'+BAL.REFINE.max+(itPityN(inst)?' · ความเพียร +'+ucPc(itPityN(inst)*BAL.REFINE.pity):'')); else info.push('ตีบวกไม่ได้');
   const ps=itSellPrice(inst); info.push(ps?'ขายได้ '+ucN(ps)+' ทอง':inst.b?'ของติดตัวเริ่มต้น · ขายไม่ได้':'ขายไม่ได้'); box.append(ucMk('p','uc-hint uc-left',info.join(' · ')));
   const sk=itSockets(inst); if(sk.length){ const s=ucMk('div','uc-socks'); s.append(ucMk('span','','ช่องรูน'));
-    sk.forEach(rid=>s.append(ucMk('span',rid?'uc-sock on':'uc-sock',rid?RUNES[rid].n+' ('+ucStatText(RUNES[rid].st)+')':'ว่าง'))); box.append(s); }
+    sk.forEach(rid=>s.append(ucMk('span',rid?'uc-sock on':'uc-sock',rid?RUNES[rid].n+' ('+itRuneText(rid)+')':'ว่าง'))); box.append(s); }
   if(d.d) box.append(ucMk('p','uc-hint uc-left',d.d));
   const acts=ucMk('div','uc-acts'), ro=ucRO();
   if(slot){ acts.append(ucBtn('ถอด','uc-b',()=>ucDoUnequip(slot),ro),ucBtn('เปลี่ยน','uc-b',()=>ucPickSlot(slot),ro)); }
@@ -214,7 +221,7 @@ function ucStackFill(box,ch,id){
   if(d.d) box.append(ucMk('p','uc-hint uc-left',d.d));
   if(d.kind==='rune'&&itHas(RUNES,d.rune)){ const R=RUNES[d.rune], g=RUNE_GROUP[R.g];
     box.append(ucStats(R.st,null),ucMk('p','uc-hint uc-left','ใส่ได้ในช่องกลุ่ม'+g.n+' ('+g.slots.map(s=>IT_SLOT_TH[s]).join(' / ')+') · ฝังฟรี · ถอดได้และได้รูนคืน')); }
-  if(d.makes&&itHas(RUNES,d.makes)) box.append(ucMk('p','uc-hint uc-left','มี '+n+'/'+BAL.PRICE.shardsPerRune+' → '+RUNES[d.makes].n+' ('+ucStatText(RUNES[d.makes].st)+')'));
+  if(d.makes&&itHas(RUNES,d.makes)) box.append(ucMk('p','uc-hint uc-left','มี '+n+'/'+BAL.PRICE.shardsPerRune+' → '+RUNES[d.makes].n+' ('+itRuneText(d.makes)+')'));
   const acts=ucMk('div','uc-acts'), ro=ucRO();
   if(d.use||d.kind==='dye'||id==='u_forget'){
     const part=box.dataset.part||'', who=ucRun()?G.char:ch, why=itCanUse(who,id,{part});
@@ -343,7 +350,7 @@ function ucRsFill(box){
     const runes=groups.filter(g=>!g.unk&&!g.inst&&itemDef(g.id).kind==='rune'), fit=runes.filter(g=>itRuneFits(g.id,d));
     if(!fit.length) box.append(ucMk('p','uc-hint',runes.length?'รูนที่มีอยู่ใส่ช่องนี้ไม่ได้':'ยังไม่มีรูน · รวมจากเศษที่แท็บ [รวมเศษ]'));
     for(const g of fit){ const R=RUNES[g.id];
-      box.append(ucRow(g.id,{n:g.n, sub:ucStatText(R.st), right:[ucBtn('ฝัง','uc-b pri',()=>{ const r=socketRune(ucCh(),S.uid,g.id,e); if(r) toast(r,'bad'); else { toast('ฝัง '+R.n+' แล้ว','good'); ucSnd('ok'); } ucRsFill(box); ucAfter(); },!fort)]})); }
+      box.append(ucRow(g.id,{n:g.n, sub:itRuneText(g.id), right:[ucBtn('ฝัง','uc-b pri',()=>{ const r=socketRune(ucCh(),S.uid,g.id,e); if(r) toast(r,'bad'); else { toast('ฝัง '+R.n+' แล้ว','good'); ucSnd('ok'); } ucRsFill(box); ucAfter(); },!fort)]})); }
     for(const g of runes) if(!itRuneFits(g.id,d)) box.append(ucRow(g.id,{n:g.n, cls:'uc-off', sub:'ใส่ได้เฉพาะกลุ่ม'+RUNE_GROUP[RUNES[g.id].g].n}));
     return; }
   const L=ucSockList(ch,false);

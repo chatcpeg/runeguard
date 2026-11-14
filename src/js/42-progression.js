@@ -209,6 +209,8 @@ function prepareRun(G,P,ch,modeId){
   P.adv=a; P.advOffered=true;                                           // never the Lv15 job pick (G.ui never 'adv')
   P.look=Object.assign({},P.cls.look,a?a.look:null,typeof gearLook==='function'?gearLook(ch):null);
   P.bonus=buildRunBonus(ch);
+  const ge=typeof gearElement==='function'?gearElement(ch):null;       // ธาตุชุดเกราะ (34 · 29 elHurtMul): character runs only, never classic
+  P.armorEl=ge&&ge.el||null; P.armorCyc=!!(ge&&ge.cyc);
   P.sx=true; P.permSt=Object.assign({},ch.st||{});                     // uncapped stat cards + main-stat power (26-stat-scaling)
   P.rank={}; for(const id of pgSkillPool(ch)){ const r=(ch.sk||{})[id]|0; if(r>0) P.rank[id]=Math.min(rankCap(ch,id),r); }
   P.tree=tfRunTree(ch);                                                  // skill trees (27): numbers + effects through sxMods

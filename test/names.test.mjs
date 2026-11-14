@@ -69,7 +69,7 @@ if (rows.length) {
       if (m.length !== 1 || ITEMS[m[0]].n !== RUNES[id].n) bad.push(id + ':' + m.join('/')); }
     const shard = Object.keys(RUNES).filter(id => !RUNES[id].shard || !Object.prototype.hasOwnProperty.call(ITEMS, RUNES[id].shard));
     return { gear, runes: Object.keys(RUNES).length, bad, shard }; })()`);
-  ok('ไอเทม M2: อุปกรณ์ ≥ 73 ชิ้น · รูน 10 แบบ · รูนแต่ละแบบมีไอเทมรูน 1 ชิ้นชื่อตรงกัน และมีเศษรูนใน ITEMS', it.gear >= 73 && it.runes === 10 && !it.bad.length && !it.shard.length, JSON.stringify(it));
+  ok('ไอเทม M2 + ท่องแดนรูน: อุปกรณ์ ≥ 81 ชิ้น · รูน 19 แบบ (เอาชีวิตรอด 10 + จ้าวถิ่น 3 + ธาตุ 6) · รูนแต่ละแบบมีไอเทมรูน 1 ชิ้นชื่อตรงกัน และมีเศษรูนใน ITEMS', it.gear >= 81 && it.runes === 19 && !it.bad.length && !it.shard.length, JSON.stringify(it));
   const d = dupes(rows.filter(r => typeof r.n === 'string' && norm(r.n)));
   ok('ไม่มีชื่อที่แสดงซ้ำกัน', d.length === 0, d.map(x => '"' + x.n + '": ' + x.rows.map(r => r.src + '.' + r.id).join(' · ')).join(' | '));
   // end to end: copy a real name onto another registry in a fresh context → must be caught with both places named

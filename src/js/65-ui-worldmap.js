@@ -38,15 +38,31 @@ function wmRender(){ const ch=curChar(), who=shEl('wmWho'), map=shEl('wmMap'), b
     ['👑 จ้าวถิ่น',B?B.n+' · Lv '+B.lv+' · ทุก '+Math.round(z.boss.every/60)+' นาที':'-'],
     ['สถานะจ้าวถิ่น',bs.seen?(bs.ready?'พร้อมแล้ว · ปรากฏหลังเข้าแผนที่ 10 วิ':'อีก '+fmtClock(bs.inSec)):'ยังไม่เคยล้ม · ปรากฏหลังเข้าแผนที่ '+fmtClock(bs.inSec)],
     ['ฝูงอาละวาด',z.rampage?z.rampage.n+' (ทุก ~2.5 นาที)':'-'],
-    ['ของที่ดรอป','อุปกรณ์ขั้น '+z.gearT.join('–')+' · ผงรูน · ยา'+(z.zn>=2?' · ผลึกรูน':'')+' · กล่องจ้าวถิ่น (รูน)'],
+    ['ของที่ดรอป','อุปกรณ์ขั้น '+z.gearT.join('–')+' · ผงรูน · ยา'+(z.zn>=2?' · ผลึกรูน':'')+' · เศษรูนธาตุ (มอนที่มีธาตุ'+(WM.sel==='s1'?' · วุ้นได้บ่อยกว่า':'')+') · กล่องจ้าวถิ่น (รูน)'],
+    ['ของดีประจำแผนที่',wmGoods(WM.sel)],
     ['สถิติตัวนี้',fz?'สังหาร '+fmtNum(fz.k|0)+' · ล้มจ้าวถิ่น '+(fz.b|0)+' · เวลา '+Math.round((fz.t|0)/60)+' นาที':'ยังไม่เคยมา']];
   const tbl=shMk('div','sv-tbl'); for(const [k,v] of rows){ const r=shMk('div','sv-row'); r.append(shMk('span','',k),shMk('b','',v)); tbl.append(r); } body.append(tbl);
+  body.append(wmElWarn(ch,z));
   const mobs=shMk('div','wm-mobs'); mobs.append(shMk('h3','','มอนในแผนที่'));
   for(const id of wmMobs(WM.sel)){ const d=EN[id], c=shBtn('','wm-mob'+(d.aggro===0?' calm':''),()=>tfHelp('fz_'+WM.sel)); c.append(shMk('span','',(d.el?EL[d.el].i+' ':'')+d.n),shMk('small','','Lv '+d.lv+(d.aggro===0?' · ไม่ตีก่อน':''))); mobs.append(c); }
   body.append(mobs);
   body.append(shMk('p','hint','ตายหรือกลับป้อม = จบรอบ ได้ EXP ทอง ของที่เก็บไว้ทั้งหมด (ตาย: EXP −1% ของเลเวล) · ประตูรูนพาไปแผนที่ข้างเคียงได้โดยไม่จบรอบ'));
   go.disabled=!ch||!!lock; go.textContent=!ch?'สร้างตัวละครก่อน':lock?'🔒 ยังเข้าไม่ได้':'เข้า'+z.n;
   if(!WM.timer) WM.timer=setInterval(()=>{ if(curScreen()!=='scrWorld'){ wmStop(); return; } const c2=curChar(); for(const zid in WM.nodes) WM.nodes[zid].textContent=fdLockWhy(c2,zid)?'🔒':wmBossText(zid); },1000); }
+// "ของดี" of a map: its goods (rar 1 · monsters, camp chests, boss box) + the boss's ★ piece and rune (boss box only)
+function wmGoods(zid){ const g=itZoneGoods(zid).map(id=>ITEMS[id].n), b=[]; for(const id in ITEMS){ const d=ITEMS[id]; if(d.slot&&d.zone===zid&&d.from) b.push('★ '+d.n); }
+  const z=ZONES[zid], r=Object.keys(RUNES).find(k=>RUNES[k].mob===(z.boss&&z.boss.id));
+  return g.concat(b,r?[RUNES[r].n]:[]).join(' · ')+(zid==='s1'?' · รูนธาตุ 6 ชนิด':'')||'-'; }
+// the character's armour element vs the map's main elements (29 elArmorVs / elBestArmor) + ? → TF_HELP.armorEl
+function wmElWarn(ch,z){ const w=shMk('div','wm-el'), g=ch?gearElement(ch):{el:null, cyc:false}, E=g.el&&EL[g.el], best=elBestArmor(z.el);
+  let t, bad=false;
+  if(E){ const v=elArmorVs(g.el), weak=z.el.filter(k=>v.weak.indexOf(k)>=0), res=z.el.filter(k=>v.res.indexOf(k)>=0||v.same.indexOf(k)>=0); bad=weak.length>0;
+    t='🛡 ธาตุเกราะ '+E.i+' '+E.n+(res.length?' · ต้าน '+res.map(k=>EL[k].i+EL[k].n).join(' '):'')+(weak.length?' · ⚠ แพ้ '+weak.map(k=>EL[k].i+EL[k].n).join(' ')+' (โดนตี ×1.5)':' · ไม่แพ้ธาตุเด่นของแผนที่นี้'); }
+  else if(g.cyc) t='🛡 ธาตุเกราะสลับทุก '+EL_CYC_T+' วิ (มงกุฎวุ้นหกสี) · บางช่วงจะแพ้ธาตุของแผนที่';
+  else t='🛡 ยังไม่มีธาตุเกราะ (โดนตี ×1 ทุกธาตุ)';
+  if(best&&(!E||g.el!==best)) t+=' · แนะนำรูน'+EL[best].n+' '+EL[best].i+' สำหรับแผนที่นี้';
+  w.classList.toggle('bad',bad); w.append(shMk('span','',t));
+  const q=shBtn('?','fd-q wm-elq',()=>{ if(typeof tfHelp==='function') tfHelp('armorEl'); }); q.setAttribute('aria-label','ธาตุเกราะคืออะไร'); w.append(q); return w; }
 function wmMobs(zid){ const z=ZONES[zid], s=new Set(); for(const r of z.regions||[]) for(const m of r.mix) s.add(m[0]); for(const c of z.camps||[]) for(const g of c.guards) s.add(g[0]);
   if(z.fort) s.add('o_archer').add('o_tower'); for(const t of [...s]){ const K=EN[t].kit; if(K&&K.summon) s.add(K.summon.type); if(K&&K.split) s.add(K.split.into); if(K&&K.dismount) s.add(K.dismount.mount); }
   return [...s].filter(t=>EN[t]).sort((a,b)=>(EN[a].lv-EN[b].lv)||(a<b?-1:1)); }
@@ -90,6 +106,15 @@ TF_HELP.field=['ในแผนที่',()=>`<table>${tfRow('เดิน','WA
   <h4>มอน</h4><p>ป้ายบนหัว: ธาตุ · Lv · ชั้นสี · มอนสัตว์ป่า/บางชนิด "ไม่ตีก่อน" จนกว่าจะโดนตี · ฝูงเดียวกันช่วยกันไล่ · เส้นแดงบนพื้น = จะพุ่ง · วงทอง = จะกระแทก · เงาบนพื้น = หินกำลังตก</p>
   <h4>ฝูงอาละวาด</h4><p>ทุก ~2.5 นาที เตือนก่อน 5 วิ (ลูกศรขอบจอ) ฝูงใหญ่บุกจากทิศเดียว · ฆ่าหมดใน 30 วิ ได้กล่องรางวัล</p>
   <p>${FD_ORDER.map(id=>`<button type="button" class="btn ghost" data-help="fz_${id}">มอน${tfE(ZONES[id].n)}</button>`).join(' ')} <button type="button" class="btn ghost" data-help="elements">วงล้อธาตุ</button></p>`];
+TF_HELP.armorEl=['ธาตุเกราะ',()=>{ const ch=typeof curChar==='function'?curChar():null, g=ch?gearElement(ch):null, E=g&&g.el&&EL[g.el];
+  return `<p>ฝัง<b>รูนธาตุ</b>ในช่องรูนของ<b>เสื้อเกราะ</b> ตัวละครจะมีธาตุนั้น · มอนที่มีธาตุตีเรา แรงหรือเบาลงตามวงล้อธาตุเดียวกับตอนเราตีมอน</p>
+  <p>🔥 ไฟ → 🌪️ ลม → 🪨 ดิน → 💧 น้ำ → 🔥 ไฟ (ลูกศร = ชนะ) · ✨ แสง ⇄ 🌑 มืด</p>
+  <table>${tfRow('ธาตุเกราะชนะธาตุมอน','โดนตี ×0.6 · ขึ้นคำว่า ต้าน')}${tfRow('ธาตุเดียวกัน','โดนตี ×0.75')}${tfRow('ธาตุมอนชนะธาตุเกราะ','โดนตี ×1.5 · ขึ้นคำว่า แพ้ธาตุ!')}${tfRow('มอนไม่มีธาตุ / ไม่มีธาตุเกราะ','×1')}</table>
+  <h4>ธาตุเกราะแต่ละแบบ</h4><table>${Object.keys(EL).map(k=>{ const v=elArmorVs(k); return tfRow(EL[k].i+' '+EL[k].n,(v.res.length?'ต้าน '+v.res.map(x=>EL[x].i+EL[x].n).join(' ')+' (×0.6) · ':'')+EL[k].i+EL[k].n+' (×0.75) · แพ้ '+v.weak.map(x=>EL[x].i+EL[x].n).join(' ')+' (×1.5)'); }).join('')}</table>
+  <h4>หารูนธาตุ</h4><p>เศษรูนธาตุดรอปจากมอนที่มีธาตุนั้น: วุ้นในบึงวุ้นหกสี ${Math.round(BAL.DROP.field.elShard*1000)/10}% · มอนธาตุอื่นในแผนที่ ${Math.round(BAL.DROP.field.elShardX*1000)/10}% · กล่องราชินีวุ้น · รวม ${BAL.PRICE.shardsPerRune} ชิ้นเป็นรูนที่แม่หมอศิลา (${BAL.PRICE.combine} ทอง)</p>
+  <h4>กติกา</h4><p>เสื้อ 1 ตัวใส่รูนธาตุได้ 1 อัน (ช่องที่เหลือใส่รูนอื่นได้) · ถอดได้และได้รูนคืน · มงกุฎวุ้นหกสีทำให้ธาตุเกราะสลับทุก ${EL_CYC_T} วิ เมื่อเสื้อไม่มีรูนธาตุ · มีผลทุกโหมดที่ใช้ตัวละคร (ท่องแดนรูน ด่านรายวัน ฯลฯ) · ไม่มีผลกับคลาสสิก · มอนอันเดดไม่มีธาตุ · ดูธาตุเด่นของแต่ละแผนที่ได้ที่แผนที่โลก</p>
+  <p>ตอนนี้: ${E?E.i+' '+tfE(E.n):g&&g.cyc?'สลับตามมงกุฎวุ้นหกสี':'ไม่มีธาตุเกราะ'}</p>
+  <p><button type="button" class="btn ghost" data-help="elements">วงล้อธาตุ (ตอนเราตีมอน)</button></p>`; }];
 for(const id of FD_ORDER){ const z=ZONES[id];
   TF_HELP['fz_'+id]=[z.i+' '+z.n,()=>`<p>${tfE(z.d)}</p><table>${wmMobs(id).map(t=>{ const d=EN[t]; return tfRow((d.el?EL[d.el].i+' ':'')+tfE(d.n)+'<br><small>Lv '+d.lv+'</small>',tfE(d.d||'')); }).join('')}</table>
     <h4>👑 ${tfE(EN[z.boss.id].n)} · Lv ${EN[z.boss.id].lv}</h4><p>${tfE(EN[z.boss.id].d)} · รัง: ${tfE(z.boss.place)} · เกิดทุก ${Math.round(z.boss.every/60)} นาที</p>

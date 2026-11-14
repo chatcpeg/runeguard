@@ -25,3 +25,7 @@
 .fd-rc{padding:0 14px;font-size:14.5px;white-space:nowrap;font-variant-numeric:tabular-nums}
 .fd-rc.on{border-color:var(--rune);color:var(--rune);background:rgba(40,30,8,.85)}
 .fd-pz{display:grid;gap:8px;margin-bottom:10px;text-align:left}
+.wm-el{display:flex;align-items:center;gap:10px;margin:10px 0;padding:8px 12px;border-radius:12px;border:1px solid var(--line);background:var(--glass);font-size:13px;line-height:1.5;color:var(--bone)}
+.wm-el.bad{border-color:var(--blood);color:#ffb0a0}
+.wm-el span{flex:1}
+.wm-elq{flex:none;width:40px;min-height:40px}

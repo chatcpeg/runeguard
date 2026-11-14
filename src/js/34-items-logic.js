@@ -12,7 +12,7 @@ const IT_RO='ข้อมูลเป็นเวอร์ชันใหม่�
 const IT_PITY_N=Math.round(BAL.REFINE.pityMax/BAL.REFINE.pity);   // 5 failures in a row = the +20% cap
 const IT_RUNE_SELL=80;                                             // a rune sells for less than 4 shards + the combine fee (lane E decision)
 const IT_STAT_TH={might:'พลังโจมตี', hp:'HP', armor:'เกราะ', crit:'คริติคอล', critMult:'แรงคริ', speed:'ความเร็ว', area:'พื้นที่สกิล',
-  cd:'คูลดาวน์', regen:'ฟื้น HP/วิ', dodge:'หลบหลีก', xp:'EXP', drop:'ดรอป', magnet:'ระยะดูดของ', boss:'ดาเมจต่อบอส', dur:'ระยะเวลาสกิล', proj:'กระสุน'};
+  cd:'คูลดาวน์', regen:'ฟื้น HP/วิ', dodge:'หลบหลีก', xp:'EXP', drop:'ดรอป', gold:'ทองจากมอน', magnet:'ระยะดูดของ', boss:'ดาเมจต่อบอส', dur:'ระยะเวลาสกิล', proj:'กระสุน'};
 const IT_FAM_TH={beast:'สัตว์', plant:'พืช', insect:'แมลง', spirit:'ภูต', ore:'แร่', undead:'อันเดด'};
 const IT_DYE_PARTS=['body','trim','cape','hatC'];
 function itRngR(){ return itRefineRng?itRefineRng():rngUnit(); }
@@ -255,8 +255,18 @@ function socketRune(ch,uid,runeId,i){
   if(!itHas(RUNES,runeId)) return 'ไม่พบรูนนี้';
   if(inst.s[i]) return 'ช่องนี้มีรูนอยู่แล้ว · ถอดออกก่อน';
   const R=RUNES[runeId]; if(!itRuneFits(runeId,itemDef(inst.id))) return R.n+'ใส่ได้เฉพาะช่องกลุ่ม'+RUNE_GROUP[R.g].n;
+  if(R.el&&itSockets(inst).some(v=>v&&RUNES[v].el)) return 'ชิ้นนี้มีรูนธาตุอยู่แล้ว · เสื้อ 1 ตัวใส่รูนธาตุได้ 1 อัน';
   if(invCount(ch,runeId)<1) return 'ไม่มี'+R.n+'ในกระเป๋า';
   invRemove(ch,runeId,1); inst.s[i]=runeId; return itCommit(ch,'socket'); }
+// rune text for lists: its stats + the armour element of an element rune ('HP +10 · ธาตุเกราะ 💧 น้ำ')
+function itRuneText(rid){ if(!itHas(RUNES,rid)) return ''; const R=RUNES[rid], t=itStatLines(R.st).map(([k,v])=>k+' '+v).join(' · ');
+  return R.el&&itHas(IT_EL_RUNE,R.el)?(t?t+' · ':'')+'ธาตุเกราะ '+IT_EL_RUNE[R.el][1]+' '+IT_EL_RUNE[R.el][0]:t; }
+// the character's armour element (§1.2 "ธาตุชุดเกราะ"): the first element rune in the worn body's sockets · none there + a worn piece
+// with elCycle (มงกุฎวุ้นหกสี) → cyc: it turns every 12 s like ราชินีวุ้น (29 elArmor) · {el, cyc, src} · el null = none (×1)
+function gearElement(ch){ let el=null, src='', cyc=false;
+  for(const [k,inst,d] of itWorn(ch)){ if(d.elCycle) cyc=true;
+    if(k==='body'&&!el) for(const rid of itSockets(inst)) if(rid&&RUNES[rid].el&&itRuneFits(rid,d)){ el=RUNES[rid].el; src=rid; break; } }
+  return {el, cyc:!el&&cyc, src}; }
 function itUnsocketFee(inst){ const d=itemDef(inst&&inst.id); return BAL.PRICE.unsocket(d&&d.tier|0||1); }
 // take a rune out: fee 100·tier gold · the rune comes back to the bag (refused when the bag cannot take it)
 function unsocketRune(ch,uid,i){
@@ -309,11 +319,16 @@ function rollDrops(table,luckMul,o){
       else if(e.gear!=null){ const pool=IT_POOL[itGearTier(e.gear,o)]; if(pool&&pool.length) give(one(pool)); } } }
   return out; }
 // §4.12 field mob table (lane F, M4): dust 3% · crystal (zone ≥ 2: 0.3%, ≥ 4: 0.6%) · own shard 1% · zone gear 0.6% · small potion 2%
-function itFieldTable(mobId,zoneN,gearIds){ const F=BAL.DROP.field, t=[{id:'m_dust', p:F.dust}, {id:'u_potion_s', p:F.potion}];
+// o (ท่องแดนรูน): {el, elP} = the shard of that element's rune at elP · {named, namedP} = one of the map's own goods (rar 1) at namedP
+function itFieldTable(mobId,zoneN,gearIds,o){ const F=BAL.DROP.field, t=[{id:'m_dust', p:F.dust}, {id:'u_potion_s', p:F.potion}];
   const cr=zoneN>=4?F.crystal4:zoneN>=2?F.crystal2:0; if(cr) t.push({id:'m_crystal', p:cr});
   if(itemDef('m_shard_'+mobId)) t.push({id:'m_shard_'+mobId, p:F.shard});
   if(Array.isArray(gearIds)&&gearIds.length) t.push({pick:gearIds.filter(id=>itGear(itemDef(id))), p:F.gear});
+  if(o&&typeof o.el==='string'&&o.elP>0&&itemDef('m_shard_el_'+o.el)) t.push({id:'m_shard_el_'+o.el, p:o.elP});
+  if(o&&Array.isArray(o.named)&&o.namedP>0){ const L=o.named.filter(id=>itGear(itemDef(id))); if(L.length) t.push({pick:L, p:o.namedP}); }
   return t; }
+// the goods (rar 1) of one map (33 IT_NAMED zone) · boss pieces (rar 3) come only from the boss box
+function itZoneGoods(zid){ const out=[]; for(const id in ITEMS){ const d=ITEMS[id]; if(d.slot&&d.zone===zid&&d.rar===1) out.push(id); } return out; }
 
 /* ---- shop, stash, consumables (§4.6 · §4.8 · §4.11) ---- */
 // buy price of one (0 = not sold for that currency) · cur 'gold' (ร้านป้านวล) | 'marks' (ร้านตราผู้พิชิต)

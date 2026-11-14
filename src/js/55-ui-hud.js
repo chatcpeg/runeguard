@@ -89,6 +89,7 @@ function hdTick(){
   if(HD.bars) hdBars();
   if(HD.manual) hdCardBtn();
   if(HD.pot[0]||HD.pot[1]) hdPots(false);
+  if(HD.el) hdElTick();
   if(G.mode.hudTick) try{ G.mode.hudTick(); }catch(e){ console.error(e); } }   // a mode's own HUD bits (ท่องแดนรูน: กลับป้อม · 65)
 function hdStart(){   // first HUD frame of a run
   HD.g=G; HD.cards=null; HD.n=-1; HD.xr=HD.jr=-1; HD.loot=G.loot?G.loot.length:0; SH.lastMode=G.modeId; shChrome(null);
@@ -99,8 +100,15 @@ function hdStart(){   // first HUD frame of a run
   HD.auto=HD.manual&&!!loadSettings().cardAuto;
   if(box){ box.hidden=!(HD.bars||HD.manual); shEl('hdBars').hidden=!HD.bars; shEl('hdCard').hidden=true;
     if(!HD.wired){ HD.wired=true; shEl('hdCard').addEventListener('click',()=>{ if(G&&!G.ui&&!G.over) G.cardReq=true; }); } }
-  hdPotStart(ch);
+  hdPotStart(ch); hdElStart();
   if(ch&&G.charTip&&!G.auto) toast(G.charTip,'info'); }
+// 🛡 armour element chip (29 elArmor · ธาตุชุดเกราะ): character runs with an element rune in the body (or มงกุฎวุ้นหกสี) · tap = help
+function hdElStart(){ const box=shEl('hdBox'); HD.el=!!(G.char&&P&&(P.armorEl||P.armorCyc)&&!G.auto); HD.elK='';
+  let b=shEl('hdEl'); if(!b){ if(!HD.el||!box) return; b=shBtn('','hd-el',()=>{ if(G&&!G.over&&!G.ui&&typeof pauseGame==='function') pauseGame(); if(typeof tfHelp==='function') tfHelp('armorEl'); }); b.id='hdEl'; }
+  if(box&&b.parentNode!==box) box.prepend(b);
+  b.hidden=!HD.el; if(HD.el){ if(box) box.hidden=false; hdElTick(); } }
+function hdElTick(){ const b=shEl('hdEl'), k=typeof elArmor==='function'?elArmor():null; if(!b||k===HD.elK) return; HD.elK=k; const E=k&&EL[k];
+  b.textContent='🛡'+(E?E.i:'⚪'); b.style.borderColor=E?E.c:''; b.setAttribute('aria-label','ธาตุเกราะ'+(E?E.n:'ไม่มี')+(P&&P.armorCyc?' (สลับทุก '+EL_CYC_T+' วิ)':'')+' · แตะเพื่อดูคำอธิบาย'); }
 // one loot entry → a log line (a stack of the same id within 4 s grows ×n on the same line) + the bag estimate:
 // gear needs an entry, a stack only when neither the bag nor this run has that id yet. Past the bag's free entries at the start
 // → one line "goes to the stash"; past the stash too → one line "will be dropped" (lane C pgCommitItems: bag → stash → lost).

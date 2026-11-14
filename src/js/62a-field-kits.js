@@ -60,7 +60,7 @@ FK.keep={tick(e,F,K,dt,d,dx,dy,M){ if(F.st!==1) return false;
 FK.charge={tick(e,F,K,dt,d,dx,dy,M){
   const C=F.ch||(F.ch={s:0, cd:rand(1,2.5), t:0, cx:0, cy:0, hit:0});
   if(C.s===2){ C.t-=dt; const sp=K.sp*(F.spdMul||1), ox=e.x, oy=e.y; e.x+=C.cx*sp*dt; e.y+=C.cy*sp*dt; e.face=C.cx<0?-1:1; e.walk+=dt*12; fdKeepIn(e);
-    if(!C.hit){ const px=P.x-e.x, py=P.y-e.y; if(px*px+py*py<(e.r+P.r+4)**2){ C.hit=1; hurtPlayer(e.dmg*K.dmg); P.kx+=C.cx*420; P.ky+=C.cy*420; if(G.over) return true; } }
+    if(!C.hit){ const px=P.x-e.x, py=P.y-e.y; if(px*px+py*py<(e.r+P.r+4)**2){ C.hit=1; hurtPlayer(e.dmg*K.dmg,e); P.kx+=C.cx*420; P.ky+=C.cy*420; if(G.over) return true; } }
     if(K.stun&&Math.hypot(e.x-ox,e.y-oy)<sp*dt*.35){ e.stunT=K.stun; C.s=0; C.cd=K.cd; G.shake=Math.max(G.shake,5); addText(e.x,e.y-e.r-14,'มึน!','#ffe14a'); sfx('hit'); return true; }   // ran into a rock / wall
     e.vx=C.cx*sp*.3; e.vy=C.cy*sp*.3; if(C.t<=0){ C.s=0; C.cd=K.cd*rand(.85,1.15); } return true; }
   if(F.st!==1){ C.s=0; return false; }
@@ -95,7 +95,7 @@ FK.buff={tick(e,F,K,dt){ F.bf=(F.bf||0)-dt; if(F.bf>0) return false; F.bf=.5; if
   return false; }};
 FK.trap={tick(e,F,K,dt){ if(F.st!==1) return false; F.tc=(F.tc==null?rand(1,2):F.tc)-dt; if(F.tc>0) return false; F.tc=K.cd*rand(.9,1.2);
   let mine=0; for(const h of G.fd.haz) if(h.k==='trap'&&h.own===e.id) mine++; if(mine>=K.max) return false;
-  const x=e.x+(P.x-e.x)*.35, y=e.y+(P.y-e.y)*.35; G.fd.haz.push({k:'trap', x, y, r:15, t:0, arm:.6, life:30, dmg:K.dmg*e.fdK, own:e.id}); return false; }};
+  const x=e.x+(P.x-e.x)*.35, y=e.y+(P.y-e.y)*.35; G.fd.haz.push({k:'trap', x, y, r:15, t:0, arm:.6, life:30, dmg:K.dmg*e.fdK, own:e.id, el:e.el}); return false; }};
 FK.shield={tick(e,F,K,dt,d,dx,dy){ const a=Math.atan2(dy,dx); if(F.ang==null) F.ang=a; const mx=K.turn*dt; F.ang+=clamp(angDiff(a,F.ang),-mx,mx);
   e.def=(e.stunT>0||e.freezeT>0)?0:K.red; e.shArc=1; return false; }};
 FK.row={tick(e,F,K,dt,d,dx,dy,M){ if(F.st!==1||F.slot==null) return false;
@@ -110,7 +110,7 @@ FK.skitter={tick(e,F,K,dt,d,dx,dy,M,atk,hurt){ if(hurt){ const a=rand(0,TAU); F.
 FK.hide={tick(e,F,K,dt,d){ const hid=F.st===0&&d>K.r&&e.hp>=e.maxHp; e.alpha=hid?.16:undefined; if(F.hid&&!hid&&!G.auto) addText(e.x,e.y-e.r-10,'!','#9fe08a'); F.hid=hid; return false; }};
 FK.ghost={tick(e,F,K){ e.alpha=K.a; return false; }};
 FK.swap={tick(e,F,K,dt){ F.sw=(F.sw==null?K.every:F.sw)-dt; if(F.sw>0) return false; F.sw=K.every; const i=K.els.indexOf(e.el); e.el=K.els[(i+1)%K.els.length]; F.swT=G.t; return false; }};
-FK.trail={tick(e,F,K,dt){ F.tr=(F.tr||0)-dt; if(F.tr>0) return false; F.tr=K.every; if(Math.hypot(e.vx,e.vy)<12) return false; fdFire(e.x,e.y+e.r*.5,K.r,K.dmg*e.fdK,K.life); return false; }};
+FK.trail={tick(e,F,K,dt){ F.tr=(F.tr||0)-dt; if(F.tr>0) return false; F.tr=K.every; if(Math.hypot(e.vx,e.vy)<12) return false; fdFire(e.x,e.y+e.r*.5,K.r,K.dmg*e.fdK,K.life,e.el); return false; }};
 FK.gems={}; FK.potion={};                                              // handled by the kill reward (62 fdOnKill): extra XP gems · a potion drop
 FK.hop={tick(e,F,K,dt,d,dx,dy,M){ M.sp*=.35+1.3*Math.max(0,Math.sin(G.t*6.5+e.id)); return false; }};
 FK.merge={tick(e,F,K,dt){ if(F.merged||F.st===2) return false; F.mg=(F.mg||0)-dt; if(F.mg>0) return false; F.mg=.5;
@@ -136,19 +136,19 @@ FK.boom={tick(e,F,K,dt,d,dx,dy,M){
 function fdBoom(e,F,K,self){ F.blown=1; const R=K.r, dmg=K.dmg*e.fdK;
   G.fx.push({k:'boom', x:e.x, y:e.y, r:R, t:0, dur:.45, c:'#ff8a3a', dead:false}); G.fx.push({k:'ring', x:e.x, y:e.y, r0:R*.3, r1:R*1.2, t:0, dur:.32, c:'#fff2d0', w:6, dead:false});
   burst(e.x,e.y,14,'#ffb050',260,.5,4); G.shake=Math.max(G.shake,8); sfx('boom');
-  if(self){ const px=P.x-e.x, py=P.y-e.y; if(px*px+py*py<(R+P.r)**2) hurtPlayer(dmg); }
+  if(self){ const px=P.x-e.x, py=P.y-e.y; if(px*px+py*py<(R+P.r)**2) hurtPlayer(dmg,e); }
   for(const o of query(e.x,e.y,R+60)){ if(o.dead||o===e) continue; const ox=o.x-e.x, oy=o.y-e.y, l=Math.hypot(ox,oy); if(l-o.r>R) continue;
     damageEnemy(o,(self?1:3)*dmg/Math.max(.5,P.might),null,{knock:260, nx:l?ox/l:1, ny:l?oy/l:0, quiet:true}); }
   if(self&&!e.dead){ e.fdNoLoot=1; e.xp=0; killEnemy(e); } }
 FK.quake={tick(e,F,K,dt,d,dx,dy,M){ const Q=F.qk||(F.qk={cd:rand(2,K.cd), t:0, a:0});
   if(Q.t>0){ Q.t-=dt; M.sp=0; if(e.stunT>0||e.freezeT>0){ Q.t=0; F.tele=null; Q.cd=1.5; return false; }
-    if(Q.t<=0){ G.fd.haz.push({k:'quake', x:e.x, y:e.y, ang:Q.a, len:K.len, w:K.w, t:0, sp:640, dmg:e.dmg*K.dmg, hit:0}); G.shake=Math.max(G.shake,7); sfx('boom'); F.tele=null; Q.cd=K.cd; } return false; }
+    if(Q.t<=0){ G.fd.haz.push({k:'quake', x:e.x, y:e.y, ang:Q.a, len:K.len, w:K.w, t:0, sp:640, dmg:e.dmg*K.dmg, hit:0, el:e.el}); G.shake=Math.max(G.shake,7); sfx('boom'); F.tele=null; Q.cd=K.cd; } return false; }
   if(F.st!==1) return false; Q.cd-=dt;
   if(Q.cd<=0&&d<K.len*.9){ Q.t=K.aim; Q.a=Math.atan2(dy,dx); F.tele={k:'line', ang:Q.a, len:K.len, t:0, dur:K.aim, w:K.w}; M.sp=0; } return false; }};
 // gold-rank (ยอดฝีมือ) monsters: one extra move — a ground slam ring (telegraphed)
 function fdEliteSlam(e,F,dt,d,M){ const S=F.es||(F.es={cd:rand(3,5), t:0});
   if(S.t>0){ S.t-=dt; M.sp=0; fdMove(e,dt,M); if(S.t<=0){ const R=125; G.fx.push({k:'ring', x:e.x, y:e.y, r0:20, r1:R, t:0, dur:.4, c:'#f0c75a', w:12, dead:false}); G.shake=Math.max(G.shake,6); sfx('boom');
-      const px=P.x-e.x, py=P.y-e.y, pl=Math.hypot(px,py)||1; if(pl<R+P.r){ hurtPlayer(e.dmg*1.2); P.kx+=px/pl*380; P.ky+=py/pl*380; } S.cd=6; F.tele=null; } return true; }
+      const px=P.x-e.x, py=P.y-e.y, pl=Math.hypot(px,py)||1; if(pl<R+P.r){ hurtPlayer(e.dmg*1.2,e); P.kx+=px/pl*380; P.ky+=py/pl*380; } S.cd=6; F.tele=null; } return true; }
   S.cd-=dt; if(S.cd<=0&&d<200&&!(e.stunT>0||e.freezeT>0)){ S.t=.9; F.tele={k:'circle', r:125, t:0, dur:.9}; } return false; }
 // an archer on a watch tower: stays up there, shoots further, takes half damage · the tower falls → it drops down (stunned, hurt)
 function fdOnTower(e,F,K,dt,d,dx,dy,hurt){ const T=F.tower;
@@ -162,27 +162,27 @@ function fdOnTower(e,F,K,dt,d,dx,dy,hurt){ const T=F.tower;
 /* ---- monster attacks: shots (straight / boomerang) and ground hazards (lobbed rock, trap, fire, quake wave, tossed meat) ---- */
 const FD_SHOT_C={fire:'#ff8a3a', arrow:'#e8d8b0', curse:'#a46bff', rock:'#a49a86', crown:'#d8a050', orb:'#c39cff'};
 function fdShoot(e,K){ const F=G.fd; if(!F) return; const sh=F.shots.length<160;
-  if(K.kind==='lob'){ const t=K.t||1, lx=P.x+P.vx*t*.45, ly=P.y+P.vy*t*.45; F.haz.push({k:'lob', x0:e.x, y0:e.y-8, x:lx, y:ly, t:0, dur:t, r:K.r||32, dmg:K.dmg*e.fdK}); return; }
+  if(K.kind==='lob'){ const t=K.t||1, lx=P.x+P.vx*t*.45, ly=P.y+P.vy*t*.45; F.haz.push({k:'lob', x0:e.x, y0:e.y-8, x:lx, y:ly, t:0, dur:t, r:K.r||32, dmg:K.dmg*e.fdK, el:e.el}); return; }
   if(!sh) return; const a=Math.atan2(P.y-e.y,P.x-e.x)+(K.burst>1?rand(-.09,.09):0), sp=K.sp||220;
   F.shots.push({x:e.x, y:e.y-(e.lift||0)*.4-6, vx:Math.cos(a)*sp, vy:Math.sin(a)*sp, r:K.kind==='arrow'?5:7, dmg:K.dmg*e.fdK, life:3.5, kind:K.kind, el:e.el, slow:K.slow||0, slowT:K.slowT||0}); }
 function fdShot(x,y,a,sp,dmg,kind,o){ const F=G.fd; if(!F||F.shots.length>=200) return null; const s=Object.assign({x, y, vx:Math.cos(a)*sp, vy:Math.sin(a)*sp, r:8, dmg, life:4, kind},o||{}); F.shots.push(s); return s; }
-function fdFire(x,y,r,dmg,life){ const F=G.fd; if(!F) return; let n=0; for(const h of F.haz) if(h.k==='fire') n++; if(n>=90) return; F.haz.push({k:'fire', x, y, r, dmg, t:0, life, tick:0}); }
+function fdFire(x,y,r,dmg,life,el){ const F=G.fd; if(!F) return; let n=0; for(const h of F.haz) if(h.k==='fire') n++; if(n>=90) return; F.haz.push({k:'fire', x, y, r, dmg, t:0, life, tick:0, el:el||'fire'}); }
 function fdShotTick(dt){ const F=G.fd, pr=P.r*.8;
   for(const s of F.shots){ if(s.dead) continue; s.life-=dt; s.t=(s.t||0)+dt;
     if(s.ret){ const o=s.ret; if(s.t>s.out&&o&&!o.dead){ const ax=o.x-s.x, ay=o.y-s.y, l=Math.hypot(ax,ay)||1; s.vx+=(ax/l*s.sp-s.vx)*Math.min(1,dt*4); s.vy+=(ay/l*s.sp-s.vy)*Math.min(1,dt*4); if(l<o.r) s.dead=true; } s.rot=(s.rot||0)+dt*14; }
     s.x+=s.vx*dt; s.y+=s.vy*dt;
     if(s.life<=0||(!s.ret&&G.obstacles&&terBlocks(s.x,s.y,s.r))){ s.dead=true; continue; }
-    const dx=s.x-P.x, dy=s.y-(P.y-6); if(dx*dx+dy*dy<(s.r+pr)**2&&!s.hitP){ if(s.ret) s.hitP=1; else s.dead=true; hurtPlayer(s.dmg); if(s.slow&&!G.over){ F.curseT=G.t+s.slowT; F.curseV=s.slow; } if(G.over) return; } }
+    const dx=s.x-P.x, dy=s.y-(P.y-6); if(dx*dx+dy*dy<(s.r+pr)**2&&!s.hitP){ if(s.ret) s.hitP=1; else s.dead=true; hurtPlayer(s.dmg,s); if(s.slow&&!G.over){ F.curseT=G.t+s.slowT; F.curseV=s.slow; } if(G.over) return; } }
   compact(F.shots); }
 function fdHazTick(dt){ const F=G.fd;
   for(const h of F.haz){ if(h.dead) continue; h.t+=dt;
     switch(h.k){
-      case 'lob': if(h.t>=h.dur){ h.dead=true; burst(h.x,h.y,8,'#8a7a5a',150,.4,3,'rock'); if((P.x-h.x)**2+(P.y-h.y)**2<(h.r+P.r*.5)**2) hurtPlayer(h.dmg); } break;
-      case 'trap': if(h.t>h.life){ h.dead=true; break; } if(h.t>h.arm&&(P.x-h.x)**2+(P.y-h.y)**2<(h.r+P.r*.6)**2){ h.dead=true; hurtPlayer(h.dmg); F.curseT=Math.max(F.curseT||0,G.t+.8); F.curseV=Math.max(F.curseV||0,.5); burst(h.x,h.y,8,'#c9a57a',140,.4,3,'rock'); sfx('hit'); }
+      case 'lob': if(h.t>=h.dur){ h.dead=true; burst(h.x,h.y,8,'#8a7a5a',150,.4,3,'rock'); if((P.x-h.x)**2+(P.y-h.y)**2<(h.r+P.r*.5)**2) hurtPlayer(h.dmg,h); } break;
+      case 'trap': if(h.t>h.life){ h.dead=true; break; } if(h.t>h.arm&&(P.x-h.x)**2+(P.y-h.y)**2<(h.r+P.r*.6)**2){ h.dead=true; hurtPlayer(h.dmg,h); F.curseT=Math.max(F.curseT||0,G.t+.8); F.curseV=Math.max(F.curseV||0,.5); burst(h.x,h.y,8,'#c9a57a',140,.4,3,'rock'); sfx('hit'); }
         break;
-      case 'fire': if(h.t>h.life){ h.dead=true; break; } h.tick-=dt; if(h.tick<=0&&(P.x-h.x)**2+(P.y-h.y)**2<(h.r+P.r*.5)**2){ h.tick=.5; hurtPlayer(h.dmg); } break;
+      case 'fire': if(h.t>h.life){ h.dead=true; break; } h.tick-=dt; if(h.tick<=0&&(P.x-h.x)**2+(P.y-h.y)**2<(h.r+P.r*.5)**2){ h.tick=.5; hurtPlayer(h.dmg,h); } break;
       case 'quake': { const f=h.t*h.sp; if(f>h.len+40){ h.dead=true; break; } if(!h.hit){ const c=Math.cos(h.ang), s=Math.sin(h.ang), px=P.x-h.x, py=P.y-h.y, al=px*c+py*s, lat=Math.abs(-px*s+py*c);
-          if(al>f-40&&al<f+10&&lat<h.w+P.r){ h.hit=1; hurtPlayer(h.dmg); P.kx+=c*300; P.ky+=s*300; } }
+          if(al>f-40&&al<f+10&&lat<h.w+P.r){ h.hit=1; hurtPlayer(h.dmg,h); P.kx+=c*300; P.ky+=s*300; } }
         if(!G.auto&&Math.random()<dt*30){ const c=Math.cos(h.ang), s=Math.sin(h.ang); burst(h.x+c*f,h.y+s*f,2,'#8a6e4e',120,.4,3,'rock'); } break; }
       case 'meat': { const o=h.tg; if(o&&!o.dead){ h.x=o.x; h.y=o.y; } if(h.t>=h.dur){ h.dead=true; if(o&&!o.dead){ o.hp=Math.min(o.maxHp,o.hp+o.maxHp*h.pct); addText(o.x,o.y-o.r-8,'+','#7dffa8'); burst(o.x,o.y,5,'#ffcf8a',90,.4,2.5); } } break; } } }
   compact(F.haz); }

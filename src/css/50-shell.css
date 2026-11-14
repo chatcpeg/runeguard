@@ -148,6 +148,8 @@ button.hb-st{padding:0;border:0;background:none;text-decoration:underline dotted
 .sv-c.lk b{color:var(--ash)}
 .sv-c[aria-pressed="true"]{border-color:var(--rune);box-shadow:inset 0 0 0 1px var(--rune);background:rgba(240,181,69,.12)}
 .sv-row.bad b{color:#ff9aa0}
+.hd-el{pointer-events:auto;min-height:40px;min-width:48px;padding:0 10px;border-radius:999px;border:2px solid var(--line-hi);background:var(--glass);color:var(--bone);font-size:16px;font-weight:700;cursor:pointer}
+.hd-el[hidden]{display:none}
 .hd-bag{padding:4px 12px;border-radius:999px;background:var(--glass);border:1px solid var(--line);font-size:13px;font-weight:700;font-variant-numeric:tabular-nums;white-space:nowrap}
 .hd-bag.bad{border-color:var(--blood);color:#ff9aa0}
 .hd-bag.warn{border-color:var(--rune);color:var(--rune)}

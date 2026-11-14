@@ -35,8 +35,8 @@ const BOSS_PAT={
   charge(e,A,dt,d,dx,dy,o,k){
     if(A.charge>0){ A.charge-=dt; const sp=o.sp*(A.rage?1.2:1); e.x+=A.cx*sp*dt; e.y+=A.cy*sp*dt; e.face=A.cx<0?-1:1;
       for(const q of query(e.x,e.y,e.r+40)){ if(q.boss||q.dead) continue; const l=Math.hypot(q.x-e.x,q.y-e.y)||1; q.kx+=(q.x-e.x)/l*60; q.ky+=(q.y-e.y)/l*60; }
-      const px=P.x-e.x, py=P.y-e.y; if(!A.hitP&&px*px+py*py<(e.r+P.r)**2){ A.hitP=1; hurtPlayer(e.dmg*1.5); P.kx+=A.cx*620; P.ky+=A.cy*620; }
-      if(A.rage&&Math.random()<dt*14) fdFire(e.x,e.y+e.r*.6,26,e.fdK*9,2.2);
+      const px=P.x-e.x, py=P.y-e.y; if(!A.hitP&&px*px+py*py<(e.r+P.r)**2){ A.hitP=1; hurtPlayer(e.dmg*1.5,e); P.kx+=A.cx*620; P.ky+=A.cy*620; }
+      if(A.rage&&Math.random()<dt*14) fdFire(e.x,e.y+e.r*.6,26,e.fdK*9,2.2,e.el);
       if(Math.random()<.5) part({x:e.x+rand(-20,20), y:e.y+e.r*.8, vx:-A.cx*60, vy:rand(-30,-5), life:.6, s:8, grow:22, c:'#6a5a4a', g:0, drag:2, k:'puff', add:false, a:.5});
       if(A.charge<=0){ A.left=(A.left|0)-1; if(A.left>0) A.chGap=o.gap||.35; else A.chargeCd=o.cd*k; } return true; }
     if(A.chGap>0){ A.chGap-=dt; if(A.chGap<=0){ A.wind=o.wind*.7; A.cx=dx; A.cy=dy; A.tele={k:'line', len:o.sp*o.dur, t:0, dur:A.wind, ang:Math.atan2(dy,dx)}; } BOSS_PAT.move(e,dt,0,0,0); return true; }
@@ -48,7 +48,7 @@ const BOSS_PAT={
   slam(e,A,dt,d,o,k){
     if(A.slam>0){ A.slam-=dt; if(A.slam<=0){ const R=o.r; G.fx.push({k:'ring', x:e.x, y:e.y, r0:20, r1:R, t:0, dur:.45, c:o.c||'#e8d6a8', w:14, dead:false}); G.shake=Math.max(G.shake,10); sfx('boom');
         burst(e.x,e.y+20,18,'#bfae8a',300,.6,5,'rock'); addDecal(crackTex(),e.x,e.y+20,R*.8,6,.8);
-        const px=P.x-e.x, py=P.y-e.y, pl=Math.hypot(px,py)||1; if(pl<R+P.r){ hurtPlayer(e.dmg*(o.dmg||1.3)); P.kx+=px/pl*520; P.ky+=py/pl*520; }
+        const px=P.x-e.x, py=P.y-e.y, pl=Math.hypot(px,py)||1; if(pl<R+P.r){ hurtPlayer(e.dmg*(o.dmg||1.3),e); P.kx+=px/pl*520; P.ky+=py/pl*520; }
         A.slamCd=o.cd*k; } return true; }
     A.slamCd=(A.slamCd==null?2.5:A.slamCd)-dt; if(A.slamCd<=0&&d<o.near){ A.slam=o.wind*k; A.tele={k:'circle', r:o.r, t:0, dur:A.slam}; return true; } return false; },
   ring(e,o,el,off){ const n=o.n, sp=o.sp, dmg=e.dmg*(o.dmg||.45); off=off==null?rand(0,TAU):off; for(let i=0;i<n;i++) fdShot(e.x,e.y-8,off+i*TAU/n,sp,dmg,'orb',{el:el||e.el, r:o.r||8}); sfx('zap'); },
@@ -74,7 +74,7 @@ function bossPattern(e,dt,d,dx,dy,cfg){ const A=e.ai; BOSS_PAT.tele(A,dt); BOSS_
 const FB_KING={charge:{sp:760, wind:.9, dur:.6, cd:5}, slam:{r:170, wind:1, cd:4.5, near:240, dmg:1.3},
   summon:[{at:.6, list:[['g_sprout',6],['g_shaman',1]], say:'เรียกก็อบลินจิ๋ว 6 ตัว + หมอผี!'}, {at:.3, list:[['g_sprout',6],['g_shaman',1]], say:'เรียกลูกน้องอีกระลอก!'}],
   extra(e,A,dt,d,dx,dy){ if(e.hp>=e.maxHp*.25) return false; A.crown=(A.crown==null?1:A.crown)-dt;
-    if(A.crown<=0&&!A.wind&&!(A.charge>0)&&!(A.slam>0)){ A.crown=4.2; const a=Math.atan2(dy,dx); fdShot(e.x,e.y-30,a,520,e.dmg*.8,'crown',{r:14, ret:e, out:.6, sp:560, life:3.2});
+    if(A.crown<=0&&!A.wind&&!(A.charge>0)&&!(A.slam>0)){ A.crown=4.2; const a=Math.atan2(dy,dx); fdShot(e.x,e.y-30,a,520,e.dmg*.8,'crown',{el:e.el, r:14, ret:e, out:.6, sp:560, life:3.2});
       if(!A.crownSaid){ A.crownSaid=1; banner('ปามงกุฎ!','บูมเมอแรงโค้งกลับ · หลบทั้งขาไปและขากลับ'); } sfx('swing'); } return false; }};
 BOSSAI.fb_king=(e,dt,d,dx,dy)=>bossPattern(e,dt,d,dx,dy,FB_KING);
 
@@ -97,5 +97,5 @@ BOSSAI.fb_shard=(e,dt,d,dx,dy)=>bossPattern(e,dt,d,dx,dy,FB_SHARD);
 const FB_WARLORD={charge:{sp:820, wind:.75, dur:.5, cd:6.5, n:3, gap:.35}, slam:{r:200, wind:1, cd:5, near:270, dmg:1.4, c:'#ffb07a'},
   summon:[{at:.7, list:[['o_grunt',6],['o_archer',2]], say:'เป่าแตรเรียกทหาร 6 + นักธนู 2!'}, {at:.4, list:[['o_grunt',6],['o_archer',2]], say:'กองหนุนมาแล้ว!'}],
   rage:{at:.25, say:'ตัวแดง · ทุกท่าเร็วขึ้น · ทิ้งรอยไฟ'},
-  extra(e,A,dt){ if(A.rage){ A.tr=(A.tr||0)-dt; if(A.tr<=0&&Math.hypot(e.vx,e.vy)>20){ A.tr=.3; fdFire(e.x,e.y+e.r*.6,26,e.fdK*9,2.4); } } return false; }};
+  extra(e,A,dt){ if(A.rage){ A.tr=(A.tr||0)-dt; if(A.tr<=0&&Math.hypot(e.vx,e.vy)>20){ A.tr=.3; fdFire(e.x,e.y+e.r*.6,26,e.fdK*9,2.4,e.el); } } return false; }};
 BOSSAI.fb_warlord=(e,dt,d,dx,dy)=>bossPattern(e,dt,d,dx,dy,FB_WARLORD);

@@ -88,7 +88,7 @@ console.log('§3.7 ตัวใหม่ = คลาสสิกทุก field'
       const m=metaBonus(ch), b=buildRunBonus(ch);
       const A=makePlayer(CLS['${c}']); recalc(A); A.hp=A.maxHp;                          // classic newRun
       const B=makePlayer(CLS['${c}']); recalc(B); B.hp=B.maxHp; const g={}; prepareRun(g,B,ch,'survival');
-      const skip=new Set(['bonus','rank','loadout','advOffered','sx','permSt','tree','sl','rangeMul','mxDodge','mxDrop']), diff=[];   // sx/permSt/tree: character-run flags of 26/27 · skill.cx = character numbers flag
+      const skip=new Set(['bonus','rank','loadout','advOffered','sx','permSt','tree','sl','rangeMul','mxDodge','mxDrop','armorEl','armorCyc']), diff=[];   // sx/permSt/tree: character-run flags of 26/27 · armorEl/armorCyc: armour element (29/34, null/false with no element rune) · skill.cx = character numbers flag
       const J=(k,v)=>k==='skills'?JSON.stringify(v.map(s=>Object.assign({},s,{cx:undefined}))):JSON.stringify(v);
       for(const k of new Set(Object.keys(A).concat(Object.keys(B)))) if(!skip.has(k)&&J(k,A[k])!==J(k,B[k])) diff.push(k);
       return {m:JSON.stringify(m), b:JSON.stringify(b), diff, n:Object.keys(A).length, bonus:B.bonus, adv:B.adv, offered:B.advOffered}; })()`);
