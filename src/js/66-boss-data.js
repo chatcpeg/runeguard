@@ -19,7 +19,7 @@ const BOSS_LIST=[
 //   R arena radius · spawn s after entering · HP × BAL.BOSS.hp (§2.4's 900 dies in 3–10 s to a character with ★5 skills) · HPD per difficulty · FULL full rewards per boss per local day (acct.daily.boss '<id>:<n>') · CUT what a fight
 //   pays after that (gold / EXP ×CUT, no marks, a small dust chance) · GOLD / EXP on top of BAL.BOSS.gold / exp · MIN = minion level
 //   floor below the boss · rushGap s between bosses of the rush (25 % heal + one card)
-const BS={R:700, CX:3000, CY:3000, spawn:2, HP:8, HPD:[1,.7,.55], FULL:3, CUT:.15, GOLD:.22, EXP:.55, MIN:6, rushGap:3, rushMin:2,
+const BS={R:700, CX:3000, CY:3000, spawn:2, HP:8, HPD:[1,.7,.55], FULL:3, CUT:.15, GOLD:.22, EXP:.55, MIN:6, rushGap:3, rushMin:2, HITCAP:.3, MINSEC:typeof SV_BSMIN==='number'?SV_BSMIN:3,   // MINSEC: a faster time is no record (an edited save)
   diffWin:[0,0,1],                                                       // ยาก opens after a win on ปกติ · ฝันร้าย after a win on ยาก
   tier(lv){ return Math.max(1,Math.min(5,1+Math.floor(lv/10))); }};
 const BOSS_BY={}; for(const b of BOSS_LIST) BOSS_BY[b.id]=b;

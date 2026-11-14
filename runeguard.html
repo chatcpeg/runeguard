@@ -5948,6 +5948,7 @@ const SV_MAXB=256*1024;                                  // biggest save this ap
 const SV_RUNIDS=30;
 const SV_RUNID_RE=/^r_[a-z0-9_]{1,24}$/;                 // a run id that survives validateSave (newRun makes r_<base36>_<4>)
 const SV_PITY=Math.round(BAL.REFINE.pityMax/BAL.REFINE.pity);   // inst.f = refine failures in a row, 0–5 (34-items-logic.js)
+const SV_BSMIN=3;                                       // shortest boss time (s) kept as a record (BS.MINSEC · 67 bsRec / bsCommit)
 const SV_DYE=['body','trim','cape','hatC'];             // ch.dye[part] = a u_dye_* id (M5 dyes · 34 gearLook reads it)
 function svObj(x){ return !!x&&typeof x==='object'&&!Array.isArray(x); }
 function svHas(o,k){ return typeof k==='string'&&Object.prototype.hasOwnProperty.call(o,k); }
@@ -5965,8 +5966,36 @@ function uid(prefix){
   let s=''; for(let i=0;i<8;i++) s+='0123456789abcdefghijklmnopqrstuvwxyz'[a[i]%36]; return p+s; }
 // local calendar day / ISO week (daily bonus · weekly rush)
 function svDay(t){ const d=new Date(t==null?Date.now():t); return d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0'); }
-// acct.daily.day still counts as today: the same day, or one day ahead at most (a save from a timezone ahead) · else stale
-function svDayCur(d,t){ t=t||svDay(); return d===t||(typeof d==='string'&&d>t&&d<=svDay(new Date(t+'T12:00:00').getTime()+864e5)); }   // t: the reference day (tests pass one)
+// The day / week of the daily counters only moves FORWARD (no trusted clock: a clock moved forward then back must not hand out the
+// same rewards again). A stamp d counts as today while d >= today (string compare of YYYY-MM-DD) — however far ahead, up to
+// SV_DAYLEAD days: its counts stay until the real day passes it (a jump ahead "borrows" those days, the wait pays them back).
+// Further ahead than that = junk (a clock years off, a dead RTC battery set back to 2000): the counts of today are FULL — nothing
+// is paid today, and the next write stamps today (svDayRoll) so a clock that is wrong once never locks the player for years.
+// A day past SV_DAYMAX is never stored (validateSave clamps it) and a clock past it reads as SV_DAYMAX.
+const SV_DAYLEAD=400, SV_DAYMAX='2100-12-31', SV_WEEKMAX='2100-W52', SV_DAY_RE=/^\d{4}-\d{2}-\d{2}$/, SV_WEEK_RE=/^\d{4}-W\d{2}$/;
+// the same rule in the players' words (help pages 68 / 69)
+const SV_DAY_NOTE='วันนับเดินหน้าอย่างเดียว: ถ้าเคยเปิดเกมตอนนาฬิกาเครื่องล้ำหน้า สิทธิ์ที่ใช้ไปยังนับอยู่จนกว่าจะถึงวันนั้นจริง (ถ้านาฬิกาเคยล้ำหน้าเกินหนึ่งปี วันนี้ถือว่าใช้ครบแล้ว พรุ่งนี้กลับมาปกติ)';
+function svDayAdd(t,n){ return svDay(new Date(t+'T12:00:00').getTime()+n*864e5); }   // t: YYYY-MM-DD · n days later (local calendar)
+function svDayOk(d){ if(typeof d!=='string'||!SV_DAY_RE.test(d)) return false; const y=+d.slice(0,4), m=+d.slice(5,7), x=+d.slice(8,10);
+  if(y<1970||m<1||m>12||x<1) return false; return x<=new Date(Date.UTC(y,m,0)).getUTCDate(); }   // a real calendar day (no 2026-02-30)
+// stamp d against the reference day t (default: the clock): 'cur' = still today · 'old' = before today, empty or malformed (a new day)
+// · 'junk' = more than SV_DAYLEAD days ahead
+function svDayState(d,t){ t=t||svDay(); if(t>SV_DAYMAX) t=SV_DAYMAX; if(!svDayOk(d)||d<t) return 'old'; return d<=svDayAdd(t,SV_DAYLEAD)?'cur':'junk'; }
+function svDayCur(d,t){ return svDayState(d,t)==='cur'; }   // t: the reference day (tests pass one)
+// the ISO week of the weekly rush bonus, same rule: 'cur' = this week or later (≤ SV_DAYLEAD days ahead) · 'old' · 'junk'
+function svWeekState(w,now){ now=now==null?Date.now():now; let c=svWeek(now); if(c>SV_WEEKMAX) c=SV_WEEKMAX;
+  if(!svWeekOk(w)||w<c) return 'old'; return w<=svWeek(now+SV_DAYLEAD*864e5)?'cur':'junk'; }
+// the daily counts in force on day t (read only · never the stored object for a past day): today's · empty · or all used (junk)
+function svDailyFull(t){ const surv={}; for(let i=0;i<=10;i++) surv[i]=1; return {day:t||svDay(), surv, boss:{'all:99':1}, dg:{exp:9, gold:9, rare:9}}; }
+function svDaily(A,t){ const D=A&&svObj(A.daily)?A.daily:null, s=D?svDayState(D.day,t):'old';
+  if(s==='cur') return {day:D.day, surv:svObj(D.surv)?D.surv:{}, boss:svObj(D.boss)?D.boss:{}, dg:svObj(D.dg)?D.dg:{}};
+  return s==='junk'?svDailyFull(t):{day:t||svDay(), surv:{}, boss:{}, dg:{}}; }
+// before a count is added: a new day clears the counts · a junk stamp becomes today with every count used · a junk rush week
+// becomes this week (bonus taken) · today's stamp is left as it is (it may be ahead of the clock: it never moves back)
+function svDayRoll(A,t){ if(!A||!svObj(A.daily)) return; const D=A.daily, s=svDayState(D.day,t); t=t||svDay(); if(t>SV_DAYMAX) t=SV_DAYMAX;
+  if(s!=='cur'){ const f=s==='junk'?svDailyFull(t):{surv:{}, boss:{}, dg:{}}; D.day=t; D.surv=f.surv; D.boss=f.boss; D.dg=f.dg; }
+  if(svWeekState(D.rushWeek)==='junk'){ let w=svWeek(); if(w>SV_WEEKMAX) w=SV_WEEKMAX; D.rushWeek=w; } }
+function svWeekOk(w){ if(typeof w!=='string'||!SV_WEEK_RE.test(w)) return false; const n=+w.slice(6); return +w.slice(0,4)>=1970&&n>=1&&n<=53; }
 function svWeek(t){ const d=new Date(t==null?Date.now():t); const u=new Date(Date.UTC(d.getFullYear(),d.getMonth(),d.getDate())); const dn=u.getUTCDay()||7;
   u.setUTCDate(u.getUTCDate()+4-dn); const y=u.getUTCFullYear(), w=Math.ceil(((u-Date.UTC(y,0,1))/864e5+1)/7); return y+'-W'+String(w).padStart(2,'0'); }
 // a name the player typed: Unicode letters/marks/digits/space only, ≤ 16 characters ('' = unusable)
@@ -6048,11 +6077,13 @@ function svRecSurv(x){ x=svObj(x)?x:{}; return {wave:svInt(x.wave,0,BAL.SURV.WAV
 function svFlagMap(x,re,max){ const o={}; for(const k of svKeys(x,max)) if(re.test(k)&&x[k]) o[k]=1; return o; }
 // rune sockets of one instance: no more than its template allows (unknown item: 2) · each = a known rune that fits the slot group,
 // an unknown rune id (newer client: kept, ignored by gearBonus) or null · a known rune in the wrong group → null
+// · one element rune (RUNES[id].el) per piece, as 34 itRuneWhy allows: from the second one on → null (an edited save)
 function svSock(s,d){
   if(!Array.isArray(s)) return [];
-  const max=d?Math.max(0,Math.min(2,d.sockRoll?d.sockRoll[1]|0:d.sock|0)):2, R=typeof RUNES!=='undefined'?RUNES:{}, out=[];
+  const max=d?Math.max(0,Math.min(2,d.sockRoll?d.sockRoll[1]|0:d.sock|0)):2, R=typeof RUNES!=='undefined'?RUNES:{}, out=[]; let el=false;
   for(let i=0;i<Math.min(max,s.length);i++){ const v=svStr(s[i],SV_ID,null);
-    if(v&&d&&svHas(R,v)){ const g=typeof RUNE_GROUP!=='undefined'&&svHas(RUNE_GROUP,R[v].g)?RUNE_GROUP[R[v].g]:null; out.push(g&&g.slots.indexOf(d.slot)>=0?v:null); }
+    if(v&&d&&svHas(R,v)){ const g=typeof RUNE_GROUP!=='undefined'&&svHas(RUNE_GROUP,R[v].g)?RUNE_GROUP[R[v].g]:null; let k=g&&g.slots.indexOf(d.slot)>=0?v:null;
+      if(k&&R[v].el){ if(el) k=null; else el=true; } out.push(k); }
     else out.push(v); }
   return out; }
 // one bag / stash entry → gear {u,id,r,f,s,lk} | stack {id,n} | null (dropped: not an object, id malformed or a prototype name)
@@ -6090,13 +6121,14 @@ function svAcct(a){
     for(const tk of svKeys(src)){ if(!/^(10|[0-9])$/.test(tk)) continue; m[tk]=svRecSurv(src[tk]); } o.records.survival[cid]=m; }
   for(const b of svKeys(r.boss)){ if(!SV_ID.test(b)) continue; const m={}, src=r.boss[b];
     for(const dk of svKeys(src)){ if(!/^[012]$/.test(dk)) continue; const x=svObj(src[dk])?src[dk]:{};
-      m[dk]={sec:svNum(x.sec,0,1e6,0), medal:x.medal==='S'||x.medal==='A'?x.medal:'B'}; } o.records.boss[b]=m; }
+      const sec=svNum(x.sec,0,1e6,0), ok=sec>=SV_BSMIN;                // a time under SV_BSMIN s is not a real kill (an edited save): no record
+      m[dk]={sec:ok?sec:0, medal:ok&&(x.medal==='S'||x.medal==='A')?x.medal:'B'}; } o.records.boss[b]=m; }
   for(const z of svKeys(a.fboss)){ if(!SV_ID.test(z)) continue; const x=svObj(a.fboss[z])?a.fboss[z]:{};
     o.fboss[z]={next:svInt(x.next,0,SV_TMAX,0), kills:svInt(x.kills,0,1e9,0)}; }
   for(const b of svKeys(a.bossUnlock)) if(SV_ID.test(b)) o.bossUnlock[b]=a.bossUnlock[b]?1:0;
   const d=svObj(a.daily)?a.daily:{};
-  o.daily={day:svStr(d.day,/^\d{4}-\d{2}-\d{2}$/,''), surv:svFlagMap(d.surv,/^(10|[0-9])$/,16), boss:svFlagMap(d.boss,/^[a-z0-9_:-]{1,40}$/,64),
-    rushWeek:svStr(d.rushWeek,/^\d{4}-W\d{2}$/,''), dg:{}};
+  o.daily={day:svDayOk(d.day)?(d.day>SV_DAYMAX?SV_DAYMAX:d.day):'', surv:svFlagMap(d.surv,/^(10|[0-9])$/,16), boss:svFlagMap(d.boss,/^[a-z0-9_:-]{1,40}$/,64),
+    rushWeek:svWeekOk(d.rushWeek)?(d.rushWeek>SV_WEEKMAX?SV_WEEKMAX:d.rushWeek):'', dg:{}};   // past 2100 → the last day / week (junk: not a free reset)
   const dg=svObj(d.dg)?d.dg:{}; for(const k of ['exp','gold','rare']){ const v=svInt(dg[k],0,9,0); if(v) o.daily.dg[k]=v; }   // daily dungeons entered today (69)
   // known lines and any future line name (a newer app's upgrade survives this app's write) · 0–max each, ≤ 24 lines
   const u=svObj(a.up)?a.up:{}, keys=BAL.UP.order.filter(k=>svHas(u,k)).concat(svKeys(u,64).filter(k=>BAL.UP.order.indexOf(k)<0&&/^[a-z]{1,12}$/.test(k)).slice(0,24));
@@ -6764,7 +6796,7 @@ function onRunEnd(G,won,o){
       r.tier=T; r.waves=waves;
       r.baseXp=Math.round(BAL.bxpNeed(rec)*S.expMul(waves,won)*S.overLv(ch.lv|0,rec));
       r.gold=gpw*waves+(won?gpw*S.winGoldWaves:0)+(G.goldRun|0);
-      const used=A&&svDayCur(A.daily.day)&&A.daily.surv[T];
+      const used=!!A&&!!svDaily(A).surv[T];                  // svDaily (40): the day only moves forward
       if((G.wave|0)>=S.dailyWave&&!used){ r.daily=true; r.baseXp*=S.dailyMul; r.gold*=S.dailyMul; }
       // next tier: reach wave 10 in the highest tier unlocked so far (never skips: a lower tier, or a locked one, unlocks nothing)
       if((G.wave|0)>=S.unlockWave&&T<S.maxT&&A&&(A.survTier|0)===T) r.unlocks.push('survTier:'+(T+1));
@@ -6794,7 +6826,7 @@ function grantRewards(ch,r,again){
   ch.play=(+ch.play||0)+t; ch.kills=(ch.kills|0)+kills; if(st.died) ch.deaths=(ch.deaths|0)+1;
   if(SAVE) SAVE.play=(+SAVE.play||0)+t;
   if(A){
-    const today=svDay(); if(!svDayCur(A.daily.day)){ A.daily.day=today; A.daily.surv={}; A.daily.boss={}; A.daily.dg={}; }   // svDayCur: a clock set back a day keeps today's counts
+    svDayRoll(A);                                                       // 40: a new day clears the counts · a stamp ahead of the clock keeps them
     if(r.mode==='survival'){ const T=String(r.tier|0), m=A.records.survival[ch.id]||(A.records.survival[ch.id]={}), old=m[T];
       if(!old||wave>old.wave||(wave===old.wave&&kills>old.kills)||(st.won&&!old.won)) m[T]={wave, kills, won:!!st.won||!!(old&&old.won)};
       if(r.daily) A.daily.surv[T]=1; }
@@ -8141,7 +8173,7 @@ function hbSurvInfo(ch,T,A,day){   // pure: §2.2 tier row + this character's fu
   const exp=Math.round(BAL.bxpNeed(rec)*S.expMul(S.WAVES,true)*over), r=ch&&A&&A.records.survival[ch.id];
   const top=typeof IT_MAXT==='number'?IT_MAXT:5, gear=Math.min(S.gearTier(T),top);   // tiers above the shipped ones drop the highest shipped
   return {T, rec, hp:S.hpMul(T), dmg:S.dmgMul(T), gpw, gear, gear20:Math.min(S.gearTier(T)+1,top), over, exp, lvs:hbLvGain(ch,exp), gold:gpw*(S.WAVES+S.winGoldWaves),
-    daily:!(A&&svDayCur(A.daily.day,day)&&A.daily.surv[T]), open:T<=HB_TIER_OPEN, unlocked:!!A&&T<=(A.survTier|0), record:r&&r[String(T)]||null}; }
+    daily:!(A&&svDaily(A,day).surv[T]), open:T<=HB_TIER_OPEN, unlocked:!!A&&T<=(A.survTier|0), record:r&&r[String(T)]||null}; }
 function hbLvGain(ch,exp){ let L=ch?ch.lv|0:1, x=(ch?ch.xp|0:0); const p=L+x/BAL.bxpNeed(L); x+=exp;   // levels gained (fraction)
   while(L<BAL.CAP.base&&x>=BAL.bxpNeed(L)){ x-=BAL.bxpNeed(L); L++; } return L>=BAL.CAP.base?BAL.CAP.base-p:L+x/BAL.bxpNeed(L)-p; }
 function hbTier0(){ const A=SAVE&&SAVE.acct; return Math.max(0,Math.min(A?A.survTier|0:0,HB_TIER_OPEN,BAL.SURV.maxT)); }
@@ -10625,8 +10657,10 @@ function fdLabels(L,T,R,B){ let n=0;
     const M=e.fm, Rk=e.rank?RANK[e.rank]:null, E=e.el&&EL[e.el], lift=(e.d.fly?12:0)+(e.lift||0), y=e.y-e.r*(e.boss?2.25:1.95)-lift;
     if(Rk){ ctx.strokeStyle=Rk.c; ctx.lineWidth=2.5; ctx.globalAlpha=.85; ctx.beginPath(); ctx.ellipse(e.x,e.y+e.r*.85,e.r*1.05,e.r*.38,0,0,TAU); ctx.stroke(); ctx.globalAlpha=1;
       if(e.rank===3){ ctx.globalCompositeOperation='lighter'; glow(e.x,e.y-e.r*.3,e.r*2.1,'#f0b545',.22+.1*Math.sin(G.t*5)); ctx.globalCompositeOperation='source-over'; } }
-    if(e.boss){ if(E){ ctx.globalCompositeOperation='lighter'; glow(e.x,e.y,e.r*2.4,E.c,.22); ctx.globalCompositeOperation='source-over'; const t=fdTag(E.i+' ธาตุ'+E.n,E.c,true); ctx.drawImage(t,e.x-t.__w/2,y-10,t.__w,t.__h); }
-      const A=e.ai; if(A&&A.nextEl&&EL[A.nextEl]&&((G.t*4)|0)%2){ const t=fdTag('ถัดไป '+EL[A.nextEl].i+' '+EL[A.nextEl].n,EL[A.nextEl].c); ctx.drawImage(t,e.x-t.__w/2,y-30,t.__w,t.__h); }
+    if(e.boss){ // painted art (12b artPaint: a boss stands up to 3.1 r tall, its crown right at y) → the tags sit above the head, not on it
+      const art=typeof ART!=='undefined'&&ART.on&&typeof artKeyEN==='function'&&!!artKeyEN(e.type), ty=art?y-24:y-10;
+      if(E){ ctx.globalCompositeOperation='lighter'; glow(e.x,e.y,e.r*2.4,E.c,.22); ctx.globalCompositeOperation='source-over'; const t=fdTag(E.i+' ธาตุ'+E.n,E.c,true); ctx.drawImage(t,e.x-t.__w/2,ty,t.__w,t.__h); }
+      const A=e.ai; if(A&&A.nextEl&&EL[A.nextEl]&&((G.t*4)|0)%2){ const t=fdTag('ถัดไป '+EL[A.nextEl].i+' '+EL[A.nextEl].n,EL[A.nextEl].c); ctx.drawImage(t,e.x-t.__w/2,ty-20,t.__w,t.__h); }
       if(A&&A.rage){ ctx.globalCompositeOperation='lighter'; glow(e.x,e.y,e.r*2.2,'#ff3a2a',.28+.12*Math.sin(G.t*9)); ctx.globalCompositeOperation='source-over'; } continue; }
     if(!M) continue;
     if(M.rage){ ctx.globalCompositeOperation='lighter'; glow(e.x,e.y-e.r*.3,e.r*1.9,'#ff3a2a',.3+.12*Math.sin(G.t*9)); ctx.globalCompositeOperation='source-over'; }
@@ -10916,7 +10950,7 @@ const BOSS_LIST=[
 //   R arena radius · spawn s after entering · HP × BAL.BOSS.hp (§2.4's 900 dies in 3–10 s to a character with ★5 skills) · HPD per difficulty · FULL full rewards per boss per local day (acct.daily.boss '<id>:<n>') · CUT what a fight
 //   pays after that (gold / EXP ×CUT, no marks, a small dust chance) · GOLD / EXP on top of BAL.BOSS.gold / exp · MIN = minion level
 //   floor below the boss · rushGap s between bosses of the rush (25 % heal + one card)
-const BS={R:700, CX:3000, CY:3000, spawn:2, HP:8, HPD:[1,.7,.55], FULL:3, CUT:.15, GOLD:.22, EXP:.55, MIN:6, rushGap:3, rushMin:2,
+const BS={R:700, CX:3000, CY:3000, spawn:2, HP:8, HPD:[1,.7,.55], FULL:3, CUT:.15, GOLD:.22, EXP:.55, MIN:6, rushGap:3, rushMin:2, HITCAP:.3, MINSEC:typeof SV_BSMIN==='number'?SV_BSMIN:3,   // MINSEC: a faster time is no record (an edited save)
   diffWin:[0,0,1],                                                       // ยาก opens after a win on ปกติ · ฝันร้าย after a win on ยาก
   tier(lv){ return Math.max(1,Math.min(5,1+Math.floor(lv/10))); }};
 const BOSS_BY={}; for(const b of BOSS_LIST) BOSS_BY[b.id]=b;
@@ -10959,8 +10993,14 @@ if(typeof EN!=='undefined') Object.assign(EN,BS_EN);   // EN absent: a pure test
 /* ---- the three old field bosses: moves on BOSS_PAT (64) ---- */
 const BS_RAM={charge:{sp:800, wind:.9, dur:.55, cd:5}, slam:{r:160, wind:.9, cd:5, near:220, dmg:1.3, c:'#d8c8a0'},
   summon:[{at:.5, list:[['m_embersquirrel',4]], say:'เรียกกระรอกหางถ่าน 4 ตัว!'}]};
-const BS_VINE={ring:{n:12, sp:200, cd:3, dmg:.4}, keep:170, slam:{r:150, wind:1, cd:5.5, near:200, dmg:1.1, c:'#7fbf5a'},
+// แม่เถาวัลย์ keeps its distance (keep) but takes root every BS_ROOT.cd s for BS_ROOT.t s: it stops backing away and walks in, no
+// knock-back (a sword hit pushed it out of reach again), its slam and thorns go on — the melee characters' turn (keep 170 → 120 + roots · tester r1 boss)
+const BS_ROOT={cd:6, t:4, keep:120}; let bsVineKeep=BS_ROOT.keep;
+const BS_VINE={ring:{n:12, sp:200, cd:3, dmg:.4}, get keep(){ return bsVineKeep; }, slam:{r:150, wind:1, cd:5.5, near:200, dmg:1.1, c:'#7fbf5a'},
   extra(e,A,dt){
+    A.rootCd=(A.rootCd==null?BS_ROOT.cd:A.rootCd)-dt; if(A.rootCd<=0){ A.rootCd=BS_ROOT.cd+BS_ROOT.t; A.root=BS_ROOT.t; addText(e.x,e.y-e.r-30,'หยั่งราก!','#9fe08a',true); }
+    if(A.root>0){ A.root-=dt; e.kx=e.ky=0; }
+    bsVineKeep=A.root>0?0:BS_ROOT.keep;                                     // read by bossPattern (64) right after extra, for this boss
     if(A.vs>0&&!(A.slam>0)&&(P.x-e.x)**2+(P.y-e.y)**2<(150+P.r)**2) bsSlowP(1.4,.6,'รากพันธนาการ!');   // the root slam that just landed binds
     A.vs=A.slam||0;
     A.sumT=(A.sumT==null?6:A.sumT)-dt; if(A.sumT<=0){ A.sumT=10; if(bsMinions()<9){ BOSS_PAT.summon(e,[['m_amberbee',3]],130); addText(e.x,e.y-e.r-24,'เรียกผึ้งอำพัน!','#ffd36a',true); } }
@@ -10981,6 +11021,13 @@ function bsQueenSplit(e){ const i=FB_Q_EL.indexOf(e.el), els=[e.el||'fire',FB_Q_
 function bsSlowP(t,v,say){ const F=G.fd; if(!F||G.over) return; F.curseT=Math.max(F.curseT||0,G.t+t); F.curseV=Math.max(F.curseV||0,v); if(say) addText(P.x,P.y-50,say,'#9fe08a',true); }
 function bsMinions(){ let n=0; for(const e of G.enemies) if(!e.dead&&!e.boss) n++; return n; }
 
+// one hit on ปกติ / ยาก takes at most BS.HITCAP of max HP (after armour; an element weakness can still add to it) · ฝันร้าย uncapped.
+// The undead bosses keep their core AI (20): ยักษ์กระดูกทมิฬ ยาก slammed ~45 % HP of a gearless mage of its level (tester r1 boss).
+// Wraps the core hurtPlayer (18) only to pass a smaller number in, and only while a boss-mode run is on: every other mode is untouched.
+function bsHitCap(dmg){ const S=G.bs; if(!S||S.di>=2||!(dmg>0)||!P) return dmg; const keep=1-P.armor/(P.armor+(G.defK||22));
+  return Math.min(dmg,BS.HITCAP*P.maxHp/Math.max(.05,keep)); }
+{ const h0=hurtPlayer; hurtPlayer=function(dmg,src){ return h0(G&&G.modeId==='boss'&&G.bs?bsHitCap(dmg):dmg,src); }; }
+
 /* ---- account state: unlocks, today's full rewards, records ---- */
 function bsAcct(){ return typeof pgAcct==='function'?pgAcct():null; }
 function bsKilledOnMap(z){ const A=bsAcct(); if(A&&svObj(A.fboss)&&svHas(A.fboss,z)&&(A.fboss[z].kills|0)>0) return true;
@@ -10993,28 +11040,31 @@ function bsLockWhy(id,ch){ const B=bsDef(id); if(!B) return 'ไม่พบบ�
   if(u.lv) return ch&&(ch.lv|0)>=u.lv?'':'ต้องเลเวลตัวละคร '+u.lv+' ขึ้นไป';
   return ''; }
 function bsRec(id,d){ const A=bsAcct(), m=A&&A.records&&svObj(A.records.boss)&&svHas(A.records.boss,id)?A.records.boss[id]:null, k=String(bsDi(d));
-  return m&&svHas(m,k)&&m[k]&&m[k].sec>0?m[k]:null; }
+  return m&&svHas(m,k)&&m[k]&&m[k].sec>=BS.MINSEC?m[k]:null; }   // a time under MINSEC (edited save) opens nothing
 // difficulty d of boss id: '' = open · ยาก needs a win on ปกติ, ฝันร้าย a win on ยาก
 function bsDiffWhy(id,d){ const di=bsDi(d); if(!di) return ''; return bsRec(id,di-1)?'':'ชนะระดับ'+BAL.BOSS.diff[di-1].n+'ก่อน'; }
 function bsWhy(id,d,ch){ if(!ch) return 'ต้องมีตัวละครก่อน'; if(typeof pgRO==='function'&&pgRO()) return 'ข้อมูลเป็นเวอร์ชันใหม่กว่าแอป แก้ไขไม่ได้';
   return bsLockWhy(id,ch)||bsDiffWhy(id,d); }
 // today's full rewards used on boss id: acct.daily.boss holds one key '<id>:<n>' per boss (flag map · validateSave keeps 1/0 only)
-function bsUsed(id,A){ A=A||bsAcct(); if(!A||!A.daily||!svDayCur(A.daily.day)||!svObj(A.daily.boss)) return 0; const p=id+':';
-  for(const k in A.daily.boss) if(k.indexOf(p)===0&&A.daily.boss[k]){ const n=+k.slice(p.length); if(Number.isInteger(n)&&n>0) return Math.min(99,n); } return 0; }
+// · svDaily (40): the day only moves forward · two keys of one boss (an edited save) → the highest · 'all:<n>' (a junk day) counts for every boss
+function bsUsed(id,A){ A=A||bsAcct(); if(!A) return 0; const D=svDaily(A).boss, p=id+':'; let m=0;
+  for(const k of Object.keys(D)){ if(!D[k]||(k.indexOf(p)!==0&&k.indexOf('all:')!==0)) continue; const n=+k.slice(k.indexOf(':')+1); if(Number.isInteger(n)&&n>m) m=n; }
+  return Math.min(99,m); }
 function bsFullLeft(id){ return Math.max(0,BS.FULL-bsUsed(id)); }
 function bsCountAdd(A,id){ if(!svObj(A.daily.boss)) A.daily.boss={}; const n=bsUsed(id,A), p=id+':';
-  for(const k of Object.keys(A.daily.boss)) if(k.indexOf(p)===0) delete A.daily.boss[k];
+  for(const k of Object.keys(A.daily.boss)) if(k.indexOf(p)===0) delete A.daily.boss[k];   // (svDayRoll ran first: grantRewards 42)
   A.daily.boss[p+Math.min(99,n+1)]=1; }
 function bsUnlocked(ch){ return BOSS_LIST.filter(B=>!bsLockWhy(B.id,ch)).map(B=>B.id); }
-function bsRushFree(){ const A=bsAcct(); return !!A&&A.daily&&A.daily.rushWeek!==svWeek(); }
+// the weekly rush bonus: free when never taken or taken in an earlier week (forward only: svWeekState 40 · a week ahead of the clock = taken)
+function bsRushFree(){ const A=bsAcct(); return !!A&&!!A.daily&&svWeekState(A.daily.rushWeek)==='old'; }
 // grantRewards (42) → once per runId: today's full-reward count of every boss paid in full + best time + medal + the weekly rush bonus
 function bsCommit(ch,r,A){ const b=r&&r.boss; if(!b||!A||!Array.isArray(b.kills)||r.unpaid) return;
   if(!svObj(A.records)) return; if(!svObj(A.records.boss)) A.records.boss={};
   for(const k of b.kills.slice(0,BOSS_LIST.length)){ if(!k||!bsDef(k.id)) continue; const di=bsDi(k.d), sec=svNum(+k.sec,0,1e6,0); if(!(sec>0)) continue;
     if(k.full) bsCountAdd(A,k.id);
     const m=svObj(A.records.boss[k.id])?A.records.boss[k.id]:(A.records.boss[k.id]={}), o=m[di];
-    if(!o||!(o.sec>0)||sec<o.sec) m[di]={sec:Math.round(sec*10)/10, medal:bsMedal(k.id,di,sec)}; }
-  if(b.rushBonus) A.daily.rushWeek=svWeek(); }
+    if(sec>=BS.MINSEC&&(!o||!(o.sec>=BS.MINSEC)||sec<o.sec)) m[di]={sec:Math.round(sec*10)/10, medal:bsMedal(k.id,di,sec)}; }
+  if(b.rushBonus&&svWeekState(A.daily.rushWeek)==='old') A.daily.rushWeek=svWeek(); }   // never moves the stamp back
 
 /* ---- the arena ---- */
 // a fixed terrain (29a look, G.terrain.fixed like the maps): pillars around the edge + 4 pillars of cover + 4 bushes
@@ -11061,6 +11111,21 @@ function bsBot(){ let b=botInput(), x=b[0], y=b[1]; const F=G.fd;
     for(const h of F.haz){ if(h.dead||h.k!=='fire') continue; const dx=P.x-h.x, dy=P.y-h.y, d2=dx*dx+dy*dy+50; if(d2<(h.r+40)**2){ x+=dx/d2*40; y+=dy/d2*40; } } }
   const cx=BS.CX-P.x, cy=BS.CY-P.y, c=Math.hypot(cx,cy)||1; if(c>BS.R-90){ x+=cx/c*.8; y+=cy/c*.8; }
   const l=Math.hypot(x,y); return l>1?[x/l,y/l]:[x,y]; }
+
+// leaving a run before its end screen (pause → กลับป้อม / เริ่มใหม่: core toTitle / startRun call mode.dispose first) never drops what
+// is already won: the bosses down so far are paid like ถอยทัพ (a rush on its way) or as the win (the last boss is down and its 1.6 s
+// wait is not over) · nothing down → nothing to keep. Same path as endRun (onRunEnd → grantRewards) without the end screen.
+function bsBank(){ const S=G&&G.modeId==='boss'?G.bs:null; if(!S||G.over||!G.char||!S.kills.length) return false;
+  const won=S.phase==='done', n=S.kills.length; try{ bsCollect(); }catch(e){ console.error(e); }
+  G.retreat=!won; G.over=true; G.won=won; let r=null;
+  try{ r=G.rewards=onRunEnd(G,won,{commit:!G.auto||!!DEV.commit}); }catch(e){ console.error(e); }
+  try{ BUS.emit('runEnd',G,won); }catch(e){ console.error(e); }                  // the cloud push after a run (44) as endRun does
+  if(r&&r.committed&&S.paid&&!G.auto&&typeof toast==='function') toast((won?'ปราบสำเร็จ':'ถอยทัพ')+' · รับรางวัลบอส '+n+' ตัวแล้ว','good');
+  return true; }
+// pause buttons (55 hdMenuText reads mode.menuText): say whether leaving keeps the bosses already down
+function bsMenuText(){ const S=G&&G.modeId==='boss'?G.bs:null, n=S&&S.paid&&!G.over?S.kills.length:0;
+  return n?{btnMenuP:'กลับป้อม · รับรางวัล '+n+' ตัว', btnRestartP:'เริ่มใหม่ · รับรางวัล '+n+' ตัวก่อน'}
+    :{btnMenuP:'กลับป้อม (ไม่รับรางวัล)', btnRestartP:'เริ่มใหม่ (ไม่รับรางวัล)'}; }
 
 MODES.boss={
   id:'boss', n:'ล่าบอส', cards:'auto', relocate:false,
@@ -11112,7 +11177,9 @@ MODES.boss={
     ctx.beginPath(); ctx.arc(A.x,A.y,A.r,0,TAU); ctx.setLineDash([22,12]); ctx.lineDashOffset=-G.t*10; ctx.lineWidth=5; ctx.strokeStyle='rgba(240,181,69,.55)'; ctx.stroke();
     ctx.setLineDash([]); ctx.lineWidth=2; ctx.strokeStyle='rgba(240,181,69,.18)'; ctx.beginPath(); ctx.arc(A.x,A.y,A.r*.18,0,TAU); ctx.stroke(); ctx.restore();
     fdDrawWorld(L,T,R,B); },
-  drawOver(L,T,R,B){ fdDrawOver(L,T,R,B); }};
+  drawOver(L,T,R,B){ fdDrawOver(L,T,R,B); },
+  get menuText(){ return bsMenuText(); },
+  dispose(){ try{ bsBank(); }catch(e){ console.error(e); } }};
 // after the run the router lands on scrBoss again (50 SH_RET · lane B's map, filled by the mode that owns the screen)
 if(typeof SH_RET!=='undefined') SH_RET.boss='scrBoss';
 
@@ -11189,10 +11256,12 @@ TF_HELP.boss=['ล่าบอส',()=>`<p>สู้กับบอสตัว�
   <h4>ความยาก</h4><table>${BAL.BOSS.diff.map((q,i)=>tfRow(q.n,'Lv บอส +'+q.lv+' · HP ×'+(Math.round(q.hp*BS.HPD[i]*10)/10)+' · ดาเมจ ×'+q.dmg+' · ตรา '+BAL.BOSS.marks[i]+(i?' · เปิดเมื่อชนะระดับ'+BAL.BOSS.diff[i-1].n:''))).join('')}</table>
   <h4>รางวัล</h4><p>ชนะแล้วได้ทอง Base/Job EXP ตราผู้พิชิต และกล่องของ (อุปกรณ์ตามเลเวลบอส ผงรูน ผลึก รูนบอส/เศษรูน) ·
   <b>รางวัลเต็มวันละ ${BS.FULL} ครั้งต่อบอส</b> (นับทุกความยาก · รีเซ็ตเที่ยงคืนตามเวลาเครื่อง) · ครั้งต่อไปของวันได้ทองและ EXP ${Math.round(BS.CUT*100)}% ไม่มีตรา และกล่องมีแค่ผงรูนบางครั้ง ·
-  บอสที่ต่ำกว่าตัวละครเกิน 5 เลเวลให้รางวัลลดลงเหมือนเอาชีวิตรอด</p>
+  บอสที่ต่ำกว่าตัวละครเกิน 5 เลเวลให้รางวัลลดลงเหมือนเอาชีวิตรอด</p><p>${SV_DAY_NOTE}</p>
   <h4>เหรียญเวลา</h4><table>${tfRow('S','ไม่เกินเวลาเป้า (แสดงใต้ชื่อบอส)')}${tfRow('A','ไม่เกิน '+BAL.BOSS.medalA+' เท่าของเวลาเป้า')}${tfRow('B','ชนะ')}</table><p>เก็บเวลาที่ดีที่สุดของแต่ละบอสแต่ละความยาก</p>
   <h4>ปลดบอส</h4><table>${tfRow('💀🧙☠️ บอสอันเดด','ถึงคลื่น 5 / 10 / 20 ในเอาชีวิตรอด')}${tfRow('👑🫧🪓 จ้าวถิ่น','ล้มได้ในแผนที่ของมันสักครั้ง (ท่องแดนรูน)')}${tfRow('🐏🌿🐢 จ้าวถิ่นรุ่นเก่า','เลเวลตัวละคร 8 / 15 / 22')}</table>
-  <h4>ฝ่าด่านบอส</h4><p>สู้ทุกตัวที่ปลดแล้วต่อกันที่ระดับปกติ · ระหว่างตัวฟื้น HP ${Math.round(BAL.BOSS.rush.heal*100)}% และเลือกการ์ด 1 ใบ · ถอยทัพจากเมนูพักได้พร้อมรางวัลของตัวที่ปราบแล้ว · ครบทุกตัวได้ตรา +${BAL.BOSS.rush.marks} สัปดาห์ละครั้ง</p>
+  <h4>ฝ่าด่านบอส</h4><p>สู้ทุกตัวที่ปลดแล้วต่อกันที่ระดับปกติ · ระหว่างตัวฟื้น HP ${Math.round(BAL.BOSS.rush.heal*100)}% และเลือกการ์ด 1 ใบ · ถอยทัพจากเมนูพักได้พร้อมรางวัลของตัวที่ปราบแล้ว · ครบทุกตัวได้ตรา +${BAL.BOSS.rush.marks} สัปดาห์ละครั้ง (สัปดาห์ก็นับเดินหน้าอย่างเดียวเหมือนวัน)</p>
+  <h4>ออกกลางรอบ</h4><p>เมนูพัก → กลับป้อม / เริ่มใหม่: ถ้าปราบบอสไปแล้วอย่างน้อย 1 ตัว ได้รางวัลของตัวที่ปราบแล้วก่อนออก (ปุ่มบอกไว้) · ยังไม่ได้ปราบสักตัว = ไม่มีรางวัล</p>
+  <h4>ดาเมจ</h4><p>ระดับปกติและยาก โดนครั้งเดียวเสีย HP ไม่เกิน ${Math.round(BS.HITCAP*100)}% ของ HP สูงสุด (แพ้ธาตุอาจเกินได้เล็กน้อย) · ฝันร้ายไม่จำกัด</p>
   <p><button type="button" class="btn ghost" data-help="elements">ดูวงล้อธาตุ</button></p>`]; }
 /* ================= 69-mode-daily.js · lane D · daily dungeons (docs/PROPOSAL-maps-daily.md §6 · phase A) ================= */
 // Three short runs from the fort, counted per local day in acct.daily.dg (taken when the run STARTS, saved at once):
@@ -11220,8 +11289,8 @@ const DG={
 function dgWeekend(t){ const d=new Date(t==null?Date.now():t).getDay(); return d===0||d===6; }
 function dgKind(kind){ return typeof kind==='string'&&svHas(DG.kinds,kind)?DG.kinds[kind]:null; }
 function dgPer(kind){ const K=dgKind(kind); return !K?0:kind==='rare'&&dgWeekend()?2:K.per; }
-// the day only moves forward: a save stamped later than the clock (clock set back) keeps its counts (tester r4 F6)
-function dgUsed(kind,A){ A=A||pgAcct(); if(!A||!A.daily||!svDayCur(A.daily.day)) return 0; return (A.daily.dg&&svHas(A.daily.dg,kind)&&A.daily.dg[kind])|0; }
+// the day only moves forward: a save stamped later than the clock (clock set back) keeps its counts until that day comes (tester r4 F6 · r6)
+function dgUsed(kind,A){ A=A||pgAcct(); if(!A) return 0; const D=svDaily(A); return (svHas(D.dg,kind)&&D.dg[kind])|0; }   // svDaily (40): forward only
 function dgLeft(kind){ return Math.max(0,dgPer(kind)-dgUsed(kind)); }
 function dgLeftAll(){ return dgLeft('exp')+dgLeft('gold')+dgLeft('rare'); }
 function dgWhy(kind,di,ch){ if(!ch) return 'ต้องมีตัวละครก่อน'; if(pgRO()) return 'ข้อมูลเป็นเวอร์ชันใหม่กว่าแอป แก้ไขไม่ได้';
@@ -11234,7 +11303,7 @@ function dgTicket(){ const t='t'+Math.floor(rngUnit()*1e12).toString(36)+DG_TICK
 function dgEnter(kind,di){
   if(typeof svlFresh==='function') try{ svlFresh(); }catch(e){}
   const ch=pgFresh(curChar()); if(dgWhy(kind,di,ch)) return false; const A=pgAcct(); if(!A) return false;
-  const today=svDay(); if(!svDayCur(A.daily.day)){ A.daily.day=today; A.daily.surv={}; A.daily.boss={}; A.daily.dg={}; }
+  svDayRoll(A);
   if(!A.daily.dg) A.daily.dg={}; A.daily.dg[kind]=(A.daily.dg[kind]|0)+1;
   const S0=SAVE; pgSave(ch,'daily',true); if(SAVE!==S0) return false;    // another tab's save came in instead: the entry was not kept -> no run
   if(typeof closeSheet==='function') closeSheet(); if(typeof shChrome==='function') shChrome(null);
@@ -11350,7 +11419,10 @@ MODES.drare=dgMode('rare',{tint:'rgba(60,70,120,.14)', timeWin:false,
 
 /* ---- fort entry (HUB button + sheet) ---- */
 let DGW={box:null};
-function dgOpen(){ const box=shMk('div','dg-win'); DGW.box=box; box.addEventListener('click',dgClick);
+// a junk day stamp (svDayState 40: a clock that was years ahead) counts as "all used today" until a write stamps today — the
+// dungeons write nothing while they are full, so opening the sheet writes it (tomorrow is a normal new day again)
+function dgDayFix(){ const A=pgAcct(), ch=curChar(); if(!A||!A.daily||pgRO()||svDayState(A.daily.day)!=='junk') return false; svDayRoll(A); if(ch) pgSave(ch,'daily',true); return true; }
+function dgOpen(){ try{ dgDayFix(); }catch(e){ console.error(e); } const box=shMk('div','dg-win'); DGW.box=box; box.addEventListener('click',dgClick);
   sheet(box,{title:'📅 ด่านรายวัน', onClose:()=>{ if(DGW.box===box) DGW.box=null; }}); dgRender(); }
 function dgRender(){ const box=DGW.box; if(!box) return; const ch=curChar();
   let h=`<div class="sp-stat"><div><b>รีเซ็ตเที่ยงคืน</b><small>วันนี้: ห้องสมบัติ = ${tfE(dgRareDay().n)}${dgWeekend()?' · เสาร์อาทิตย์เข้าห้องสมบัติได้ 2 ครั้ง':''}</small></div><button type="button" class="tf-q" data-help="daily" aria-label="อธิบายด่านรายวัน">?</button></div>`;
@@ -11366,7 +11438,7 @@ function dgClick(e){ const q=e.target.closest('[data-help]'); if(q){ tfHelp(q.da
   Promise.resolve(confirmBox('เข้า'+K.n+' ระดับ'+D.n+'? ใช้สิทธิ์ 1 ครั้ง (เหลือ '+dgLeft(k)+')',{okText:'เข้าด่าน'})).then(ok=>{ if(ok&&!dgEnter(k,di)){ toast(dgWhy(k,di,curChar())||'เข้าด่านไม่ได้','bad'); dgRender(); } }).catch(er=>console.error(er)); }
 HUB.push({id:'daily', n:'ด่านรายวัน', i:'📅', order:22, badge(){ return curChar()?'เหลือ '+dgLeftAll():'ต้องมีตัวละครก่อน'; }, open(){ dgOpen(); }});
 if(typeof TF_HELP!=='undefined'){                                      // help pages (59) · absent in pure test loads
-TF_HELP.daily=['ด่านรายวัน',()=>`<p>ด่านสั้น ๆ ที่ให้รางวัลก้อนใหญ่ · นับสิทธิ์ตามวันในเครื่อง รีเซ็ตเที่ยงคืน · สิทธิ์ถูกใช้ทันทีที่กดเข้า (ปิดแอปหนีก็ไม่คืน)</p>
+TF_HELP.daily=['ด่านรายวัน',()=>`<p>ด่านสั้น ๆ ที่ให้รางวัลก้อนใหญ่ · นับสิทธิ์ตามวันในเครื่อง รีเซ็ตเที่ยงคืน · สิทธิ์ถูกใช้ทันทีที่กดเข้า (ปิดแอปหนีก็ไม่คืน)</p><p>${SV_DAY_NOTE}</p>
   <table>${tfRow('✨ ลานวิญญาณ','2 ครั้ง/วัน · 3 นาที · ไล่ฆ่าภูตที่วิ่งหนี (ภูตทอง ×5 แต้ม) → EXP ×10')}${tfRow('💰 คลังทอง','2 ครั้ง/วัน · 3 นาที · ฆ่าก็อบลินแบกถุงทอง ยืนเปิดหีบ 2 วิ → ทอง ×10')}${tfRow('🎁 ห้องสมบัติ','1 ครั้ง/วัน (เสาร์อาทิตย์ 2) · 3 คลื่น + ผู้เฝ้าคลัง → หีบของประจำวัน')}</table>
   <p>ปุ่ม เล่นอีกครั้ง / เริ่มใหม่ พากลับมาหน้านี้ (ต้องใช้สิทธิ์ใหม่) · ถอยทัพ · รับรางวัล ในเมนูพักออกพร้อมรางวัลที่ได้</p>
   <h4>ความยาก</h4><table>${DG.diff.map(D=>tfRow(D.n,'Lv '+D.lv+'+ · มอน HP ×'+D.hp+' ดาเมจ ×'+D.dmg+' · รางวัล ×'+D.rw)).join('')}</table>

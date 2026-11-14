@@ -24,8 +24,8 @@ const DG={
 function dgWeekend(t){ const d=new Date(t==null?Date.now():t).getDay(); return d===0||d===6; }
 function dgKind(kind){ return typeof kind==='string'&&svHas(DG.kinds,kind)?DG.kinds[kind]:null; }
 function dgPer(kind){ const K=dgKind(kind); return !K?0:kind==='rare'&&dgWeekend()?2:K.per; }
-// the day only moves forward: a save stamped later than the clock (clock set back) keeps its counts (tester r4 F6)
-function dgUsed(kind,A){ A=A||pgAcct(); if(!A||!A.daily||!svDayCur(A.daily.day)) return 0; return (A.daily.dg&&svHas(A.daily.dg,kind)&&A.daily.dg[kind])|0; }
+// the day only moves forward: a save stamped later than the clock (clock set back) keeps its counts until that day comes (tester r4 F6 · r6)
+function dgUsed(kind,A){ A=A||pgAcct(); if(!A) return 0; const D=svDaily(A); return (svHas(D.dg,kind)&&D.dg[kind])|0; }   // svDaily (40): forward only
 function dgLeft(kind){ return Math.max(0,dgPer(kind)-dgUsed(kind)); }
 function dgLeftAll(){ return dgLeft('exp')+dgLeft('gold')+dgLeft('rare'); }
 function dgWhy(kind,di,ch){ if(!ch) return 'ต้องมีตัวละครก่อน'; if(pgRO()) return 'ข้อมูลเป็นเวอร์ชันใหม่กว่าแอป แก้ไขไม่ได้';
@@ -38,7 +38,7 @@ function dgTicket(){ const t='t'+Math.floor(rngUnit()*1e12).toString(36)+DG_TICK
 function dgEnter(kind,di){
   if(typeof svlFresh==='function') try{ svlFresh(); }catch(e){}
   const ch=pgFresh(curChar()); if(dgWhy(kind,di,ch)) return false; const A=pgAcct(); if(!A) return false;
-  const today=svDay(); if(!svDayCur(A.daily.day)){ A.daily.day=today; A.daily.surv={}; A.daily.boss={}; A.daily.dg={}; }
+  svDayRoll(A);
   if(!A.daily.dg) A.daily.dg={}; A.daily.dg[kind]=(A.daily.dg[kind]|0)+1;
   const S0=SAVE; pgSave(ch,'daily',true); if(SAVE!==S0) return false;    // another tab's save came in instead: the entry was not kept -> no run
   if(typeof closeSheet==='function') closeSheet(); if(typeof shChrome==='function') shChrome(null);
@@ -154,7 +154,10 @@ MODES.drare=dgMode('rare',{tint:'rgba(60,70,120,.14)', timeWin:false,
 
 /* ---- fort entry (HUB button + sheet) ---- */
 let DGW={box:null};
-function dgOpen(){ const box=shMk('div','dg-win'); DGW.box=box; box.addEventListener('click',dgClick);
+// a junk day stamp (svDayState 40: a clock that was years ahead) counts as "all used today" until a write stamps today — the
+// dungeons write nothing while they are full, so opening the sheet writes it (tomorrow is a normal new day again)
+function dgDayFix(){ const A=pgAcct(), ch=curChar(); if(!A||!A.daily||pgRO()||svDayState(A.daily.day)!=='junk') return false; svDayRoll(A); if(ch) pgSave(ch,'daily',true); return true; }
+function dgOpen(){ try{ dgDayFix(); }catch(e){ console.error(e); } const box=shMk('div','dg-win'); DGW.box=box; box.addEventListener('click',dgClick);
   sheet(box,{title:'📅 ด่านรายวัน', onClose:()=>{ if(DGW.box===box) DGW.box=null; }}); dgRender(); }
 function dgRender(){ const box=DGW.box; if(!box) return; const ch=curChar();
   let h=`<div class="sp-stat"><div><b>รีเซ็ตเที่ยงคืน</b><small>วันนี้: ห้องสมบัติ = ${tfE(dgRareDay().n)}${dgWeekend()?' · เสาร์อาทิตย์เข้าห้องสมบัติได้ 2 ครั้ง':''}</small></div><button type="button" class="tf-q" data-help="daily" aria-label="อธิบายด่านรายวัน">?</button></div>`;
@@ -170,7 +173,7 @@ function dgClick(e){ const q=e.target.closest('[data-help]'); if(q){ tfHelp(q.da
   Promise.resolve(confirmBox('เข้า'+K.n+' ระดับ'+D.n+'? ใช้สิทธิ์ 1 ครั้ง (เหลือ '+dgLeft(k)+')',{okText:'เข้าด่าน'})).then(ok=>{ if(ok&&!dgEnter(k,di)){ toast(dgWhy(k,di,curChar())||'เข้าด่านไม่ได้','bad'); dgRender(); } }).catch(er=>console.error(er)); }
 HUB.push({id:'daily', n:'ด่านรายวัน', i:'📅', order:22, badge(){ return curChar()?'เหลือ '+dgLeftAll():'ต้องมีตัวละครก่อน'; }, open(){ dgOpen(); }});
 if(typeof TF_HELP!=='undefined'){                                      // help pages (59) · absent in pure test loads
-TF_HELP.daily=['ด่านรายวัน',()=>`<p>ด่านสั้น ๆ ที่ให้รางวัลก้อนใหญ่ · นับสิทธิ์ตามวันในเครื่อง รีเซ็ตเที่ยงคืน · สิทธิ์ถูกใช้ทันทีที่กดเข้า (ปิดแอปหนีก็ไม่คืน)</p>
+TF_HELP.daily=['ด่านรายวัน',()=>`<p>ด่านสั้น ๆ ที่ให้รางวัลก้อนใหญ่ · นับสิทธิ์ตามวันในเครื่อง รีเซ็ตเที่ยงคืน · สิทธิ์ถูกใช้ทันทีที่กดเข้า (ปิดแอปหนีก็ไม่คืน)</p><p>${SV_DAY_NOTE}</p>
   <table>${tfRow('✨ ลานวิญญาณ','2 ครั้ง/วัน · 3 นาที · ไล่ฆ่าภูตที่วิ่งหนี (ภูตทอง ×5 แต้ม) → EXP ×10')}${tfRow('💰 คลังทอง','2 ครั้ง/วัน · 3 นาที · ฆ่าก็อบลินแบกถุงทอง ยืนเปิดหีบ 2 วิ → ทอง ×10')}${tfRow('🎁 ห้องสมบัติ','1 ครั้ง/วัน (เสาร์อาทิตย์ 2) · 3 คลื่น + ผู้เฝ้าคลัง → หีบของประจำวัน')}</table>
   <p>ปุ่ม เล่นอีกครั้ง / เริ่มใหม่ พากลับมาหน้านี้ (ต้องใช้สิทธิ์ใหม่) · ถอยทัพ · รับรางวัล ในเมนูพักออกพร้อมรางวัลที่ได้</p>
   <h4>ความยาก</h4><table>${DG.diff.map(D=>tfRow(D.n,'Lv '+D.lv+'+ · มอน HP ×'+D.hp+' ดาเมจ ×'+D.dmg+' · รางวัล ×'+D.rw)).join('')}</table>

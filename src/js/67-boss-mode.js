@@ -11,8 +11,14 @@
 /* ---- the three old field bosses: moves on BOSS_PAT (64) ---- */
 const BS_RAM={charge:{sp:800, wind:.9, dur:.55, cd:5}, slam:{r:160, wind:.9, cd:5, near:220, dmg:1.3, c:'#d8c8a0'},
   summon:[{at:.5, list:[['m_embersquirrel',4]], say:'เรียกกระรอกหางถ่าน 4 ตัว!'}]};
-const BS_VINE={ring:{n:12, sp:200, cd:3, dmg:.4}, keep:170, slam:{r:150, wind:1, cd:5.5, near:200, dmg:1.1, c:'#7fbf5a'},
+// แม่เถาวัลย์ keeps its distance (keep) but takes root every BS_ROOT.cd s for BS_ROOT.t s: it stops backing away and walks in, no
+// knock-back (a sword hit pushed it out of reach again), its slam and thorns go on — the melee characters' turn (keep 170 → 120 + roots · tester r1 boss)
+const BS_ROOT={cd:6, t:4, keep:120}; let bsVineKeep=BS_ROOT.keep;
+const BS_VINE={ring:{n:12, sp:200, cd:3, dmg:.4}, get keep(){ return bsVineKeep; }, slam:{r:150, wind:1, cd:5.5, near:200, dmg:1.1, c:'#7fbf5a'},
   extra(e,A,dt){
+    A.rootCd=(A.rootCd==null?BS_ROOT.cd:A.rootCd)-dt; if(A.rootCd<=0){ A.rootCd=BS_ROOT.cd+BS_ROOT.t; A.root=BS_ROOT.t; addText(e.x,e.y-e.r-30,'หยั่งราก!','#9fe08a',true); }
+    if(A.root>0){ A.root-=dt; e.kx=e.ky=0; }
+    bsVineKeep=A.root>0?0:BS_ROOT.keep;                                     // read by bossPattern (64) right after extra, for this boss
     if(A.vs>0&&!(A.slam>0)&&(P.x-e.x)**2+(P.y-e.y)**2<(150+P.r)**2) bsSlowP(1.4,.6,'รากพันธนาการ!');   // the root slam that just landed binds
     A.vs=A.slam||0;
     A.sumT=(A.sumT==null?6:A.sumT)-dt; if(A.sumT<=0){ A.sumT=10; if(bsMinions()<9){ BOSS_PAT.summon(e,[['m_amberbee',3]],130); addText(e.x,e.y-e.r-24,'เรียกผึ้งอำพัน!','#ffd36a',true); } }
@@ -33,6 +39,13 @@ function bsQueenSplit(e){ const i=FB_Q_EL.indexOf(e.el), els=[e.el||'fire',FB_Q_
 function bsSlowP(t,v,say){ const F=G.fd; if(!F||G.over) return; F.curseT=Math.max(F.curseT||0,G.t+t); F.curseV=Math.max(F.curseV||0,v); if(say) addText(P.x,P.y-50,say,'#9fe08a',true); }
 function bsMinions(){ let n=0; for(const e of G.enemies) if(!e.dead&&!e.boss) n++; return n; }
 
+// one hit on ปกติ / ยาก takes at most BS.HITCAP of max HP (after armour; an element weakness can still add to it) · ฝันร้าย uncapped.
+// The undead bosses keep their core AI (20): ยักษ์กระดูกทมิฬ ยาก slammed ~45 % HP of a gearless mage of its level (tester r1 boss).
+// Wraps the core hurtPlayer (18) only to pass a smaller number in, and only while a boss-mode run is on: every other mode is untouched.
+function bsHitCap(dmg){ const S=G.bs; if(!S||S.di>=2||!(dmg>0)||!P) return dmg; const keep=1-P.armor/(P.armor+(G.defK||22));
+  return Math.min(dmg,BS.HITCAP*P.maxHp/Math.max(.05,keep)); }
+{ const h0=hurtPlayer; hurtPlayer=function(dmg,src){ return h0(G&&G.modeId==='boss'&&G.bs?bsHitCap(dmg):dmg,src); }; }
+
 /* ---- account state: unlocks, today's full rewards, records ---- */
 function bsAcct(){ return typeof pgAcct==='function'?pgAcct():null; }
 function bsKilledOnMap(z){ const A=bsAcct(); if(A&&svObj(A.fboss)&&svHas(A.fboss,z)&&(A.fboss[z].kills|0)>0) return true;
@@ -45,28 +58,31 @@ function bsLockWhy(id,ch){ const B=bsDef(id); if(!B) return 'ไม่พบบ�
   if(u.lv) return ch&&(ch.lv|0)>=u.lv?'':'ต้องเลเวลตัวละคร '+u.lv+' ขึ้นไป';
   return ''; }
 function bsRec(id,d){ const A=bsAcct(), m=A&&A.records&&svObj(A.records.boss)&&svHas(A.records.boss,id)?A.records.boss[id]:null, k=String(bsDi(d));
-  return m&&svHas(m,k)&&m[k]&&m[k].sec>0?m[k]:null; }
+  return m&&svHas(m,k)&&m[k]&&m[k].sec>=BS.MINSEC?m[k]:null; }   // a time under MINSEC (edited save) opens nothing
 // difficulty d of boss id: '' = open · ยาก needs a win on ปกติ, ฝันร้าย a win on ยาก
 function bsDiffWhy(id,d){ const di=bsDi(d); if(!di) return ''; return bsRec(id,di-1)?'':'ชนะระดับ'+BAL.BOSS.diff[di-1].n+'ก่อน'; }
 function bsWhy(id,d,ch){ if(!ch) return 'ต้องมีตัวละครก่อน'; if(typeof pgRO==='function'&&pgRO()) return 'ข้อมูลเป็นเวอร์ชันใหม่กว่าแอป แก้ไขไม่ได้';
   return bsLockWhy(id,ch)||bsDiffWhy(id,d); }
 // today's full rewards used on boss id: acct.daily.boss holds one key '<id>:<n>' per boss (flag map · validateSave keeps 1/0 only)
-function bsUsed(id,A){ A=A||bsAcct(); if(!A||!A.daily||!svDayCur(A.daily.day)||!svObj(A.daily.boss)) return 0; const p=id+':';
-  for(const k in A.daily.boss) if(k.indexOf(p)===0&&A.daily.boss[k]){ const n=+k.slice(p.length); if(Number.isInteger(n)&&n>0) return Math.min(99,n); } return 0; }
+// · svDaily (40): the day only moves forward · two keys of one boss (an edited save) → the highest · 'all:<n>' (a junk day) counts for every boss
+function bsUsed(id,A){ A=A||bsAcct(); if(!A) return 0; const D=svDaily(A).boss, p=id+':'; let m=0;
+  for(const k of Object.keys(D)){ if(!D[k]||(k.indexOf(p)!==0&&k.indexOf('all:')!==0)) continue; const n=+k.slice(k.indexOf(':')+1); if(Number.isInteger(n)&&n>m) m=n; }
+  return Math.min(99,m); }
 function bsFullLeft(id){ return Math.max(0,BS.FULL-bsUsed(id)); }
 function bsCountAdd(A,id){ if(!svObj(A.daily.boss)) A.daily.boss={}; const n=bsUsed(id,A), p=id+':';
-  for(const k of Object.keys(A.daily.boss)) if(k.indexOf(p)===0) delete A.daily.boss[k];
+  for(const k of Object.keys(A.daily.boss)) if(k.indexOf(p)===0) delete A.daily.boss[k];   // (svDayRoll ran first: grantRewards 42)
   A.daily.boss[p+Math.min(99,n+1)]=1; }
 function bsUnlocked(ch){ return BOSS_LIST.filter(B=>!bsLockWhy(B.id,ch)).map(B=>B.id); }
-function bsRushFree(){ const A=bsAcct(); return !!A&&A.daily&&A.daily.rushWeek!==svWeek(); }
+// the weekly rush bonus: free when never taken or taken in an earlier week (forward only: svWeekState 40 · a week ahead of the clock = taken)
+function bsRushFree(){ const A=bsAcct(); return !!A&&!!A.daily&&svWeekState(A.daily.rushWeek)==='old'; }
 // grantRewards (42) → once per runId: today's full-reward count of every boss paid in full + best time + medal + the weekly rush bonus
 function bsCommit(ch,r,A){ const b=r&&r.boss; if(!b||!A||!Array.isArray(b.kills)||r.unpaid) return;
   if(!svObj(A.records)) return; if(!svObj(A.records.boss)) A.records.boss={};
   for(const k of b.kills.slice(0,BOSS_LIST.length)){ if(!k||!bsDef(k.id)) continue; const di=bsDi(k.d), sec=svNum(+k.sec,0,1e6,0); if(!(sec>0)) continue;
     if(k.full) bsCountAdd(A,k.id);
     const m=svObj(A.records.boss[k.id])?A.records.boss[k.id]:(A.records.boss[k.id]={}), o=m[di];
-    if(!o||!(o.sec>0)||sec<o.sec) m[di]={sec:Math.round(sec*10)/10, medal:bsMedal(k.id,di,sec)}; }
-  if(b.rushBonus) A.daily.rushWeek=svWeek(); }
+    if(sec>=BS.MINSEC&&(!o||!(o.sec>=BS.MINSEC)||sec<o.sec)) m[di]={sec:Math.round(sec*10)/10, medal:bsMedal(k.id,di,sec)}; }
+  if(b.rushBonus&&svWeekState(A.daily.rushWeek)==='old') A.daily.rushWeek=svWeek(); }   // never moves the stamp back
 
 /* ---- the arena ---- */
 // a fixed terrain (29a look, G.terrain.fixed like the maps): pillars around the edge + 4 pillars of cover + 4 bushes
@@ -113,6 +129,21 @@ function bsBot(){ let b=botInput(), x=b[0], y=b[1]; const F=G.fd;
     for(const h of F.haz){ if(h.dead||h.k!=='fire') continue; const dx=P.x-h.x, dy=P.y-h.y, d2=dx*dx+dy*dy+50; if(d2<(h.r+40)**2){ x+=dx/d2*40; y+=dy/d2*40; } } }
   const cx=BS.CX-P.x, cy=BS.CY-P.y, c=Math.hypot(cx,cy)||1; if(c>BS.R-90){ x+=cx/c*.8; y+=cy/c*.8; }
   const l=Math.hypot(x,y); return l>1?[x/l,y/l]:[x,y]; }
+
+// leaving a run before its end screen (pause → กลับป้อม / เริ่มใหม่: core toTitle / startRun call mode.dispose first) never drops what
+// is already won: the bosses down so far are paid like ถอยทัพ (a rush on its way) or as the win (the last boss is down and its 1.6 s
+// wait is not over) · nothing down → nothing to keep. Same path as endRun (onRunEnd → grantRewards) without the end screen.
+function bsBank(){ const S=G&&G.modeId==='boss'?G.bs:null; if(!S||G.over||!G.char||!S.kills.length) return false;
+  const won=S.phase==='done', n=S.kills.length; try{ bsCollect(); }catch(e){ console.error(e); }
+  G.retreat=!won; G.over=true; G.won=won; let r=null;
+  try{ r=G.rewards=onRunEnd(G,won,{commit:!G.auto||!!DEV.commit}); }catch(e){ console.error(e); }
+  try{ BUS.emit('runEnd',G,won); }catch(e){ console.error(e); }                  // the cloud push after a run (44) as endRun does
+  if(r&&r.committed&&S.paid&&!G.auto&&typeof toast==='function') toast((won?'ปราบสำเร็จ':'ถอยทัพ')+' · รับรางวัลบอส '+n+' ตัวแล้ว','good');
+  return true; }
+// pause buttons (55 hdMenuText reads mode.menuText): say whether leaving keeps the bosses already down
+function bsMenuText(){ const S=G&&G.modeId==='boss'?G.bs:null, n=S&&S.paid&&!G.over?S.kills.length:0;
+  return n?{btnMenuP:'กลับป้อม · รับรางวัล '+n+' ตัว', btnRestartP:'เริ่มใหม่ · รับรางวัล '+n+' ตัวก่อน'}
+    :{btnMenuP:'กลับป้อม (ไม่รับรางวัล)', btnRestartP:'เริ่มใหม่ (ไม่รับรางวัล)'}; }
 
 MODES.boss={
   id:'boss', n:'ล่าบอส', cards:'auto', relocate:false,
@@ -164,7 +195,9 @@ MODES.boss={
     ctx.beginPath(); ctx.arc(A.x,A.y,A.r,0,TAU); ctx.setLineDash([22,12]); ctx.lineDashOffset=-G.t*10; ctx.lineWidth=5; ctx.strokeStyle='rgba(240,181,69,.55)'; ctx.stroke();
     ctx.setLineDash([]); ctx.lineWidth=2; ctx.strokeStyle='rgba(240,181,69,.18)'; ctx.beginPath(); ctx.arc(A.x,A.y,A.r*.18,0,TAU); ctx.stroke(); ctx.restore();
     fdDrawWorld(L,T,R,B); },
-  drawOver(L,T,R,B){ fdDrawOver(L,T,R,B); }};
+  drawOver(L,T,R,B){ fdDrawOver(L,T,R,B); },
+  get menuText(){ return bsMenuText(); },
+  dispose(){ try{ bsBank(); }catch(e){ console.error(e); } }};
 // after the run the router lands on scrBoss again (50 SH_RET · lane B's map, filled by the mode that owns the screen)
 if(typeof SH_RET!=='undefined') SH_RET.boss='scrBoss';
 

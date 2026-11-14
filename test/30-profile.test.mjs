@@ -1780,8 +1780,8 @@ console.log('วันของรายวัน: ข้อที่ tester ร
     SAVE.acct.daily.day=d(1); SAVE.acct.daily.dg={gold:2}; o.ahead1=dgLeft('gold');
     SAVE.acct.daily.day=d(30); o.ahead30=dgLeft('gold');
     return o; })()`);
-  ok('วันในเซฟนับเป็นวันนี้: วันเดียวกัน หรือล่วงหน้าไม่เกิน 1 วัน (เกินนั้น = นาฬิกาเคยผิด → รีเซ็ต)', JSON.stringify(r.cur) === '[true,true,false,false,false,false]', r.cur);
-  ok('เซฟล่วงหน้า 1 วัน: สิทธิ์ที่ใช้ไปยังนับ · ล่วงหน้า 30 วัน: ไม่ล็อกด่าน', r.ahead1 === 0 && r.ahead30 === 2, r);
+  ok('วันในเซฟนับเป็นวันนี้: วันเดียวกัน หรือล่วงหน้ากี่วันก็ได้ (เดินหน้าอย่างเดียว · tester r6) · เมื่อวาน / ว่าง = วันใหม่', JSON.stringify(r.cur) === '[true,true,true,false,false,false]', r.cur);
+  ok('เซฟล่วงหน้า 1 วัน / 30 วัน: สิทธิ์ที่ใช้ไปยังนับจนกว่าจะถึงวันนั้นจริง (เลื่อนนาฬิกาไปกลับไม่ได้สิทธิ์ใหม่)', r.ahead1 === 0 && r.ahead30 === 0, r);
 }
 
 console.log(`\nผล: ผ่าน ${pass} · ไม่ผ่าน ${fail}`);

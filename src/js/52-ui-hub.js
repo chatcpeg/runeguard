@@ -148,7 +148,7 @@ function hbSurvInfo(ch,T,A,day){   // pure: §2.2 tier row + this character's fu
   const exp=Math.round(BAL.bxpNeed(rec)*S.expMul(S.WAVES,true)*over), r=ch&&A&&A.records.survival[ch.id];
   const top=typeof IT_MAXT==='number'?IT_MAXT:5, gear=Math.min(S.gearTier(T),top);   // tiers above the shipped ones drop the highest shipped
   return {T, rec, hp:S.hpMul(T), dmg:S.dmgMul(T), gpw, gear, gear20:Math.min(S.gearTier(T)+1,top), over, exp, lvs:hbLvGain(ch,exp), gold:gpw*(S.WAVES+S.winGoldWaves),
-    daily:!(A&&svDayCur(A.daily.day,day)&&A.daily.surv[T]), open:T<=HB_TIER_OPEN, unlocked:!!A&&T<=(A.survTier|0), record:r&&r[String(T)]||null}; }
+    daily:!(A&&svDaily(A,day).surv[T]), open:T<=HB_TIER_OPEN, unlocked:!!A&&T<=(A.survTier|0), record:r&&r[String(T)]||null}; }
 function hbLvGain(ch,exp){ let L=ch?ch.lv|0:1, x=(ch?ch.xp|0:0); const p=L+x/BAL.bxpNeed(L); x+=exp;   // levels gained (fraction)
   while(L<BAL.CAP.base&&x>=BAL.bxpNeed(L)){ x-=BAL.bxpNeed(L); L++; } return L>=BAL.CAP.base?BAL.CAP.base-p:L+x/BAL.bxpNeed(L)-p; }
 function hbTier0(){ const A=SAVE&&SAVE.acct; return Math.max(0,Math.min(A?A.survTier|0:0,HB_TIER_OPEN,BAL.SURV.maxT)); }

@@ -210,8 +210,10 @@ function fdLabels(L,T,R,B){ let n=0;
     const M=e.fm, Rk=e.rank?RANK[e.rank]:null, E=e.el&&EL[e.el], lift=(e.d.fly?12:0)+(e.lift||0), y=e.y-e.r*(e.boss?2.25:1.95)-lift;
     if(Rk){ ctx.strokeStyle=Rk.c; ctx.lineWidth=2.5; ctx.globalAlpha=.85; ctx.beginPath(); ctx.ellipse(e.x,e.y+e.r*.85,e.r*1.05,e.r*.38,0,0,TAU); ctx.stroke(); ctx.globalAlpha=1;
       if(e.rank===3){ ctx.globalCompositeOperation='lighter'; glow(e.x,e.y-e.r*.3,e.r*2.1,'#f0b545',.22+.1*Math.sin(G.t*5)); ctx.globalCompositeOperation='source-over'; } }
-    if(e.boss){ if(E){ ctx.globalCompositeOperation='lighter'; glow(e.x,e.y,e.r*2.4,E.c,.22); ctx.globalCompositeOperation='source-over'; const t=fdTag(E.i+' ธาตุ'+E.n,E.c,true); ctx.drawImage(t,e.x-t.__w/2,y-10,t.__w,t.__h); }
-      const A=e.ai; if(A&&A.nextEl&&EL[A.nextEl]&&((G.t*4)|0)%2){ const t=fdTag('ถัดไป '+EL[A.nextEl].i+' '+EL[A.nextEl].n,EL[A.nextEl].c); ctx.drawImage(t,e.x-t.__w/2,y-30,t.__w,t.__h); }
+    if(e.boss){ // painted art (12b artPaint: a boss stands up to 3.1 r tall, its crown right at y) → the tags sit above the head, not on it
+      const art=typeof ART!=='undefined'&&ART.on&&typeof artKeyEN==='function'&&!!artKeyEN(e.type), ty=art?y-24:y-10;
+      if(E){ ctx.globalCompositeOperation='lighter'; glow(e.x,e.y,e.r*2.4,E.c,.22); ctx.globalCompositeOperation='source-over'; const t=fdTag(E.i+' ธาตุ'+E.n,E.c,true); ctx.drawImage(t,e.x-t.__w/2,ty,t.__w,t.__h); }
+      const A=e.ai; if(A&&A.nextEl&&EL[A.nextEl]&&((G.t*4)|0)%2){ const t=fdTag('ถัดไป '+EL[A.nextEl].i+' '+EL[A.nextEl].n,EL[A.nextEl].c); ctx.drawImage(t,e.x-t.__w/2,ty-20,t.__w,t.__h); }
       if(A&&A.rage){ ctx.globalCompositeOperation='lighter'; glow(e.x,e.y,e.r*2.2,'#ff3a2a',.28+.12*Math.sin(G.t*9)); ctx.globalCompositeOperation='source-over'; } continue; }
     if(!M) continue;
     if(M.rage){ ctx.globalCompositeOperation='lighter'; glow(e.x,e.y-e.r*.3,e.r*1.9,'#ff3a2a',.3+.12*Math.sin(G.t*9)); ctx.globalCompositeOperation='source-over'; }

@@ -18,6 +18,7 @@ const SV_MAXB=256*1024;                                  // biggest save this ap
 const SV_RUNIDS=30;
 const SV_RUNID_RE=/^r_[a-z0-9_]{1,24}$/;                 // a run id that survives validateSave (newRun makes r_<base36>_<4>)
 const SV_PITY=Math.round(BAL.REFINE.pityMax/BAL.REFINE.pity);   // inst.f = refine failures in a row, 0–5 (34-items-logic.js)
+const SV_BSMIN=3;                                       // shortest boss time (s) kept as a record (BS.MINSEC · 67 bsRec / bsCommit)
 const SV_DYE=['body','trim','cape','hatC'];             // ch.dye[part] = a u_dye_* id (M5 dyes · 34 gearLook reads it)
 function svObj(x){ return !!x&&typeof x==='object'&&!Array.isArray(x); }
 function svHas(o,k){ return typeof k==='string'&&Object.prototype.hasOwnProperty.call(o,k); }
@@ -35,8 +36,36 @@ function uid(prefix){
   let s=''; for(let i=0;i<8;i++) s+='0123456789abcdefghijklmnopqrstuvwxyz'[a[i]%36]; return p+s; }
 // local calendar day / ISO week (daily bonus · weekly rush)
 function svDay(t){ const d=new Date(t==null?Date.now():t); return d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0'); }
-// acct.daily.day still counts as today: the same day, or one day ahead at most (a save from a timezone ahead) · else stale
-function svDayCur(d,t){ t=t||svDay(); return d===t||(typeof d==='string'&&d>t&&d<=svDay(new Date(t+'T12:00:00').getTime()+864e5)); }   // t: the reference day (tests pass one)
+// The day / week of the daily counters only moves FORWARD (no trusted clock: a clock moved forward then back must not hand out the
+// same rewards again). A stamp d counts as today while d >= today (string compare of YYYY-MM-DD) — however far ahead, up to
+// SV_DAYLEAD days: its counts stay until the real day passes it (a jump ahead "borrows" those days, the wait pays them back).
+// Further ahead than that = junk (a clock years off, a dead RTC battery set back to 2000): the counts of today are FULL — nothing
+// is paid today, and the next write stamps today (svDayRoll) so a clock that is wrong once never locks the player for years.
+// A day past SV_DAYMAX is never stored (validateSave clamps it) and a clock past it reads as SV_DAYMAX.
+const SV_DAYLEAD=400, SV_DAYMAX='2100-12-31', SV_WEEKMAX='2100-W52', SV_DAY_RE=/^\d{4}-\d{2}-\d{2}$/, SV_WEEK_RE=/^\d{4}-W\d{2}$/;
+// the same rule in the players' words (help pages 68 / 69)
+const SV_DAY_NOTE='วันนับเดินหน้าอย่างเดียว: ถ้าเคยเปิดเกมตอนนาฬิกาเครื่องล้ำหน้า สิทธิ์ที่ใช้ไปยังนับอยู่จนกว่าจะถึงวันนั้นจริง (ถ้านาฬิกาเคยล้ำหน้าเกินหนึ่งปี วันนี้ถือว่าใช้ครบแล้ว พรุ่งนี้กลับมาปกติ)';
+function svDayAdd(t,n){ return svDay(new Date(t+'T12:00:00').getTime()+n*864e5); }   // t: YYYY-MM-DD · n days later (local calendar)
+function svDayOk(d){ if(typeof d!=='string'||!SV_DAY_RE.test(d)) return false; const y=+d.slice(0,4), m=+d.slice(5,7), x=+d.slice(8,10);
+  if(y<1970||m<1||m>12||x<1) return false; return x<=new Date(Date.UTC(y,m,0)).getUTCDate(); }   // a real calendar day (no 2026-02-30)
+// stamp d against the reference day t (default: the clock): 'cur' = still today · 'old' = before today, empty or malformed (a new day)
+// · 'junk' = more than SV_DAYLEAD days ahead
+function svDayState(d,t){ t=t||svDay(); if(t>SV_DAYMAX) t=SV_DAYMAX; if(!svDayOk(d)||d<t) return 'old'; return d<=svDayAdd(t,SV_DAYLEAD)?'cur':'junk'; }
+function svDayCur(d,t){ return svDayState(d,t)==='cur'; }   // t: the reference day (tests pass one)
+// the ISO week of the weekly rush bonus, same rule: 'cur' = this week or later (≤ SV_DAYLEAD days ahead) · 'old' · 'junk'
+function svWeekState(w,now){ now=now==null?Date.now():now; let c=svWeek(now); if(c>SV_WEEKMAX) c=SV_WEEKMAX;
+  if(!svWeekOk(w)||w<c) return 'old'; return w<=svWeek(now+SV_DAYLEAD*864e5)?'cur':'junk'; }
+// the daily counts in force on day t (read only · never the stored object for a past day): today's · empty · or all used (junk)
+function svDailyFull(t){ const surv={}; for(let i=0;i<=10;i++) surv[i]=1; return {day:t||svDay(), surv, boss:{'all:99':1}, dg:{exp:9, gold:9, rare:9}}; }
+function svDaily(A,t){ const D=A&&svObj(A.daily)?A.daily:null, s=D?svDayState(D.day,t):'old';
+  if(s==='cur') return {day:D.day, surv:svObj(D.surv)?D.surv:{}, boss:svObj(D.boss)?D.boss:{}, dg:svObj(D.dg)?D.dg:{}};
+  return s==='junk'?svDailyFull(t):{day:t||svDay(), surv:{}, boss:{}, dg:{}}; }
+// before a count is added: a new day clears the counts · a junk stamp becomes today with every count used · a junk rush week
+// becomes this week (bonus taken) · today's stamp is left as it is (it may be ahead of the clock: it never moves back)
+function svDayRoll(A,t){ if(!A||!svObj(A.daily)) return; const D=A.daily, s=svDayState(D.day,t); t=t||svDay(); if(t>SV_DAYMAX) t=SV_DAYMAX;
+  if(s!=='cur'){ const f=s==='junk'?svDailyFull(t):{surv:{}, boss:{}, dg:{}}; D.day=t; D.surv=f.surv; D.boss=f.boss; D.dg=f.dg; }
+  if(svWeekState(D.rushWeek)==='junk'){ let w=svWeek(); if(w>SV_WEEKMAX) w=SV_WEEKMAX; D.rushWeek=w; } }
+function svWeekOk(w){ if(typeof w!=='string'||!SV_WEEK_RE.test(w)) return false; const n=+w.slice(6); return +w.slice(0,4)>=1970&&n>=1&&n<=53; }
 function svWeek(t){ const d=new Date(t==null?Date.now():t); const u=new Date(Date.UTC(d.getFullYear(),d.getMonth(),d.getDate())); const dn=u.getUTCDay()||7;
   u.setUTCDate(u.getUTCDate()+4-dn); const y=u.getUTCFullYear(), w=Math.ceil(((u-Date.UTC(y,0,1))/864e5+1)/7); return y+'-W'+String(w).padStart(2,'0'); }
 // a name the player typed: Unicode letters/marks/digits/space only, ≤ 16 characters ('' = unusable)
@@ -118,11 +147,13 @@ function svRecSurv(x){ x=svObj(x)?x:{}; return {wave:svInt(x.wave,0,BAL.SURV.WAV
 function svFlagMap(x,re,max){ const o={}; for(const k of svKeys(x,max)) if(re.test(k)&&x[k]) o[k]=1; return o; }
 // rune sockets of one instance: no more than its template allows (unknown item: 2) · each = a known rune that fits the slot group,
 // an unknown rune id (newer client: kept, ignored by gearBonus) or null · a known rune in the wrong group → null
+// · one element rune (RUNES[id].el) per piece, as 34 itRuneWhy allows: from the second one on → null (an edited save)
 function svSock(s,d){
   if(!Array.isArray(s)) return [];
-  const max=d?Math.max(0,Math.min(2,d.sockRoll?d.sockRoll[1]|0:d.sock|0)):2, R=typeof RUNES!=='undefined'?RUNES:{}, out=[];
+  const max=d?Math.max(0,Math.min(2,d.sockRoll?d.sockRoll[1]|0:d.sock|0)):2, R=typeof RUNES!=='undefined'?RUNES:{}, out=[]; let el=false;
   for(let i=0;i<Math.min(max,s.length);i++){ const v=svStr(s[i],SV_ID,null);
-    if(v&&d&&svHas(R,v)){ const g=typeof RUNE_GROUP!=='undefined'&&svHas(RUNE_GROUP,R[v].g)?RUNE_GROUP[R[v].g]:null; out.push(g&&g.slots.indexOf(d.slot)>=0?v:null); }
+    if(v&&d&&svHas(R,v)){ const g=typeof RUNE_GROUP!=='undefined'&&svHas(RUNE_GROUP,R[v].g)?RUNE_GROUP[R[v].g]:null; let k=g&&g.slots.indexOf(d.slot)>=0?v:null;
+      if(k&&R[v].el){ if(el) k=null; else el=true; } out.push(k); }
     else out.push(v); }
   return out; }
 // one bag / stash entry → gear {u,id,r,f,s,lk} | stack {id,n} | null (dropped: not an object, id malformed or a prototype name)
@@ -160,13 +191,14 @@ function svAcct(a){
     for(const tk of svKeys(src)){ if(!/^(10|[0-9])$/.test(tk)) continue; m[tk]=svRecSurv(src[tk]); } o.records.survival[cid]=m; }
   for(const b of svKeys(r.boss)){ if(!SV_ID.test(b)) continue; const m={}, src=r.boss[b];
     for(const dk of svKeys(src)){ if(!/^[012]$/.test(dk)) continue; const x=svObj(src[dk])?src[dk]:{};
-      m[dk]={sec:svNum(x.sec,0,1e6,0), medal:x.medal==='S'||x.medal==='A'?x.medal:'B'}; } o.records.boss[b]=m; }
+      const sec=svNum(x.sec,0,1e6,0), ok=sec>=SV_BSMIN;                // a time under SV_BSMIN s is not a real kill (an edited save): no record
+      m[dk]={sec:ok?sec:0, medal:ok&&(x.medal==='S'||x.medal==='A')?x.medal:'B'}; } o.records.boss[b]=m; }
   for(const z of svKeys(a.fboss)){ if(!SV_ID.test(z)) continue; const x=svObj(a.fboss[z])?a.fboss[z]:{};
     o.fboss[z]={next:svInt(x.next,0,SV_TMAX,0), kills:svInt(x.kills,0,1e9,0)}; }
   for(const b of svKeys(a.bossUnlock)) if(SV_ID.test(b)) o.bossUnlock[b]=a.bossUnlock[b]?1:0;
   const d=svObj(a.daily)?a.daily:{};
-  o.daily={day:svStr(d.day,/^\d{4}-\d{2}-\d{2}$/,''), surv:svFlagMap(d.surv,/^(10|[0-9])$/,16), boss:svFlagMap(d.boss,/^[a-z0-9_:-]{1,40}$/,64),
-    rushWeek:svStr(d.rushWeek,/^\d{4}-W\d{2}$/,''), dg:{}};
+  o.daily={day:svDayOk(d.day)?(d.day>SV_DAYMAX?SV_DAYMAX:d.day):'', surv:svFlagMap(d.surv,/^(10|[0-9])$/,16), boss:svFlagMap(d.boss,/^[a-z0-9_:-]{1,40}$/,64),
+    rushWeek:svWeekOk(d.rushWeek)?(d.rushWeek>SV_WEEKMAX?SV_WEEKMAX:d.rushWeek):'', dg:{}};   // past 2100 → the last day / week (junk: not a free reset)
   const dg=svObj(d.dg)?d.dg:{}; for(const k of ['exp','gold','rare']){ const v=svInt(dg[k],0,9,0); if(v) o.daily.dg[k]=v; }   // daily dungeons entered today (69)
   // known lines and any future line name (a newer app's upgrade survives this app's write) · 0–max each, ≤ 24 lines
   const u=svObj(a.up)?a.up:{}, keys=BAL.UP.order.filter(k=>svHas(u,k)).concat(svKeys(u,64).filter(k=>BAL.UP.order.indexOf(k)<0&&/^[a-z]{1,12}$/.test(k)).slice(0,24));
